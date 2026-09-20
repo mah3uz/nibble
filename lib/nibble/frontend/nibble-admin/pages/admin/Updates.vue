@@ -46,7 +46,7 @@ function copy(release: Release) {
 </script>
 
 <template>
-  <div>
+  <div class="mx-auto max-w-5xl">
     <PageHeader title="Updates" icon="download" :breadcrumbs="[{ label: 'Updates' }]">
       <template #meta>
         <span class="text-sm text-gray-600 tabular-nums dark:text-gray-400">{{ current }}</span>
