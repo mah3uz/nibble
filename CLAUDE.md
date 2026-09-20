@@ -85,9 +85,12 @@ Default to surfacing uncertainty, not hiding it.
 ## Project status
 
 Nibble is a standalone CMS. A Rails 8 app serves a themed public site and a control panel, both Inertia + Vue 3
-with SSR, on SQLite. Content is schema-driven: YAML under `app/schema` and the active theme declares collections,
-taxonomies, blueprints, globals, navigation and forms; entries and terms are rows whose `data` is validated against
-a blueprint. See `README.md` for setup, commands and deployment.
+with SSR, on SQLite. Content is schema-driven: YAML declares collections, taxonomies,
+blueprints, globals, navigation and forms, read in three layers — Nibble's, the theme's, then the site's — and
+entries and terms are rows whose `data` is validated against a blueprint.
+
+Nibble is installed by cloning it and running `install.sh`; releases are tags a site merges. See `README.md` for
+setup, commands, what a site owns, and upgrading.
 
 It is a product in its own right, not a copy of another site. Design features on their own merits:
 there is no parity baseline to match, and no deviations to log.
@@ -106,7 +109,12 @@ control panel · themes as npm workspaces under `themes/*` · Kamal on a VPS · 
 - `lib/nibble/` — the engine, autoloaded as `Nibble::`: `Schema`, `Field`/`Fields`/`Fieldtype`, `Records::*`,
   `Lifecycle`, `Query`, `Presenter`, `Routing`, `PageProps`, `PageCache`, `Search`, `Seo`, `Sitemaps`, `Assets`,
   `Forms`, `Outbound`, `Webhooks`, `Access`, `Packages`, `ContentMigrations`, `Check`.
-- `app/schema/` — the baseline schema YAML; a theme adds its own under `themes/<theme>/schema/`.
+- `app/schema/` — the baseline schema YAML. Schema is read in three layers: this, then the theme's
+  `themes/<theme>/schema/`, then the site's own `schema/`, and the last to define a handle wins.
+- `schema/`, `site/`, `config/nibble.yml`, `config/deploy*.yml`, `db/migrate`, `Gemfile.local` — **a site's, not
+  ours.** Nibble ships templates and generates them at install; it never writes them again. `site/pages/<same path
+  as ours>.vue` replaces a control panel screen, `site/slots/*.vue` replace chrome, `site/initializers/*.rb` run at
+  boot. `bin/rails nibble:eject <path>` is how a site takes one of our files over, recorded in `.nibble/`.
 - `app/controllers/` — `SiteController` (public catch-all), `Admin::*` (control panel), `Api::V1::*` (Content API),
   `FormsController`, `SitemapsController`, `AssetFilesController`.
 - `app/frontend/` — `nibble-admin/` (CP components, `@nibble-admin`), `nibble/` (the theme runtime, `@nibble`),
