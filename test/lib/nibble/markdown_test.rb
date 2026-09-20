@@ -32,7 +32,7 @@ class Nibble::MarkdownTest < ActiveSupport::TestCase
     assert_includes html, "markdown-alert-note", "> [!NOTE] is how the docs write a callout"
     assert_includes html, %(<input type="checkbox" checked)
     assert_includes html, "<table>"
-    assert_includes html, %(<pre lang="ruby">), "a stylesheet highlights code, so the language has to survive"
+    assert_includes html, %(<code class="language-ruby">), "the class every highlighter looks for"
     assert_includes html, "footnote-ref"
   end
 
@@ -62,7 +62,7 @@ class Nibble::MarkdownTest < ActiveSupport::TestCase
     assert_includes html, "<del>gone</del>"
     assert_includes html, "markdown-alert-note"
     assert_includes html, %(<input type="checkbox")
-    assert_includes html, %(<pre lang="ruby">)
+    assert_includes html, %(<code class="language-ruby">)
   end
 
   test "sanitising still refuses a link that would run code" do

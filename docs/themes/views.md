@@ -55,6 +55,24 @@ renders one set of a replicator field, which is how a page assembled from blocks
 
 `views/errors/404.vue` and `views/errors/500.vue` render those responses.
 
+## Highlighting code
+
+Nibble renders a fenced code block as `<pre><code class="language-ruby">`, the shape Prism, highlight.js and
+Shiki all look for, and stops there. **Highlighting is your theme's decision**, because it is look: add a
+highlighter and its stylesheet to your theme if you want one, and sites that publish no code carry nothing.
+
+```sh
+npm install prismjs -w @nibble-theme/<yours>
+```
+
+```js
+// themes/<yours>/components/Prose.vue, after the HTML is in the DOM
+import { highlightAllUnder } from 'prismjs'
+```
+
+Nibble deliberately does not highlight on the server: the only built-in option writes inline colours in a theme
+of its own choosing, which no stylesheet could override.
+
 ## Styles
 
 `styles/theme.css` is the theme's stylesheet, built by Vite. Themes are npm workspaces, so a theme may have
