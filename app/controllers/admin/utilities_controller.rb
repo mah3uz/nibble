@@ -77,7 +77,8 @@ module Admin
     def health
       checks = Nibble::Health.run
       render inertia: "admin/utilities/Health", props: { status: Nibble::Health.status(checks), checks: checks.map(&:to_h),
-                                                           checked_at: Time.current.utc.iso8601, system: system_info }
+                                                           checked_at: Time.current.utc.iso8601, system: system_info,
+                                                           releases: Nibble::Releases.newer.map(&:to_h) }
     end
 
     def jobs
