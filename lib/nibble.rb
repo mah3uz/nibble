@@ -32,8 +32,9 @@ module Nibble
 
     def config_values
       values = config_file.exist? ? Rails.application.config_for(:nibble).to_h.deep_stringify_keys : {}
-      values["theme"] = build_theme if values["theme"].blank?
-      values["url"] = site_url if values["url"].blank?
+      # One settings file serves every environment, so the environment decides the theme and the URL.
+      values["theme"] = ENV["NIBBLE_THEME"].presence || values["theme"].presence || DEFAULT_THEME
+      values["url"] = ENV["SITE_URL"].presence || values["url"].presence || site_url
       values
     end
 

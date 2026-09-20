@@ -5,8 +5,9 @@ class Nibble::ConfigTest < ActiveSupport::TestCase
     Nibble::Config.new({ "locales" => [ { "code" => "en", "default" => true } ] }.merge(overrides))
   end
 
-  test "the site URL is the SITE_URL deployments set" do
-    assert_equal ENV.fetch("SITE_URL"), Nibble.config.url
+  test "the site URL is the SITE_URL deployments set, not whatever the install wrote" do
+    assert_equal ENV.fetch("SITE_URL"), Nibble.config.url,
+      "one settings file serves every environment, so a deploy's SITE_URL has to win over it"
   end
 
   test "a site without a theme runs on the core schema alone" do
