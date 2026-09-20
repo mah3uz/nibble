@@ -8,7 +8,7 @@ module Admin
       render inertia: "admin/Updates", props: {
         current: Nibble::VERSION,
         checking: Nibble::Releases.checking?,
-        releases: Nibble::Releases.all.map(&:to_h)
+        releases: Nibble::Releases.all.map { |release| release.to_h.merge(body: Nibble::Markdown.render(release.body)) }
       }
     end
 

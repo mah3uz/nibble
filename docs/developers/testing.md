@@ -38,7 +38,9 @@ the process survives. A component that touches browser globals on import would o
 rendering for the whole public site, and nothing else would catch it.
 
 It refuses to run when something is already listening on port 13714, so a stale process cannot make it pass
-against the wrong bundle.
+against the wrong bundle. That port is fixed by `@inertiajs/vite`, so only one server can hold it at a time.
+`bin/dev` does not use it — in development the Vite dev server renders — so if the check trips, it is a leftover
+from an interrupted run or an SSR server you started yourself. The message says how to find out which.
 
 ## End-to-end
 

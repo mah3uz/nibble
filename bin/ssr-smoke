@@ -6,14 +6,27 @@ cd "$(dirname "$0")/.."
 
 PORT=13714 # fixed by @inertiajs/vite's SSR server
 if curl -s -o /dev/null "http://localhost:$PORT/health"; then
-  echo "SSR smoke test FAILED: something is already listening on port $PORT; stop it so the fresh bundle is tested."
+  echo "SSR smoke test FAILED: something is already listening on port $PORT, so the fresh bundle would not be"
+  echo "the thing tested. The port is fixed by @inertiajs/vite, so only one server can hold it."
+  echo "  ps -o pid,etime,cmd -p \$(ss -ltnpH | grep $PORT | grep -oP 'pid=\\K[0-9]+')   # what has it"
+  echo "bin/dev does not use this port: it is either a leftover from an interrupted run, or a production-mode"
+  echo "SSR server you started yourself."
   exit 1
 fi
 
 mkdir -p tmp
 node public/vite-ssr/ssr.js > tmp/ssr-smoke.log 2>&1 &
 pid=$!
-trap 'kill $pid 2>/dev/null || true' EXIT
+# SIGTERM alone sometimes leaves it running, and the next run then fails on the busy port.
+cleanup() {
+  kill "$pid" 2>/dev/null || return 0
+  for _ in 1 2 3 4 5; do
+    kill -0 "$pid" 2>/dev/null || return 0
+    sleep 0.2
+  done
+  kill -9 "$pid" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
 
 for _ in $(seq 1 50); do
   curl -sf "http://localhost:$PORT/health" > /dev/null && break

@@ -3,7 +3,6 @@ defineProps<{ source: string }>()
 </script>
 
 <template>
-  <div class="font-mono text-[13px] leading-relaxed whitespace-pre-wrap text-gray-700 dark:text-gray-300">
-    {{ source }}
-  </div>
+  <!-- eslint-disable-next-line vue/no-v-html -- Nibble's own notes, rendered from the CHANGELOG we publish. -->
+  <div class="prose prose-sm max-w-none dark:prose-invert [&_.anchor]:hidden" v-html="source" />
 </template>
