@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ChevronDownIcon } from '@lucide/vue'
 import { NodeViewContent, NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3'
 import { computed } from 'vue'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { codeLanguages } from '@/fieldtypes/rich-text/extensions'
 
 const props = defineProps(nodeViewProps)
@@ -17,21 +17,22 @@ const language = computed({
   <!-- The wrapper cannot be the pre: Tiptap sets white-space: normal on it, which unwraps the code. -->
   <NodeViewWrapper class="group/code relative">
     <div
-      class="absolute top-2 right-2 opacity-0 transition-opacity group-hover/code:opacity-100 focus-within:opacity-100"
+      class="absolute top-2 right-2 opacity-0 transition-opacity group-hover/code:opacity-100 focus-within:opacity-100 has-[[data-state=open]]:opacity-100"
       contenteditable="false"
+      @mousedown.stop
     >
-      <select
-        v-model="language"
-        aria-label="Code language"
-        class="h-6 cursor-pointer appearance-none rounded-sm border border-gray-700 bg-gray-800 py-0 pr-6 pl-2 font-mono text-xs text-gray-300 outline-none hover:text-white focus-visible:focus-outline"
-        @mousedown.stop
-      >
-        <option class="bg-[Canvas] text-[CanvasText]" value="">plain text</option>
-        <option v-for="name in codeLanguages" :key="name" class="bg-[Canvas] text-[CanvasText]" :value="name">
-          {{ name }}
-        </option>
-      </select>
-      <ChevronDownIcon class="pointer-events-none absolute top-1/2 right-1.5 size-3 -translate-y-1/2 text-gray-400" />
+      <Select v-model="language">
+        <SelectTrigger
+          size="sm"
+          aria-label="Code language"
+          class="h-7 w-auto gap-1 rounded-md border-white/10 bg-white/5 from-transparent to-transparent px-2 font-mono text-xs text-gray-300 shadow-none hover:text-white dark:border-white/10 dark:from-transparent dark:to-transparent dark:text-gray-300"
+        >
+          <SelectValue placeholder="auto" />
+        </SelectTrigger>
+        <SelectContent class="font-mono text-xs">
+          <SelectItem v-for="name in codeLanguages" :key="name" :value="name">{{ name }}</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
     <pre><NodeViewContent as="code" :class="language && `language-${language}`" /></pre>
   </NodeViewWrapper>

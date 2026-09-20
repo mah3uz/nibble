@@ -55,3 +55,26 @@ code[class*='language-'] {
 .token.variable {
   color: var(--color-sky-300);
 }
+
+.token.method-definition,
+.token.function-definition,
+.token.function-variable,
+.token.class-name-definition,
+.token.section-name,
+.token.decorator,
+.token.macro,
+.token.table,
+.token.package {
+  color: var(--color-pink-400);
+}
+
+.token.null,
+.token.value,
+.token.return-type,
+.token.namespace {
+  color: var(--color-sky-300);
+}
+
+.token.delimiter {
+  color: var(--color-slate-400);
+}

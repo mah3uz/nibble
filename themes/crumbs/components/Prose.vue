@@ -11,10 +11,18 @@ let prism: Promise<{ highlightAll: () => void }> | null = null
 function load() {
   prism ??= (async () => {
     const core = await import('prismjs')
+    await import('prismjs/components/prism-markup-templating')
     await Promise.all([
       import('prismjs/components/prism-bash'),
+      import('prismjs/components/prism-go'),
+      import('prismjs/components/prism-ini'),
       import('prismjs/components/prism-json'),
+      import('prismjs/components/prism-php'),
+      import('prismjs/components/prism-python'),
       import('prismjs/components/prism-ruby'),
+      import('prismjs/components/prism-rust'),
+      import('prismjs/components/prism-toml'),
+      import('prismjs/components/prism-typescript'),
       import('prismjs/components/prism-yaml'),
     ])
     return core.default
