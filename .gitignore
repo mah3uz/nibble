@@ -29,10 +29,6 @@
 /config/master.key
 /config/credentials/*.key
 
-# A site's own encrypted credentials. Nibble ships none: an install generates its own, and keeping
-# someone else's ciphertext in the repo means a leaked key exposes every version of it.
-/config/credentials/*.yml.enc
-/config/credentials.yml.enc
 
 # Working notes, plans and research. Kept out of the repository so what ships is the product,
 # not the story of how it got here. Back these up separately — they are not versioned here.
