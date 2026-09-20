@@ -38,9 +38,12 @@ the process survives. A component that touches browser globals on import would o
 rendering for the whole public site, and nothing else would catch it.
 
 It refuses to run when something is already listening on port 13714, so a stale process cannot make it pass
-against the wrong bundle. That port is fixed by `@inertiajs/vite`, so only one server can hold it at a time.
-`bin/dev` does not use it — in development the Vite dev server renders — so if the check trips, it is a leftover
-from an interrupted run or an SSR server you started yourself. The message says how to find out which.
+against the wrong bundle, and it checks the port is free again before it exits.
+
+That port is fixed by `@inertiajs/vite`, so only one server can hold it. **Usually that is `bin/dev`**: Puma's
+`inertia_ssr` plugin starts an SSR server unless the Vite dev server is already running, and at boot it often is
+not — which is also why `bin/dev` sometimes logs `Inertia SSR: process exited … restarting in 1s`, the plugin
+losing a race for the port. Stop `bin/dev` before running the smoke test, or `bin/ci`.
 
 ## End-to-end
 

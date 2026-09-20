@@ -38,7 +38,7 @@ plugin :tmp_restart
 plugin :solid_queue if ENV["SOLID_QUEUE_IN_PUMA"]
 
 # Starts the Inertia SSR server (public/vite-ssr/ssr.js) after boot and restarts it if it crashes.
-# Skipped while the Vite dev server is running (development renders SSR through Vite).
+# Skipped only if the Vite dev server is already up, so at boot it can win the race and start one anyway.
 plugin :inertia_ssr
 
 # Specify the PID file. Defaults to tmp/pids/server.pid in development.

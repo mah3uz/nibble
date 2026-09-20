@@ -8,23 +8,30 @@ PORT=13714 # fixed by @inertiajs/vite's SSR server
 if curl -s -o /dev/null "http://localhost:$PORT/health"; then
   echo "SSR smoke test FAILED: something is already listening on port $PORT, so the fresh bundle would not be"
   echo "the thing tested. The port is fixed by @inertiajs/vite, so only one server can hold it."
-  echo "  ps -o pid,etime,cmd -p \$(ss -ltnpH | grep $PORT | grep -oP 'pid=\\K[0-9]+')   # what has it"
-  echo "bin/dev does not use this port: it is either a leftover from an interrupted run, or a production-mode"
-  echo "SSR server you started yourself."
+  echo "Usually bin/dev: Puma's inertia_ssr plugin starts one unless the Vite dev server is already up, which"
+  echo "at boot it often is not. Stop bin/dev, or find what has it:"
+  echo "  ps -o pid,etime,cmd -p \$(ss -ltnpH | grep $PORT | grep -oP 'pid=\\K[0-9]+')"
   exit 1
 fi
 
 mkdir -p tmp
 node public/vite-ssr/ssr.js > tmp/ssr-smoke.log 2>&1 &
 pid=$!
-# SIGTERM alone sometimes leaves it running, and the next run then fails on the busy port.
+# SIGTERM alone sometimes leaves it running, and the next run then fails on the busy port. Insist, then
+# check the port is actually free, because a server we left behind is a failure the next run inherits.
 cleanup() {
-  kill "$pid" 2>/dev/null || return 0
+  kill "$pid" 2>/dev/null
   for _ in 1 2 3 4 5; do
-    kill -0 "$pid" 2>/dev/null || return 0
+    kill -0 "$pid" 2>/dev/null || break
     sleep 0.2
   done
   kill -9 "$pid" 2>/dev/null || true
+  wait "$pid" 2>/dev/null || true
+  for _ in 1 2 3 4 5; do
+    curl -s -o /dev/null --max-time 1 "http://localhost:$PORT/health" || return 0
+    sleep 0.2
+  done
+  echo "SSR smoke test: port $PORT is still held after stopping our server (pid $pid)." >&2
 }
 trap cleanup EXIT INT TERM
 
