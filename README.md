@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/nibble-banner.svg" alt="Nibble" width="100%">
+</p>
+
 # Nibble
 
 A schema-driven CMS. Rails 8 serves the public site and the control panel through Inertia + Vue 3 with
@@ -217,3 +221,8 @@ and that your toolchain meets its floor, merges, installs dependencies and runs 
 
 New behaviour ships switched off: raising `load_defaults` in `config/nibble.yml` is what turns it on, so taking a
 release never changes how your site behaves on its own.
+
+## Licence
+
+MIT — see `LICENSE`. Use it, change it, sell it, rebrand the control panel; keep the copyright notice with copies.
+It comes with no warranty and no support promise.

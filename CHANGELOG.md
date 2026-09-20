@@ -23,6 +23,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   classes.
 - `Gemfile.local` for a site's own gems.
 - `config/nibble.yml` accepts `load_defaults`, which is how new behaviour gets turned on — never by upgrading.
+- A licence: MIT (`LICENSE`). Use it, change it, sell it, rebrand the control panel; keep the copyright notice
+  with copies. No warranty, no support promise.
 
 ### Changed
 
