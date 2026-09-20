@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+$stdout.sync = true
+
 def fail!(message) = abort("upgrade refused: #{message}")
 
 # Refuse before booting: a deployed environment would fail on its own credentials rather than say why.
@@ -53,6 +55,10 @@ unless git("-c", "merge.ff=true", "merge", "--no-edit", target)
   exit 1
 end
 
+# The baseline is the release's own commit: measured from the merge commit, a site's edits to our files
+# would be absorbed into it and stop being reported.
+Nibble::Release.record_install(version: taken.version, commit: git_out("rev-parse", "#{target}^{commit}"))
+
 step "installing dependencies"
 system("bundle", "install") or fail!("bundle install failed; the merge is still here, and git merge --abort undoes it")
 system("npm", "ci") or fail!("npm ci failed; the merge is still here, and git merge --abort undoes it")
@@ -60,12 +66,12 @@ system("npm", "ci") or fail!("npm ci failed; the merge is still here, and git me
 step "migrating"
 puts "  past this point the merge is committed; the way back is the snapshot above"
 unless system(ROOT.join("bin/rails").to_s, "nibble:upgrade")
-  warn "\nthe database did not reach #{taken.version}. Restore the snapshot before trying again:"
+  warn "\nthe code is on #{taken.version}; the database is not."
+  warn "fix what it reported, then run bin/rails nibble:upgrade again."
+  warn "if the database was left part way, put it back first with:"
   warn "  cp #{snapshot.relative_path_from(ROOT)} #{database}"
   exit 1
 end
-
-Nibble::Release.record_install(version: taken.version, commit: git_out("rev-parse", "HEAD"))
 
 step "on #{taken.version}"
 puts "  run bin/ci, look over the site, then commit and deploy"
