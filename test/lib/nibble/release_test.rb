@@ -35,4 +35,76 @@ class Nibble::ReleaseTest < ActiveSupport::TestCase
     assert_equal File.read(Rails.root.join(".ruby-version")).strip.delete_prefix("ruby-"), Nibble::Release.ruby_floor
     assert_equal JSON.parse(Rails.root.join("package.json").read).dig("engines", "node").delete_prefix(">="), Nibble::Release.node_floor
   end
+
+  test "an upgrade is gated on the floors of the release being taken, not the one installed" do
+    repo_with_releases
+
+    taken = Nibble::Release.declared("v0.2.0", root: @root)
+    blockers = Nibble::Release.blockers(from: "0.2.0", ruby: "3.4.1", node: "24.0.0", release: taken)
+
+    assert_equal 1, blockers.size, "reading the installed release's floors would let a site onto code it cannot run"
+    assert_match "node 99.0.0", blockers.sole.reason
+    assert_empty Nibble::Release.blockers(from: "0.1.0", ruby: "3.4.1", node: "24.0.0",
+                                          release: Nibble::Release.declared("v0.1.0", root: @root)),
+                 "the same machine clears the release it is actually on"
+  end
+
+  test "how far back a release upgrades from is the taken release's answer" do
+    repo_with_releases
+
+    blocker = Nibble::Release.too_old("0.1.0", *Nibble::Release.declared("v0.2.0", root: @root).then { |release|
+      [ release.version, release.minimum_upgrade_from ]
+    })
+
+    assert blocker, "0.2.0 raised its floor to 0.2.0, so an 0.1.0 install has to go through it"
+    assert_match "go through 0.2.0", blocker.reason
+  end
+
+  test "releases are ordered by version, so the tenth is newer than the ninth" do
+    repo_with_releases
+    tag("v0.10.0")
+
+    assert_equal "v0.10.0", Nibble::Release.latest(root: @root), "sorting these as text would offer an older release as the newest"
+    assert_equal %w[v0.1.0 v0.2.0 v0.10.0], Nibble::Release.tags(root: @root)
+  end
+
+  test "a ref that declares no version is refused rather than taken for a release" do
+    repo_with_releases
+    write("lib/nibble.rb", "module Nibble; end")
+    tag("not-a-release")
+
+    assert_raises(Nibble::Error) { Nibble::Release.declared("not-a-release", root: @root) }
+  end
+
+  private
+
+  def repo_with_releases
+    @root = Pathname(Dir.mktmpdir("nibble-release"))
+    write("lib/nibble/release.rb", %(MINIMUM_UPGRADE_FROM = "0.1.0"))
+    write(".ruby-version", "3.4.1")
+    release("0.1.0", node: "24.0.0")
+    release("0.2.0", node: "99.0.0", minimum: "0.2.0")
+  end
+
+  def release(version, node:, minimum: nil)
+    write("lib/nibble.rb", %(VERSION = "#{version}"))
+    write("package.json", { engines: { node: ">=#{node}" } }.to_json)
+    write("lib/nibble/release.rb", %(MINIMUM_UPGRADE_FROM = "#{minimum}")) if minimum
+    tag("v#{version}")
+  end
+
+  def tag(name)
+    git("add", "-A")
+    git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", name)
+    git("tag", name)
+  end
+
+  def git(*args) = system("git", "-C", @root.to_s, *args, out: File::NULL, err: File::NULL)
+
+  def write(relative, body)
+    git("init", "-q") unless @root.join(".git").exist?
+    path = @root.join(relative)
+    path.dirname.mkpath
+    path.write(body)
+  end
 end
