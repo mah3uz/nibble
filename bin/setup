@@ -31,7 +31,7 @@ FileUtils.chdir APP_ROOT do
 
   puts "== Installing dependencies =="
   system("bundle check") || system!("bundle install")
-  system! "npm install"
+  system("npm ci") || system!("npm install")
 
   puts "\n== Ignoring this checkout's own site files =="
   ignore_own_site_files
