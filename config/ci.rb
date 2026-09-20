@@ -1,4 +1,4 @@
-# Run using bin/ci (local mirror of .github/workflows/ci.yml)
+# Every check Nibble runs on itself. Run it with bin/ci.
 
 CI.run do
   step "Setup", "bin/setup --skip-server"

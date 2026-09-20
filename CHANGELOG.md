@@ -11,6 +11,14 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## Changed
+
+- `.github/` is gone. Workflows and dependency updates of ours have no business running in your repository,
+  against your budget, on rules you did not write — and a site is a clone, so the only way not to send them is
+  not to have them. `bin/ci` runs every check Nibble runs on itself. `.github/` is yours, empty or otherwise.
+  **Upgrade:** taking this release deletes our copy from your tree. If you had put your own workflows there, git
+  stops on the conflict — keep your side.
+
 ## 0.4.0 — 2026-09-21
 
 ## What's new
