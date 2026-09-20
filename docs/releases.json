@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.4.0",
+    "date": "2026-09-21",
+    "url": "https://gitea.tlbn.app/mahfuz/nibble/releases/tag/v0.4.0",
+    "security": false,
+    "body": "## What's new\n\n- `bin/rails nibble:generate:view NAME --collection=posts` writes a view and its query sidecar into your own\n  theme, typed for that collection's records, and says how to wire it up. It refuses to write into Nibble's\n  theme, which is what `nibble:generate:theme` is for."
+  },
+  {
     "version": "0.3.0",
     "date": "2026-09-21",
     "url": "https://gitea.tlbn.app/mahfuz/nibble/releases/tag/v0.3.0",

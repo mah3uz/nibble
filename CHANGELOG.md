@@ -11,6 +11,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.4.0 — 2026-09-21
+
 ## What's new
 
 - `bin/rails nibble:generate:view NAME --collection=posts` writes a view and its query sidecar into your own
