@@ -105,24 +105,29 @@ control panel · themes as npm workspaces under `themes/*` · Kamal on a VPS · 
 
 ## Architecture
 
-**Where things live:**
+**Where things live. Everything under `lib/nibble/` is ours; everything else is the site's.**
 - `lib/nibble/` — the engine, autoloaded as `Nibble::`: `Schema`, `Field`/`Fields`/`Fieldtype`, `Records::*`,
   `Lifecycle`, `Query`, `Presenter`, `Routing`, `PageProps`, `PageCache`, `Search`, `Seo`, `Sitemaps`, `Assets`,
-  `Forms`, `Outbound`, `Webhooks`, `Access`, `Packages`, `ContentMigrations`, `Check`.
-- `app/schema/` — the baseline schema YAML. Schema is read in three layers: this, then the theme's
+  `Forms`, `Outbound`, `Webhooks`, `Access`, `Packages`, `ContentMigrations`, `Release`, `Releases`, `Eject`,
+  `Install`, `Upgrade`, `Check`.
+- `lib/nibble/app/` — laid out as Rails lays out `app/`, and added the same way, so names are unchanged:
+  `controllers/` (`SiteController` catch-all, `Admin::*`, `Api::V1::*`, `FormsController`, `SitemapsController`,
+  `AssetFilesController`), `models/` (only identity and access: users, roles, sessions, credentials, API tokens),
+  `jobs/`, `mailers/`, `services/`, `helpers/`, `channels/`, `views/`.
+- `lib/nibble/frontend/` — `nibble-admin/` (the control panel, `@nibble-admin`, also `@` and `~`), `nibble/` (the
+  theme runtime, `@nibble`), `entrypoints/`, `ssr/`. It is Vite's `sourceCodeDir`.
+- `lib/nibble/core_schema/` — the baseline schema YAML. Schema is read in three layers: this, then the theme's
   `themes/<theme>/schema/`, then the site's own `schema/`, and the last to define a handle wins.
-- `schema/`, `site/`, `config/nibble.yml`, `config/deploy*.yml`, `db/migrate`, `Gemfile.local` — **a site's, not
-  ours.** Nibble ships templates and generates them at install; it never writes them again. `site/pages/<same path
-  as ours>.vue` replaces a control panel screen, `site/slots/*.vue` replace chrome, `site/initializers/*.rb` run at
-  boot. `bin/rails nibble:eject <path>` is how a site takes one of our files over, recorded in `.nibble/`.
-- `app/controllers/` — `SiteController` (public catch-all), `Admin::*` (control panel), `Api::V1::*` (Content API),
-  `FormsController`, `SitemapsController`, `AssetFilesController`.
-- `app/frontend/` — `nibble-admin/` (CP components, `@nibble-admin`), `nibble/` (the theme runtime, `@nibble`),
-  `ssr/`, `entrypoints/`.
+- `app/`, `schema/`, `site/`, `config/nibble.yml`, `config/deploy*.yml`, `db/migrate`, `Gemfile.local` — **a
+  site's, not ours.** Nibble ships templates and generates them at install; it never writes them again. A site's
+  own `app/` loads beside ours and its views are looked in first. `site/pages/<same path as ours>.vue` replaces a
+  control panel screen, `site/slots/*.vue` replace chrome, `site/initializers/*.rb` run at boot, `site/test/` is
+  for its own tests. `bin/rails nibble:eject <path>` is how a site takes one of our files over, recorded in
+  `.nibble/`.
 - `themes/<theme>/` — `layouts/`, `views/` (each `.vue` may have a `.yml` query sidecar), `views/sets/`,
   `components/`, `styles/`, `schema/`, `content/` (its content package); `@theme` resolves to the active one,
-  chosen by `NIBBLE_THEME` and defaulting to `crumbs`.
-- `app/models/` — only identity and access: users, roles, sessions, credentials, API tokens.
+  named in `config/nibble.yml`, then `NIBBLE_THEME`, defaulting to `crumbs`. `nibble:generate:theme` starts one.
+- `docs/` — the documentation, plain Markdown, one folder per reader.
 
 **Public request flow:**
 1. `NibbleRedirectsMiddleware`, backed by the `redirects` table and cached.
