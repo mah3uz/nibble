@@ -1,0 +1,22 @@
+schema: 1
+title: Post
+tabs:
+  main:
+    display: Content
+    sections:
+      - fields:
+          - import: nibble::post_fields
+  sidebar:
+    display: Sidebar
+    sections:
+      - fields:
+          - handle: authors
+            field: { type: terms, taxonomies: [authors], max_items: 1, listable: true }
+          - handle: topics
+            field: { type: terms, taxonomies: [topics], listable: true }
+          - import: nibble::featured_image
+  seo:
+    display: SEO
+    sections:
+      - fields:
+          - import: nibble::seo

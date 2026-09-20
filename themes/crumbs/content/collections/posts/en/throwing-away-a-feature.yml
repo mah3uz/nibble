@@ -1,0 +1,14 @@
+title: Throwing away a feature nobody asked for
+published_at: 2026-06-02T08:00:00Z
+authors: [authors/lena-park]
+topics: [topics/slow-work, topics/tools]
+excerpt: We built it in a week, kept it for a year, and deleted it in an afternoon. Nobody noticed.
+body:
+  - type: paragraph
+    content:
+      - type: text
+        text: It had a settings screen, two background jobs and a help page. What it did not have was users.
+  - type: paragraph
+    content:
+      - type: text
+        text: Deleting it took one pull request and removed four hundred lines. The support inbox stayed quiet.

@@ -1,0 +1,10 @@
+title: Featured image
+fields:
+  - handle: featured_image
+    field:
+      type: assets
+      display: Featured image
+      max_files: 1
+      preset: card
+      alt: optional
+      listable: hidden

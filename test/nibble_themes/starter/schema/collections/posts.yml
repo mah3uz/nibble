@@ -1,0 +1,9 @@
+schema: 1
+title: Posts
+route: /blog/{slug}
+dated: true
+taxonomies: [topics]
+blueprints: [post]
+template: posts/show
+workflow: simple
+sort: published_at:desc

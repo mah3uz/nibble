@@ -1,0 +1,5 @@
+params: [q, page]
+results:
+  from: search:site
+  q: $params.q
+  paginate: { per_page: 12 }

@@ -1,0 +1,30 @@
+schema: 1
+title: Site
+localizable: true
+blueprint:
+  title: Site
+  tabs:
+    main:
+      display: General
+      sections:
+        - fields:
+            - handle: name
+              field: { type: text, required: true, width: 50 }
+            - handle: tagline
+              field: { type: text, width: 50 }
+            - handle: logo
+              field: { type: assets, max_files: 1, alt: optional, width: 50 }
+            - handle: favicon
+              field: { type: assets, max_files: 1, alt: none, allowed_types: [ico, png, svg], width: 50 }
+            - handle: contact_email
+              field: { type: text, input_type: email }
+            - handle: social_links
+              field:
+                type: grid
+                mode: table
+                add_row: Add link
+                fields:
+                  - handle: label
+                    field: { type: text, required: true }
+                  - handle: url
+                    field: { type: text, input_type: url, required: true }

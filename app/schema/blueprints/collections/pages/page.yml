@@ -1,0 +1,13 @@
+schema: 1
+title: Page
+tabs:
+  main:
+    display: Content
+    sections:
+      - fields:
+          - import: nibble::page_fields
+  seo:
+    display: SEO
+    sections:
+      - fields:
+          - import: nibble::seo

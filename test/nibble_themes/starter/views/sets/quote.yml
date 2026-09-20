@@ -1,0 +1,4 @@
+latest:
+  from: entries:posts
+  limit: 1
+  fields: [title, uri]

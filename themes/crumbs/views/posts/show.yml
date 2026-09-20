@@ -1,0 +1,7 @@
+related:
+  from: entries:posts
+  where:
+    topics: { in: $entry.topics }
+  not:
+    id: $entry.id
+  limit: 3

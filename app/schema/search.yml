@@ -1,0 +1,5 @@
+schema: 1
+indexes:
+  site:
+    collections: [pages, posts]
+    fields: [title, excerpt, body, blocks]

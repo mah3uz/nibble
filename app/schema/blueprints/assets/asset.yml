@@ -1,0 +1,15 @@
+schema: 1
+title: Asset
+tabs:
+  main:
+    display: Details
+    sections:
+      - fields:
+          - handle: title
+            field: { type: text, display: Title }
+          - handle: alt
+            field: { type: text, display: Alt text, instructions: Describes the image for screen readers. }
+          - handle: caption
+            field: { type: textarea, display: Caption }
+          - handle: credit
+            field: { type: text, display: Credit }

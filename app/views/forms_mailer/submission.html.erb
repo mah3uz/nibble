@@ -1,0 +1,9 @@
+<p>A new <strong><%= @form.title || @form.handle %></strong> submission came in.</p>
+<table cellpadding="6" style="border-collapse: collapse;">
+  <% @rows.each do |label, value| %>
+    <tr>
+      <th align="left" valign="top" style="border-bottom: 1px solid #e5e7eb;"><%= label %></th>
+      <td style="border-bottom: 1px solid #e5e7eb; white-space: pre-wrap;"><%= value.presence || "—" %></td>
+    </tr>
+  <% end %>
+</table>

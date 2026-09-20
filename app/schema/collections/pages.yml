@@ -1,0 +1,20 @@
+schema: 1
+title: Pages
+route: "{parent_uri}/{slug}"
+structure:
+  max_depth: 5
+  root: true
+blueprints: [page]
+template: pages/show
+layout: default
+workflow: simple
+revisions:
+  keep: 100
+sitemap:
+  enabled: true
+  priority: 0.5
+  changefreq: monthly
+search: site
+api: true
+localizable: true
+sort: position:asc

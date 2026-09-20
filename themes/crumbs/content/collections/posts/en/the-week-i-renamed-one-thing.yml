@@ -1,0 +1,19 @@
+title: The week I renamed one thing
+published_at: 2026-08-04T08:00:00Z
+authors: [authors/mo-ferris]
+topics: [topics/slow-work]
+excerpt: A rename is never just a rename. Here's what one word cost us, and why it was worth it.
+body:
+  - type: paragraph
+    content:
+      - type: text
+        text: The word was "item". It was in the database, in three screens, in a URL, and in the way everyone on the team talked about the product. Changing it took four days.
+  - type: heading
+    attrs: { level: 2 }
+    content:
+      - type: text
+        text: Why bother
+  - type: paragraph
+    content:
+      - type: text
+        text: Because every conversation started with a clarification. Once the word matched what people meant, the arguments got shorter and the code got smaller.

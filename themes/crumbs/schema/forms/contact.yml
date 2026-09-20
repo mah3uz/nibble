@@ -1,0 +1,29 @@
+title: Contact
+cp_notify: true
+spam:
+  captcha: true
+success:
+  message: Thanks for writing in. We'll get back to you soon.
+fields:
+  - handle: name
+    field: { type: text, display: Your name, required: true, character_limit: 100 }
+  - handle: email
+    field: { type: text, input_type: email, display: Email, required: true }
+  - handle: topic
+    field:
+      type: select
+      display: Topic
+      options:
+        hello: Just saying hello
+        recipe: A recipe question
+        collaboration: Working together
+  - handle: message
+    field: { type: textarea, display: Message, required: true, character_limit: 2000 }
+  - handle: attachment
+    field:
+      type: files
+      display: Attachment
+      instructions: Optional. A PDF or photo, up to 5 MB.
+      max_files: 1
+      max_file_size: 5
+      extensions: [pdf, jpg, jpeg, png]

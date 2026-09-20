@@ -1,0 +1,12 @@
+schema: 1
+title: Author
+tabs:
+  main:
+    sections:
+      - fields:
+          - handle: title
+            field: { type: text, display: Name, required: true, listable: true }
+          - handle: bio
+            field: { type: textarea, character_limit: 400 }
+          - handle: website
+            field: { type: text, input_type: url }

@@ -1,0 +1,6 @@
+A new <%= @form.title || @form.handle %> submission came in.
+<% @rows.each do |label, value| %>
+
+<%= label %>:
+<%= value.presence || "—" %>
+<% end %>

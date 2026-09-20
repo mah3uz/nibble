@@ -1,0 +1,4 @@
+name: Starter fixture
+handle: starter
+version: 1.0.0
+nibble: "^1"

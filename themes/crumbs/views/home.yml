@@ -1,0 +1,10 @@
+featured:
+  from: entries:posts
+  limit: 1
+recent:
+  from: entries:posts
+  offset: 1
+  limit: 6
+topics:
+  from: terms:topics
+  fields: [title, uri]

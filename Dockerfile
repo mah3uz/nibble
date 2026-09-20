@@ -1,0 +1,97 @@
+# syntax=docker/dockerfile:1
+# check=error=true
+
+# Production image (also used for staging with RAILS_ENV=staging). Deploy with Kamal
+# (config/deploy.yml, config/deploy.staging.yml) or build and run by hand:
+#   docker build -t nibble .
+#   docker run -d -p 80:80 -e RAILS_MASTER_KEY=<config/credentials/production.key> -v nibble-storage:/rails/storage nibble
+#
+# Puma serves the app behind Thruster; the inertia_ssr Puma plugin runs the Node SSR server
+# (public/vite-ssr/ssr.js, bundled with its dependencies) inside the same container.
+
+# Keep in step with mise.toml
+ARG RUBY_VERSION=4.0.6
+FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
+
+# Rails app lives here
+WORKDIR /rails
+
+# Install base packages (libvips for image transforms, ffmpeg for video and audio facts and video thumbnails, sqlite3 for the database console)
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y curl ffmpeg libjemalloc2 libvips sqlite3 && \
+    ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# Set production environment variables and enable jemalloc for reduced memory usage and latency.
+ENV RAILS_ENV="production" \
+    BUNDLE_DEPLOYMENT="1" \
+    BUNDLE_PATH="/usr/local/bundle" \
+    BUNDLE_WITHOUT="development:test" \
+    LD_PRELOAD="/usr/local/lib/libjemalloc.so"
+
+# Throw-away build stage to reduce size of final image
+FROM base AS build
+
+# Install packages needed to build gems and node modules
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y build-essential git libyaml-dev node-gyp pkg-config python-is-python3 && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# Install Node.js (needed for the Vite builds; the runtime is kept in the final image for SSR)
+ARG NODE_VERSION=26.8.2
+ENV PATH=/usr/local/node/bin:$PATH
+RUN curl -sL https://github.com/nodenv/node-build/archive/master.tar.gz | tar xz -C /tmp/ && \
+    /tmp/node-build-master/bin/node-build "${NODE_VERSION}" /usr/local/node && \
+    rm -rf /tmp/node-build-master
+
+# Install application gems
+COPY vendor/* ./vendor/
+COPY Gemfile Gemfile.lock ./
+
+RUN bundle install && \
+    rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
+    # -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495
+    bundle exec bootsnap precompile -j 1 --gemfile
+
+# Install node modules
+COPY package.json package-lock.json ./
+RUN npm ci && \
+    rm -rf ~/.npm
+
+# Copy application code
+COPY . .
+
+# Precompile bootsnap code for faster boot times.
+# -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495
+RUN bundle exec bootsnap precompile -j 1 app/ lib/
+
+# Build the client and SSR bundles (vite:build_all) without requiring RAILS_MASTER_KEY.
+# The SSR bundle is self-contained (ssr.noExternal in vite.config.ts), so node_modules can go.
+RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile && \
+    test -f public/vite-ssr/ssr.js && \
+    rm -rf node_modules
+
+
+# Final stage for app image
+FROM base
+
+# Node runtime for the SSR server
+COPY --from=build /usr/local/node /usr/local/node
+ENV PATH=/usr/local/node/bin:$PATH
+
+# Copy built artifacts: gems, application
+COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
+COPY --from=build /rails /rails
+
+# Run and own only the runtime files as a non-root user for security
+RUN groupadd --system --gid 1000 rails && \
+    useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash && \
+    chown -R rails:rails db log storage tmp
+USER 1000:1000
+
+# Entrypoint prepares the database.
+ENTRYPOINT ["/rails/bin/docker-entrypoint"]
+
+# Start server via Thruster by default, this can be overwritten at runtime
+EXPOSE 80
+CMD ["./bin/thrust", "./bin/rails", "server"]

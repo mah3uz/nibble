@@ -1,0 +1,10 @@
+{
+  "name": "cms-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Admin CMS end-to-end tests (Playwright) against a running dev server",
+  "dependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "playwright": "1.63.0"
+  }
+}

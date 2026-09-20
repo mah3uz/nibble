@@ -1,0 +1,8 @@
+<p>
+  <%= NotificationsMailer::SUBJECTS.fetch(@notification.kind, "Something needs your attention") %>:
+  <strong><%= @title || "a record" %></strong>
+</p>
+<% if @comment.present? %>
+  <blockquote><%= @comment %></blockquote>
+<% end %>
+<p>Open the control panel to take a look.</p>

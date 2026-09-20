@@ -1,0 +1,9 @@
+schema: 1
+title: Topics
+route: /topics/{slug}
+index_route: /topics
+template: topics/show
+index_template: topics/index
+blueprints: [topic]
+sort: title:asc
+api: true

@@ -1,0 +1,38 @@
+title: Post fields
+fields:
+  - handle: title
+    field:
+      type: text
+      required: true
+      listable: true
+      localizable: true
+      validate: [max:200]
+  - handle: excerpt
+    field:
+      type: textarea
+      instructions: Shown on listings and used as the fallback meta description.
+      character_limit: 300
+      localizable: true
+  - handle: body
+    field:
+      type: rich_text
+      display: Content
+      localizable: true
+      reading_time: true
+      buttons:
+        - h2
+        - h3
+        - bold
+        - italic
+        - underline
+        - strikethrough
+        - code
+        - codeblock
+        - unorderedlist
+        - orderedlist
+        - quote
+        - anchor
+        - image
+        - table
+        - horizontalrule
+        - removeformat

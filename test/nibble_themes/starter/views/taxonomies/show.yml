@@ -1,0 +1,6 @@
+params: [page]
+posts:
+  from: entries:posts
+  where:
+    topics: $term
+  paginate: { per_page: 10 }

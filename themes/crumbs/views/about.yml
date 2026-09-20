@@ -1,0 +1,4 @@
+authors:
+  from: terms:authors
+contact:
+  from: form:contact

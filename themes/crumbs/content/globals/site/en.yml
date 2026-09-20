@@ -1,0 +1,8 @@
+name: Crumbs
+tagline: Small pieces about making things, published whenever there's something worth saying.
+contact_email: hello@example.com
+social_links:
+  - label: Mastodon
+    url: https://example.social/@crumbs
+  - label: GitHub
+    url: https://github.com/example/crumbs

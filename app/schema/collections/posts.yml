@@ -1,0 +1,19 @@
+schema: 1
+title: Posts
+route: /blog/{slug}
+dated: true
+taxonomies: []
+blueprints: [post]
+template: posts/show
+layout: default
+workflow: simple
+revisions:
+  keep: 100
+sitemap:
+  enabled: true
+  priority: 0.6
+  changefreq: weekly
+search: site
+api: true
+localizable: true
+sort: published_at:desc

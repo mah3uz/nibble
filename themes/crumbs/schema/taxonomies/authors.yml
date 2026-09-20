@@ -1,0 +1,8 @@
+schema: 1
+title: Authors
+icon: user-avatar
+route: /authors/{slug}
+template: authors/show
+blueprints: [author]
+sort: title:asc
+api: true

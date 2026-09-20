@@ -1,0 +1,10 @@
+[
+  { "description": "no condition is always visible", "if": null, "data": {}, "visible": true },
+  { "description": "equality match", "if": { "show_heading": true }, "data": { "show_heading": true }, "visible": true },
+  { "description": "equality mismatch", "if": { "show_heading": true }, "data": { "show_heading": false }, "visible": false },
+  { "description": "missing sibling value is treated as false", "if": { "show_heading": false }, "data": {}, "visible": true },
+  { "description": "array value checks inclusion", "if": { "loan_type": ["medical", "dental"] }, "data": { "loan_type": "dental" }, "visible": true },
+  { "description": "array value excludes a non-member", "if": { "loan_type": ["medical", "dental"] }, "data": { "loan_type": "vehicle" }, "visible": false },
+  { "description": "every key must match (AND)", "if": { "show_heading": true, "style": "bold" }, "data": { "show_heading": true, "style": "italic" }, "visible": false },
+  { "description": "nil sibling value matches a false condition", "if": { "featured": false }, "data": { "featured": null }, "visible": true }
+]

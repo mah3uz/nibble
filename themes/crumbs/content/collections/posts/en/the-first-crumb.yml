@@ -1,0 +1,10 @@
+title: The first crumb
+published_at: 2026-04-20T08:00:00Z
+authors: [authors/lena-park]
+topics: [topics/slow-work]
+excerpt: Why we're starting a small publication in the middle of a busy year.
+body:
+  - type: paragraph
+    content:
+      - type: text
+        text: Everything we publish here will be short, specific, and written while the work is still fresh. That's the whole plan.

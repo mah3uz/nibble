@@ -1,0 +1,10 @@
+schema: 1
+title: Topic
+tabs:
+  main:
+    sections:
+      - fields:
+          - handle: title
+            field: { type: text, required: true, listable: true }
+          - handle: description
+            field: { type: textarea, character_limit: 200 }

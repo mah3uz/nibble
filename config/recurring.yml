@@ -1,0 +1,38 @@
+# examples:
+#   periodic_cleanup:
+#     class: CleanSoftDeletedRecordsJob
+#     queue: background
+#     args: [ 1000, { batch_size: 500 } ]
+#     schedule: every hour
+#   periodic_cleanup_with_command:
+#     command: "SoftDeletedRecord.due.delete_all"
+#     priority: 2
+#     schedule: at 5am every day
+
+production: &production
+  clear_solid_queue_finished_jobs:
+    command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
+    schedule: every hour at minute 12
+  run_publishing_schedule:
+    class: Nibble::Jobs::RunSchedule
+    queue: maintenance
+    schedule: every minute
+  nightly_database_snapshot:
+    class: DatabaseSnapshotJob
+    queue: maintenance
+    schedule: at 3am every day
+  nightly_trash_purge:
+    class: Nibble::Jobs::PurgeTrash
+    queue: maintenance
+    schedule: at 3:15am every day
+  nightly_submission_purge:
+    class: Nibble::Jobs::PurgeSubmissions
+    queue: maintenance
+    schedule: at 3:30am every day
+  nightly_webhook_delivery_purge:
+    class: Nibble::Jobs::PurgeWebhookDeliveries
+    queue: maintenance
+    schedule: at 3:45am every day
+
+staging:
+  <<: *production

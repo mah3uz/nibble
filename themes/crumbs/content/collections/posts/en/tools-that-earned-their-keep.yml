@@ -1,0 +1,24 @@
+title: Tools that earned their keep
+published_at: 2026-07-18T08:00:00Z
+authors: [authors/lena-park]
+topics: [topics/tools, topics/slow-work]
+excerpt: Six months of using fewer, duller tools, and the three that survived.
+body:
+  - type: paragraph
+    content:
+      - type: text
+        text: Every tool here is boring, which is the point. Boring tools don't ask for attention, and they don't change under you the week before a deadline.
+  - type: bulletList
+    content:
+      - type: listItem
+        content:
+          - type: paragraph
+            content:
+              - type: text
+                text: A plain text file for the day's plan. No sync, no tags, no app updates.
+      - type: listItem
+        content:
+          - type: paragraph
+            content:
+              - type: text
+                text: One script that builds the whole project, so nobody has to remember the order.

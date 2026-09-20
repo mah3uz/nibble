@@ -1,0 +1,4 @@
+params: [page]
+posts:
+  from: entries:posts
+  paginate: { per_page: 12 }

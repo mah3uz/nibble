@@ -1,0 +1,12 @@
+title: Contact
+spam:
+  captcha: true
+success:
+  message: Thanks!
+fields:
+  - handle: email
+    field: { type: text, input_type: email, display: Email, required: true, placeholder: you@example.com, validate: ["regex:/@/"] }
+  - handle: topic
+    field: { type: select, options: { sales: Sales, support: Support } }
+  - handle: attachment
+    field: { type: files, max_files: 1, max_file_size: 2, extensions: [pdf] }

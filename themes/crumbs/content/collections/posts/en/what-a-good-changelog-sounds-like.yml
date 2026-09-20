@@ -1,0 +1,10 @@
+title: What a good changelog sounds like
+published_at: 2026-05-12T08:00:00Z
+authors: [authors/mo-ferris]
+topics: [topics/tools]
+excerpt: Write it for the person who missed the last three releases, not the person who wrote the code.
+body:
+  - type: paragraph
+    content:
+      - type: text
+        text: A changelog is not a commit log. It's a short letter to someone who was busy, and it should read like one.

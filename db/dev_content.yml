@@ -1,0 +1,165 @@
+authors: [Lena Park, Mo Ferris, Priya Nair]
+
+templates:
+  - "Notes on %s"
+  - "What %s taught me about attention"
+  - "A short case for %s"
+  - "Why I keep coming back to %s"
+  - "%s, revisited"
+  - "The quiet value of %s"
+  - "Getting %s wrong for a year"
+  - "A week of %s"
+  - "Against rushing %s"
+  - "Small rules for %s"
+
+captions:
+  - The desk on a slow morning.
+  - Where most of this got written.
+  - A better view than the screen.
+  - Evidence that the plan worked, eventually.
+  - Nothing here needed a notification.
+
+topics:
+  Reading:
+    subjects: [slow reading, marginalia, library cards, rereading, audiobooks, reading lists, second-hand books, long novels, poetry at breakfast, abandoned books, footnotes, the reading chair, book clubs, short stories, reading aloud, index cards, borrowed books, bookmarks, the unread shelf, essays]
+    headings: [Where it started, What changed, The part nobody mentions, A small experiment, What I'd tell myself, Keeping it going]
+    paragraphs:
+      - Twenty pages a day sounds like nothing until you add up a month of it. The number is small on purpose, because small numbers survive bad weeks.
+      - I used to measure reading by how many books I finished. Now I measure it by how many sentences I can still quote a week later, which is a humbling and much more useful number.
+      - The margins are where the book becomes mine. A question mark, an arrow, a date. None of it is for anyone else, and that is exactly why it works.
+      - Rereading is not a failure to find something new. The book stays the same and the reader changes, so the second pass is usually the first real one.
+      - A library card is the cheapest subscription I have and the only one that has never tried to upsell me. Due dates are also the best deadline I know.
+      - Some books are meant to be abandoned at page forty. Giving myself permission to stop made me start far more of them.
+      - Reading aloud slows everything down to the speed of speech, which is roughly the speed at which I actually understand things.
+      - The unread shelf is not a to-do list. It is a pantry, and nobody feels guilty about a well-stocked pantry.
+    list:
+      - Read the first and last chapter before deciding.
+      - Keep a pencil in the book, not on the desk.
+      - Write three sentences when you stop.
+      - Let a bad book go without a verdict.
+      - Return library books a day early, just to feel good.
+      - Reread one old favourite each season.
+    quotes:
+      - The book stays the same and the reader changes.
+      - A pencil in the margin is a conversation, not vandalism.
+      - Small numbers survive bad weeks.
+
+  Slow work:
+    subjects: [single-tasking, long mornings, unhurried planning, deep work blocks, the empty calendar, finishing things, boring tools, waiting, doing one thing well, the second draft, quiet Fridays, saying no, walks between tasks, the long list, patience at work, slow shipping, maintenance, the daily log, calm deadlines, rest]
+    headings: [The problem with fast, What slowing down looked like, An honest trade-off, The first month, What stuck, What I dropped]
+    paragraphs:
+      - Most of my best work happens in the second hour of doing one thing. The first hour is just getting past the urge to check something else.
+      - An empty calendar used to make me nervous. Now it is the only condition under which anything difficult gets done.
+      - Finishing is a skill, and like any skill it gets rusty when you spend all day starting things instead.
+      - Slow is not the same as late. Slow is choosing the order of things carefully so that nothing has to be done twice.
+      - I keep a plain text log of what I did each day. It takes two minutes and it has settled more arguments with myself than any productivity app.
+      - Saying no is easier when you can point at the one thing you are saying yes to. A vague no feels rude, a specific one feels like a plan.
+      - Maintenance never makes the announcement, but it is why the announcements keep working.
+      - A walk between tasks is not a break from the work. It is where the next task quietly gets sorted out.
+    list:
+      - Block the morning before anyone else can.
+      - Finish one thing before opening another.
+      - Keep the log boring and daily.
+      - Make every no specific.
+      - Schedule the maintenance like it matters, because it does.
+      - Walk before deciding anything big.
+    quotes:
+      - Slow is choosing the order of things carefully.
+      - Finishing is a skill that rusts.
+      - Maintenance is why the announcements keep working.
+
+  Tools:
+    subjects: [plain text, a good pencil, the command line, notebooks, one calendar, keyboard shortcuts, paper maps, the kitchen timer, fountain pens, a single browser tab, old laptops, index cards, a physical inbox, text expanders, the humble spreadsheet, printed checklists, backups, a desk lamp, sticky notes, the dumb phone]
+    headings: [Why this one, How I actually use it, What it replaced, The limits, A year later, Would I recommend it]
+    paragraphs:
+      - The best tool is the one that disappears while you use it. Everything else is a hobby dressed up as productivity.
+      - Plain text files have outlived three note-taking apps, two operating systems and one very confident startup. They will probably outlive me.
+      - A kitchen timer does one thing, loudly, and asks nothing in return. It is the most honest piece of software I own, and it has no software.
+      - I resisted a paper notebook for years because it could not sync. It turns out that was the feature.
+      - Keyboard shortcuts are compound interest. Each one saves a second, and the seconds add up to an afternoon by the end of the year.
+      - Backups are boring right up until the day they are the only interesting thing in the world.
+      - The spreadsheet is still the most flexible piece of software most of us have. It just does not have a marketing team telling us so.
+      - An old laptop with nothing installed makes a surprisingly good writing machine. There is nowhere to wander off to.
+    list:
+      - Prefer tools that work offline.
+      - Learn five shortcuts a month, no more.
+      - Keep one calendar, not three.
+      - Test the backup by restoring from it.
+      - Buy the pencil you actually enjoy holding.
+      - Retire a tool before adding a new one.
+    quotes:
+      - The best tool disappears while you use it.
+      - It could not sync, and that was the feature.
+      - Backups are boring until they are everything.
+
+  Writing:
+    subjects: [first drafts, the morning page, cutting words, titles, the outline, rewriting, clear sentences, the reader in your head, notes that turn into posts, the changelog, short paragraphs, the blank page, editing on paper, writing every day, plain words, the ending, writing for one person, deleting the intro, headlines, the second read]
+    headings: [The draft, What I cut, Reading it aloud, The version I published, What the reader saw, Next time]
+    paragraphs:
+      - The first draft is for finding out what I think. The second draft is for making it look like I knew all along.
+      - Cutting the first paragraph improves almost everything I write. It is usually me clearing my throat.
+      - A title is a promise. If the post cannot keep it, change the title, not the post.
+      - Short paragraphs are not a trick for skimmers. They are a way of admitting that each idea deserves a moment of its own.
+      - I write for one person I know. The post comes out warmer, and strangely, more people read it.
+      - Editing on paper catches different mistakes than editing on screen. The eye moves slower when it cannot scroll.
+      - A good changelog reads like a letter to the person who has to live with the change. A bad one reads like a receipt.
+      - The ending should land where the reader already is, not where I wish they were.
+    list:
+      - Delete the first paragraph and see if anything is lost.
+      - Read it aloud once before publishing.
+      - Replace one long word with a short one.
+      - Check the title still matches the post.
+      - Write the ending before the middle.
+      - Leave it overnight when you can.
+    quotes:
+      - A title is a promise.
+      - The first paragraph is usually me clearing my throat.
+      - Write for one person you know.
+
+  Craft:
+    subjects: [sharpening tools, sourdough, woodworking, darning socks, bookbinding, mending, pottery, knot tying, hand lettering, gardening by the season, repairing a chair, knife skills, a good workbench, learning by copying, practice logs, tidy workshops, the apprentice mindset, measure twice, small repairs, finishing touches]
+    headings: [Starting badly, The first proper attempt, What the material taught me, Tools that mattered, Mistakes worth keeping, Where it goes from here]
+    paragraphs:
+      - The material always wins the argument. Wood has grain, dough has time, and neither cares about my schedule.
+      - Copying a master's work is not cheating. It is how every craft has been passed down, one careful imitation at a time.
+      - A sharp tool is safer than a dull one, because a sharp tool goes where you point it.
+      - Mending something is a small act of disagreement with how easily we throw things away.
+      - The practice log is the least romantic part of learning a craft and the only part that reliably works.
+      - Every tidy workshop I have seen belongs to someone who has lost a tool in an untidy one.
+      - The first loaf was a brick. The tenth was bread. Nothing magical happened in between, just ten loaves.
+      - Finishing touches are where amateurs stop and craftspeople start. The last ten percent is most of the difference.
+    list:
+      - Sharpen before you start, not when it is too late.
+      - Keep a log of every attempt, good or bad.
+      - Copy one piece you admire, exactly.
+      - Put every tool back before lunch.
+      - Mend one thing a month.
+      - Spend the last hour on the finish.
+    quotes:
+      - The material always wins the argument.
+      - The tenth loaf was bread.
+      - A sharp tool goes where you point it.
+
+  Habits:
+    subjects: [the evening walk, waking early, no-phone mornings, the weekly review, one small habit, streaks, habit resets, tea instead of coffee, the Sunday plan, tidying the desk, the ten-minute rule, going to bed on time, the daily stretch, reading before sleep, fewer apps, the monthly audit, keeping promises to yourself, a lighter inbox, the reset week, starting again]
+    headings: [Why this habit, The first two weeks, When it broke, How it came back, What it replaced, Still going]
+    paragraphs:
+      - The habit that stuck was the one small enough to do on the worst day of the week. Ambition is for projects, not habits.
+      - Streaks are motivating until they break, and then they are the reason to stop. I stopped counting and kept going.
+      - A weekly review takes twenty minutes and saves me from the slow drift of doing things out of habit rather than intent.
+      - The phone stays in another room until breakfast. The first week was strange. By the third, the mornings felt twice as long.
+      - The ten-minute rule is simple. Do the thing for ten minutes, and if you still hate it, stop. I rarely stop.
+      - Resetting a habit is not starting over. The groove is still there, it just needs a little sweeping out.
+      - The Sunday plan is less a plan than a conversation with the week ahead, in which I am polite but firm.
+      - Keeping a promise to yourself is the only way to believe the next one you make.
+    list:
+      - Make it small enough for a bad day.
+      - Stop counting the streak.
+      - Review the week on Sunday.
+      - Keep the phone out of the bedroom.
+      - Try ten minutes before deciding.
+      - Reset without guilt.
+    quotes:
+      - Ambition is for projects, not habits.
+      - Resetting a habit is not starting over.
+      - Keep a promise to yourself so you believe the next one.

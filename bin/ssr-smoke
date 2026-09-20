@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Starts the built SSR bundle, renders the not-found page with a random prop and fails unless the
+# HTML contains it, proving the Node SSR process can actually render Vue pages.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+PORT=13714 # fixed by @inertiajs/vite's SSR server
+if curl -s -o /dev/null "http://localhost:$PORT/health"; then
+  echo "SSR smoke test FAILED: something is already listening on port $PORT; stop it so the fresh bundle is tested."
+  exit 1
+fi
+
+mkdir -p tmp
+node public/vite-ssr/ssr.js > tmp/ssr-smoke.log 2>&1 &
+pid=$!
+trap 'kill $pid 2>/dev/null || true' EXIT
+
+for _ in $(seq 1 50); do
+  curl -sf "http://localhost:$PORT/health" > /dev/null && break
+  kill -0 "$pid" 2>/dev/null || { echo "SSR smoke test FAILED: server exited"; cat tmp/ssr-smoke.log; exit 1; }
+  sleep 0.2
+done
+
+marker="ssr-smoke-$RANDOM"
+# The shared props every theme page carries (SiteController#site_props).
+site="{\"locale\":\"en\",\"url\":\"/$marker\",\"params\":{},\"globals\":{},\"navigation\":{}}"
+html=$(curl -sf -X POST "http://localhost:$PORT/render" -H 'Content-Type: application/json' \
+  -d "{\"component\":\"theme/errors/404\",\"props\":{\"site\":$site},\"url\":\"/$marker\",\"version\":\"\"}")
+
+if ! grep -q "Nothing but crumbs here" <<< "$html"; then
+  echo "SSR smoke test FAILED. Response: ${html:0:500}"; cat tmp/ssr-smoke.log; exit 1
+fi
+
+# Every page component is imported by the one long-lived SSR process (admin editors included), so a
+# module that touches browser globals on import would take down SSR for the whole public site.
+# Render each with only the shared site props (page props missing may fail the render; that's fine) and check the process survives.
+for file in $(cd app/frontend/pages && find . -name '*.vue' | sed 's|^\./||; s|\.vue$||') $(cd themes/$(bin/rails runner 'print Nibble.build_theme')/views && find . -name '*.vue' | sed 's|^\./|theme/|; s|\.vue$||'); do
+  curl -s -o /dev/null -X POST "http://localhost:$PORT/render" -H 'Content-Type: application/json' \
+    -d "{\"component\":\"$file\",\"props\":{\"site\":$site},\"url\":\"/\",\"version\":\"\"}" || true
+done
+sleep 1
+if ! kill -0 "$pid" 2>/dev/null; then
+  echo "SSR smoke test FAILED: server crashed after importing every page component"; grep -v '^    at ' tmp/ssr-smoke.log | tail -8; exit 1
+fi
+echo "SSR smoke test passed"

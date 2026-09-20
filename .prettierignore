@@ -1,0 +1,10 @@
+public/
+tmp/
+vendor/
+node_modules/
+app/frontend/styles/typography.js
+app/frontend/styles/*.css
+*.md
+app/frontend/components/ui/
+themes/*/.nibble/
+themes/*/content/

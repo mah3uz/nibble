@@ -1,0 +1,7 @@
+Hi <%= @user.name %>,
+
+You've been given <%= @user.roles.map(&:title).to_sentence.presence || "limited" %> access to <%= site_name %>. Choose your password here, then sign in with <%= @user.email_address %>:
+
+<%= edit_password_url(@user.generate_token_for(:invitation)) %>
+
+This link will expire in <%= distance_of_time_in_words(0, User::INVITATION_EXPIRES_IN) %> and works once.

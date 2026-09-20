@@ -1,0 +1,18 @@
+title: About Crumbs
+template: about
+eyebrow: A little introduction
+intro: Crumbs is a small publication about the unglamorous middle of making things.
+blocks:
+  - type: rich_text
+    text:
+      - type: paragraph
+        content:
+          - type: text
+            text: We started Crumbs because the interesting part of a project is rarely the launch. It's the week you spent renaming one thing, or the afternoon you threw away a feature nobody asked for.
+      - type: paragraph
+        content:
+          - type: text
+            text: Everything here is written by people who were in the middle of the work at the time. Nothing is sponsored, and nothing is written by a machine.
+  - type: quote
+    quote: Take small bites. Chew slowly. Share the rest.
+    attribution: The house rules

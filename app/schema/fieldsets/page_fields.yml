@@ -1,0 +1,70 @@
+title: Page fields
+fields:
+  - handle: title
+    field:
+      type: text
+      required: true
+      listable: true
+      localizable: true
+      validate: [max:200]
+  - handle: blocks
+    field:
+      type: replicator
+      display: Page blocks
+      localizable: true
+      button_label: Add block
+      sets:
+        content:
+          display: Content
+          sets:
+            rich_text:
+              display: Text
+              icon: text
+              fields:
+                - handle: text
+                  field: { type: rich_text, required: true }
+            quote:
+              display: Quote
+              icon: quote
+              fields:
+                - handle: quote
+                  field: { type: textarea, required: true }
+                - handle: attribution
+                  field: { type: text }
+            cta:
+              display: Call to action
+              icon: click
+              fields:
+                - handle: heading
+                  field: { type: text, required: true }
+                - handle: text
+                  field: { type: textarea }
+                - handle: button_label
+                  field: { type: text, width: 50 }
+                - handle: link
+                  field: { type: link, width: 50, validate: ["required_with:{this}.button_label"] }
+        media:
+          display: Media
+          sets:
+            image:
+              display: Image
+              icon: image
+              fields:
+                - handle: image
+                  field: { type: assets, max_files: 1, alt: required, required: true }
+                - handle: caption
+                  field: { type: text }
+            gallery:
+              display: Gallery
+              icon: images
+              fields:
+                - handle: images
+                  field: { type: assets, alt: required, required: true, min_files: 2 }
+            embed:
+              display: Embed
+              icon: video
+              fields:
+                - handle: url
+                  field: { type: text, input_type: url, required: true, instructions: "A YouTube, Vimeo or other oEmbed URL." }
+                - handle: caption
+                  field: { type: text }

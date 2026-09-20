@@ -1,0 +1,7 @@
+title: SEO
+fields:
+  - handle: seo
+    field:
+      type: seo
+      display: SEO
+      listable: false

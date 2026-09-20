@@ -1,0 +1,37 @@
+{
+  "ignored_warnings": [
+    {
+      "fingerprint": "816264da422f06cc42e75786cbbed5614b0c0fc12939791ca03ad38638f64762",
+      "check": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/services/database_snapshot.rb",
+      "line": 31,
+      "note": "The path is built from the configured snapshot directory and today's date, never from a request."
+    },
+    {
+      "fingerprint": "b87a100dfd84b604872101d6958ce24a11bcb58e6194162b5c4269c7d8dccf09",
+      "check": "MassAssignment",
+      "message": "Specify exact keys allowed for mass assignment instead of using `permit!` which allows any keys",
+      "file": "app/controllers/admin/nibble_api/relationships_controller.rb",
+      "line": 9,
+      "note": "The scope is a filter for a relationship search: each resolver defines its own keys, values are arrayified, and they only ever reach a scoped query."
+    },
+    {
+      "fingerprint": "e1c96083352b7775398acd4045518e8a9e6070e7ec4b88b5fd9e5f946629435b",
+      "check": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/controllers/admin/utilities_controller.rb",
+      "line": 41,
+      "note": "The table names come from Nibble::Search::TABLES, a constant, not from the request."
+    },
+    {
+      "fingerprint": "cbf5dcc0638d39d4451d7acb9908eda36c0a7dc4192820ad366d68c9b90b112e",
+      "check": "Redirect",
+      "message": "Possible unprotected redirect",
+      "file": "app/controllers/admin/form_files_controller.rb",
+      "line": 12,
+      "note": "The URL is a short-lived signed storage link Active Storage generated for a submission's own file, not a value from the request."
+    }
+  ],
+  "brakeman_version": "8.0.6"
+}

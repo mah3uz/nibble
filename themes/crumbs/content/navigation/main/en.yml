@@ -1,0 +1,7 @@
+tree:
+  - entry: pages/blog
+    title: Archive
+  - title: Topics
+    url: /topics
+  - entry: pages/about
+    title: About

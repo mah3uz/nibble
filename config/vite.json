@@ -1,0 +1,24 @@
+{
+  "all": {
+    "sourceCodeDir": "app/frontend",
+    "watchAdditionalPaths": [
+      "themes/**/*"
+    ],
+    "ssrBuildEnabled": true,
+    "additionalEntrypoints": [
+      "~/{assets,fonts,icons,images}/**/*",
+      "themes/*/styles/theme.css"
+    ]
+  },
+  "development": {
+    "autoBuild": true,
+    "skipProxy": true,
+    "publicOutputDir": "vite-dev",
+    "port": 3136
+  },
+  "test": {
+    "autoBuild": false,
+    "publicOutputDir": "vite-test",
+    "port": 3037
+  }
+}

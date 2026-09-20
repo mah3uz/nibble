@@ -1,0 +1,6 @@
+tree:
+  - entry: pages/about
+    children:
+      - entry: pages/about/team
+  - title: Elsewhere
+    url: https://example.org

@@ -1,0 +1,22 @@
+{
+  "name": "<%= Nibble::Records::GlobalSet.find_by(handle: "site")&.values&.dig("name").presence || "Nibble" %>",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "/icon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "scope": "/",
+  "description": "<%= Nibble::Records::GlobalSet.find_by(handle: "site")&.values&.dig("tagline").presence || "A Nibble site." %>",
+  "theme_color": "red",
+  "background_color": "red"
+}

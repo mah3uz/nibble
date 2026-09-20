@@ -1,0 +1,6 @@
+[tools]
+ruby = "4.0.6"
+node = "26.8.2"
+
+[env]
+_.file = ".env"

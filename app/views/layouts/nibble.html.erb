@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="<%= @nibble_locale || "en" %>">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <% if (seo = @nibble_seo) %>
+      <title inertia><%= seo["title"] %></title>
+      <% if seo["description"] %><meta inertia="description" name="description" content="<%= seo["description"] %>"><% end %>
+      <% if seo["canonical"] %><link inertia="canonical" rel="canonical" href="<%= seo["canonical"] %>"><% end %>
+      <% if seo["robots"] %><meta inertia="robots" name="robots" content="<%= seo["robots"] %>"><% end %>
+      <meta property="og:type" content="<%= seo["og_type"] %>">
+      <meta property="og:title" content="<%= seo["title"] %>">
+      <% if seo["description"] %><meta property="og:description" content="<%= seo["description"] %>"><% end %>
+      <% if seo["canonical"] %><meta property="og:url" content="<%= seo["canonical"] %>"><% end %>
+      <% if seo["site_name"] %><meta property="og:site_name" content="<%= seo["site_name"] %>"><% end %>
+      <% if seo["image"] %><meta property="og:image" content="<%= seo["image"] %>"><% end %>
+      <% if seo["favicon"] %><link rel="icon" href="<%= seo["favicon"]["href"] %>"<% if seo["favicon"]["type"] %> type="<%= seo["favicon"]["type"] %>"<% end %>><% end %>
+      <meta name="twitter:card" content="<%= seo["image"] ? "summary_large_image" : "summary" %>">
+      <% seo["verification"].each do |tag| %><meta name="<%= tag["name"] %>" content="<%= tag["content"] %>"><% end %>
+      <% seo["json_ld"].each do |node| %><script type="application/ld+json"><%= json_escape(node.to_json).html_safe %></script><% end %>
+    <% end %>
+    <%= csp_meta_tag %>
+    <%= vite_stylesheet_tag "/themes/#{Nibble.build_theme}/styles/theme.css" %>
+    <%= vite_client_tag %>
+    <%= vite_typescript_tag "inertia" %>
+    <%= inertia_ssr_head %>
+    <%= Nibble::Integrations.head_html(@nibble_integrations) if @nibble_integrations %>
+  </head>
+  <body>
+    <%= yield %>
+    <%= Nibble::Integrations.body_html(@nibble_integrations) if @nibble_integrations %>
+  </body>
+</html>

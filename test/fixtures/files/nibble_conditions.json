@@ -1,0 +1,56 @@
+[
+  { "description": "fields without conditions are always visible", "config": {}, "values": {}, "visible": true },
+
+  { "description": "a plain value means equals", "config": { "if": { "link_type": "external" } }, "values": { "link_type": "external" }, "visible": true },
+  { "description": "every condition under if must pass", "config": { "if": { "link_type": "external", "enabled": "true" } }, "values": { "link_type": "external", "enabled": false }, "visible": false },
+  { "description": "true matches a boolean", "config": { "if": { "enabled": "true" } }, "values": { "enabled": true }, "visible": true },
+
+  { "description": "not", "config": { "if": { "status": "not draft" } }, "values": { "status": "published" }, "visible": true },
+  { "description": "isnt alias", "config": { "if": { "status": "isnt draft" } }, "values": { "status": "draft" }, "visible": false },
+  { "description": "is alias", "config": { "if": { "status": "is published" } }, "values": { "status": "published" }, "visible": true },
+  { "description": "!= alias", "config": { "if": { "status": "!= draft" } }, "values": { "status": "published" }, "visible": true },
+  { "description": "equals operator", "config": { "if": { "status": "equals draft" } }, "values": { "status": "published" }, "visible": false },
+
+  { "description": "unless inverts", "config": { "unless": { "type": "section" } }, "values": { "type": "section" }, "visible": false },
+  { "description": "hide_when inverts", "config": { "hide_when": { "type": "section" } }, "values": { "type": "text" }, "visible": true },
+  { "description": "if_any passes when one passes", "config": { "if_any": { "a": "1", "b": "1" } }, "values": { "a": "0", "b": "1" }, "visible": true },
+  { "description": "unless_any hides when one passes", "config": { "unless_any": { "a": "1", "b": "1" } }, "values": { "a": "0", "b": "1" }, "visible": false },
+  { "description": "only the first key in evaluator order counts", "config": { "unless": { "a": "1" }, "if": { "a": "2" } }, "values": { "a": "1" }, "visible": false },
+
+  { "description": "not null with a value", "config": { "if": { "instructions": "not null" } }, "values": { "instructions": "Help" }, "visible": true },
+  { "description": "empty string counts as null", "config": { "if": { "instructions": "not null" } }, "values": { "instructions": "" }, "visible": false },
+  { "description": "missing value equals null", "config": { "if": { "instructions": "null" } }, "values": {}, "visible": true },
+  { "description": "empty matches an empty list", "config": { "if": { "tags": "empty" } }, "values": { "tags": [] }, "visible": true },
+  { "description": "not empty with text", "config": { "if": { "title": "not empty" } }, "values": { "title": "Hello" }, "visible": true },
+  { "description": "false matches false", "config": { "if": { "featured": "false" } }, "values": { "featured": false }, "visible": true },
+
+  { "description": "loose equality: number equals its string", "config": { "if": { "count": "5" } }, "values": { "count": 5 }, "visible": true },
+  { "description": "strict equality: number is not its string", "config": { "if": { "count": "=== 5" } }, "values": { "count": 5 }, "visible": false },
+  { "description": "strict inequality", "config": { "if": { "count": "!== 5" } }, "values": { "count": 5 }, "visible": true },
+  { "description": "loose equality: true equals 1", "config": { "if": { "flag": "1" } }, "values": { "flag": true }, "visible": true },
+  { "description": "a list never equals a scalar", "config": { "if": { "tags": "a" } }, "values": { "tags": ["a"] }, "visible": false },
+
+  { "description": "numeric >= with a string number", "config": { "if": { "rating": ">= 4" } }, "values": { "rating": "4.5" }, "visible": true },
+  { "description": "numeric < fails", "config": { "if": { "rating": "< 4" } }, "values": { "rating": 4 }, "visible": false },
+  { "description": "non-numbers never pass numeric comparisons", "config": { "if": { "rating": "> 1" } }, "values": { "rating": "high" }, "visible": false },
+
+  { "description": "contains substring", "config": { "if": { "title": "contains News" } }, "values": { "title": "Company News 2026" }, "visible": true },
+  { "description": "includes in a list", "config": { "if": { "roles": "includes editor" } }, "values": { "roles": ["author", "editor"] }, "visible": true },
+  { "description": "list membership is strict", "config": { "if": { "ids": "contains 5" } }, "values": { "ids": [5] }, "visible": false },
+  { "description": "contains_any with a list", "config": { "if": { "roles": "contains_any admin, editor" } }, "values": { "roles": ["editor"] }, "visible": true },
+  { "description": "includes_any with a string", "config": { "if": { "format": "includes_any mp4, webm" } }, "values": { "format": "video/webm" }, "visible": true },
+
+  { "description": "several values for one field are all required (passes)", "config": { "if": { "status": ["not draft", "not scheduled"] } }, "values": { "status": "published" }, "visible": true },
+  { "description": "several values for one field are all required (fails)", "config": { "if": { "status": ["not draft", "not scheduled"] } }, "values": { "status": "scheduled" }, "visible": false },
+
+  { "description": "dotted handles read nested values", "config": { "if": { "link.type": "url" } }, "values": { "link": { "type": "url" } }, "visible": true },
+
+  { "description": "$root reads the whole record", "config": { "if": { "$root.layout": "wide" } }, "values": { "caption": "x" },
+    "root_values": { "layout": "wide", "blocks": [{ "type": "gallery", "items": [{ "caption": "x" }] }] }, "path": "blocks.0.items.0.caption", "visible": true },
+  { "description": "$parent climbs out of the current row", "config": { "if": { "$parent.type": "gallery" } }, "values": { "caption": "x" },
+    "root_values": { "layout": "wide", "blocks": [{ "type": "gallery", "items": [{ "caption": "x" }] }] }, "path": "blocks.0.items.0.caption", "visible": true },
+  { "description": "$parent.$parent climbs twice", "config": { "if": { "$parent.$parent.layout": "wide" } }, "values": { "caption": "x" },
+    "root_values": { "layout": "wide", "blocks": [{ "type": "gallery", "items": [{ "caption": "x" }] }] }, "path": "blocks.0.items.0.caption", "visible": true },
+
+  { "description": "a prefixed import looks up its prefixed sibling", "config": { "if": { "enabled": "true" } }, "values": { "seo_enabled": true }, "prefix": "seo_", "visible": true }
+]

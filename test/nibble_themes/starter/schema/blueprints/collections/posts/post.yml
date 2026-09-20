@@ -1,0 +1,12 @@
+schema: 1
+title: Post
+tabs:
+  main:
+    sections:
+      - fields:
+          - import: nibble::post_fields
+          - handle: topics
+            field: { type: terms, taxonomies: [topics] }
+          - handle: related
+            field: { type: entries, collections: [posts] }
+          - import: nibble::seo

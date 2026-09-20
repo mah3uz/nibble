@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Londrina+Solid:wght@900&family=Poppins:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+@import 'tailwindcss' source(none);
+@plugin '@tailwindcss/typography';
+@source '../';
+
+@custom-variant dark {
+  &:where([data-theme='dark'], [data-theme='dark'] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme]), :root:not([data-theme]) *) {
+      @slot;
+    }
+  }
+}
+
+@theme {
+  --color-hot-pink: #fd2d78;
+  --color-paper: #fffdf5;
+  --color-ink: #171923;
+  --color-night: #17191f;
+  --color-night-panel: #202229;
+  --color-accent: #b81953;
+  --font-display: 'Londrina Solid', sans-serif;
+  --font-body: 'Poppins', sans-serif;
+}
+
+@layer base {
+  :root {
+    @variant dark {
+      --color-accent: #ff8eb5;
+    }
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+  }
+  button {
+    cursor: pointer;
+  }
+  ::selection {
+    background: #fd2d7840;
+  }
+}
+
+@utility crumb-rule {
+  border-top: 2px solid currentColor;
+}

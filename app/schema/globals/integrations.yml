@@ -1,0 +1,75 @@
+schema: 1
+title: Integrations
+blueprint:
+  title: Integrations
+  tabs:
+    analytics:
+      display: Analytics
+      sections:
+        - display: Google
+          instructions: Loaded on the live site only, never in previews or on staging.
+          fields:
+            - handle: ga4_measurement_id
+              field: { type: text, display: GA4 measurement ID, placeholder: G-XXXXXXXXXX, validate: ["regex:/\\AG-[A-Z0-9]+\\z/"], width: 50 }
+            - handle: gtm_container_id
+              field: { type: text, display: Tag Manager container ID, placeholder: GTM-XXXXXXX, validate: ["regex:/\\AGTM-[A-Z0-9]+\\z/"], width: 50 }
+        - display: Script analytics
+          instructions: For Plausible, Fathom, Umami and similar tools that load one script tag.
+          fields:
+            - handle: analytics_script_src
+              field: { type: text, input_type: url, display: Script URL, placeholder: https://plausible.io/js/script.js }
+            - handle: analytics_script_attributes
+              field:
+                type: grid
+                mode: table
+                display: Script attributes
+                instructions: For example data-domain, data-site or data-website-id.
+                add_row: Add attribute
+                fields:
+                  - handle: name
+                    field: { type: text, required: true, validate: ["regex:/\\Adata-[a-z0-9-]+\\z/"] }
+                  - handle: value
+                    field: { type: text, required: true }
+    code:
+      display: Custom code
+      sections:
+        - display: Custom code
+          instructions: Added to every live page exactly as written. Only paste code from sources you trust.
+          fields:
+            - handle: head_code
+              field: { type: textarea, display: Head code, instructions: Placed at the end of the head. }
+            - handle: body_code
+              field: { type: textarea, display: Body code, instructions: Placed at the end of the body. }
+    captcha:
+      display: CAPTCHA
+      sections:
+        - display: CAPTCHA
+          instructions: Used by forms that turn CAPTCHA on.
+          fields:
+            - handle: captcha_provider
+              field: { type: select, display: Provider, clearable: true, options: { turnstile: Cloudflare Turnstile, recaptcha: Google reCAPTCHA v3 }, width: 50 }
+            - handle: captcha_site_key
+              field: { type: text, display: Site key, width: 50 }
+            - handle: captcha_secret_key
+              field: { type: secret, display: Secret key }
+            - handle: recaptcha_min_score
+              field:
+                type: text
+                input_type: number
+                display: Minimum score
+                instructions: reCAPTCHA v3 rates each visitor from 0.0 (likely a bot) to 1.0 (likely human). Submissions below this score are rejected.
+                default: 0.5
+                placeholder: "0.5"
+                validate: ["regex:/\\A(0(\\.\\d+)?|1(\\.0+)?)\\z/"]
+                if: { captcha_provider: "recaptcha" }
+                width: 50
+    email:
+      display: Email
+      sections:
+        - display: Sender
+          instructions: Every email the site sends comes from this address, including form notifications and account invites.
+          fields:
+            - handle: mail_from_name
+              field: { type: text, display: Sender name, placeholder: Nibble, width: 50 }
+            - handle: mail_from_address
+              field: { type: text, input_type: email, display: Sender address, placeholder: noreply@example.com, width: 50 }

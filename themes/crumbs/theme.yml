@@ -1,0 +1,5 @@
+name: Crumbs
+handle: crumbs
+version: 0.1.0
+nibble: '^1'
+description: A writing-focused theme for Nibble, made of crumbs.

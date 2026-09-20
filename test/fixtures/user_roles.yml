@@ -1,0 +1,11 @@
+admin:
+  user: admin
+  role: admin
+
+editor:
+  user: editor
+  role: editor
+
+author:
+  user: author
+  role: author

@@ -1,0 +1,19 @@
+# Kamal destination overlay for staging. Merged on top of config/deploy.yml.
+# Usage:  bin/kamal deploy -d staging
+servers:
+  web:
+    - <%= staging_server %>
+
+proxy:
+  ssl: true
+  hosts:
+    - <%= staging_host %>
+
+# Arrays are replaced (not merged) in Kamal destination overlays, so both must be listed in full.
+env:
+  secret:
+    - RAILS_MASTER_KEY
+  clear:
+    RAILS_ENV: staging
+    SITE_URL: https://<%= staging_host %>
+    SOLID_QUEUE_IN_PUMA: true

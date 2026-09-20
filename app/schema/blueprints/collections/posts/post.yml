@@ -1,0 +1,18 @@
+schema: 1
+title: Post
+tabs:
+  main:
+    display: Content
+    sections:
+      - fields:
+          - import: nibble::post_fields
+  sidebar:
+    display: Sidebar
+    sections:
+      - fields:
+          - import: nibble::featured_image
+  seo:
+    display: SEO
+    sections:
+      - fields:
+          - import: nibble::seo

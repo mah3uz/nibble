@@ -1,0 +1,6 @@
+schema: 1
+title: Topics
+route: /topics/{slug}
+index_route: /topics
+blueprints: [topic]
+sort: title:asc

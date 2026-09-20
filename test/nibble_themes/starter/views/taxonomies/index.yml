@@ -1,0 +1,3 @@
+topics:
+  from: terms:topics
+  fields: [title, uri]

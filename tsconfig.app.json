@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "preserve",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Aliases */
+    "paths": {
+      "@/*": ["./app/frontend/*"],
+      "~/*": ["./app/frontend/*"],
+      "@nibble-admin/*": ["./app/frontend/nibble-admin/*"],
+      "@nibble": ["./app/frontend/nibble/index.ts"],
+      "@nibble/*": ["./app/frontend/nibble/*"],
+      "@theme/*": ["./themes/crumbs/*"]
+    }
+  },
+
+  "include": [
+    "app/frontend/**/*.ts",
+    "app/frontend/**/*.tsx",
+    "app/frontend/**/*.vue",
+    "themes/*/**/*.ts",
+    "themes/*/**/*.vue",
+    "themes/*/.nibble/*.d.ts"
+  ]
+}

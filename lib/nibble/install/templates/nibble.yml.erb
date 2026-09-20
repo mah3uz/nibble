@@ -1,0 +1,23 @@
+# Your settings. Nibble ships defaults for everything not listed here, so keep this file short:
+# what you set, you maintain. See schema/README.md for content, and the docs for every key.
+default: &default
+  # Behaviour introduced after this version stays off until you raise it. Read the changelog first.
+  load_defaults: "<%= version %>"
+  theme: <%= theme %>
+  url: <%= url %>
+  locales:
+    - code: en
+      default: true
+      url_prefix: ""
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+staging:
+  <<: *default
+
+production:
+  <<: *default

@@ -1,0 +1,33 @@
+schema: 1
+title: SEO
+localizable: true
+blueprint:
+  title: SEO defaults
+  tabs:
+    main:
+      display: Defaults
+      sections:
+        - fields:
+            - handle: title_template
+              field:
+                type: text
+                default: "{title} · {site_name}"
+                instructions: "Page titles use this pattern. Tokens: {title}, {site_name}."
+            - handle: default_description
+              field: { type: textarea, character_limit: 160 }
+            - handle: default_share_image
+              field: { type: assets, max_files: 1, alt: optional }
+            - handle: organization_name
+              field: { type: text, width: 50 }
+            - handle: organization_logo
+              field: { type: assets, max_files: 1, alt: none, width: 50 }
+            - handle: verification_tags
+              field:
+                type: grid
+                mode: table
+                add_row: Add tag
+                fields:
+                  - handle: name
+                    field: { type: text, required: true, instructions: "e.g. google-site-verification" }
+                  - handle: content
+                    field: { type: text, required: true }

@@ -1,0 +1,34 @@
+{
+  "source_root": "REPLACED_IN_TEST",
+  "posts": [
+    {
+      "slug": "dental-loan-guide",
+      "source_file": "src/app/blog/(posts)/dental-loan-guide/page.mdx",
+      "title": "Dental loan guide",
+      "description": "How dental loans work.",
+      "published_on": "2019-05-20 19:09:20",
+      "category": "Dental Loan, medical loan",
+      "author": { "name": "Acme", "role": "Author", "image_file": "src/app/blog/one/avatar.png" },
+      "cover_image_file": "src/app/blog/one/cover.png",
+      "metadata": { "title": "Dental loan guide", "description": "How dental loans work." },
+      "body_json": { "type": "doc", "content": [
+        { "type": "paragraph", "content": [ { "type": "text", "text": "Hello" } ] },
+        { "type": "image", "attrs": { "src": "source-image:src/app/blog/one/cover.png", "alt": "Dental loan guide" } }
+      ] },
+      "body_images": [ { "file": "src/app/blog/one/cover.png", "alt": "Dental loan guide" } ]
+    },
+    {
+      "slug": "second-post",
+      "source_file": "src/app/blog/(posts)/second-post/page.mdx",
+      "title": "Second",
+      "description": null,
+      "published_on": "2020-01-01 10:00:00",
+      "category": "dental loan",
+      "author": { "name": "Acme", "role": "Author", "image_file": "src/app/blog/one/avatar.png" },
+      "cover_image_file": "src/app/blog/one/cover.png",
+      "metadata": { "title": "Second" },
+      "body_json": { "type": "doc", "content": [ { "type": "paragraph", "content": [ { "type": "text", "text": "Two" } ] } ] },
+      "body_images": []
+    }
+  ]
+}

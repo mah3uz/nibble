@@ -1,0 +1,32 @@
+admin:
+  handle: admin
+  title: Administrator
+  superuser: true
+  abilities: []
+
+editor:
+  handle: editor
+  title: Editor
+  abilities:
+    - entries.*
+    - terms.*
+    - globals.*
+    - navigation.*
+    - assets.*
+    - forms.*
+    - redirects.manage
+    - trash.view
+    - search.rebuild
+    - utilities.view
+    - workflow.approve.*
+
+author:
+  handle: author
+  title: Author
+  abilities:
+    - entries.*.view
+    - entries.*.create
+    - entries.*.edit_own
+    - terms.*.view
+    - assets.view
+    - assets.upload
