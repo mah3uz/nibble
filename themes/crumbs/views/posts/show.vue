@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3'
-import { Image, RichText } from '@nibble'
+import { Image } from '@nibble'
+import Prose from '../../components/Prose.vue'
 import { computed } from 'vue'
 import type { PostsPost, ViewProps } from '../../.nibble/types'
 import PostCard from '../../components/PostCard.vue'
@@ -57,7 +58,7 @@ const readingTime = computed(() => {
     />
     <div class="mx-auto max-w-[65ch] pt-10 sm:pt-14">
       <div class="prose dark:prose-invert">
-        <RichText :value="page.body" />
+        <Prose :value="page.body" />
       </div>
     </div>
     <section v-if="related.length" class="mt-16 border-t border-current/20 pt-10" aria-labelledby="related-heading">

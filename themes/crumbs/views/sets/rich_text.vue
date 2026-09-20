@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { RichText, type RichTextValue } from '@nibble'
+import { type RichTextValue } from '@nibble'
+import Prose from '../../components/Prose.vue'
 
 defineProps<{ text: RichTextValue }>()
 </script>
 
 <template>
-  <RichText :value="text" />
+  <Prose :value="text" />
 </template>

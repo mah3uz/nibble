@@ -194,14 +194,134 @@
   corner-shape: superellipse(2);
 }
 
-/* How the control panel renders prose it did not write: rich text, Markdown fields, release notes. A theme
-   styles its own prose in themes/<handle>/styles, and nothing here reaches it. */
+/* How the control panel renders prose it did not write: rich text, Markdown fields, release notes. It carries
+   its own dark colours, so it needs no prose-invert. A theme styles its own prose in themes/<handle>/styles,
+   and nothing here reaches it. */
 @utility prose-nibble {
-  max-width: none;
+  && {
+    max-width: none;
+  }
 
-  & :where(code)::before,
-  & :where(code)::after {
+  --tw-prose-body: var(--color-gray-700);
+  --tw-prose-headings: var(--color-gray-925);
+  --tw-prose-lead: var(--color-gray-600);
+  --tw-prose-links: var(--color-blue-600);
+  --tw-prose-bold: var(--color-gray-925);
+  --tw-prose-counters: var(--color-gray-500);
+  --tw-prose-bullets: var(--color-gray-300);
+  --tw-prose-hr: var(--color-gray-200);
+  --tw-prose-quotes: var(--color-gray-700);
+  --tw-prose-quote-borders: var(--color-gray-200);
+  --tw-prose-captions: var(--color-gray-500);
+  --tw-prose-code: var(--color-gray-925);
+  --tw-prose-pre-code: var(--color-gray-100);
+  --tw-prose-pre-bg: var(--color-gray-900);
+  --tw-prose-th-borders: var(--color-gray-200);
+  --tw-prose-td-borders: var(--color-gray-100);
+
+  @variant dark {
+    --tw-prose-body: var(--color-gray-300);
+    --tw-prose-headings: var(--color-white);
+    --tw-prose-lead: var(--color-gray-400);
+    --tw-prose-links: var(--color-blue-400);
+    --tw-prose-bold: var(--color-white);
+    --tw-prose-counters: var(--color-gray-400);
+    --tw-prose-bullets: var(--color-gray-600);
+    --tw-prose-hr: var(--color-gray-700);
+    --tw-prose-quotes: var(--color-gray-300);
+    --tw-prose-quote-borders: var(--color-gray-700);
+    --tw-prose-captions: var(--color-gray-400);
+    --tw-prose-code: var(--color-white);
+    --tw-prose-th-borders: var(--color-gray-700);
+    --tw-prose-td-borders: var(--color-gray-800);
+  }
+
+  /* Inline code reads as a chip rather than quoted text: the panel is full of paths and commands. The
+     doubled class is deliberate — the typography plugin's own rules are emitted after this one. */
+  && :where(code):not(:where(pre *)) {
+    border-radius: calc(var(--radius) - 2px);
+    background: color-mix(in oklab, var(--color-orange-500) 12%, transparent);
+    padding: 0.125em 0.375em;
+    color: var(--color-orange-700);
+    font-weight: 450;
+    font-size: 0.875em;
+  }
+
+  && :where(code)::before,
+  && :where(code)::after {
     content: none;
+  }
+
+  @variant dark {
+    && :where(code):not(:where(pre *)) {
+      background: color-mix(in oklab, var(--color-orange-500) 18%, transparent);
+      color: var(--color-orange-200);
+    }
+  }
+
+  /* A fenced block should read as a block of code: its own panel, dark in both themes, scrolling rather
+     than wrapping, with the gutter a line of code expects. */
+  && :where(pre) {
+    border: 1px solid var(--color-gray-800);
+    border-radius: var(--radius-md);
+    background: var(--color-gray-900);
+    padding: 0.75rem 0.875rem;
+    overflow-x: auto;
+    font-family: var(--default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: 0.8125em;
+    line-height: 1.6;
+    tab-size: 2;
+  }
+
+  && :where(pre code) {
+    font-weight: 400;
+    background: none;
+    padding: 0;
+  }
+
+  && :where(blockquote) {
+    font-style: normal;
+    font-weight: 400;
+  }
+
+  && :where(table) {
+    font-size: 0.875em;
+  }
+
+  /* > [!NOTE] and friends, which the documentation and the changelog use for anything worth stopping at. */
+  & :where(.markdown-alert) {
+    --alert: var(--color-blue-500);
+    margin: 1.25em 0;
+    border-left: 3px solid var(--alert);
+    border-radius: var(--radius-md);
+    background: color-mix(in oklab, var(--alert) 7%, transparent);
+    padding: 0.625rem 0.875rem;
+  }
+
+  & :where(.markdown-alert-tip) {
+    --alert: var(--color-emerald-500);
+  }
+
+  & :where(.markdown-alert-important) {
+    --alert: var(--color-violet-500);
+  }
+
+  & :where(.markdown-alert-warning) {
+    --alert: var(--color-amber-500);
+  }
+
+  & :where(.markdown-alert-caution) {
+    --alert: var(--color-red-500);
+  }
+
+  & :where(.markdown-alert-title) {
+    margin: 0 0 0.25em;
+    color: color-mix(in oklab, var(--alert) 80%, var(--tw-prose-headings));
+    font-weight: 500;
+  }
+
+  & :where(.markdown-alert > :last-child) {
+    margin-bottom: 0;
   }
 
   /* commonmarker links every heading to itself; useful for a table of contents, noise in a panel. */

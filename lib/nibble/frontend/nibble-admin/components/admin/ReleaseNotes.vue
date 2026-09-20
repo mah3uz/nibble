@@ -1,7 +1,7 @@
 <script setup lang="ts">
 defineProps<{ source: string }>()
 
-const prose = 'prose prose-sm prose-nibble dark:prose-invert'
+const prose = 'prose prose-sm prose-nibble'
 </script>
 
 <template>

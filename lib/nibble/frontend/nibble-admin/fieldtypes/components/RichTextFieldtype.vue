@@ -65,7 +65,7 @@ const editor = useEditor({
     FindAndReplace.configure({ injectCSS: false, searchDebounceMs: 150 }),
   ],
   editorProps: {
-    attributes: { class: 'nib-content prose prose-nibble dark:prose-invert' },
+    attributes: { class: 'nib-content prose prose-nibble' },
     scrollMargin: { top: 160, bottom: 48, left: 0, right: 0 },
     scrollThreshold: { top: 160, bottom: 48, left: 0, right: 0 },
     handleKeyDown: (view, event) => {

@@ -2,5 +2,11 @@
   "name": "@nibble-theme/crumbs",
   "private": true,
   "version": "0.1.0",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "prismjs": "^1.30.0"
+  },
+  "devDependencies": {
+    "@types/prismjs": "^1.26.6"
+  }
 }

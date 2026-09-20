@@ -19,7 +19,7 @@ const limit = computed(() => Number(props.config.character_limit) || 0)
 const previewable = computed(() => props.config.preview !== false)
 const showing = ref(false)
 const previewClasses =
-  'prose prose-sm prose-nibble rounded-md border border-gray-200 px-3.5 py-2.5 dark:prose-invert dark:border-gray-700'
+  'prose prose-sm prose-nibble rounded-md border border-gray-200 px-3.5 py-2.5 dark:border-gray-700'
 const html = ref('')
 const failed = ref(false)
 
