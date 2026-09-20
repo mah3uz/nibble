@@ -71,6 +71,22 @@ module Nibble
         })
       end
 
+      # A site's own theme, copied from ours so it starts working: themes/* is an npm workspace glob, so
+      # nothing has to be registered.
+      def theme(handle, root: Rails.root)
+        check!(handle)
+        source = root.join("themes", DEFAULT_THEME)
+        target = root.join("themes", handle)
+        raise Refused, "themes/#{handle} already exists" if target.exist?
+        raise Refused, "there is no themes/#{DEFAULT_THEME} to copy" unless source.directory?
+
+        FileUtils.cp_r(source, target)
+        target.join("theme.yml").write(theme_manifest(handle).to_yaml)
+        rename_package(target.join("package.json"), handle)
+
+        [ Written.new(path: "themes/#{handle}", note: activate(handle, root)) ]
+      end
+
       def plugin(_handle, root: Rails.root)
         raise Refused, "there is no extension API yet, so there is nothing for a plugin to plug into"
       end
@@ -79,6 +95,31 @@ module Nibble
 
       def check!(handle)
         raise Refused, "'#{handle}' must be lowercase letters, numbers and underscores" unless handle.to_s.match?(HANDLE)
+      end
+
+      def theme_manifest(handle)
+        { "name" => handle.humanize, "handle" => handle, "version" => "0.1.0", "nibble" => "^#{THEME_API_VERSION}",
+          "description" => "#{handle.humanize}, a theme for Nibble." }
+      end
+
+      def rename_package(path, handle)
+        return unless path.file?
+
+        package = JSON.parse(path.read)
+        package["name"] = "@nibble-theme/#{handle}"
+        path.write("#{JSON.pretty_generate(package)}\n")
+      end
+
+      # config/nibble.yml is the site's, so only the one line that names the theme is touched.
+      def activate(handle, root)
+        settings = root.join("config/nibble.yml")
+        return "set NIBBLE_THEME=#{handle}, or theme: #{handle} in config/nibble.yml, to use it" unless settings.file?
+
+        body = settings.read
+        return "add theme: #{handle} to config/nibble.yml to use it" unless body.match?(/^(\s*)theme:\s*\S+/)
+
+        settings.write(body.sub(/^(\s*)theme:\s*\S+/) { "#{Regexp.last_match(1)}theme: #{handle}" })
+        "config/nibble.yml now names it as this site's theme"
       end
 
       def text_field = { "handle" => "body", "field" => { "type" => "textarea", "display" => "Body" } }
