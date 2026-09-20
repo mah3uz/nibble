@@ -1,6 +1,6 @@
 module Nibble
   module Eject
-    AREAS = { "app/frontend/nibble-admin/pages" => "site/pages" }.freeze
+    AREAS = { "lib/nibble/frontend/nibble-admin/pages" => "site/pages" }.freeze
     RESERVED = %w[lib app bin test Gemfile package.json vite.config.ts Dockerfile config/application.rb config/environments config/initializers themes/crumbs].freeze
     MANIFEST = ".nibble/ejected.yml".freeze
 

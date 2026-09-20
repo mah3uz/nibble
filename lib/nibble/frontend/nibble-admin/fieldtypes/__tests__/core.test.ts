@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import allHandles from '../../../../../test/fixtures/files/nibble_fieldtypes.json'
+import allHandles from '../../../../../../test/fixtures/files/nibble_fieldtypes.json'
 import { coreFieldtypeHandles, registerCoreFieldtypes } from '../core'
 import { registeredFieldtypes, resolveFieldtype } from '../registry'
 

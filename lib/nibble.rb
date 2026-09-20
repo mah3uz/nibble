@@ -60,7 +60,7 @@ module Nibble
       LinkTypes.register("term", title: "Term", resolver: terms)
     end
 
-    def core_schema_path = Rails.root.join("app/schema")
+    def core_schema_path = Rails.root.join("lib/nibble/core_schema")
     def site_schema_path = Rails.root.join("schema")
     def themes_path = Rails.root.join("themes")
 

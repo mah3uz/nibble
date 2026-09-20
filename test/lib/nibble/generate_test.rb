@@ -30,7 +30,7 @@ class Nibble::GenerateTest < ActiveSupport::TestCase
   test "generated files land in the site's schema, never in Nibble's" do
     written = Nibble::Generate.collection("guides", root: @root).map(&:path)
 
-    assert(written.all? { |path| path.start_with?("schema/") }, "site generators must not write into app/schema")
+    assert(written.all? { |path| path.start_with?("schema/") }, "site generators must not write into ours")
   end
 
   test "a name that isn't a valid handle is refused before anything is written" do

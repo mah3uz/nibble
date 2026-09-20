@@ -25,11 +25,11 @@ export default defineConfig(({ command, isSsrBuild }) => ({
     alias: {
       '@theme': resolve(import.meta.dirname, 'themes', theme),
       '@site': resolve(import.meta.dirname, 'site'),
-      '@nibble': resolve(import.meta.dirname, 'app/frontend/nibble'),
-      '@nibble-admin': resolve(import.meta.dirname, 'app/frontend/nibble-admin'),
-      '@': resolve(import.meta.dirname, 'app/frontend/nibble-admin'),
+      '@nibble': resolve(import.meta.dirname, 'lib/nibble/frontend/nibble'),
+      '@nibble-admin': resolve(import.meta.dirname, 'lib/nibble/frontend/nibble-admin'),
+      '@': resolve(import.meta.dirname, 'lib/nibble/frontend/nibble-admin'),
       // Find and replace has no regex mode, so its 868K RE2 engine is stubbed out rather than bundled.
-      re2js: resolve(import.meta.dirname, 'app/frontend/nibble-admin/lib/stubs/re2js.ts'),
+      re2js: resolve(import.meta.dirname, 'lib/nibble/frontend/nibble-admin/lib/stubs/re2js.ts'),
     },
   },
   ssr: {

@@ -10,9 +10,8 @@ class DatabasePortabilityTest < ActiveSupport::TestCase
     /\b(?:MATCH\s+['"?]|PRAGMA\s|VACUUM\b|AUTOINCREMENT\b|GLOB\s)/ # upper-case SQL keywords, not prose
   )
   ALLOWED = [
-    "app/models/search.rb",
     "lib/nibble/search.rb",
-    "app/services/database_snapshot.rb",
+    "lib/nibble/app/services/database_snapshot.rb",
     "lib/nibble/db/migrate/20260920102900_create_search_index.rb",
     "lib/nibble/db/migrate/20260920103000_create_search_index_trigram.rb"
   ].freeze

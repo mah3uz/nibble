@@ -89,7 +89,7 @@ class Nibble::ConfigTest < ActiveSupport::TestCase
   end
 
   test "schema errors point at the file and key so authors can find the problem" do
-    error = Nibble::SchemaError.new(file: Rails.root.join("app/schema/collections/posts.yml"), key: "route", reason: "is required")
-    assert_equal "app/schema/collections/posts.yml: route: is required", error.message
+    error = Nibble::SchemaError.new(file: Rails.root.join("lib/nibble/core_schema/collections/posts.yml"), key: "route", reason: "is required")
+    assert_equal "lib/nibble/core_schema/collections/posts.yml: route: is required", error.message
   end
 end

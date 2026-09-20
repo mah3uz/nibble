@@ -15,7 +15,13 @@ module NibbleApp
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks middleware commands])
-    Rails.autoloaders.main.ignore("#{__dir__}/../lib/nibble/routes", "#{__dir__}/../lib/nibble/db")
+    Rails.autoloaders.main.ignore("#{__dir__}/../lib/nibble/routes", "#{__dir__}/../lib/nibble/db",
+      "#{__dir__}/../lib/nibble/app")
+
+    # Ours, laid out as Rails lays out app/, so Admin::EntriesController keeps its name. A site's own
+    # app/ is still loaded, and its views are looked in first.
+    config.paths.add "lib/nibble/app", eager_load: true, glob: "{*,*/concerns}", exclude: %w[views]
+    config.paths["app/views"] << "lib/nibble/app/views"
 
     config.paths["config/routes.rb"] = [
       "lib/nibble/routes/core.rb",

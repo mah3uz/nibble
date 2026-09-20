@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import cases from '../../../../../test/fixtures/files/nibble_conditions.json'
+import cases from '../../../../../../test/fixtures/files/nibble_conditions.json'
 import { isVisible, registerCondition, unregisterCondition } from '..'
 
 type Case = {

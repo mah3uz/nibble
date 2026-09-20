@@ -22,19 +22,19 @@
 
     /* Aliases */
     "paths": {
-      "@/*": ["./app/frontend/nibble-admin/*"],
-      "~/*": ["./app/frontend/nibble-admin/*"],
-      "@nibble-admin/*": ["./app/frontend/nibble-admin/*"],
-      "@nibble": ["./app/frontend/nibble/index.ts"],
-      "@nibble/*": ["./app/frontend/nibble/*"],
+      "@/*": ["./lib/nibble/frontend/nibble-admin/*"],
+      "~/*": ["./lib/nibble/frontend/nibble-admin/*"],
+      "@nibble-admin/*": ["./lib/nibble/frontend/nibble-admin/*"],
+      "@nibble": ["./lib/nibble/frontend/nibble/index.ts"],
+      "@nibble/*": ["./lib/nibble/frontend/nibble/*"],
       "@theme/*": ["./themes/crumbs/*"]
     }
   },
 
   "include": [
-    "app/frontend/**/*.ts",
-    "app/frontend/**/*.tsx",
-    "app/frontend/**/*.vue",
+    "lib/nibble/frontend/**/*.ts",
+    "lib/nibble/frontend/**/*.tsx",
+    "lib/nibble/frontend/**/*.vue",
     "themes/*/**/*.ts",
     "themes/*/**/*.vue",
     "themes/*/.nibble/*.d.ts"

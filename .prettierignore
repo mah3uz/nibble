@@ -2,9 +2,9 @@ public/
 tmp/
 vendor/
 node_modules/
-app/frontend/nibble-admin/styles/typography.js
-app/frontend/nibble-admin/styles/*.css
+lib/nibble/frontend/nibble-admin/styles/typography.js
+lib/nibble/frontend/nibble-admin/styles/*.css
 *.md
-app/frontend/nibble-admin/components/ui/
+lib/nibble/frontend/nibble-admin/components/ui/
 themes/*/.nibble/
 themes/*/content/
