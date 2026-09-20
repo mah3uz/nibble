@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.2.1",
+    "date": "2026-09-21",
+    "url": "https://gitea.tlbn.app/mahfuz/nibble/releases/tag/v0.2.1",
+    "security": false,
+    "body": "## What's fixed\n\n- The Updates screen showed only \"Up to date\" when you were already on the newest release, hiding every release's\n  notes. It now lists them whatever version you are on, with the one you are running marked.\n\n## Changed\n\n- `db/schema.rb` is yours, and Nibble no longer ships one. It is generated from migrations, so two copies of it —\n  ours and yours — conflicted on every upgrade that carried a migration, on a file neither of us edits by hand.\n  **Upgrade:** the merge removes our copy. Run `bin/rails db:prepare` to regenerate yours, then commit it. If git\n  reports a conflict on it instead, keep your side and run the same command."
+  },
+  {
     "version": "0.2.0",
     "date": "2026-09-21",
     "url": "https://gitea.tlbn.app/mahfuz/nibble/releases/tag/v0.2.0",

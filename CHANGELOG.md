@@ -11,6 +11,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.2.1 — 2026-09-21
+
 ## What's fixed
 
 - The Updates screen showed only "Up to date" when you were already on the newest release, hiding every release's
