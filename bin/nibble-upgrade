@@ -1,0 +1,66 @@
+#!/usr/bin/env ruby
+def fail!(message) = abort("upgrade refused: #{message}")
+
+# Refuse before booting: a deployed environment would fail on its own credentials rather than say why.
+environment = ENV["RAILS_ENV"] || ENV["RACK_ENV"] || "development"
+fail!("upgrade on a workstation and deploy the result; never in place on #{environment}") unless environment == "development"
+
+require_relative "../config/environment"
+
+ROOT = Rails.root
+
+def step(title) = puts("\n#{title}")
+def git(*args) = system("git", "-C", ROOT.to_s, *args)
+def git_out(*args) = IO.popen([ "git", "-C", ROOT.to_s, *args ], err: File::NULL, &:read).strip
+
+fail!("working tree isn't clean") unless git_out("status", "--porcelain").empty?
+
+installed = Nibble::Release.installed or fail!("no install record in #{Nibble::Release::RECORD}; this checkout was not installed by nibble:install")
+
+step "fetching releases from #{Nibble::REPOSITORY}"
+git("fetch", "--tags", ENV.fetch("NIBBLE_REPO", Nibble::REPOSITORY)) or fail!("could not fetch")
+
+target = ARGV.first ? (ARGV.first.start_with?("v") ? ARGV.first : "v#{ARGV.first}") : Nibble::Release.latest
+fail!("no releases to upgrade to") if target.blank?
+taken = Nibble::Release.declared(target)
+fail!("#{target} is #{taken.version}, which this install is already on") if taken.version == installed.version
+
+step "#{installed.version} → #{taken.version}"
+blockers = Nibble::Release.blockers(from: installed.version, release: taken)
+if blockers.any?
+  blockers.each { |blocker| warn "  ✗ #{blocker.reason}" }
+  fail!("#{taken.version} cannot be taken yet")
+end
+
+step "snapshotting the database"
+database = ActiveRecord::Base.connection_db_config.database
+snapshot = ROOT.join("storage", "upgrades", "#{Time.current.strftime('%Y-%m-%d-%H%M%S')}-#{installed.version}.sqlite3")
+snapshot.dirname.mkpath
+ActiveRecord::Base.connection.execute("VACUUM INTO '#{snapshot}'")
+puts "  #{snapshot.relative_path_from(ROOT)}"
+puts "  restore it with: cp #{snapshot.relative_path_from(ROOT)} #{database}"
+
+step "merging #{target}"
+unless git("merge", "--no-edit", target)
+  warn "\nthe merge stopped on conflicts in files this site has changed."
+  warn "resolve them and commit, or put everything back with: git merge --abort"
+  exit 1
+end
+
+step "installing dependencies"
+system("bundle", "install") or fail!("bundle install failed; the merge is still here, and git merge --abort undoes it")
+system("npm", "ci") or fail!("npm ci failed; the merge is still here, and git merge --abort undoes it")
+
+step "migrating"
+puts "  past this point the merge is committed; the way back is the snapshot above"
+unless system(ROOT.join("bin/rails").to_s, "nibble:upgrade")
+  warn "\nthe database did not reach #{taken.version}. Restore the snapshot before trying again:"
+  warn "  cp #{snapshot.relative_path_from(ROOT)} #{database}"
+  exit 1
+end
+
+Nibble::Release.record_install(version: taken.version, commit: git_out("rev-parse", "HEAD"))
+
+step "on #{taken.version}"
+puts "  run bin/ci, look over the site, then commit and deploy"
+puts "  the snapshot stays at #{snapshot.relative_path_from(ROOT)} until you remove it"
