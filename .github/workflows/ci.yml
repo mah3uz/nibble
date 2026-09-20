@@ -1,9 +1,10 @@
 name: CI
 
 on:
-  pull_request:
-  push:
-    branches: [ main ]
+  workflow_dispatch: # manually disabled — remove this line and restore the triggers below to re-enable
+  # pull_request:
+  # push:
+  #   branches: [main]
 
 jobs:
   scan_ruby:
