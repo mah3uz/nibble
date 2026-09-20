@@ -49,6 +49,11 @@ const hasActiveChild = (item: (typeof admin.value.nav)[number]['items'][number])
                 <Link :href="item.url">
                   <AdminIcon :name="NAV_ICONS[item.icon] ?? item.icon" class="size-4" />
                   <span>{{ item.title }}</span>
+                  <span
+                    v-if="item.badge"
+                    class="ms-auto rounded-full bg-amber-400 px-1.5 text-[11px] leading-4 font-medium text-amber-950 tabular-nums"
+                    >{{ item.badge }}</span
+                  >
                 </Link>
               </SidebarMenuButton>
               <SidebarMenuSub
@@ -63,6 +68,11 @@ const hasActiveChild = (item: (typeof admin.value.nav)[number]['items'][number])
                   >
                     <Link :href="child.url">
                       <span>{{ child.title }}</span>
+                      <span
+                        v-if="child.badge"
+                        class="ms-auto rounded-full bg-amber-400 px-1.5 text-[11px] leading-4 font-medium text-amber-950 tabular-nums"
+                        >{{ child.badge }}</span
+                      >
                     </Link>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>

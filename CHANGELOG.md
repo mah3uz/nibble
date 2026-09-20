@@ -15,8 +15,9 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   requirements, merges, installs dependencies and migrates. It runs on a workstation only.
 - The upgrade offers to re-render the files you own that we generate, and reports what changed in our copy of
   anything you ejected.
-- `release_feed` in `config/nibble.yml`: set it to a published release file and the Health screen lists what is
-  newer. Unset, nothing is fetched.
+- **Utilities → Updates**: releases newer than the one you are running, what each one changed, and the command
+  that takes it, with a count beside Utilities in the sidebar. It appears only once `release_feed` is set in
+  `config/nibble.yml`; unset, nothing is fetched and nothing about your site is ever sent.
 
 ### Changed
 

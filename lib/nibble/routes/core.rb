@@ -142,6 +142,7 @@ Rails.application.routes.draw do
       get :audit
       get :jobs
       get :health
+      get :updates
       get :content
       get "content/export", action: :export_content, as: :export_content
       post "content/import", action: :import_content, as: :import_content

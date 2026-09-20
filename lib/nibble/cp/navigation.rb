@@ -18,8 +18,8 @@ module Nibble
 
         private
 
-        def item(title, url, icon, children: nil, active: url)
-          { "title" => title, "url" => url, "icon" => icon, "active" => active, "children" => children, "badge" => nil }
+        def item(title, url, icon, children: nil, active: url, badge: nil)
+          { "title" => title, "url" => url, "icon" => icon, "active" => active, "children" => children, "badge" => badge }
         end
 
         def section(handle, label, items) = items.any? ? { "handle" => handle, "label" => label, "items" => items } : nil
@@ -74,8 +74,13 @@ module Nibble
           items << item("Redirects", "/admin/redirects", "redirects") if Access.can?(user, "redirects.manage")
           items << item("Webhooks", "/admin/webhooks", "webhooks") if Access.can?(user, Webhooks::MANAGE_ABILITY)
           if Access.can?(user, "utilities.view")
-            children = Utilities::LIST.map { |utility| item(utility[:title], Utilities.url(utility), utility[:icon]) }
-            items << item("Utilities", "/admin/utilities", "utilities", children:)
+            updates = Releases.newer.size
+            updates = nil unless updates.positive?
+            children = Utilities::LIST.map do |utility|
+              item(utility[:title], Utilities.url(utility), utility[:icon],
+                   badge: (updates if utility[:key] == "updates"))
+            end
+            items << item("Utilities", "/admin/utilities", "utilities", children:, badge: updates)
           end
           items
         end

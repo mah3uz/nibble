@@ -33,4 +33,30 @@ class Nibble::ReleasesTest < ActiveSupport::TestCase
   test "a site has no feed until it sets one" do
     assert_nil Nibble.config.release_feed
   end
+
+  test "the control panel wears a badge only once there is something to take" do
+    utilities = ->(user) { Nibble::Cp::Navigation.for(user).flat_map { |section| section["items"] }.find { |item| item["title"] == "Utilities" } }
+
+    assert_nil utilities.call(users(:admin))["badge"], "an install with no feed is never nagged"
+
+    with_feed do
+      updates = utilities.call(users(:admin))
+
+      assert_equal 1, updates["badge"]
+      assert_equal 1, updates["children"].find { |child| child["title"] == "Updates" }["badge"]
+    end
+  end
+
+  private
+
+  def with_feed(&)
+    was = Nibble.config
+    Nibble.config = Nibble::Config.new(Nibble.config_values.merge("release_feed" => "https://example.com/releases.json"))
+    Nibble::Releases.fetcher = ->(_) { FEED }
+    yield
+  ensure
+    Nibble.config = was
+    Nibble::Releases.fetcher = nil
+    Rails.cache.clear
+  end
 end

@@ -9,6 +9,7 @@ module Nibble
         { key: "content", title: "Content", icon: "package", description: "Export the site's content as a package, or import one." },
         { key: "schema", title: "Schema", icon: "blueprints", description: "Problems nibble:check finds in blueprints, fieldsets, forms and the theme." },
         { key: "backups", title: "Backups", icon: "backups", description: "When the database was last backed up, and where the copies live." },
+        { key: "updates", title: "Updates", icon: "download", description: "Releases newer than the one running, and the command that takes one." },
         { key: "audit", title: "Audit log", icon: "history", description: "Recent changes, sign-ins and permission changes, with who made them." }
       ].freeze
 

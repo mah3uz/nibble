@@ -238,8 +238,9 @@ New behaviour ships switched off: raising `load_defaults` in `config/nibble.yml`
 release never changes how your site behaves on its own.
 
 Nibble does not check for releases unless you ask it to. Set `release_feed` in `config/nibble.yml` to the URL of a
-published release file and the control panel's Health screen lists what is newer; it reads that file and sends
-nothing about your site.
+published release file and **Utilities → Updates** lists what is newer, with the command to take each one and a
+count beside Utilities in the sidebar. It reads that file and sends nothing about your site. Nibble never updates
+itself: the control panel hands you the command, and you run it on your own machine.
 
 ## Licence
 

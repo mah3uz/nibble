@@ -9,8 +9,6 @@ import { useBreadcrumbs } from '@/lib/breadcrumbs'
 
 type Check = { name: string; status: 'ok' | 'warn' | 'fail' | 'skip'; message: string; ms: number }
 
-type Release = { version: string; url: string | null; notes: string | null }
-
 type System = {
   nibble: number
   rails: string
@@ -22,13 +20,7 @@ type System = {
   pending_events: number
 }
 
-defineProps<{
-  status: 'ok' | 'degraded' | 'down'
-  checks: Check[]
-  checked_at: string
-  system: System
-  releases: Release[]
-}>()
+defineProps<{ status: 'ok' | 'degraded' | 'down'; checks: Check[]; checked_at: string; system: System }>()
 
 const LABELS: Record<Check['status'], string> = { ok: 'healthy', warn: 'warning', fail: 'failing', skip: 'skipped' }
 const NAMES: Record<string, string> = {
@@ -70,23 +62,6 @@ useBreadcrumbs([{ label: 'Utilities', url: '/admin/utilities' }, { label: 'Healt
           <StatusCell :value="LABELS[check.status]" />
           <span class="flex-1 text-gray-600 dark:text-gray-400">{{ check.message }}</span>
           <span class="shrink-0 text-xs text-gray-500 tabular-nums">{{ check.ms }} ms</span>
-        </div>
-      </div>
-    </AdminPanel>
-
-    <AdminPanel v-if="releases.length" title="Releases">
-      <div class="text-sm">
-        <div v-for="release in releases" :key="release.version" class="flex items-center gap-3 py-1">
-          <span class="font-medium">{{ release.version }}</span>
-          <span class="flex-1 text-gray-600 dark:text-gray-400">{{ release.notes ?? 'is available' }}</span>
-          <a
-            v-if="release.url"
-            :href="release.url"
-            target="_blank"
-            rel="noreferrer"
-            class="text-blue-600 hover:underline dark:text-blue-400"
-            >notes</a
-          >
         </div>
       </div>
     </AdminPanel>
