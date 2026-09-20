@@ -95,7 +95,51 @@ class Nibble::GenerateTest < ActiveSupport::TestCase
     assert_match "already exists", error.message
   end
 
+
+  test "a view is written into the site's own theme, with a query it can use" do
+    starter
+    Nibble::Generate.theme("almanac", root: @root)
+
+    written = Nibble::Generate.view("guides/index", collection: "posts", root: @root, schema: fake_schema, theme: "almanac")
+
+    assert_equal "entries:posts", yaml("themes/almanac/views/guides/index.yml").dig("items", "from")
+    body = @root.join("themes/almanac/views/guides/index.vue").read
+    assert_includes body, "ViewProps['guides/index']"
+    assert_includes body, "PostsPost", "typing it for the collection is why the collection is asked for"
+    assert_includes body, "'../../.nibble/types'", "a nested view has to reach the theme's types"
+    assert_match "schema/collections/posts.yml", written.last.note
+  end
+
+  test "a view refuses to be written into Nibble's own theme" do
+    starter
+
+    error = assert_raises(Nibble::Generate::Refused) do
+      Nibble::Generate.view("guides/index", root: @root, schema: fake_schema, theme: Nibble::DEFAULT_THEME)
+    end
+
+    assert_match "nibble:generate:theme", error.message, "editing ours is what the theme generator exists to avoid"
+  end
+
+  test "a view naming a collection that does not exist is refused before anything is written" do
+    starter
+    Nibble::Generate.theme("almanac", root: @root)
+
+    assert_raises(Nibble::Generate::Refused) do
+      Nibble::Generate.view("guides/index", collection: "nope", root: @root, schema: fake_schema, theme: "almanac")
+    end
+    assert_not @root.join("themes/almanac/views/guides/index.yml").exist?
+  end
+
   private
+
+  def fake_schema
+    blueprint = Struct.new(:handle).new("post")
+    collection = Struct.new(:handle, :key).new("posts", "collections/posts")
+    schema = Object.new
+    schema.define_singleton_method(:collections) { [ collection ] }
+    schema.define_singleton_method(:blueprints_for) { |_| [ blueprint ] }
+    schema
+  end
 
   def starter
     views = @root.join("themes", Nibble::DEFAULT_THEME, "views")

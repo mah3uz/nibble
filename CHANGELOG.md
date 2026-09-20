@@ -11,6 +11,12 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## What's new
+
+- `bin/rails nibble:generate:view NAME --collection=posts` writes a view and its query sidecar into your own
+  theme, typed for that collection's records, and says how to wire it up. It refuses to write into Nibble's
+  theme, which is what `nibble:generate:theme` is for.
+
 ## 0.3.0 — 2026-09-21
 
 ## What's new

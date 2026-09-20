@@ -126,6 +126,7 @@ The public site is rendered by the active theme in `themes/<handle>` (default `c
 ```
 bin/rails nibble:admin:create                # add a user: name, email, password and role, all asked for
 bin/rails nibble:generate:theme almanac      # this site's own theme, copied from the starter
+bin/rails nibble:generate:view guides/index --collection=posts   # a view and its query sidecar
 bin/rails nibble:check                       # schema, theme, roles, settings, pending migrations, ejected files
 bin/rails nibble:check --support             # a summary of this install to paste into an issue
 bin/rails nibble:content:validate themes/crumbs/content

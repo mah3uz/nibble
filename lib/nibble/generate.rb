@@ -85,6 +85,22 @@ module Nibble
         [ Written.new(path: "themes/#{handle}", note: activate(handle, root)) ]
       end
 
+      VIEW_NAME = %r{\A[a-z][a-z0-9_]*(/[a-z][a-z0-9_]*)*\z}
+
+      def view(name, collection: nil, root: Rails.root, schema: Nibble.schema, theme: Nibble.config.theme)
+        raise Refused, "'#{name}' must be lowercase names separated by /" unless name.to_s.match?(VIEW_NAME)
+        raise Refused, "there is no theme to write into; generate one first" if theme.blank?
+        raise Refused, "themes/#{theme} is Nibble's — run nibble:generate:theme first" if theme == DEFAULT_THEME
+
+        item = collection && (schema.collections.find { |one| one.handle == collection } or
+          raise Refused, "there is no #{collection} collection")
+        written = write_all(root,
+          "themes/#{theme}/views/#{name}.yml" => view_query(item),
+          "themes/#{theme}/views/#{name}.vue" => view_body(name, item, schema))
+
+        [ *written[..-2], Written.new(path: written.last.path, note: wiring(name, item)) ]
+      end
+
       def plugin(_handle, root: Rails.root)
         raise Refused, "there is no extension API yet, so there is nothing for a plugin to plug into"
       end
@@ -120,6 +136,45 @@ module Nibble
         "config/nibble.yml now names it as this site's theme"
       end
 
+      def view_query(item)
+        return { "related" => { "from" => "entries:#{item.handle}", "limit" => 3 } } if item.nil?
+
+        { "params" => [ "page" ],
+          "items" => { "from" => "entries:#{item.handle}", "paginate" => { "per_page" => 12 } } }
+      end
+
+      def view_body(name, item, schema)
+        depth = "../" * (name.count("/") + 1)
+        record = item ? record_type(item, schema) : "RecordBase"
+        <<~VUE
+          <script setup lang="ts">
+          import type { ViewProps, #{record} } from '#{depth}.nibble/types'
+
+          defineProps<ViewProps['#{name}'] & { page: #{record} }>()
+          </script>
+
+          <template>
+            <article>
+              <h1>{{ page.title }}</h1>
+            </article>
+          </template>
+        VUE
+      end
+
+      def wiring(name, item)
+        return "set template: #{name} on a collection or blueprint to use it" if item.nil?
+
+        "add template: #{name} to schema/collections/#{item.handle}.yml to use it"
+      end
+
+      def record_type(item, schema)
+        blueprint = schema.blueprints_for(item).first or return "RecordBase"
+
+        "#{pascal(item.handle)}#{pascal(blueprint.handle)}"
+      end
+
+      def pascal(handle) = handle.to_s.camelize
+
       def text_field = { "handle" => "body", "field" => { "type" => "textarea", "display" => "Body" } }
 
       def blueprint_body(title)
@@ -132,7 +187,7 @@ module Nibble
         files.map do |relative, data|
           path = root.join(relative)
           path.dirname.mkpath
-          path.write(data.to_yaml)
+          path.write(data.is_a?(String) ? data : data.to_yaml)
           Written.new(path: relative, note: nil)
         end
       end
