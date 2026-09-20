@@ -76,6 +76,17 @@ class Nibble::ReleaseTest < ActiveSupport::TestCase
     assert_raises(Nibble::Error) { Nibble::Release.declared("not-a-release", root: @root) }
   end
 
+  test "re-recording an install keeps the answers the install asked for" do
+    root = Pathname(Dir.mktmpdir("nibble-record"))
+    Nibble::Release.record_install(version: "0.2.0", commit: "abc", answers: { url: "https://notes.example" }, root:)
+    Nibble::Release.record_install(version: "0.3.0", commit: "def", root:)
+
+    assert_equal "https://notes.example", Nibble::Release.installed(root:).answers[:url],
+                 "an upgrade re-records without them, and losing them stops it ever re-rendering a site's own files"
+  ensure
+    FileUtils.rm_rf(root)
+  end
+
   private
 
   def repo_with_releases

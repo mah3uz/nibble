@@ -35,6 +35,13 @@ module Nibble
         manifest(root:).values.select { |ejection| changed_since?(ejection, root:) }
       end
 
+      def diff_since(ejection, root: Rails.root)
+        return "" unless changed_since?(ejection, root:)
+
+        IO.popen([ "git", "-C", root.to_s, "diff", "--stat", ejection.commit, "HEAD", "--", ejection.source ],
+                 err: File::NULL, &:read)
+      end
+
       def changed_since?(ejection, root: Rails.root)
         return false if ejection.commit.blank?
 

@@ -5,6 +5,10 @@ module Nibble
     KAMAL = { "deploy.yml.erb" => "config/deploy.yml", "deploy.staging.yml.erb" => "config/deploy.staging.yml" }.freeze
     TEMPLATES = CORE.merge(KAMAL).freeze
 
+    TEMPLATES_DIR = "lib/nibble/install/templates".freeze
+
+    Regenerated = Data.define(:destination, :rendered, :current)
+
     QUESTIONS = {
       name: "Application name (containers, image and volume are named after it)",
       url: "Public site URL",
@@ -70,6 +74,25 @@ module Nibble
         written << destination
       end
       Result.new(written:, skipped:)
+    end
+
+    # The answers recorded at install are what lets an upgrade re-render a template a site owns the output of.
+    def self.outdated(since:, answers:, root: Rails.root)
+      TEMPLATES.filter_map do |template, destination|
+        next if answers.blank?
+        next unless changed?(template, since, root)
+
+        current = root.join(destination)
+        next unless current.file?
+
+        rendered = new(answers:, root:).render(template)
+        Regenerated.new(destination:, rendered:, current: current.read) if rendered != current.read
+      end
+    end
+
+    def self.changed?(template, since, root)
+      system("git", "-C", root.to_s, "diff", "--quiet", since, "HEAD", "--", "#{TEMPLATES_DIR}/#{template}",
+             out: File::NULL, err: File::NULL) == false
     end
 
     def render(template)

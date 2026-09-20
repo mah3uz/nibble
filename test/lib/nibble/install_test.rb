@@ -77,4 +77,55 @@ class Nibble::InstallTest < ActiveSupport::TestCase
     assert_nil Nibble::Install.problem_with(:name, "acme")
     assert_nil Nibble::Install.problem_with(:ssh_user, "anything at all")
   end
+
+  test "a template that has moved on since the install is offered against the site's own file" do
+    release = repo_with_templates
+    install(url: "https://notes.example", name: "notes").run
+    @root.join("config/nibble.yml").write("production:\n  theme: stale\n")
+
+    offered = Nibble::Install.outdated(since: release, answers: { url: "https://notes.example", name: "notes" }, root: @root)
+
+    assert_equal [ "config/nibble.yml" ], offered.map(&:destination)
+    assert_equal "production:\n  theme: stale\n", offered.sole.current
+    assert_includes offered.sole.rendered, "notes", "the re-render has to use this site's own answers, not ours"
+  end
+
+  test "a template nobody touched is left out, so an upgrade only asks about what changed" do
+    repo_with_templates(touch: false)
+    install(url: "https://notes.example").run
+    release = commit_all("release")
+
+    assert_empty Nibble::Install.outdated(since: release, answers: { url: "https://notes.example" }, root: @root)
+  end
+
+  test "without recorded answers nothing is offered, rather than a file rendered from our defaults" do
+    release = repo_with_templates
+    install(url: "https://notes.example").run
+
+    assert_empty Nibble::Install.outdated(since: release, answers: {}, root: @root),
+                 "re-rendering with defaults would overwrite a site's hosts and URLs with ours"
+  end
+
+  private
+
+  def repo_with_templates(touch: true)
+    git("init", "-q")
+    templates = @root.join(Nibble::Install::TEMPLATES_DIR)
+    templates.mkpath
+    FileUtils.cp_r(Nibble::Install.templates_path.children, templates)
+    baseline = commit_all("the release this site installed from")
+    return baseline unless touch
+
+    templates.join("nibble.yml.erb").write("#{templates.join('nibble.yml.erb').read}\n# our template moved on\n")
+    commit_all("a later release, which changed it")
+    baseline
+  end
+
+  def commit_all(message)
+    git("add", "-A")
+    git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", message)
+    IO.popen([ "git", "-C", @root.to_s, "rev-parse", "HEAD" ], &:read).strip
+  end
+
+  def git(*args) = system("git", "-C", @root.to_s, *args, out: File::NULL, err: File::NULL)
 end

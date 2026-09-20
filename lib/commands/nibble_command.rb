@@ -52,7 +52,7 @@ class NibbleCommand < Rails::Command::Base
     result.written.each { |path| say_status :create, path, :green }
     result.skipped.each { |path| say_status :keep, "#{path} — yours already, left alone", :yellow }
     master_key
-    Nibble::Release.record_install(version: Nibble::VERSION, commit: Nibble::Eject.commit)
+    Nibble::Release.record_install(version: Nibble::VERSION, commit: Nibble::Eject.commit, answers:)
     say_status :record, ".nibble/install.yml — this install is #{Nibble::VERSION}", :green
     options[:defaults] || options[:only] ? admin_reminder : set_up_database
     next_steps(kamal)

@@ -4,7 +4,7 @@ module Nibble
     RECORD = ".nibble/install.yml".freeze
 
     Blocker = Data.define(:reason)
-    Installed = Data.define(:version, :commit, :at)
+    Installed = Data.define(:version, :commit, :at, :answers)
     Declared = Data.define(:version, :minimum_upgrade_from, :ruby_floor, :node_floor)
 
     class << self
@@ -47,10 +47,12 @@ module Nibble
       def latest(root: Rails.root) = tags(root:).last
 
       # Written by install and upgrade: without it there is no baseline to tell a site's edits from ours.
-      def record_install(version:, commit:, root: Rails.root)
+      def record_install(version:, commit:, answers: nil, root: Rails.root)
         file = root.join(RECORD)
         file.dirname.mkpath
-        file.write({ "version" => version, "commit" => commit, "at" => Date.current.to_s }.to_yaml)
+        kept = answers.presence || installed(root:)&.answers || {}
+        file.write({ "version" => version, "commit" => commit, "at" => Date.current.to_s,
+                     "answers" => kept.deep_stringify_keys }.to_yaml)
       end
 
       def installed(root: Rails.root)
@@ -58,7 +60,8 @@ module Nibble
         return nil unless file.file?
 
         data = YAML.safe_load_file(file) || {}
-        Installed.new(version: data["version"], commit: data["commit"], at: data["at"])
+        Installed.new(version: data["version"], commit: data["commit"], at: data["at"],
+                      answers: (data["answers"] || {}).symbolize_keys)
       end
 
       def at_least?(version, floor) = Gem::Version.new(version.to_s) >= Gem::Version.new(floor.to_s)

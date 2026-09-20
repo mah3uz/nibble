@@ -100,6 +100,22 @@ class Nibble::EjectTest < ActiveSupport::TestCase
     assert_equal [ "lib/nibble/search.rb" ], Nibble::Eject.unmanaged(root: @root)
   end
 
+  test "an upgrade can show what changed upstream since a file was ejected" do
+    git("init", "-q")
+    git("add", "-A")
+    commit("first")
+    ejection = Nibble::Eject.run(@source, root: @root)
+
+    assert_empty Nibble::Eject.diff_since(ejection, root: @root), "nothing has moved on yet"
+
+    write(@source, "<template>ours, improved</template>")
+    git("add", "-A")
+    commit("our improvement")
+
+    assert_includes Nibble::Eject.diff_since(ejection, root: @root), @source,
+                    "a site cannot decide whether to take an improvement it cannot see"
+  end
+
   test "a properly ejected copy is not reported as an accident" do
     git("init", "-q")
     git("add", "-A")

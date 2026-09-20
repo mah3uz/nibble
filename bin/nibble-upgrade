@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 $stdout.sync = true
+require "tmpdir"
 
 def fail!(message) = abort("upgrade refused: #{message}")
 
@@ -12,6 +13,14 @@ require_relative "../config/environment"
 ROOT = Rails.root
 
 def step(title) = puts("\n#{title}")
+
+def diff(mine, theirs)
+  Dir.mktmpdir do |dir|
+    [ [ "yours", mine ], [ "ours", theirs ] ].each { |name, body| File.write(File.join(dir, name), body) }
+    IO.popen([ "git", "diff", "--no-index", "--", "#{dir}/yours", "#{dir}/ours" ], err: File::NULL, &:read)
+      .lines.drop(4).map { |line| "  #{line}" }.join
+  end
+end
 def git(*args) = system("git", "-C", ROOT.to_s, *args)
 def git_out(*args) = IO.popen([ "git", "-C", ROOT.to_s, *args ], err: File::NULL, &:read).strip
 
@@ -58,6 +67,42 @@ end
 # The baseline is the release's own commit: measured from the merge commit, a site's edits to our files
 # would be absorbed into it and stop being reported.
 Nibble::Release.record_install(version: taken.version, commit: git_out("rev-parse", "#{target}^{commit}"))
+
+step "files a site owns, generated from our templates"
+regenerated = Nibble::Install.outdated(since: installed.commit, answers: installed.answers)
+if installed.answers.blank?
+  puts "  this install predates recorded answers, so ours cannot be re-rendered; compare them by hand"
+elsif regenerated.empty?
+  puts "  none changed"
+else
+  take_all = false
+  regenerated.each do |file|
+    answer = take_all ? "y" : nil
+    until %w[y n a q].include?(answer)
+      puts "\n  #{file.destination} — our template has moved on"
+      print "  [y] take ours  [n] keep yours  [d] show the difference  [a] take every one  [q] leave the rest: "
+      answer = $stdin.tty? ? $stdin.gets.to_s.strip.downcase : "n"
+      puts "n (nothing is typed here without a terminal)" unless $stdin.tty?
+      puts diff(file.current, file.rendered) if answer == "d"
+    end
+    break if answer == "q"
+
+    take_all ||= answer == "a"
+    next if answer == "n"
+
+    ROOT.join(file.destination).write(file.rendered)
+    puts "  wrote #{file.destination} — git diff shows what it replaced"
+  end
+end
+
+step "files this site ejected"
+stale = Nibble::Eject.stale
+puts "  none out of date" if stale.empty?
+stale.each do |ejection|
+  puts "  #{ejection.target} — ours changed since you copied it on #{ejection.at}"
+  puts Nibble::Eject.diff_since(ejection).lines.map { |line| "    #{line}" }.join
+  puts "    see it all with: git diff #{ejection.commit} HEAD -- #{ejection.source}"
+end
 
 step "installing dependencies"
 system("bundle", "install") or fail!("bundle install failed; the merge is still here, and git merge --abort undoes it")
