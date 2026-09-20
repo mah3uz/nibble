@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.3.0",
+    "date": "2026-09-21",
+    "url": "https://gitea.tlbn.app/mahfuz/nibble/releases/tag/v0.3.0",
+    "security": false,
+    "body": "## What's new\n\n- `bin/rails nibble:generate:theme HANDLE` copies the starter theme into `themes/HANDLE`, names it as this site's\n  theme and leaves ours alone, so a site never edits `themes/crumbs` to change how it looks.\n\n## What's fixed\n\n- The asset build ignored the theme named in `config/nibble.yml` and always bundled `themes/crumbs`, so a site\n  with its own theme edited `.vue` files that were never built — silently, with nothing to see in any log. The\n  build now resolves the theme the way the rest of Nibble does: your settings first, `NIBBLE_THEME` second.\n- An upgrade stopped partway through on any site with its own theme or its own npm packages: `npm ci` refuses a\n  lockfile that is not exactly ours.\n- `nibble:generate:theme` registers the new theme with npm, so a later `npm ci` — in your own CI, or a container\n  build — doesn't fail naming a workspace nothing told you about.\n- A theme view that throws while rendering on the server now says which view and which URL in the log, instead of\n  an anonymous stack trace. Vue drops only the piece that threw, so the page is otherwise served as normal.\n- `bin/rails nibble:upgrade` writes `db/schema.rb` when there isn't one, so taking 0.2.1 — which stopped shipping\n  ours — leaves a site with its own. **Upgrade:** 0.2.1 said to run `bin/rails db:prepare` for this; that only\n  writes the file when there is something to migrate. If you have no `db/schema.rb`, run\n  `bin/rails db:schema:dump` once, or take this release and it is written for you."
+  },
+  {
     "version": "0.2.1",
     "date": "2026-09-21",
     "url": "https://gitea.tlbn.app/mahfuz/nibble/releases/tag/v0.2.1",
