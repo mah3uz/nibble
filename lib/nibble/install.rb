@@ -54,12 +54,13 @@ module Nibble
       }
     end
 
-    def initialize(answers: {}, root: Rails.root, force: false, only: nil, kamal: false)
+    def initialize(answers: {}, root: Rails.root, force: false, only: nil, kamal: false, version: Nibble::VERSION)
       @root = Pathname(root)
       @answers = self.class.defaults(root: @root).merge(answers.to_h.symbolize_keys).freeze
       @force = force
       @kamal = kamal
       @only = only && Array(only).map(&:to_s)
+      @version = version
     end
 
     def run
@@ -77,7 +78,7 @@ module Nibble
     end
 
     # The answers recorded at install are what lets an upgrade re-render a template a site owns the output of.
-    def self.outdated(since:, answers:, root: Rails.root)
+    def self.outdated(since:, answers:, version: Nibble::VERSION, root: Rails.root)
       TEMPLATES.filter_map do |template, destination|
         next if answers.blank?
         next unless changed?(template, since, root)
@@ -85,7 +86,7 @@ module Nibble
         current = root.join(destination)
         next unless current.file?
 
-        rendered = new(answers:, root:).render(template)
+        rendered = new(answers:, root:, version:).render(template)
         Regenerated.new(destination:, rendered:, current: current.read) if rendered != current.read
       end
     end
@@ -114,7 +115,7 @@ module Nibble
     end
 
     def context
-      values = answers.merge(version: Nibble::VERSION)
+      values = answers.merge(version: @version)
       binding_object = Object.new
       values.each { |key, value| binding_object.define_singleton_method(key) { value } }
       binding_object.instance_eval { binding }

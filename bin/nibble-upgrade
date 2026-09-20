@@ -69,7 +69,7 @@ end
 Nibble::Release.record_install(version: taken.version, commit: git_out("rev-parse", "#{target}^{commit}"))
 
 step "files a site owns, generated from our templates"
-regenerated = Nibble::Install.outdated(since: installed.commit, answers: installed.answers)
+regenerated = Nibble::Install.outdated(since: installed.commit, answers: installed.answers, version: installed.version)
 if installed.answers.blank?
   puts "  this install predates recorded answers, so ours cannot be re-rendered; compare them by hand"
 elsif regenerated.empty?

@@ -90,6 +90,19 @@ class Nibble::InstallTest < ActiveSupport::TestCase
     assert_includes offered.sole.rendered, "notes", "the re-render has to use this site's own answers, not ours"
   end
 
+  test "re-rendering keeps the version a site is on, so an upgrade never switches new behaviour on" do
+    release = repo_with_templates
+    install(url: "https://notes.example").run
+    @root.join("config/nibble.yml").write("production:\n  theme: stale\n")
+
+    offered = Nibble::Install.outdated(since: release, answers: { url: "https://notes.example" },
+                                       version: "0.0.9", root: @root)
+
+    assert_includes offered.sole.rendered, %(load_defaults: "0.0.9")
+    assert_not_includes offered.sole.rendered, Nibble::VERSION,
+                        "taking the running release's number here would turn on behaviour the site never opted into"
+  end
+
   test "a template nobody touched is left out, so an upgrade only asks about what changed" do
     repo_with_templates(touch: false)
     install(url: "https://notes.example").run
