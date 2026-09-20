@@ -237,10 +237,13 @@ in `CHANGELOG.md`, which is also where anything a release needs from you is writ
 New behaviour ships switched off: raising `load_defaults` in `config/nibble.yml` is what turns it on, so taking a
 release never changes how your site behaves on its own.
 
-Nibble does not check for releases unless you ask it to. Set `release_feed` in `config/nibble.yml` to the URL of a
-published release file and **Utilities → Updates** lists what is newer, with the command to take each one and a
-count beside Utilities in the sidebar. It reads that file and sends nothing about your site. Nibble never updates
-itself: the control panel hands you the command, and you run it on your own machine.
+**Updates** in the sidebar carries a count of the releases newer than yours, what each one changed, and the command
+to take it. Once a day in the background Nibble reads the release file it publishes and remembers two things — how
+many releases are waiting and whether any is a security fix — so every page can show that instantly without asking
+anyone. Opening Updates reads the file again, so what you are looking at is current. Reading that file is all that
+happens — nothing about your site is sent anywhere — and a switch on that screen stops even that. There is nothing
+to configure. Nibble never updates itself: the control panel hands you the command, and you run it on your own
+machine.
 
 ## Licence
 

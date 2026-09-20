@@ -5,6 +5,11 @@ class RepositoryTest < ActiveSupport::TestCase
     assert_match %r{\Ahttps://\S+\.git\z}, Nibble::REPOSITORY
   end
 
+  test "the release feed is ours to publish and points at a file, not an API" do
+    assert_match %r{\Ahttps://\S+\.json\z}, Nibble::RELEASES_FEED,
+      "a site never sets this: an install has to know where to look without being told"
+  end
+
   test "the installer clones the same repository the app knows about" do
     default = Rails.root.join("install.sh").read[/^REPO="\$\{NIBBLE_REPO:-([^}]+)\}"/, 1]
 

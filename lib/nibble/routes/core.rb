@@ -129,6 +129,8 @@ Rails.application.routes.draw do
         post :replace
       end
     end
+    get "updates", to: "updates#show", as: :admin_updates
+    patch "updates", to: "updates#update"
     resources :redirects, only: %i[index create update destroy]
     resources :not_found_paths, only: %i[index destroy], path: "404s"
     resource :utilities, only: :show, controller: "utilities" do
@@ -142,7 +144,6 @@ Rails.application.routes.draw do
       get :audit
       get :jobs
       get :health
-      get :updates
       get :content
       get "content/export", action: :export_content, as: :export_content
       post "content/import", action: :import_content, as: :import_content

@@ -1,14 +1,29 @@
 #!/usr/bin/env ruby
 require "pathname"
+require "json"
 
 ROOT = Pathname(__dir__).parent
 VERSION_FILE = ROOT.join("lib/nibble.rb")
 CHANGELOG = ROOT.join("CHANGELOG.md")
+FEED = ROOT.join("docs/releases.json")
+
+# Kept to the most recent releases: every install reads this file, and it must not grow without limit.
+KEEP_RELEASES = 25
+
+def publish_feed(version, notes, date)
+  published = FEED.file? ? JSON.parse(FEED.read) : []
+  published.reject! { |release| release["version"] == version }
+  published.unshift("version" => version, "date" => date, "url" => "#{REPOSITORY_URL}/releases/tag/v#{version}",
+                    "security" => notes.match?(/^##\s+Security\b/i), "body" => notes.strip)
+  FEED.write("#{JSON.pretty_generate(published.first(KEEP_RELEASES))}\n")
+end
 
 def fail!(message) = abort("release refused: #{message}")
 
 version = ARGV.first or fail!("usage: bin/nibble-release <version>, e.g. bin/nibble-release 0.2.0")
 fail!("#{version} isn't a version like 1.2.3") unless version.match?(/\A\d+\.\d+\.\d+\z/)
+
+REPOSITORY_URL = VERSION_FILE.read[/REPOSITORY = "([^"]+)"/, 1].to_s.delete_suffix(".git")
 
 current = VERSION_FILE.read[/VERSION = "([^"]+)"/, 1]
 current_tagged = !`git -C #{ROOT} tag -l v#{current}`.strip.empty?
@@ -19,16 +34,18 @@ elsif Gem::Version.new(version) < Gem::Version.new(current)
 end
 fail!("working tree isn't clean") unless `git -C #{ROOT} status --porcelain`.strip.empty?
 
-notes = CHANGELOG.read[/^## Unreleased\n(.*?)(?=^## |\z)/m, 1].to_s.strip
+notes = CHANGELOG.read[/^## Unreleased\n(.*?)(?=^## \d+\.\d+\.\d+ |\z)/m, 1].to_s.strip
 fail!("CHANGELOG.md has nothing under Unreleased") if notes.empty?
 
+date = Time.now.strftime("%Y-%m-%d")
 VERSION_FILE.write(VERSION_FILE.read.sub(/VERSION = "[^"]+"/, %(VERSION = "#{version}")))
-CHANGELOG.write(CHANGELOG.read.sub(/^## Unreleased\n/, "## Unreleased\n\n## #{version} — #{Time.now.strftime('%Y-%m-%d')}\n"))
+CHANGELOG.write(CHANGELOG.read.sub(/^## Unreleased\n/, "## Unreleased\n\n## #{version} — #{date}\n"))
+publish_feed(version, notes, date)
 
 puts "running bin/ci"
 system(ROOT.join("bin/ci").to_s) or fail!("bin/ci failed — nothing was committed or tagged")
 
-system("git", "-C", ROOT.to_s, "add", VERSION_FILE.to_s, CHANGELOG.to_s) or fail!("could not stage the release")
+system("git", "-C", ROOT.to_s, "add", VERSION_FILE.to_s, CHANGELOG.to_s, FEED.to_s) or fail!("could not stage the release")
 system("git", "-C", ROOT.to_s, "commit", "-qm", "Release #{version}") or fail!("could not commit the release")
 system("git", "-C", ROOT.to_s, "tag", "-a", "v#{version}", "--cleanup=verbatim", "-m", "Nibble #{version}\n\n#{notes}") or fail!("could not tag the release")
 

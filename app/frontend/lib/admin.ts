@@ -24,6 +24,7 @@ export type NavItem = {
   active: string
   children: NavItem[] | null
   badge: number | null
+  badge_tone: 'danger' | null
 }
 export type NavSection = { handle: string; label: string | null; items: NavItem[] }
 

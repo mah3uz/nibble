@@ -17,6 +17,10 @@ production: &production
     class: Nibble::Jobs::RunSchedule
     queue: maintenance
     schedule: every minute
+  daily_release_check:
+    class: Nibble::Jobs::CheckReleases
+    queue: maintenance
+    schedule: at 4am every day
   nightly_database_snapshot:
     class: DatabaseSnapshotJob
     queue: maintenance

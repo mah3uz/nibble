@@ -1,7 +1,8 @@
 module Nibble
   VERSION = "0.1.0".freeze
-  # Where releases come from. Swap this one line when Nibble moves to its public home.
+  # Where releases come from. Swap these two lines when Nibble moves to its public home.
   REPOSITORY = "https://gitea.tlbn.app/mahfuz/nibble.git".freeze
+  RELEASES_FEED = "https://gitea.tlbn.app/mahfuz/nibble/raw/branch/main/docs/releases.json".freeze
   SCHEMA_FORMAT = 1
   THEME_API_VERSION = 1
   CONTENT_FORMAT_VERSION = 1

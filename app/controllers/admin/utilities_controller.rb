@@ -80,14 +80,6 @@ module Admin
                                                            checked_at: Time.current.utc.iso8601, system: system_info }
     end
 
-    def updates
-      render inertia: "admin/utilities/Updates", props: {
-        current: Nibble::VERSION,
-        feed: Nibble.config.release_feed.present?,
-        releases: Nibble::Releases.newer.map(&:to_h)
-      }
-    end
-
     def jobs
       props = Nibble::Cp::JobsDashboard.available? ? Nibble::Cp::JobsDashboard.new.props : { available: false }
       render inertia: "admin/utilities/Jobs", props: { jobs: props }

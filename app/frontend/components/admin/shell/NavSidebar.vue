@@ -51,7 +51,8 @@ const hasActiveChild = (item: (typeof admin.value.nav)[number]['items'][number])
                   <span>{{ item.title }}</span>
                   <span
                     v-if="item.badge"
-                    class="ms-auto rounded-full bg-amber-400 px-1.5 text-[11px] leading-4 font-medium text-amber-950 tabular-nums"
+                    class="ms-auto rounded-full px-1.5 text-[11px] leading-4 font-medium tabular-nums"
+                    :class="item.badge_tone === 'danger' ? 'bg-red-500 text-white' : 'bg-amber-400 text-amber-950'"
                     >{{ item.badge }}</span
                   >
                 </Link>
@@ -68,11 +69,6 @@ const hasActiveChild = (item: (typeof admin.value.nav)[number]['items'][number])
                   >
                     <Link :href="child.url">
                       <span>{{ child.title }}</span>
-                      <span
-                        v-if="child.badge"
-                        class="ms-auto rounded-full bg-amber-400 px-1.5 text-[11px] leading-4 font-medium text-amber-950 tabular-nums"
-                        >{{ child.badge }}</span
-                      >
                     </Link>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>

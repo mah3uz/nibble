@@ -21,12 +21,11 @@ module Nibble
           "og" => { "w" => 1200, "h" => 630, "fit" => "crop" }
         }
       },
-      "outbound" => { "allowed_hosts" => [], "secrets" => [], "config" => {} },
-      "release_feed" => nil
+      "outbound" => { "allowed_hosts" => [], "secrets" => [], "config" => {} }
     }.freeze
 
     attr_reader :load_defaults, :theme, :url, :locales, :reserved_paths, :disable, :trash_retention_days, :asset_extensions, :asset_presets, :max_upload_bytes,
-                :outbound_allowed_hosts, :outbound_secrets, :outbound_config, :release_feed
+                :outbound_allowed_hosts, :outbound_secrets, :outbound_config
 
     def initialize(values, themes_path: nil)
       values = DEFAULTS.deep_merge(values.to_h.deep_stringify_keys.compact)
@@ -46,7 +45,6 @@ module Nibble
       @outbound_allowed_hosts = Array(outbound["allowed_hosts"]).map { |host| host.to_s.downcase }.freeze
       @outbound_secrets = Array(outbound["secrets"]).map(&:to_s).freeze
       @outbound_config = outbound["config"].to_h.deep_dup.freeze
-      @release_feed = values["release_feed"].presence
       freeze
     end
 

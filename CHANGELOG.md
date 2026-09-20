@@ -1,25 +1,31 @@
 # Changelog
 
-What changed for a site running Nibble. Anything that needs you to act has an **Upgrade** note; releases without
-one are safe to take as they come. A release whose database migrations cannot be undone says so in its entry, so
-you know the snapshot is the only way back.
+What changed for a site running Nibble, under **What's new**, **What's fixed**, **Changed** and **Security**.
+Anything that needs you to act has an **Upgrade** note; releases without one are safe to take as they come. A
+release whose database migrations cannot be undone says so in its entry, so you know the snapshot is the only way
+back. The control panel shows these same notes, read from `docs/releases.json`, which a release generates from
+this file.
 
 Versions are ordered but not promises: while Nibble is `0.x`, anything can change between releases. Themes pin the
 theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
-### Added
+## What's new
 
 - `bin/nibble-upgrade` takes this site to a release: it snapshots the database, gates on the incoming release's
   requirements, merges, installs dependencies and migrates. It runs on a workstation only.
 - The upgrade offers to re-render the files you own that we generate, and reports what changed in our copy of
   anything you ejected.
-- **Utilities → Updates**: releases newer than the one you are running, what each one changed, and the command
-  that takes it, with a count beside Utilities in the sidebar. It appears only once `release_feed` is set in
-  `config/nibble.yml`; unset, nothing is fetched and nothing about your site is ever sent.
+- **Updates** in the sidebar: releases newer than the one you are running, what each one changed, and the command
+  that takes it, with a count on the menu item that turns red when one of them is a security fix. A daily
+  background check remembers the count; the page itself reads the file again when you open it, so no other page
+  ever waits on it and there is nothing to set up. Nothing about your site is sent, and a switch on that screen
+  stops the checks entirely.
+- Settings a person changes in the control panel are kept in a `settings` table, separate from `config/nibble.yml`,
+  which stays a file you edit by hand.
 
-### Changed
+## Changed
 
 - The first administrator is made by asking, not by environment variables: `bin/rails nibble:admin:create` asks
   for a name, email address and password, and refuses a password the rules reject. `ADMIN_EMAIL`,
@@ -31,7 +37,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## 0.1.0 — 2026-09-20
 
-### Added
+## What's new
 
 - `schema/` holds a site's own collections, blueprints, taxonomies, globals, navigation and forms. It is read after
   Nibble's and after the theme's, so a file here replaces one of ours whole.
@@ -49,7 +55,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - A licence: MIT (`LICENSE`). Use it, change it, sell it, rebrand the control panel; keep the copyright notice
   with copies. No warranty, no support promise.
 
-### Changed
+## Changed
 
 - Passwords must be at least 12 characters and mix lower case, upper case, a number and a symbol. The rule is on
   the model, so the control panel, password resets, invitations and the installer all apply it.
