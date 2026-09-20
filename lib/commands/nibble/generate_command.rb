@@ -11,7 +11,8 @@ class NibbleGenerateCommand < Rails::Command::Base
       puts "wrote #{written.path}"
       puts "  #{written.note}" if written.note
     end
-    puts "run npm install, then bin/rails nibble:check"
+    install_workspace
+    puts "run bin/rails nibble:check"
   rescue Nibble::Generate::Refused => e
     abort "generate refused: #{e.message}"
   end
@@ -29,6 +30,14 @@ class NibbleGenerateCommand < Rails::Command::Base
   end
 
   private
+
+  # A new theme leaves package-lock.json out of date, and npm ci then fails far from here.
+  def install_workspace
+    puts "registering the theme with npm"
+    return puts "  npm install failed — run it yourself before building" unless system("npm", "install", "--silent")
+
+    puts "  package-lock.json now knows about it; commit it with the theme"
+  end
 
   # A new collection changes the theme's generated types, so leaving them stale would fail nibble:check.
   def refresh_types

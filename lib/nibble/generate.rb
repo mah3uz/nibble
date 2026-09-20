@@ -71,8 +71,6 @@ module Nibble
         })
       end
 
-      # A site's own theme, copied from ours so it starts working: themes/* is an npm workspace glob, so
-      # nothing has to be registered.
       def theme(handle, root: Rails.root)
         check!(handle)
         source = root.join("themes", DEFAULT_THEME)
@@ -110,7 +108,7 @@ module Nibble
         path.write("#{JSON.pretty_generate(package)}\n")
       end
 
-      # config/nibble.yml is the site's, so only the one line that names the theme is touched.
+      # The site's file: only the line naming the theme is touched.
       def activate(handle, root)
         settings = root.join("config/nibble.yml")
         return "set NIBBLE_THEME=#{handle}, or theme: #{handle} in config/nibble.yml, to use it" unless settings.file?

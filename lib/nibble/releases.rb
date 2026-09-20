@@ -15,8 +15,7 @@ module Nibble
 
     CHECKING = "updates.checking".freeze
 
-    # Ours, not a site's: nobody types in where their own CMS looks for updates. All a site decides is
-    # whether to look at all, and it decides that in the control panel.
+    # Ours, not a site's: all a site chooses is whether to look.
     def self.checking? = Records::Setting.read(CHECKING, true) != false
 
     def self.checking=(on)
@@ -30,8 +29,7 @@ module Nibble
     NOTHING = Summary.new(count: 0, security: false)
 
     class << self
-      # Reads what the scheduled check last found. It never fetches: a slow feed must not hold up the
-      # control panel, and a site that has just switched this on should not wait for the first request.
+      # Never fetches: a slow feed must not hold up a page.
       def all(current: VERSION, feed: feed_url)
         return [] if feed.blank?
 
@@ -46,7 +44,7 @@ module Nibble
 
       def newer(current: VERSION, feed: feed_url) = all(current:, feed:).select { |release| release.status == "newer" }
 
-      # What every control panel page reads: two numbers the daily check left behind, never the whole feed.
+      # What every page reads, so none of them parses the feed.
       def summary
         return NOTHING if feed_url.blank?
 
@@ -83,8 +81,7 @@ module Nibble
         end
       end
 
-      # A plain GET of a published file: no headers, no query, nothing about this site leaves it. The
-      # timeouts matter because the Updates screen fetches this while someone waits for the page.
+      # No headers, no query: nothing about this site leaves. Timeouts because a page waits on it.
       def fetch(feed)
         uri = URI.parse(feed)
         raise Error, "the release feed must be an https URL" unless uri.scheme == "https"
@@ -104,7 +101,6 @@ module Nibble
         end
       end
 
-      # Nothing has been fetched yet, so ask in the background and answer with what we have: nothing.
       def check_soon(answer)
         Jobs::CheckReleases.perform_later if Rails.cache.write(ASKED_KEY, true, expires_in: ASK_AGAIN_AFTER, unless_exist: true)
         answer

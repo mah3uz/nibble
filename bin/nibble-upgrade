@@ -64,8 +64,7 @@ unless git("-c", "merge.ff=true", "merge", "--no-edit", target)
   exit 1
 end
 
-# The baseline is the release's own commit: measured from the merge commit, a site's edits to our files
-# would be absorbed into it and stop being reported.
+# The release's commit, not the merge commit, which would absorb a site's edits to our files.
 Nibble::Release.record_install(version: taken.version, commit: git_out("rev-parse", "#{target}^{commit}"))
 
 step "files a site owns, generated from our templates"
@@ -106,8 +105,8 @@ end
 
 step "installing dependencies"
 system("bundle", "install") or fail!("bundle install failed; the merge is still here, and git merge --abort undoes it")
-# A site with its own theme or its own packages has a lockfile of its own, which npm ci refuses to use.
-system("npm", "ci") || system("npm", "install") or fail!("installing npm packages failed; the merge is still here, and git merge --abort undoes it")
+# package-lock.json is shared, so rebuild it rather than install from it.
+system("npm", "install") or fail!("installing npm packages failed; the merge is still here, and git merge --abort undoes it")
 
 step "migrating"
 puts "  past this point the merge is committed; the way back is the snapshot above"

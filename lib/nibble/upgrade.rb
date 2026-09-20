@@ -42,8 +42,7 @@ module Nibble
       raise Stopped, "#{moment}, nibble:check found:\n#{check.problems.map { |problem| "  ✗ #{problem}" }.join("\n")}"
     end
 
-    # db/schema.rb is the site's and generated, so an upgrade that removes ours leaves them without one:
-    # migrating alone will not write it when there is nothing left to migrate.
+    # Migrating writes it only when something migrates, and we no longer ship one.
     def dump_schema!
       return if @schema_file.exist?
 

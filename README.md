@@ -231,6 +231,9 @@ Two kinds of file a merge cannot decide for you, so it asks:
 - **Files you ejected.** For each one it shows what changed in our copy since you took yours, so you can decide
   what to carry across.
 
+`package-lock.json` is the one file both of us write — your own theme or packages have to go in it. The upgrade
+rebuilds it for you; if git stops on a conflict there, take either side and run `npm install`.
+
 The way back has a boundary, and the command names it as it crosses: until the migrations run, `git merge --abort`
 undoes everything; after them, restore the snapshot it printed. A release whose migrations cannot be undone says so
 in `CHANGELOG.md`, which is also where anything a release needs from you is written.

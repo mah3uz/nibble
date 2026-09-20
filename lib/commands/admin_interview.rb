@@ -12,7 +12,7 @@ module AdminInterview
     end
   end
 
-  # The install never asks: the first user has to be able to do everything, or there is no way to finish setting up.
+  # The install never asks: the first user has to be able to do everything.
   def superuser_role = Role.find_by(superuser: true) || Role.find_by!(handle: "admin")
 
   def ask_role

@@ -18,8 +18,15 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## What's fixed
 
+- The asset build ignored the theme named in `config/nibble.yml` and always bundled `themes/crumbs`, so a site
+  with its own theme edited `.vue` files that were never built — silently, with nothing to see in any log. The
+  build now resolves the theme the way the rest of Nibble does: your settings first, `NIBBLE_THEME` second.
 - An upgrade stopped partway through on any site with its own theme or its own npm packages: `npm ci` refuses a
-  lockfile that is not exactly ours. It falls back to `npm install`, as `bin/setup` already did.
+  lockfile that is not exactly ours.
+- `nibble:generate:theme` registers the new theme with npm, so a later `npm ci` — in your own CI, or a container
+  build — doesn't fail naming a workspace nothing told you about.
+- A theme view that throws while rendering on the server now says which view and which URL in the log, instead of
+  an anonymous stack trace. Vue drops only the piece that threw, so the page is otherwise served as normal.
 - `bin/rails nibble:upgrade` writes `db/schema.rb` when there isn't one, so taking 0.2.1 — which stopped shipping
   ours — leaves a site with its own. **Upgrade:** 0.2.1 said to run `bin/rails db:prepare` for this; that only
   writes the file when there is something to migrate. If you have no `db/schema.rb`, run
@@ -34,6 +41,10 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Changed
 
+- `package-lock.json` is shared, not ours alone: a site with its own theme or packages has to change it. An
+  upgrade now rebuilds it with `npm install` rather than installing from it, so a merged lockfile repairs itself.
+  **Upgrade:** if git reports a conflict on it, take either side and run `npm install` — the result is the same
+  either way, and commit it.
 - `db/schema.rb` is yours, and Nibble no longer ships one. It is generated from migrations, so two copies of it —
   ours and yours — conflicted on every upgrade that carried a migration, on a file neither of us edits by hand.
   **Upgrade:** the merge removes our copy. Run `bin/rails db:prepare` to regenerate yours, then commit it. If git

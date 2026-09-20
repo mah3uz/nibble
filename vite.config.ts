@@ -1,11 +1,24 @@
 import vue from '@vitejs/plugin-vue'
 import inertia from '@inertiajs/vite'
 import tailwindcss from '@tailwindcss/vite'
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import RubyPlugin from 'vite-plugin-ruby'
 
-const theme = process.env.NIBBLE_THEME || 'crumbs'
+// The order Nibble.config uses: the site's settings first, then the environment.
+function activeTheme(): string {
+  try {
+    const settings = readFileSync(resolve(import.meta.dirname, 'config/nibble.yml'), 'utf8')
+    const named = settings.match(/^\s*theme:\s*["']?([a-z0-9_]+)["']?\s*$/m)
+    if (named) return named[1]
+  } catch {
+    // Not installed yet.
+  }
+  return process.env.NIBBLE_THEME || 'crumbs'
+}
+
+const theme = activeTheme()
 
 export default defineConfig(({ command, isSsrBuild }) => ({
   resolve: {
