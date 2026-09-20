@@ -11,6 +11,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.5.0 — 2026-09-21
+
 ## Changed
 
 - **Everything of Nibble's now lives under `lib/nibble/`, and `app/` is yours.** Your models, controllers, jobs
