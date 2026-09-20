@@ -22,8 +22,8 @@
 
     /* Aliases */
     "paths": {
-      "@/*": ["./app/frontend/*"],
-      "~/*": ["./app/frontend/*"],
+      "@/*": ["./app/frontend/nibble-admin/*"],
+      "~/*": ["./app/frontend/nibble-admin/*"],
       "@nibble-admin/*": ["./app/frontend/nibble-admin/*"],
       "@nibble": ["./app/frontend/nibble/index.ts"],
       "@nibble/*": ["./app/frontend/nibble/*"],

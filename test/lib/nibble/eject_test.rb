@@ -3,7 +3,7 @@ require "test_helper"
 class Nibble::EjectTest < ActiveSupport::TestCase
   setup do
     @root = Pathname(Dir.mktmpdir("nibble-eject"))
-    @source = "app/frontend/pages/admin/Dashboard.vue"
+    @source = "app/frontend/nibble-admin/pages/admin/Dashboard.vue"
     write(@source, "<template>ours</template>")
   end
 
@@ -56,7 +56,7 @@ class Nibble::EjectTest < ActiveSupport::TestCase
   end
 
   test "a path that doesn't exist is refused before anything is written" do
-    error = assert_raises(Nibble::Eject::Refused) { Nibble::Eject.run("app/frontend/pages/admin/Gone.vue", root: @root) }
+    error = assert_raises(Nibble::Eject::Refused) { Nibble::Eject.run("app/frontend/nibble-admin/pages/admin/Gone.vue", root: @root) }
 
     assert_match "doesn't exist", error.message
     assert_not @root.join(".nibble/ejected.yml").exist?
@@ -134,9 +134,9 @@ class Nibble::EjectTest < ActiveSupport::TestCase
   end
 
   test "ejecting a second file keeps the first in the manifest" do
-    write("app/frontend/pages/admin/Confirm.vue", "<template>confirm</template>")
+    write("app/frontend/nibble-admin/pages/admin/Confirm.vue", "<template>confirm</template>")
     Nibble::Eject.run(@source, root: @root)
-    Nibble::Eject.run("app/frontend/pages/admin/Confirm.vue", root: @root)
+    Nibble::Eject.run("app/frontend/nibble-admin/pages/admin/Confirm.vue", root: @root)
 
     assert_equal 2, Nibble::Eject.manifest(root: @root).size
   end

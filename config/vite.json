@@ -6,7 +6,7 @@
     ],
     "ssrBuildEnabled": true,
     "additionalEntrypoints": [
-      "~/{assets,fonts,icons,images}/**/*",
+      "~/nibble-admin/{assets,fonts,icons,images}/**/*",
       "themes/*/styles/theme.css"
     ]
   },

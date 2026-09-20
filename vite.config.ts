@@ -27,7 +27,9 @@ export default defineConfig(({ command, isSsrBuild }) => ({
       '@site': resolve(import.meta.dirname, 'site'),
       '@nibble': resolve(import.meta.dirname, 'app/frontend/nibble'),
       '@nibble-admin': resolve(import.meta.dirname, 'app/frontend/nibble-admin'),
-      re2js: resolve(import.meta.dirname, 'app/frontend/lib/stubs/re2js.ts'),
+      '@': resolve(import.meta.dirname, 'app/frontend/nibble-admin'),
+      // Find and replace has no regex mode, so its 868K RE2 engine is stubbed out rather than bundled.
+      re2js: resolve(import.meta.dirname, 'app/frontend/nibble-admin/lib/stubs/re2js.ts'),
     },
   },
   ssr: {

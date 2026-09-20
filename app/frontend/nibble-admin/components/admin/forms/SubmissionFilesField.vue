@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { fieldtypeEmits, fieldtypeProps, useFieldtype } from '@/nibble-admin/fieldtypes/useFieldtype'
+import { fieldtypeEmits, fieldtypeProps, useFieldtype } from '@nibble-admin/fieldtypes/useFieldtype'
 
 type FileLink = { filename: string; size: number; url: string }
 

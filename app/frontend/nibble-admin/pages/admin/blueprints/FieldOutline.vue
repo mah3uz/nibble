@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PublishField } from '@/nibble-admin/fieldtypes/types'
+import type { PublishField } from '@nibble-admin/fieldtypes/types'
 
 type SetGroup = {
   handle: string

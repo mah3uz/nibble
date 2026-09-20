@@ -7,11 +7,11 @@ import StatusCell from '@/components/admin/listing/cells/StatusCell.vue'
 import PageHeader from '@/components/admin/page/PageHeader.vue'
 import { Button } from '@/components/ui/button'
 import { useConfirm } from '@/lib/confirm'
-import { registerCoreFieldtypes } from '@/nibble-admin/fieldtypes/core'
-import { registerFieldtype } from '@/nibble-admin/fieldtypes/registry'
-import PublishContainer from '@/nibble-admin/publish/PublishContainer.vue'
-import PublishSections from '@/nibble-admin/publish/PublishSections.vue'
-import type { PublishBlueprint } from '@/nibble-admin/fieldtypes/types'
+import { registerCoreFieldtypes } from '@nibble-admin/fieldtypes/core'
+import { registerFieldtype } from '@nibble-admin/fieldtypes/registry'
+import PublishContainer from '@nibble-admin/publish/PublishContainer.vue'
+import PublishSections from '@nibble-admin/publish/PublishSections.vue'
+import type { PublishBlueprint } from '@nibble-admin/fieldtypes/types'
 
 registerCoreFieldtypes()
 registerFieldtype('files', SubmissionFilesField)

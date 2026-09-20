@@ -2,7 +2,7 @@
 import { Link } from '@inertiajs/vue3'
 import AdminIcon from '@/components/admin/icons/AdminIcon.vue'
 import PageHeader from '@/components/admin/page/PageHeader.vue'
-import type { PublishBlueprint } from '@/nibble-admin/fieldtypes/types'
+import type { PublishBlueprint } from '@nibble-admin/fieldtypes/types'
 import FieldOutline from './FieldOutline.vue'
 
 defineProps<{ label: string; source: string; blueprint: PublishBlueprint }>()

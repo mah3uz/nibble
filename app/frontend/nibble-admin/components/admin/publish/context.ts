@@ -1,4 +1,4 @@
-export type { PublishBlueprint, PublishField, PublishSection, PublishTab } from '@/nibble-admin/fieldtypes/types'
+export type { PublishBlueprint, PublishField, PublishSection, PublishTab } from '@nibble-admin/fieldtypes/types'
 
 export type RecordStatus = 'draft' | 'in_review' | 'approved' | 'scheduled' | 'published' | 'unpublished'
 

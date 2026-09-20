@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import LinkUrlInput from '@/nibble-admin/components/LinkUrlInput.vue'
+import LinkUrlInput from '@nibble-admin/components/LinkUrlInput.vue'
 import EntryPicker from './EntryPicker.vue'
 import type { NavEntry, NavTreeItem } from './types'
 

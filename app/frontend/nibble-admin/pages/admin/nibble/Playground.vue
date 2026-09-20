@@ -4,9 +4,9 @@ import { ref, shallowRef } from 'vue'
 import PageHeader from '@/components/admin/page/PageHeader.vue'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { registerCoreFieldtypes } from '@/nibble-admin/fieldtypes/core'
-import type { PublishBlueprint } from '@/nibble-admin/fieldtypes/types'
-import PublishContainer from '@/nibble-admin/publish/PublishContainer.vue'
+import { registerCoreFieldtypes } from '@nibble-admin/fieldtypes/core'
+import type { PublishBlueprint } from '@nibble-admin/fieldtypes/types'
+import PublishContainer from '@nibble-admin/publish/PublishContainer.vue'
 
 const props = defineProps<{
   blueprints: { key: string; title: string }[]
