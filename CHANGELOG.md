@@ -1,12 +1,28 @@
 # Changelog
 
 What changed for a site running Nibble. Anything that needs you to act has an **Upgrade** note; releases without
-one are safe to take as they come.
+one are safe to take as they come. A release whose database migrations cannot be undone says so in its entry, so
+you know the snapshot is the only way back.
 
 Versions are ordered but not promises: while Nibble is `0.x`, anything can change between releases. Themes pin the
 theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
+
+### Added
+
+- `bin/nibble-upgrade` takes this site to a release: it snapshots the database, gates on the incoming release's
+  requirements, merges, installs dependencies and migrates. It runs on a workstation only.
+- The upgrade offers to re-render the files you own that we generate, and reports what changed in our copy of
+  anything you ejected.
+- `release_feed` in `config/nibble.yml`: set it to a published release file and the Health screen lists what is
+  newer. Unset, nothing is fetched.
+
+### Changed
+
+- `.nibble/install.yml` now records the answers the install was given, which is what lets an upgrade re-render
+  your settings without asking again. Installs made before this keep working; the upgrade says it cannot
+  re-render them.
 
 ## 0.1.0 — 2026-09-20
 

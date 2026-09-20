@@ -215,12 +215,31 @@ Before the first deploy:
 
 ## Upgrading
 
-Releases are tags. `bin/nibble-upgrade` snapshots the database, checks the release can upgrade from your version
-and that your toolchain meets its floor, merges, installs dependencies and runs `bin/rails nibble:upgrade`.
-`CHANGELOG.md` says what each release needs from you, if anything.
+Releases are tags. **Upgrade on your own machine, check the result, then deploy it** — never in place on a
+server, which the command refuses to do. Commit a clean tree first: that is what lets you undo anything it does.
+
+`bin/nibble-upgrade [version]` takes the newest release, or the one you name. It snapshots the database and
+prints the command that puts it back, checks the release can upgrade from your version and that your machine
+meets its Ruby and Node floors, merges, installs dependencies and runs `bin/rails nibble:upgrade`.
+
+Two kinds of file a merge cannot decide for you, so it asks:
+
+- **Files you own that we generate** — `config/nibble.yml`, `.env`, the deploy files. If our template has moved
+  on, it re-renders yours from the answers your install recorded and offers it, with a diff. Your `load_defaults`
+  is kept, so new behaviour still stays off.
+- **Files you ejected.** For each one it shows what changed in our copy since you took yours, so you can decide
+  what to carry across.
+
+The way back has a boundary, and the command names it as it crosses: until the migrations run, `git merge --abort`
+undoes everything; after them, restore the snapshot it printed. A release whose migrations cannot be undone says so
+in `CHANGELOG.md`, which is also where anything a release needs from you is written.
 
 New behaviour ships switched off: raising `load_defaults` in `config/nibble.yml` is what turns it on, so taking a
 release never changes how your site behaves on its own.
+
+Nibble does not check for releases unless you ask it to. Set `release_feed` in `config/nibble.yml` to the URL of a
+published release file and the control panel's Health screen lists what is newer; it reads that file and sends
+nothing about your site.
 
 ## Licence
 
