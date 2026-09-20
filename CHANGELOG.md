@@ -16,6 +16,15 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - `bin/rails nibble:generate:theme HANDLE` copies the starter theme into `themes/HANDLE`, names it as this site's
   theme and leaves ours alone, so a site never edits `themes/crumbs` to change how it looks.
 
+## What's fixed
+
+- An upgrade stopped partway through on any site with its own theme or its own npm packages: `npm ci` refuses a
+  lockfile that is not exactly ours. It falls back to `npm install`, as `bin/setup` already did.
+- `bin/rails nibble:upgrade` writes `db/schema.rb` when there isn't one, so taking 0.2.1 — which stopped shipping
+  ours — leaves a site with its own. **Upgrade:** 0.2.1 said to run `bin/rails db:prepare` for this; that only
+  writes the file when there is something to migrate. If you have no `db/schema.rb`, run
+  `bin/rails db:schema:dump` once, or take this release and it is written for you.
+
 ## 0.2.1 — 2026-09-21
 
 ## What's fixed

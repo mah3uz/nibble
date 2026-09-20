@@ -83,4 +83,21 @@ class Nibble::UpgradeTest < ActiveSupport::TestCase
     assert_empty second.migrations
     assert_not second.snapshot
   end
+
+  test "an upgrade writes db/schema.rb when the site has none, since ours is no longer shipped" do
+    dumped = false
+
+    Nibble::Upgrade.run(database: -> { }, schema_file: @themes.join("no-schema.rb"), schema_dump: -> { dumped = true })
+
+    assert dumped, "migrating alone does not write it when there is nothing left to migrate"
+  end
+
+  test "a site's own db/schema.rb is left exactly as it is" do
+    theirs = @themes.join("schema.rb")
+    theirs.write("# theirs")
+
+    Nibble::Upgrade.run(database: -> { }, schema_file: theirs, schema_dump: -> { flunk "never overwrite a site's own" })
+
+    assert_equal "# theirs", theirs.read
+  end
 end

@@ -106,7 +106,8 @@ end
 
 step "installing dependencies"
 system("bundle", "install") or fail!("bundle install failed; the merge is still here, and git merge --abort undoes it")
-system("npm", "ci") or fail!("npm ci failed; the merge is still here, and git merge --abort undoes it")
+# A site with its own theme or its own packages has a lockfile of its own, which npm ci refuses to use.
+system("npm", "ci") || system("npm", "install") or fail!("installing npm packages failed; the merge is still here, and git merge --abort undoes it")
 
 step "migrating"
 puts "  past this point the merge is committed; the way back is the snapshot above"

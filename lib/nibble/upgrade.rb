@@ -5,9 +5,11 @@ module Nibble
 
     def self.run(**options) = new(**options).run
 
-    def initialize(allow_data_loss: false, database: nil, log: ->(_line) { })
+    def initialize(allow_data_loss: false, database: nil, schema_file: nil, schema_dump: nil, log: ->(_line) { })
       @allow_data_loss = allow_data_loss
       @database = database || method(:prepare_database)
+      @schema_file = schema_file || Rails.root.join("db/schema.rb")
+      @schema_dump = schema_dump || method(:dump_schema)
       @log = log
     end
 
@@ -15,6 +17,7 @@ module Nibble
       compatible!
       @log.call("database: running migrations")
       @database.call
+      dump_schema!
       warnings = verify!("before content migrations")
       migrations = ContentMigrations.run
       Events.dispatch_pending
@@ -37,6 +40,21 @@ module Nibble
       return check.warnings.map(&:to_s) if check.ok?
 
       raise Stopped, "#{moment}, nibble:check found:\n#{check.problems.map { |problem| "  ✗ #{problem}" }.join("\n")}"
+    end
+
+    # db/schema.rb is the site's and generated, so an upgrade that removes ours leaves them without one:
+    # migrating alone will not write it when there is nothing left to migrate.
+    def dump_schema!
+      return if @schema_file.exist?
+
+      @schema_dump.call
+      @log.call("database: wrote db/schema.rb")
+    end
+
+    def dump_schema
+      require "rake"
+      Rails.application.load_tasks unless Rake::Task.task_defined?("db:schema:dump")
+      Rake::Task["db:schema:dump"].invoke
     end
 
     def prepare_database
