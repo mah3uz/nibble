@@ -37,13 +37,15 @@ changes is not doing anything. The suite is Minitest, run in parallel, with fixt
 the process survives. A component that touches browser globals on import would otherwise take down server
 rendering for the whole public site, and nothing else would catch it.
 
-It refuses to run when something is already listening on port 13714, so a stale process cannot make it pass
-against the wrong bundle, and it checks the port is free again before it exits.
+It runs on a port of its own, picked free at the moment it starts, so it can run while `bin/dev` is up — Puma's
+`inertia_ssr` plugin holds 13714 whenever the Vite dev server was not already running when it booted, which is
+also why `bin/dev` sometimes logs `Inertia SSR: process exited … restarting in 1s`.
 
-That port is fixed by `@inertiajs/vite`, so only one server can hold it. **Usually that is `bin/dev`**: Puma's
-`inertia_ssr` plugin starts an SSR server unless the Vite dev server is already running, and at boot it often is
-not — which is also why `bin/dev` sometimes logs `Inertia SSR: process exited … restarting in 1s`, the plugin
-losing a race for the port. Stop `bin/dev` before running the smoke test, or `bin/ci`.
+That is possible because `lib/nibble/frontend/ssr/ssr.ts` calls `createServer` itself, with
+`port: process.env.INERTIA_SSR_PORT`, rather than letting `@inertiajs/vite` write that call on its fixed port.
+Production sets nothing and gets 13714, which is what `config/initializers/inertia_rails.rb` expects.
+
+It also checks its port is free again before exiting: a server left behind is a failure the next run inherits.
 
 ## End-to-end
 

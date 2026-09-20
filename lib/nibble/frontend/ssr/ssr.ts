@@ -1,12 +1,20 @@
+import type { Page } from '@inertiajs/core'
 import { createInertiaApp } from '@inertiajs/vue3'
+import createServer from '@inertiajs/vue3/server'
 import { createSSRApp, h } from 'vue'
+import { renderToString } from 'vue/server-renderer'
 import AdminLayout from '../nibble-admin/layouts/AdminLayout.vue'
 import AuthLayout from '../nibble-admin/layouts/AuthLayout.vue'
 import { inertiaDefaults, layoutFor } from '../nibble-admin/lib/inertia-shared'
 import { resolvePage } from '../nibble-admin/lib/resolve-page'
 
-// Wrapped by @inertiajs/vite into an SSR server; the layouts load eagerly here, not lazily.
-createInertiaApp({
+// @inertiajs/vite would write this bootstrap for us, but only ever on its fixed port. We write it so the
+// port can move, which is what lets the smoke test run while a dev server holds the usual one.
+// Without page and render in the options, TypeScript picks the client overload, which returns void. On a
+// server the same call returns the render function below.
+type RenderPage = (page: Page, to: typeof renderToString) => Promise<{ head: string[]; body: string }>
+
+const render = (await createInertiaApp({
   resolve: resolvePage,
   layout: layoutFor(AdminLayout, AuthLayout),
   defaults: inertiaDefaults,
@@ -22,4 +30,10 @@ createInertiaApp({
     }
     return app
   },
+})) as unknown as RenderPage
+
+declare const process: { env: Record<string, string | undefined> }
+
+createServer((page) => render(page, renderToString), {
+  port: Number(process.env.INERTIA_SSR_PORT) || 13714,
 })
