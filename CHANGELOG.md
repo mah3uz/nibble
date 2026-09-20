@@ -8,6 +8,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.1.0 — 2026-09-20
+
 ### Added
 
 - `schema/` holds a site's own collections, blueprints, taxonomies, globals, navigation and forms. It is read after
