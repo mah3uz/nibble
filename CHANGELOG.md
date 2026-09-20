@@ -23,20 +23,17 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   merge, because that file has moved.
 - `bin/rails nibble:check` no longer reports files you added under a directory Nibble also uses as edits to ours.
   It reports what you changed or deleted of Nibble's, which is what an upgrade can actually stop on.
+- `.github/` is gone. Workflows and dependency updates of ours have no business running in your repository,
+  against your budget, on rules you did not write — and a site is a clone, so the only way not to send them is
+  not to have them. `bin/ci` runs every check Nibble runs on itself. `.github/` is yours, empty or otherwise.
+  **Upgrade:** taking this release deletes our copy from your tree. If you had put your own workflows there, git
+  stops on the conflict — keep your side.
 
 ## What's new
 
 - `site/test/` is yours for your own tests, run by `bin/ci` and by `bin/rails test site/test`, with Nibble's
   `test_helper` available. Nibble's own tests stay in `test/`.
 - The README says how to send a change back rather than carry it, and states the ownership rule in one line.
-
-## Changed
-
-- `.github/` is gone. Workflows and dependency updates of ours have no business running in your repository,
-  against your budget, on rules you did not write — and a site is a clone, so the only way not to send them is
-  not to have them. `bin/ci` runs every check Nibble runs on itself. `.github/` is yours, empty or otherwise.
-  **Upgrade:** taking this release deletes our copy from your tree. If you had put your own workflows there, git
-  stops on the conflict — keep your side.
 
 ## 0.4.0 — 2026-09-21
 
