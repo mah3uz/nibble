@@ -11,7 +11,12 @@ version = ARGV.first or fail!("usage: bin/nibble-release <version>, e.g. bin/nib
 fail!("#{version} isn't a version like 1.2.3") unless version.match?(/\A\d+\.\d+\.\d+\z/)
 
 current = VERSION_FILE.read[/VERSION = "([^"]+)"/, 1]
-fail!("#{version} isn't newer than #{current}") unless Gem::Version.new(version) > Gem::Version.new(current)
+current_tagged = !`git -C #{ROOT} tag -l v#{current}`.strip.empty?
+if current_tagged
+  fail!("#{version} isn't newer than #{current}") unless Gem::Version.new(version) > Gem::Version.new(current)
+elsif Gem::Version.new(version) < Gem::Version.new(current)
+  fail!("#{version} is behind #{current}, which has no tag yet")
+end
 fail!("working tree isn't clean") unless `git -C #{ROOT} status --porcelain`.strip.empty?
 
 notes = CHANGELOG.read[/^## Unreleased\n(.*?)(?=^## |\z)/m, 1].to_s.strip
@@ -25,7 +30,7 @@ system(ROOT.join("bin/ci").to_s) or fail!("bin/ci failed — nothing was committ
 
 system("git", "-C", ROOT.to_s, "add", VERSION_FILE.to_s, CHANGELOG.to_s) or fail!("could not stage the release")
 system("git", "-C", ROOT.to_s, "commit", "-qm", "Release #{version}") or fail!("could not commit the release")
-system("git", "-C", ROOT.to_s, "tag", "-a", "v#{version}", "-m", "Nibble #{version}\n\n#{notes}") or fail!("could not tag the release")
+system("git", "-C", ROOT.to_s, "tag", "-a", "v#{version}", "--cleanup=verbatim", "-m", "Nibble #{version}\n\n#{notes}") or fail!("could not tag the release")
 
 repository = VERSION_FILE.read[/REPOSITORY = "([^"]+)"/, 1]
 puts "tagged v#{version}. Push it with: git push #{repository} main --follow-tags"
