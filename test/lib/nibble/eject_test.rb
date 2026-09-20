@@ -116,6 +116,38 @@ class Nibble::EjectTest < ActiveSupport::TestCase
                     "a site cannot decide whether to take an improvement it cannot see"
   end
 
+  test "a site's own files are not reported as edits to ours" do
+    git("init", "-q")
+    write("lib/nibble/search.rb", "class Search; end")
+    git("add", "-A")
+    commit("first")
+    base = IO.popen([ "git", "-C", @root.to_s, "rev-parse", "HEAD" ], &:read).strip
+    Nibble::Release.record_install(version: "0.1.0", commit: base, root: @root)
+
+    write("lib/nibble/their_own.rb", "class TheirOwn; end")
+    write("app/models/invoice.rb", "class Invoice; end")
+    git("add", "-A")
+    commit("the site writes its own")
+
+    assert_empty Nibble::Eject.unmanaged(root: @root),
+                 "a file only they have cannot conflict with ours, and app/ is theirs now"
+  end
+
+  test "a file of ours the site deleted is reported, because the upgrade will stop on it" do
+    git("init", "-q")
+    write("lib/nibble/search.rb", "class Search; end")
+    git("add", "-A")
+    commit("first")
+    base = IO.popen([ "git", "-C", @root.to_s, "rev-parse", "HEAD" ], &:read).strip
+    Nibble::Release.record_install(version: "0.1.0", commit: base, root: @root)
+
+    @root.join("lib/nibble/search.rb").delete
+    git("add", "-A")
+    commit("the site removes one of ours")
+
+    assert_equal [ "lib/nibble/search.rb" ], Nibble::Eject.unmanaged(root: @root)
+  end
+
   test "a properly ejected copy is not reported as an accident" do
     git("init", "-q")
     git("add", "-A")

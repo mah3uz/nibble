@@ -43,18 +43,33 @@ Then `bin/dev` and sign in at `/admin`.
 
 ## What belongs to you
 
-Nibble never writes to these, so upgrades leave them alone:
+**Everything under `lib/nibble/` is Nibble's. Everything else is yours.**
+
+That includes `app/`, so your own models, controllers and jobs sit where a Rails application puts them, beside
+nothing of ours. Your views are looked in before Nibble's, so you can replace one by name.
 
 | Path | Holds |
 |---|---|
 | `schema/` | your collections, blueprints, taxonomies, globals, navigation and forms |
-| `themes/<yours>/` | your theme |
-| `site/` | control panel overrides, slots and your own initializers |
+| `themes/<yours>/` | your theme — `bin/rails nibble:generate:theme <name>` starts one |
+| `site/` | control panel overrides, slots, your own initializers, and `site/test/` |
+| `app/`, `db/migrate`, `Gemfile.local` | your own code, migrations and gems |
 | `config/nibble.yml`, `.env`, `config/deploy*.yml` | your settings, generated at install |
-| `db/migrate`, `Gemfile.local` | your migrations and gems |
 
-Everything else is Nibble's. To change one of its files, `bin/rails nibble:eject <path>` copies it into `site/`
-and records that you now maintain it, so `bin/rails nibble:check` can tell you when the original moves on.
+To change one of Nibble's files, `bin/rails nibble:eject <path>` copies it where yours is found first and records
+that you now maintain it, so `bin/rails nibble:check` tells you when the original moves on. It also reports any of
+Nibble's files you changed or deleted without ejecting — the ones an upgrade will stop on.
+
+### Sending a change back
+
+If you have changed something of Nibble's and the change would suit everyone, it is worth upstreaming rather than
+carrying: a patch you keep is a conflict on every upgrade, and an ejected file stops receiving fixes.
+
+1. `bin/rails nibble:check` — see exactly which of its files you changed.
+2. Clone Nibble itself, make the change there, and run `bin/ci`.
+3. Send it to the repository in `Nibble::REPOSITORY`, describing what it fixes for a site.
+4. Once it is released, take the release and drop your copy: `git rm site/<path>` and the entry in
+   `.nibble/ejected.yml`.
 
 ## Running it
 
@@ -127,6 +142,7 @@ The public site is rendered by the active theme in `themes/<handle>` (default `c
 bin/rails nibble:admin:create                # add a user: name, email, password and role, all asked for
 bin/rails nibble:generate:theme almanac      # this site's own theme, copied from the starter
 bin/rails nibble:generate:view guides/index --collection=posts   # a view and its query sidecar
+bin/rails test site/test                     # your own tests (bin/ci runs them too)
 bin/rails nibble:check                       # schema, theme, roles, settings, pending migrations, ejected files
 bin/rails nibble:check --support             # a summary of this install to paste into an issue
 bin/rails nibble:content:validate themes/crumbs/content

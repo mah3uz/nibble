@@ -1,7 +1,7 @@
 module Nibble
   module Eject
     AREAS = { "lib/nibble/frontend/nibble-admin/pages" => "site/pages" }.freeze
-    RESERVED = %w[lib app bin test Gemfile package.json vite.config.ts Dockerfile config/application.rb config/environments config/initializers themes/crumbs].freeze
+    RESERVED = %w[lib bin test Gemfile package.json vite.config.ts Dockerfile config/application.rb config/environments config/initializers themes/crumbs].freeze
     MANIFEST = ".nibble/ejected.yml".freeze
 
     Ejection = Data.define(:source, :target, :commit, :at)
@@ -82,8 +82,10 @@ module Nibble
         ejection
       end
 
+      # Only what a site changed or removed of ours: a file it added is its own, and cannot conflict.
       def changed(root, commit)
-        out = IO.popen([ "git", "-C", root.to_s, "diff", "--name-only", commit, "HEAD", "--", *RESERVED ], err: File::NULL, &:read)
+        out = IO.popen([ "git", "-C", root.to_s, "diff", "--name-only", "--diff-filter=MD", commit, "HEAD", "--", *RESERVED ],
+          err: File::NULL, &:read)
         out.split("\n").map(&:strip).reject(&:empty?).sort
       end
 

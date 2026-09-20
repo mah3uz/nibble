@@ -13,6 +13,23 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Changed
 
+- **Everything of Nibble's now lives under `lib/nibble/`, and `app/` is yours.** Your models, controllers, jobs
+  and views sit where a Rails application puts them, with nothing of ours beside them, and your views are looked
+  in before Nibble's. Class names are unchanged.
+  **Upgrade:** if you added files under `app/`, they stay exactly where they are and keep working. If you had
+  changed one of Nibble's files in place — which `bin/rails nibble:check` reports — git will stop on it during the
+  merge, because that file has moved.
+- `bin/rails nibble:check` no longer reports files you added under a directory Nibble also uses as edits to ours.
+  It reports what you changed or deleted of Nibble's, which is what an upgrade can actually stop on.
+
+## What's new
+
+- `site/test/` is yours for your own tests, run by `bin/ci` and by `bin/rails test site/test`, with Nibble's
+  `test_helper` available. Nibble's own tests stay in `test/`.
+- The README says how to send a change back rather than carry it, and states the ownership rule in one line.
+
+## Changed
+
 - `.github/` is gone. Workflows and dependency updates of ours have no business running in your repository,
   against your budget, on rules you did not write — and a site is a clone, so the only way not to send them is
   not to have them. `bin/ci` runs every check Nibble runs on itself. `.github/` is yours, empty or otherwise.
