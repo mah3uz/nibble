@@ -91,7 +91,6 @@ environment variables are read directly:
 | `DB_SNAPSHOT_BUCKET`, `DB_SNAPSHOT_REGION` | Where the nightly database backup is uploaded |
 | `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD` | Staging's HTTP Basic Auth when booting staging locally |
 | `NIBBLE_SECRET_<NAME>` | Secrets for outbound API connections, one per name in `outbound.secrets` |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | First administrator for `db:seed` |
 
 CAPTCHA keys, the mail sender and analytics IDs are site settings in the **Integrations** global, not environment
 variables.
@@ -125,6 +124,7 @@ The public site is rendered by the active theme in `themes/<handle>` (default `c
 `NIBBLE_THEME`). A theme's example content is a content package under `themes/<handle>/content`.
 
 ```
+bin/rails nibble:admin:create                # add a user: name, email, password and role, all asked for
 bin/rails nibble:check                       # schema, theme, roles, settings, pending migrations, ejected files
 bin/rails nibble:check --support             # a summary of this install to paste into an issue
 bin/rails nibble:content:validate themes/crumbs/content

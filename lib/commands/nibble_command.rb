@@ -1,6 +1,8 @@
 require_relative "clean_failures"
+require_relative "admin_interview"
 
 class NibbleCommand < Rails::Command::Base
+  include AdminInterview
   extend CleanFailures
 
   BUDGETS = { cached: 50, uncached: 300, queries: 15, listing: 150, listing_queries: 12 }.freeze
@@ -166,58 +168,10 @@ class NibbleCommand < Rails::Command::Base
     say_status :create, "administrator #{user.email_address}", :green
   end
 
-  def build_admin
-    loop do
-      name = ask_until("  Your name", :cyan) { |value| "a name is required" if value.blank? }
-      email = ask_until("  Your email address", :cyan) { |value| "#{value.inspect} is not an email address" unless value.match?(/\A[^@\s]+@[^@\s]+\.[^@\s]+\z/) }
-      password = ask_password
-      user = User.new(name:, email_address: email.strip.downcase, password:, roles: [ Role.find_by!(handle: "admin") ])
-      return user if user.save
-
-      say "  #{user.errors.full_messages.to_sentence}", :red
-    end
-  end
-
-  def ask_password
-    say "  At least #{User::MINIMUM_PASSWORD_LENGTH} characters, with #{User::PASSWORD_RULES.keys.to_sentence}.", :white
-    loop do
-      password = ask_secret("  A password")
-      problems = User.password_problems(password)
-      next problems.each { |problem| say "  That password #{problem}", :red } if problems.any?
-      return password if !$stdin.tty? || ask_secret("  Type it again") == password
-
-      say "  They do not match", :red
-    end
-  end
-
-  # Thor's echo: false blocks when stdin is a pipe, which would hang a scripted install.
-  def ask_secret(prompt)
-    answer = $stdin.tty? ? ask(prompt, :cyan, echo: false).tap { say "" } : ask(prompt, :cyan)
-    no_input! if answer.nil?
-    answer
-  end
-
-  # Thor returns nil at end of input; without this a scripted run would spin on the same prompt forever.
-  def ask_until(prompt, colour)
-    loop do
-      answer = ask(prompt, colour)
-      no_input! if answer.nil?
-
-      value = answer.to_s.strip
-      problem = yield(value) or return value
-
-      say "  #{problem}", :red
-    end
-  end
-
-  def no_input!
-    abort "  install stopped: no more input. Run bin/rails nibble:install in a terminal to create the administrator."
-  end
-
   def admin_reminder
     return if User.administrators.exists?
 
-    say_status :todo, "no administrator yet — run bin/rails nibble:install to create one", :yellow
+    say_status :todo, "no administrator yet — run bin/rails nibble:admin:create", :yellow
   rescue ActiveRecord::StatementInvalid
     nil
   end

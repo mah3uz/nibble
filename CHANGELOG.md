@@ -21,6 +21,10 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ### Changed
 
+- The first administrator is made by asking, not by environment variables: `bin/rails nibble:admin:create` asks
+  for a name, email address and password, and refuses a password the rules reject. `ADMIN_EMAIL`,
+  `ADMIN_PASSWORD` and `ADMIN_NAME` no longer do anything — `db:seed` seeds roles and tells you to run the
+  command.
 - `.nibble/install.yml` now records the answers the install was given, which is what lets an upgrade re-render
   your settings without asking again. Installs made before this keep working; the upgrade says it cannot
   re-render them.

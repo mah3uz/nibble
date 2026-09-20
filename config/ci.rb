@@ -19,5 +19,5 @@ CI.run do
   # Build test assets up front so no test triggers (and races) an on-demand Vite build.
   step "Build: test assets", "env RAILS_ENV=test bin/vite build"
   step "Tests: Rails", "bin/rails test"
-  step "Tests: Seeds", "env RAILS_ENV=test ADMIN_EMAIL=ci@example.com ADMIN_PASSWORD=Ci-Only-Password-1! bin/rails db:seed:replant"
+  step "Tests: Seeds", "env RAILS_ENV=test bin/rails db:seed:replant"
 end
