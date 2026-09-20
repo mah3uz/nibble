@@ -11,6 +11,18 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## What's fixed
+
+- The Updates screen showed only "Up to date" when you were already on the newest release, hiding every release's
+  notes. It now lists them whatever version you are on, with the one you are running marked.
+
+## Changed
+
+- `db/schema.rb` is yours, and Nibble no longer ships one. It is generated from migrations, so two copies of it —
+  ours and yours — conflicted on every upgrade that carried a migration, on a file neither of us edits by hand.
+  **Upgrade:** the merge removes our copy. Run `bin/rails db:prepare` to regenerate yours, then commit it. If git
+  reports a conflict on it instead, keep your side and run the same command.
+
 ## 0.2.0 — 2026-09-21
 
 ## What's new
