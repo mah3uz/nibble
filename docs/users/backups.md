@@ -1,7 +1,22 @@
-# Restoring the database from a nightly backup
+---
+title: Backups
+description: What Nibble backs up, and how to restore it.
+order: 4
+---
+
+# Backups
+
+`DatabaseSnapshotJob` runs nightly at 3am and keeps a complete copy of the database in two places. Nothing else
+is backed up automatically: uploaded files live in S3, which has its own durability, and the cache, queue and
+cable databases are ephemeral.
+
+An upgrade takes its own snapshot before it changes anything, and prints the command to put it back — see
+[Upgrading](upgrading.md).
+
+## Restoring from a nightly backup
 
 `DatabaseSnapshotJob` runs nightly (`config/recurring.yml`, 3am) and calls `DatabaseSnapshot.create!`
-(`app/services/database_snapshot.rb`), which `VACUUM INTO`s the primary database into a compacted,
+(`lib/nibble/app/services/database_snapshot.rb`), which `VACUUM INTO`s the primary database into a compacted,
 self-contained copy, gzips it, and keeps it in two places:
 
 - **Locally**, on the server's persistent volume, under `storage/backups/` — the last 7 days.
