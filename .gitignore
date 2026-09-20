@@ -6,9 +6,6 @@
 # Ignore all environment files. Nibble ships none: the install generates yours.
 /.env*
 
-# Deploy configuration carries your hosts, registry and domains. The install generates it.
-/config/deploy.yml
-/config/deploy.staging.yml
 
 # Ignore all logfiles and tempfiles.
 /log/*
