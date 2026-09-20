@@ -279,6 +279,35 @@
     padding: 0;
   }
 
+  /* highlight.js token names, as the rich text editor's lowlight decorations emit them. */
+  && :where(.hljs-title, .hljs-name, .hljs-tag, .hljs-selector-tag, .hljs-section) {
+    color: var(--color-pink-400);
+  }
+
+  && :where(.hljs-keyword, .hljs-attr, .hljs-selector-attr, .hljs-doctag) {
+    color: var(--color-slate-300);
+  }
+
+  &&
+    :where(
+      .hljs-string,
+      .hljs-symbol,
+      .hljs-number,
+      .hljs-literal,
+      .hljs-property,
+      .hljs-attribute,
+      .hljs-variable,
+      .hljs-built_in,
+      .hljs-type,
+      .hljs-regexp
+    ) {
+    color: var(--color-sky-300);
+  }
+
+  && :where(.hljs-comment, .hljs-quote, .hljs-operator, .hljs-punctuation, .hljs-meta) {
+    color: var(--color-slate-400);
+  }
+
   && :where(blockquote) {
     font-style: normal;
     font-weight: 400;

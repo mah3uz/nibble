@@ -9,6 +9,7 @@ import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue'
 import AdminIcon from '@/components/admin/icons/AdminIcon.vue'
 import type { AssetRow } from '@/components/admin/assets/api'
 import AssetSelector from '@/components/admin/assets/AssetSelector.vue'
+import CodeBlockNodeView from '@/components/admin/rich-text/CodeBlockNodeView.vue'
 import ImageNodeView from '@/components/admin/rich-text/ImageNodeView.vue'
 import FindReplaceBar from '../../components/FindReplaceBar.vue'
 import LinkUrlInput from '../../components/LinkUrlInput.vue'
@@ -20,7 +21,7 @@ import { MarkdownPaste } from '@/lib/tiptap/markdownPaste'
 import { readingTime } from '@/lib/tiptap/readingTime'
 import { clone } from '../../lib/clone'
 import { rowId } from '../../lib/rowId'
-import { RichTextImage, baseExtensions, setNode } from '../rich-text/extensions'
+import { RichTextCodeBlock, RichTextImage, baseExtensions, setNode } from '../rich-text/extensions'
 import SetNodeView, { type SetNodeStorage } from '../rich-text/SetNodeView.vue'
 import type { PublishSetGroup } from '../types'
 import { fieldtypeEmits, fieldtypeProps, useFieldtype } from '../useFieldtype'
@@ -54,11 +55,13 @@ const editor = useEditor({
   content: doc(nodes()),
   editable: !isReadOnly.value,
   extensions: [
-    ...baseExtensions.map((extension) =>
-      extension === RichTextImage
-        ? RichTextImage.extend({ addNodeView: () => VueNodeViewRenderer(ImageNodeView) })
-        : extension,
-    ),
+    ...baseExtensions.map((extension) => {
+      if (extension === RichTextImage)
+        return RichTextImage.extend({ addNodeView: () => VueNodeViewRenderer(ImageNodeView) })
+      if (extension === RichTextCodeBlock)
+        return RichTextCodeBlock.extend({ addNodeView: () => VueNodeViewRenderer(CodeBlockNodeView) })
+      return extension
+    }),
     setNode(SetNodeView).extend({ addStorage: () => storage, name: 'set' }),
     Markdown,
     MarkdownPaste,

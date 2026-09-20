@@ -1,10 +1,17 @@
 import { Node, mergeAttributes } from '@tiptap/core'
+import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import Image from '@tiptap/extension-image'
 import { ListItem } from '@tiptap/extension-list'
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
 import StarterKit from '@tiptap/starter-kit'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
+import { common, createLowlight } from 'lowlight'
 import type { Component } from 'vue'
+
+const lowlight = createLowlight(common)
+
+export const codeLanguages = lowlight.listLanguages().sort()
+export const RichTextCodeBlock = CodeBlockLowlight.configure({ lowlight })
 
 export const RichTextImage = Image.extend({
   addAttributes() {
@@ -24,10 +31,12 @@ export const RichTextImage = Image.extend({
 // Must match the nodes and marks Nibble::Fieldtypes::RichText renders on the server.
 export const baseExtensions = [
   StarterKit.configure({
+    codeBlock: false,
     heading: { levels: [2, 3, 4] },
     listItem: false,
     link: { openOnClick: false, autolink: true, defaultProtocol: 'https' },
   }),
+  RichTextCodeBlock,
   ListItem.extend({ content: '(paragraph | heading) block*' }),
   RichTextImage,
   Table.configure({ resizable: true }),

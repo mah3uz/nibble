@@ -107,6 +107,14 @@ class RichText::RendererTest < ActiveSupport::TestCase
     assert_equal "Front desk", img.({ "asset" => asset.id, "alt" => "Front desk" })["alt"]
   end
 
+  test "a code block carries the language a theme highlights from, and nothing a class cannot hold" do
+    code = ->(language) { render({ "type" => "codeBlock", "attrs" => { "language" => language }, "content" => [ text("puts :hi") ] }) }
+
+    assert_includes code.("ruby"), %(<pre><code class="language-ruby">puts :hi</code></pre>)
+    assert_includes code.(nil), "<pre><code>puts :hi</code></pre>"
+    assert_includes code.("rb\" onload=\"alert(1)"), "<pre><code>puts :hi</code></pre>"
+  end
+
   test "srcset with an unsafe URL is removed" do
     dom = Nokogiri::HTML5.fragment(RichText::Sanitizer.sanitize(%(<img src="/a.jpg" srcset="/a.jpg 1x, javascript:alert(1) 2x" alt="">)))
     assert_nil dom.at_css("img")["srcset"]
