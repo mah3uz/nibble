@@ -1,9 +1,7 @@
 <script setup lang="ts">
 defineProps<{ source: string }>()
 
-// prose puts backticks around inline code, and heading anchors are commonmarker's, not ours to show.
-const prose =
-  'prose prose-sm max-w-none dark:prose-invert [&_.anchor]:hidden [&_code]:before:content-none [&_code]:after:content-none'
+const prose = 'prose prose-sm prose-nibble dark:prose-invert'
 </script>
 
 <template>

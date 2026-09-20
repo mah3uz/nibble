@@ -194,6 +194,22 @@
   corner-shape: superellipse(2);
 }
 
+/* How the control panel renders prose it did not write: rich text, Markdown fields, release notes. A theme
+   styles its own prose in themes/<handle>/styles, and nothing here reaches it. */
+@utility prose-nibble {
+  max-width: none;
+
+  & :where(code)::before,
+  & :where(code)::after {
+    content: none;
+  }
+
+  /* commonmarker links every heading to itself; useful for a table of contents, noise in a panel. */
+  & :where(.anchor) {
+    display: none;
+  }
+}
+
 @utility st-text-legibility {
   font-family: 'Inter Variable', sans-serif;
   letter-spacing: -0.01em;

@@ -11,6 +11,13 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## What's new
+
+- A **markdown** fieldtype: write Markdown in any blueprint, with a preview rendered by the server so it shows
+  what a theme will actually receive. Assets are referenced rather than linked, so replacing one does not leave
+  documents pointing at the old file.
+- Release notes in **Updates** are rendered rather than shown as Markdown source.
+
 ## 0.5.0 — 2026-09-21
 
 ## Changed

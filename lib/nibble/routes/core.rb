@@ -159,6 +159,7 @@ Rails.application.routes.draw do
     end
     scope "nibble", module: "nibble_api", as: "nibble" do
       get "relationships/:type", to: "relationships#index", as: :relationships
+      post "markdown/preview", to: "markdown#preview", as: :markdown_preview
       if Rails.env.local?
         get "playground", to: "playground#show", as: :playground
         post "playground/validate", to: "playground#validate", as: :playground_validate

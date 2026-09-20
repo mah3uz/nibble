@@ -9,6 +9,7 @@ const components = {
   integer: () => import('./components/IntegerFieldtype.vue'),
   link: () => import('./components/LinkFieldtype.vue'),
   list: () => import('./components/ListFieldtype.vue'),
+  markdown: () => import('./components/MarkdownFieldtype.vue'),
   radio: () => import('./components/RadioFieldtype.vue'),
   replicator: () => import('./components/ReplicatorFieldtype.vue'),
   rich_text: () => import('./components/RichTextFieldtype.vue'),

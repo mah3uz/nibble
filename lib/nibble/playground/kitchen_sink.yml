@@ -8,6 +8,7 @@ tabs:
           - { handle: title, field: { type: text, required: true, character_limit: 60, listable: true } }
           - { handle: slug, field: { type: slug, from: title, show_regenerate: true } }
           - { handle: excerpt, field: { type: textarea, character_limit: 200, instructions: Shown on listings. } }
+          - { handle: notes, field: { type: markdown, rows: 8, instructions: "Markdown, with a preview." } }
           - { handle: count, field: { type: integer, min: 1, max: 10, width: 50 } }
           - { handle: featured, field: { type: toggle, inline_label: Feature on the home page, width: 50 } }
           - { handle: category, field: { type: select, options: { news: News, guides: Guides }, clearable: true, width: 50 } }
