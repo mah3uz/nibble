@@ -11,6 +11,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.2.0 — 2026-09-21
+
 ## What's new
 
 - `bin/nibble-upgrade` takes this site to a release: it snapshots the database, gates on the incoming release's

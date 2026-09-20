@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.2.0",
+    "date": "2026-09-21",
+    "url": "https://gitea.tlbn.app/mahfuz/nibble/releases/tag/v0.2.0",
+    "security": false,
+    "body": "## What's new\n\n- `bin/nibble-upgrade` takes this site to a release: it snapshots the database, gates on the incoming release's\n  requirements, merges, installs dependencies and migrates. It runs on a workstation only.\n- The upgrade offers to re-render the files you own that we generate, and reports what changed in our copy of\n  anything you ejected.\n- **Updates** in the sidebar: releases newer than the one you are running, what each one changed, and the command\n  that takes it, with a count on the menu item that turns red when one of them is a security fix. A daily\n  background check remembers the count; the page itself reads the file again when you open it, so no other page\n  ever waits on it and there is nothing to set up. Nothing about your site is sent, and a switch on that screen\n  stops the checks entirely.\n- Settings a person changes in the control panel are kept in a `settings` table, separate from `config/nibble.yml`,\n  which stays a file you edit by hand.\n\n## Changed\n\n- The first administrator is made by asking, not by environment variables: `bin/rails nibble:admin:create` asks\n  for a name, email address and password, and refuses a password the rules reject. `ADMIN_EMAIL`,\n  `ADMIN_PASSWORD` and `ADMIN_NAME` no longer do anything — `db:seed` seeds roles and tells you to run the\n  command.\n- `.nibble/install.yml` now records the answers the install was given, which is what lets an upgrade re-render\n  your settings without asking again. Installs made before this keep working; the upgrade says it cannot\n  re-render them."
+  },
+  {
     "version": "0.1.0",
     "date": "2026-09-20",
     "url": "https://gitea.tlbn.app/mahfuz/nibble/releases/tag/v0.1.0",
