@@ -17,12 +17,25 @@ module Nibble
 
       private
 
+      # Carries its own leading separator, as parent_uri does, so a route reads "/docs{parent_slugs}/{slug}".
+      def ancestor_slugs(parent)
+        slugs = []
+        while parent
+          slugs.unshift(parent.slug)
+          parent = parent.respond_to?(:parent) ? parent.parent : nil
+        end
+        slugs.compact.any? ? "/#{slugs.compact.join('/')}" : ""
+      end
+
       def tokens(record)
         date = record.respond_to?(:published_at) ? record.published_at : nil
         parent = record.respond_to?(:parent) ? record.parent : nil
         {
           "slug" => record.slug,
           "parent_uri" => parent ? parent.uri : "",
+          # The ancestors' slugs alone, so a route can nest a structure under a prefix of its own without
+          # the parent's whole URI — which already carries that prefix — doubling it.
+          "parent_slugs" => ancestor_slugs(parent),
           "year" => date&.strftime("%Y"),
           "month" => date&.strftime("%m"),
           "locale" => Nibble.config.locale(record.locale)&.url_prefix.to_s
