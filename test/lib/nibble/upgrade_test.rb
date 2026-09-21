@@ -5,7 +5,8 @@ class Nibble::UpgradeTest < ActiveSupport::TestCase
     @steps = []
     @themes = Pathname(Dir.mktmpdir("nibble-upgrade"))
     FileUtils.cp_r(Rails.root.join("themes/crumbs"), @themes.join("crumbs"))
-    Nibble.config = Nibble::Config.new(Nibble.config_values.merge("theme" => "crumbs"), themes_path: @themes)
+    Nibble.config = Nibble::Config.new(Nibble.config_values.merge("theme" => "crumbs"),
+      themes_path: @themes, site_schema_path: @themes.join("no_site_schema"))
     Nibble.reset_schema!
   end
 

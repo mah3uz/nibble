@@ -77,7 +77,7 @@ module NibbleRecordsHelper
     Nibble.config = Nibble::Config.new({ "theme" => "records", "locales" => [ { "code" => "en", "default" => true } ], "reserved_paths" => [ "/admin" ],
                                          "outbound" => { "secrets" => [ "crm_token" ] },
                                          "assets" => { "presets" => { "card" => { "w" => 32, "h" => 16, "fit" => "crop", "srcset" => [ 16, 32 ] } } } },
-      themes_path: @nibble_themes)
+      themes_path: @nibble_themes, site_schema_path: @nibble_themes.join("site_schema"))
     Nibble.reset_schema!
     Nibble.boot!
   end

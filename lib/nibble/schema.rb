@@ -3,7 +3,7 @@ module Nibble
     def self.layers(config = Nibble.config)
       layers = [ [ :core, Nibble.core_schema_path ] ]
       layers << [ :theme, config.theme_path.join("schema") ] if config.theme_path
-      layers << [ :site, Nibble.site_schema_path ]
+      layers << [ :site, config.site_schema_path ]
     end
 
     def self.load(config = Nibble.config)

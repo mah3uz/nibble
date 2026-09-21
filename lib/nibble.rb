@@ -27,6 +27,14 @@ module Nibble
 
     def build_theme = config.theme
 
+    # A theme that ships no stylesheet gets no link. Where one exists, a missing manifest entry still
+    # raises, because serving a page without the CSS it was built for is the failure worth hearing about.
+    def theme_stylesheet
+      return nil unless config.theme_path&.join("styles", "theme.css")&.file?
+
+      "/themes/#{build_theme}/styles/theme.css"
+    end
+
     def site_url = ENV["SITE_URL"].presence || "http://localhost:#{ENV.fetch("PORT", 3100)}"
 
     def config_file = Rails.root.join("config/nibble.yml")

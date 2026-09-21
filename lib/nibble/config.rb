@@ -27,9 +27,10 @@ module Nibble
     attr_reader :load_defaults, :theme, :url, :locales, :reserved_paths, :disable, :trash_retention_days, :asset_extensions, :asset_presets, :max_upload_bytes,
                 :outbound_allowed_hosts, :outbound_secrets, :outbound_config
 
-    def initialize(values, themes_path: nil)
+    def initialize(values, themes_path: nil, site_schema_path: nil)
       values = DEFAULTS.deep_merge(values.to_h.deep_stringify_keys.compact)
       @themes_path = themes_path && Pathname(themes_path)
+      @site_schema_path = site_schema_path && Pathname(site_schema_path)
       @load_defaults = values["load_defaults"].presence.to_s
       @theme = values["theme"].presence
       @url = values["url"].to_s
@@ -56,6 +57,9 @@ module Nibble
     def locale(code) = locales.find { |locale| locale.code == code.to_s }
 
     def theme_path = theme && (@themes_path || Nibble.themes_path).join(theme)
+
+    # A test fixture points this somewhere of its own, so a site's schema can't reach into what it declares.
+    def site_schema_path = @site_schema_path || Nibble.site_schema_path
 
     def active_theme = theme_path && Theme.load(theme_path)
 

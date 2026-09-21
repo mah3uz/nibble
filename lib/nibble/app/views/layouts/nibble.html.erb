@@ -20,7 +20,7 @@
       <% seo["json_ld"].each do |node| %><script type="application/ld+json"><%= json_escape(node.to_json).html_safe %></script><% end %>
     <% end %>
     <%= csp_meta_tag %>
-    <%= vite_stylesheet_tag "/themes/#{Nibble.build_theme}/styles/theme.css" %>
+    <% if (theme_css = Nibble.theme_stylesheet) %><%= vite_stylesheet_tag theme_css %><% end %>
     <%= vite_client_tag %>
     <%= vite_typescript_tag "inertia" %>
     <%= inertia_ssr_head %>

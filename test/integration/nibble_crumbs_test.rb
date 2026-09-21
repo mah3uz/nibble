@@ -4,7 +4,9 @@ class NibbleCrumbsTest < ActionDispatch::IntegrationTest
   QUERY_BUDGET = 15
 
   setup do
-    Nibble.config = nil
+    # Crumbs' demo content is imported against crumbs' own blueprints, so the site's schema stays out of it.
+    Nibble.config = Nibble::Config.new(Nibble.config_values.merge("theme" => "crumbs"),
+      site_schema_path: Rails.root.join("test/nibble_themes/no_site_schema"))
     Nibble.reset_schema!
     Nibble.boot!
     Nibble::PageCache.store = ActiveSupport::Cache::MemoryStore.new
@@ -17,6 +19,8 @@ class NibbleCrumbsTest < ActionDispatch::IntegrationTest
 
   teardown do
     Nibble::PageCache.store = nil
+    Nibble.config = nil
+    Nibble.reset_schema!
     Nibble::Search.rebuild
   end
 
