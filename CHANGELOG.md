@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.9.0 — 2026-09-22
+
 ### What's new
 
 - **A folder of Markdown decides its own addresses.** A collection written as files now answers where its files
