@@ -3,8 +3,8 @@
 What changed for a site running Nibble, under **What's new**, **What's fixed**, **Changed** and **Security**.
 Anything that needs you to act has an **Upgrade** note; releases without one are safe to take as they come. A
 release whose database migrations cannot be undone says so in its entry, so you know the snapshot is the only way
-back. The control panel shows these same notes, read from `releases.json`, which a release generates from
-this file.
+back. The control panel shows these same notes, read from the feed the documentation site publishes, which is
+generated from this file rather than written by hand.
 
 Versions are ordered but not promises: while Nibble is `0.x`, anything can change between releases. Themes pin the
 theme API (`nibble: '^1'` in `theme.yml`), not this number.

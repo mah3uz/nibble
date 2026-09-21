@@ -148,4 +148,38 @@ class Nibble::ReleasesTest < ActiveSupport::TestCase
     Nibble::Releases.checking = true
     Nibble::Releases.fetcher = nil
   end
+
+  test "the feed is a projection of the changelog, so what a site reads cannot drift from the notes" do
+    changelog = Pathname(Dir.mktmpdir).join("CHANGELOG.md")
+    changelog.write(<<~MD)
+      # Changelog
+
+      ## Unreleased
+
+      ## 0.2.0 — 2026-02-01
+
+      ## Security
+
+      - A fix that matters.
+
+      ## What's new
+
+      - Something else.
+
+      ## 0.1.0 — 2026-01-01
+
+      ## What's new
+
+      - The first one.
+    MD
+    feed = changelog.dirname.join("releases.json")
+
+    releases = Nibble::Releases.publish(changelog, feed)
+
+    assert_equal %w[0.2.0 0.1.0], releases.map { |release| release["version"] }, "newest first, and Unreleased is not one"
+    assert releases.first["security"], "a Security section is what tells a site to upgrade now"
+    assert_not releases.last["security"]
+    assert_includes releases.first["body"], "- Something else.", "the whole entry travels, not the first section"
+    assert_equal releases, JSON.parse(feed.read)
+  end
 end
