@@ -40,7 +40,10 @@ site="{\"locale\":\"en\",\"url\":\"/$marker\",\"params\":{},\"globals\":{},\"nav
 html=$(curl -sf -X POST "http://localhost:$PORT/render" -H 'Content-Type: application/json' \
   -d "{\"component\":\"theme/errors/404\",\"props\":{\"site\":$site},\"url\":\"/$marker\",\"version\":\"\"}")
 
-if ! grep -q "Nothing but crumbs here" <<< "$html"; then
+# Every theme writes its own 404, so the proof has to hold for any of them: Vue's renderer marked the
+# shell, and the prop we passed in came back through it. A component that fails to render returns no body.
+body=$(jq -r '.body // empty' <<< "$html")
+if ! grep -q 'data-server-rendered="true"' <<< "$body" || ! grep -q "$marker" <<< "$body"; then
   echo "SSR smoke test FAILED. Response: ${html:0:500}"; cat tmp/ssr-smoke.log; exit 1
 fi
 
