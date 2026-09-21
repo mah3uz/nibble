@@ -99,4 +99,12 @@ class Nibble::PackagesMarkdownTest < ActiveSupport::TestCase
     assert_empty second.trashed
     assert_equal "Everything.", Nibble::Records::Entry.kept.sole.values["body"]
   end
+
+  test "a source folder cannot reach outside content/, which is the only place files are read from" do
+    inside = { "markdown" => "docs" }
+    outside = [ { "markdown" => "../app" }, { "markdown" => "/etc" }, { "markdown" => "docs/../../app" } ]
+
+    assert Nibble::Schema::Rules::SOURCE.(inside)
+    outside.each { |source| assert_not Nibble::Schema::Rules::SOURCE.(source), "#{source['markdown']} should be refused" }
+  end
 end

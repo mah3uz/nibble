@@ -14,7 +14,9 @@ module Nibble
       end
       WORKFLOW = ->(value) { %w[simple review].include?(value) }
       SORT = ->(value) { value.is_a?(String) && value.match?(/\A[a-z_]+:(asc|desc)\z/) }
-      SOURCE = ->(value) { value.is_a?(Hash) && STRING.(value["markdown"]) && OPTIONAL_STRING.(value["field"]) }
+      # A folder inside content/, named without the prefix, so a collection cannot read from anywhere else.
+      IN_CONTENT = ->(value) { STRING.(value) && !value.start_with?("/") && !value.split("/").include?("..") }
+      SOURCE = ->(value) { value.is_a?(Hash) && IN_CONTENT.(value["markdown"]) && OPTIONAL_STRING.(value["field"]) }
 
       KINDS = {
         "collections" => {

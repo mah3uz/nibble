@@ -6,5 +6,5 @@ structure:
 blueprints: [doc]
 template: docs/show
 source:
-  markdown: content/docs
+  markdown: docs
   field: body

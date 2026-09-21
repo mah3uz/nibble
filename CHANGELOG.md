@@ -11,6 +11,13 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## What's new
+
+- **A collection can be written as Markdown files.** Name a folder inside `content/` in the collection's schema
+  and `bin/rails nibble:content:markdown` makes the collection match it: a file is a page, a folder's `index.md`
+  is the page its files sit under, frontmatter becomes fields, and a page whose file has gone is trashed. It is
+  safe to run again, so a deploy can run it every time.
+
 ## Changed
 
 - `bin/nibble-release` offers the push rather than printing it, and offers to publish the feed in the repository

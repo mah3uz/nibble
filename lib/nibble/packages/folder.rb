@@ -2,6 +2,8 @@ module Nibble
   module Packages
     # A collection whose pages are written as Markdown in a folder: the folder decides what exists.
     class Folder
+      ROOT = "content".freeze
+
       Result = Data.define(:report, :trashed, :collection) do
         def ok? = report.ok?
       end
@@ -11,7 +13,7 @@ module Nibble
       def self.for(handle, dry_run: false)
         item = Nibble.schema.collection(handle) or raise Error, "no collection '#{handle}'"
         source = item.data["source"] or raise Error, "collection '#{handle}' has no source folder"
-        new(handle, root: Rails.root.join(source["markdown"]), field: source["field"], dry_run:)
+        new(handle, root: Rails.root.join(ROOT, source["markdown"]), field: source["field"], dry_run:)
       end
 
       def initialize(handle, root:, field: nil, dry_run: false)
