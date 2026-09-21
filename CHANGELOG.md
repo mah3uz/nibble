@@ -17,6 +17,38 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   what a theme will actually receive. Assets are referenced rather than linked, so replacing one does not leave
   documents pointing at the old file.
 - Release notes in **Updates** are rendered rather than shown as Markdown source.
+- **Code blocks are highlighted while you write them,** and carry the language you chose to the published page.
+  A selector on the block names it, the control panel colours it as you type, and a theme highlights the page
+  from the same name — Crumbs does, with the thirty-seven languages the selector offers, fetching only the ones
+  a page actually uses.
+- **Tab indents inside a code block,** two spaces at a time, and Shift-Tab takes them away. A selection spanning
+  lines moves together.
+- Writing in the control panel reads as prose: headings, quotes, tables, callouts and a code panel that looks
+  like code, in both colour schemes.
+
+## Changed
+
+- **The documentation is no longer part of Nibble.** It is a site of its own, written in Markdown, which is also
+  what publishes the release notes your control panel shows. Every site that installed Nibble was carrying a copy
+  of our documentation and a feed file it never read from disk.
+  **Upgrade:** taking this release deletes `docs/` from your tree. If you had put your own files there, git stops
+  on the conflict — keep your side, or move them first.
+- **The release feed moved with it, and is generated rather than appended to.** It is built from the changelog
+  each time, so an entry corrected after its release now reaches every site instead of staying wrong.
+  **Upgrade:** a control panel still on 0.5.0 asks for the feed at its old address, which this release removes,
+  so its update check quietly fails until it upgrades. Upgrading is the fix; nothing else is affected.
+- Choosing a term or an entry says **Choose…**, or whatever `placeholder` the field sets, rather than naming what
+  the control is made of.
+
+## What's fixed
+
+- **A Markdown field with an image in it could not be imported.** Exporting wrote the asset's path where its id
+  had been, and importing that file failed on the first slash, so content carrying one could not move between
+  sites at all.
+- Every field in a panel drew a hard line across its top in dark mode: an input's inset highlight, which belongs
+  to an input standing on its own, painted inside the group that draws its border.
+- Server rendering takes its port from `INERTIA_SSR_PORT` at both ends. A second instance — a test server beside
+  a development one — fought the first for 13714, and the loser sat in a restart loop.
 
 ## 0.5.0 — 2026-09-21
 
