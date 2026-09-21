@@ -2,7 +2,7 @@
 import { NodeViewContent, NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3'
 import { computed } from 'vue'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { codeLanguages } from '@/fieldtypes/rich-text/extensions'
+import { codeLanguages } from '@/lib/highlight'
 
 const props = defineProps(nodeViewProps)
 

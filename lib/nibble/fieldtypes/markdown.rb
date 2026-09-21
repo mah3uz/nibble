@@ -1,7 +1,7 @@
 module Nibble
   module Fieldtypes
     class Markdown < Fieldtype
-      ASSET_URL = %r{nibble://asset/([a-zA-Z0-9-]+)}
+      ASSET_URL = %r{nibble://asset/([^\s)"']+)}
 
       self.categories = %w[text structured]
       self.contract_samples = [ "## Heading\n\nSome **text**.", nil ]

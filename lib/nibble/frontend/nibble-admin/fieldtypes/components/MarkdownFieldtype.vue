@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { Button } from '@/components/ui/button'
+import { highlightBlocks } from '@/lib/highlight'
 import { Textarea } from '@/components/ui/textarea'
 import { fieldtypeEmits, fieldtypeProps, useFieldtype } from '../useFieldtype'
 
@@ -20,6 +21,7 @@ const previewable = computed(() => props.config.preview !== false)
 const showing = ref(false)
 const previewClasses =
   'prose prose-sm prose-nibble rounded-md border border-gray-200 px-3.5 py-2.5 dark:border-gray-700'
+const rendered = useTemplateRef<HTMLElement>('rendered')
 const html = ref('')
 const failed = ref(false)
 
@@ -37,6 +39,8 @@ async function preview() {
     })
     if (!response.ok) throw new Error(String(response.status))
     html.value = (await response.json()).html
+    await nextTick()
+    if (rendered.value) highlightBlocks(rendered.value)
   } catch {
     failed.value = true
   }
@@ -60,7 +64,7 @@ async function preview() {
     />
 
     <!-- eslint-disable-next-line vue/no-v-html -- the server rendered it, raw HTML is dropped, and it is the author's own text -->
-    <div v-if="showing" :class="previewClasses" v-html="failed ? '' : html" />
+    <div v-if="showing" ref="rendered" :class="previewClasses" v-html="failed ? '' : html" />
     <p v-if="showing && failed" class="text-sm text-destructive">The preview could not be rendered.</p>
 
     <div class="flex items-center justify-between">

@@ -25,6 +25,25 @@ class Nibble::PackagesExportTest < ActiveSupport::TestCase
     assert_equal "Grids", read(dir, "collections/posts/en/grids.yml")["title"]
   end
 
+  test "a Markdown field makes the round trip, with the asset it names carried as a path" do
+    blob = ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "photo.jpg")
+    asset = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, { "folder" => "site" }).record
+    notes = "See ![desk](nibble://asset/#{asset.id}) for the layout."
+    created = Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create,
+      { "title" => "Round trip", "notes" => notes })
+    assert created.ok?, created.errors.inspect
+
+    dir, = export
+
+    assert_equal "See ![desk](nibble://asset/site/photo.jpg) for the layout.", read(dir, "collections/posts/en/round-trip.yml")["notes"],
+      "a package must name the asset by path, since an id means nothing on the site importing it"
+
+    created.record.update_column(:data, created.record.data.merge("notes" => "replaced"))
+    assert Nibble::Packages::Importer.new(dir, mode: "update").call.ok?
+
+    assert_equal notes, Nibble::Records::Entry.find_by!(slug: "round-trip").values["notes"]
+  end
+
   test "references come out as natural keys, not database ids" do
     dir, = export
 

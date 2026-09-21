@@ -5,12 +5,9 @@ import { ListItem } from '@tiptap/extension-list'
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
 import StarterKit from '@tiptap/starter-kit'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
-import { common, createLowlight } from 'lowlight'
 import type { Component } from 'vue'
+import { lowlight } from '@/lib/highlight'
 
-const lowlight = createLowlight(common)
-
-export const codeLanguages = lowlight.listLanguages().sort()
 export const RichTextCodeBlock = CodeBlockLowlight.configure({ lowlight })
 
 export const RichTextImage = Image.extend({

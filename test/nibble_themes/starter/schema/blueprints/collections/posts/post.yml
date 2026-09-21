@@ -7,6 +7,8 @@ tabs:
           - import: nibble::post_fields
           - handle: topics
             field: { type: terms, taxonomies: [topics] }
+          - handle: notes
+            field: { type: markdown }
           - handle: related
             field: { type: entries, collections: [posts] }
           - import: nibble::seo

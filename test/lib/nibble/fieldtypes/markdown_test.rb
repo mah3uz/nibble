@@ -18,6 +18,8 @@ class Nibble::Fieldtypes::MarkdownTest < ActiveSupport::TestCase
     assert_includes field.fieldtype.augment(doc), "<h1", "off by default: the author is trusted"
     assert_includes field("sanitize" => true).fieldtype.augment(doc), "<h1", "Markdown's allowlist keeps h1"
     assert_includes field("sanitize" => true).fieldtype.augment(doc), "<del>gone</del>"
+    assert_not_includes field("sanitize" => true).fieldtype.augment("[x](javascript:alert(1))\n"), "javascript:",
+      "on, the field is what stands between a public form and a link that runs code"
   end
 
   test "an asset is stored as a reference, so replacing it does not leave documents pointing at the old file" do
