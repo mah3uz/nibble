@@ -6,7 +6,7 @@ written by hand names a folder in here:
 ```yaml
 # schema/collections/docs.yml
 source:
-  markdown: docs      # the files in content/docs
+  markdown: docs      # the files in content/docs — content/docs says the same thing
   field: body         # the field their Markdown lands in
 ```
 

@@ -8,12 +8,19 @@ module Nibble
         def ok? = report.ok?
       end
 
+      # Written with or without the prefix: content/docs and docs are the same folder.
+      def self.path(value)
+        parts = value.to_s.split("/")
+        parts.shift if parts.first == ROOT
+        Rails.root.join(ROOT, *parts)
+      end
+
       def self.declared = Nibble.schema.all(:collections).select { |item| item.data["source"].is_a?(Hash) }
 
       def self.for(handle, dry_run: false)
         item = Nibble.schema.collection(handle) or raise Error, "no collection '#{handle}'"
         source = item.data["source"] or raise Error, "collection '#{handle}' has no source folder"
-        new(handle, root: Rails.root.join(ROOT, source["markdown"]), field: source["field"], dry_run:)
+        new(handle, root: path(source["markdown"]), field: source["field"], dry_run:)
       end
 
       def initialize(handle, root:, field: nil, dry_run: false)

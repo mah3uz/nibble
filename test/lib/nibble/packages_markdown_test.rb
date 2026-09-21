@@ -105,6 +105,10 @@ class Nibble::PackagesMarkdownTest < ActiveSupport::TestCase
     outside = [ { "markdown" => "../app" }, { "markdown" => "/etc" }, { "markdown" => "docs/../../app" } ]
 
     assert Nibble::Schema::Rules::SOURCE.(inside)
+    assert Nibble::Schema::Rules::SOURCE.({ "markdown" => "content/docs" })
+    assert_equal Nibble::Packages::Folder.path("docs"), Nibble::Packages::Folder.path("content/docs"),
+      "the prefix is optional, and means the same folder either way"
+    assert_equal Rails.root.join("content/docs"), Nibble::Packages::Folder.path("docs")
     outside.each { |source| assert_not Nibble::Schema::Rules::SOURCE.(source), "#{source['markdown']} should be refused" }
   end
 end
