@@ -10,10 +10,19 @@ class RoutesLayeringTest < ActiveSupport::TestCase
     assert_equal ROUTE_FILES, drawn
   end
 
-  test "config/routes.rb belongs to the site, so Nibble draws none of its own routes there" do
-    drawn = Rails.root.join("config/routes.rb").read[/draw do\n(.*)\nend/m, 1].to_s
+  # A site adds its own routes to config/routes.rb, so the property worth holding is that none of Nibble's
+  # are declared there — not that the file is empty, which is only true of a site that has added nothing.
+  NIBBLE_PATHS = [ "/forms/:handle", "/assets/:uuid/:filename", "/robots.txt", "/sitemap.xml", "/*path" ].freeze
 
-    assert_empty drawn.strip, "Nibble's routes belong in lib/nibble/routes, or a site can't edit its own file safely"
+  test "config/routes.rb belongs to the site, so Nibble draws none of its own routes there" do
+    drawn = Rails.application.routes.routes.map { |route| route.path.spec.to_s }
+    site = Rails.root.join("config/routes.rb").read[/draw do\n(.*)\nend/m, 1].to_s
+
+    NIBBLE_PATHS.each do |path|
+      assert_includes drawn, path, "#{path} is one of Nibble's fixed routes and has to stay drawn"
+      refute_includes site, path.delete_prefix("/"),
+        "#{path} is Nibble's, so it belongs in lib/nibble/routes — a site has to own config/routes.rb outright"
+    end
   end
 
   test "the catch-all matches last, so neither the control panel nor a site's routes are swallowed" do
