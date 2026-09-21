@@ -8,7 +8,7 @@ import { VueNodeViewRenderer } from '@tiptap/vue-3'
 import type { Component } from 'vue'
 import { lowlight } from '@/lib/highlight'
 
-export const RichTextCodeBlock = CodeBlockLowlight.configure({ lowlight })
+export const RichTextCodeBlock = CodeBlockLowlight.configure({ lowlight, enableTabIndentation: true, tabSize: 2 })
 
 export const RichTextImage = Image.extend({
   addAttributes() {
