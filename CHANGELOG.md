@@ -11,6 +11,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.6.0 — 2026-09-21
+
 ## What's new
 
 - A **markdown** fieldtype: write Markdown in any blueprint, with a preview rendered by the server so it shows
