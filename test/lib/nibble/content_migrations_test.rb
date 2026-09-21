@@ -128,6 +128,32 @@ class Nibble::ContentMigrationsTest < ActiveSupport::TestCase
     assert_equal "Old", article.reload.data["intro"]
   end
 
+  test "a removed collection's records can be cleared, which nibble:check otherwise reports with nothing to run" do
+    doc = create_entry("docs", { "title" => "Stranded" })
+    kept = create_entry("articles", { "title" => "Still here" })
+    Nibble::Revisions.write(doc, :import, snapshot: doc.snapshot, actor: nil, message: "before")
+    @nibble_themes.join("records/schema/collections/docs.yml").delete
+    FileUtils.rm_rf(@nibble_themes.join("records/schema/blueprints/collections/docs"))
+    Nibble.reset_schema!
+
+    migration("2026_10_01_drop_docs", { "delete_collection" => { "collection" => "docs" } })
+    run_migrations
+
+    assert_empty Nibble::Records::Entry.where(collection: "docs")
+    assert_empty Nibble::Records::Revision.where(record_type: "Nibble::Records::Entry", record_id: doc.id)
+    assert_equal "Still here", kept.reload.title, "only the removed collection's records go"
+  end
+
+  test "a collection still in the schema is never deleted by a migration" do
+    create_entry("articles", { "title" => "One" })
+    migration("2026_10_01_drop_articles", { "delete_collection" => { "collection" => "articles" } })
+
+    error = assert_raises(Nibble::Error) { run_migrations }
+
+    assert_match "still in the schema", error.message
+    assert_equal 1, Nibble::Records::Entry.where(collection: "articles").count
+  end
+
   test "migrations run in date order across layers" do
     migration("2026_10_02_second", { "set_default" => { "collection" => "articles", "field" => "summary", "value" => "b" } })
     migration("2026_10_01_first", { "set_default" => { "collection" => "articles", "field" => "summary", "value" => "a" } })
