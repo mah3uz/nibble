@@ -8,3 +8,4 @@ template: docs/show
 source:
   markdown: docs
   field: body
+  navigation: docs

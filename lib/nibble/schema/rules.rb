@@ -16,7 +16,10 @@ module Nibble
       SORT = ->(value) { value.is_a?(String) && value.match?(/\A[a-z_]+:(asc|desc)\z/) }
       # A folder inside content/, named without the prefix, so a collection cannot read from anywhere else.
       IN_CONTENT = ->(value) { STRING.(value) && !value.start_with?("/") && !value.split("/").include?("..") }
-      SOURCE = ->(value) { value.is_a?(Hash) && IN_CONTENT.(value["markdown"]) && OPTIONAL_STRING.(value["field"]) }
+      SOURCE = ->(value) do
+        value.is_a?(Hash) && IN_CONTENT.(value["markdown"]) && OPTIONAL_STRING.(value["field"]) &&
+          OPTIONAL_STRING.(value["navigation"])
+      end
 
       KINDS = {
         "collections" => {

@@ -12,7 +12,9 @@ class Nibble::PackagesMarkdownTest < ActiveSupport::TestCase
     dir
   end
 
-  def folder_for(dir) = Nibble::Packages::Folder.new("docs", root: dir, field: "body")
+  def folder_for(dir) = Nibble::Packages::Folder.new("docs", root: dir, field: "body", navigation: "docs")
+
+  def entry_in(node) = Nibble::Records::Entry.find(node["entry"] || node["id"])
 
   def read(dir, **options)
     reader = Nibble::Packages::MarkdownReader.new(dir, collection: "posts", **options)
@@ -31,7 +33,7 @@ class Nibble::PackagesMarkdownTest < ActiveSupport::TestCase
     assert_equal "posts/guides", testing.parent_key, "a folder's index.md is the page its files sit under"
     assert_equal "Testing", testing.data["title"], "frontmatter is fields"
     assert_equal "# Testing\n\nHow we test.", testing.data["body"], "the body is the Markdown, frontmatter removed"
-    assert_equal 2, testing.data["order"]
+    assert_not testing.data.key?("order"), "order places the page in the tree; it is not a field of the blueprint"
   end
 
   test "the field the body lands in is the collection's to choose" do
@@ -94,7 +96,7 @@ class Nibble::PackagesMarkdownTest < ActiveSupport::TestCase
 
     second = folder_for(dir).call
 
-    assert_equal 1, first.report.created.size
+    assert_equal 2, first.report.created.size, "the page, and the navigation its folders describe"
     assert_empty second.report.created
     assert_empty second.trashed
     assert_equal "Everything.", Nibble::Records::Entry.kept.sole.values["body"]
@@ -155,5 +157,19 @@ class Nibble::PackagesMarkdownTest < ActiveSupport::TestCase
 
     assert_equal 1, Nibble::Records::Asset.kept.count, "running again uploads it again only if it changed"
     assert_includes entry.reload.blueprint_fields.add_values(entry.values).augment.values["body"], asset.url
+  end
+
+  test "the folders are the tree a sidebar needs, in the order the pages ask for" do
+    dir = folder("guides/index.md" => "---\ntitle: Guides\norder: 2\n---\n\nAll of them.\n",
+                 "guides/testing.md" => "---\ntitle: Testing\n---\n\nHow.\n",
+                 "start.md" => "---\ntitle: Start\norder: 1\n---\n\nHere.\n")
+
+    folder_for(dir).call
+
+    tree = Nibble::Records::NavigationTree.find_by!(handle: "docs").tree
+    assert_equal 2, tree.size
+    assert_equal "start", entry_in(tree.first).slug, "order decides, so a sidebar does not read alphabetically"
+    assert_equal "guides", entry_in(tree.second).slug
+    assert_equal "testing", entry_in(tree.second["children"].sole).slug, "a folder's pages sit under its page"
   end
 end

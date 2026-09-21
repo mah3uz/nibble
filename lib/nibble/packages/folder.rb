@@ -21,7 +21,7 @@ module Nibble
       def self.for(handle, dry_run: false)
         item = Nibble.schema.collection(handle) or raise Error, "no collection '#{handle}'"
         source = item.data["source"] or raise Error, "collection '#{handle}' has no source folder"
-        new(handle, root: path(source["markdown"]), field: source["field"], dry_run:)
+        new(handle, root: path(source["markdown"]), field: source["field"], navigation: source["navigation"], dry_run:)
       end
 
       # Where a page is written, which is what the control panel shows instead of letting anyone edit it.
@@ -39,15 +39,17 @@ module Nibble
         path(source["markdown"]).join(*file).relative_path_from(Rails.root).to_s
       end
 
-      def initialize(handle, root:, field: nil, dry_run: false)
+      def initialize(handle, root:, field: nil, navigation: nil, dry_run: false)
         @handle = handle
         @root = Pathname(root)
         @field = field
+        @navigation = navigation
         @dry_run = dry_run
       end
 
       def call
-        reader = MarkdownReader.new(@root, collection: @handle, field: @field, images: @dry_run ? {} : images)
+        reader = MarkdownReader.new(@root, collection: @handle, field: @field, navigation: @navigation,
+                                   images: @dry_run ? {} : images)
         report = Importer.new(@root, mode: "update", dry_run: @dry_run, reader:).call
         return Result.new(report:, trashed: [], collection: @handle) unless report.ok? && !@dry_run
 
@@ -79,7 +81,7 @@ module Nibble
       def checksum(relative) = Digest::MD5.base64digest(@root.join(relative).read)
 
       def trash(documents)
-        keys = documents.map(&:key).to_set
+        keys = documents.select { |doc| doc.kind == "collections" }.map(&:key).to_set
         entries = Records::Entry.kept.where(collection: @handle).includes(:parent)
         entries.reject { |entry| keys.include?(key_of(entry)) }
                .each { |entry| Lifecycle.call(entry, :trash, {}, mode: :import) }

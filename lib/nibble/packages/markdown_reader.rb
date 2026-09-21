@@ -9,19 +9,37 @@ module Nibble
 
       attr_reader :errors
 
-      def initialize(root, collection:, field: DEFAULT_FIELD, locale: nil, images: {})
+      def initialize(root, collection:, field: DEFAULT_FIELD, locale: nil, images: {}, navigation: nil)
         @root = Pathname(root)
         @collection = collection
         @field = field || DEFAULT_FIELD
         @locale = locale || Nibble.config.default_locale.code
         @images = images
+        @navigation = navigation
+        @order = {}
         @errors = []
       end
 
       def documents
         raise Error, "#{@root} isn't a folder of Markdown" unless @root.directory?
 
-        Dir.glob("**/*.md", base: @root).sort.filter_map { |relative| document(relative) }
+        pages = Dir.glob("**/*.md", base: @root).sort.filter_map { |relative| document(relative) }
+        @navigation ? pages + [ navigation(pages) ] : pages
+      end
+
+      # The folders are the tree a sidebar needs; order in the frontmatter says what comes first.
+      def navigation(pages)
+        by_parent = pages.group_by(&:parent_key)
+        Document.new(kind: "navigation", handle: @navigation, locale: @locale,
+                     key: @navigation, data: { "tree" => branch(by_parent, nil) }, file: "#{@navigation} navigation")
+      end
+
+      def branch(by_parent, key)
+        Array(by_parent[key]).sort_by { |doc| [ @order[doc.key] || Float::INFINITY, doc.data["title"].to_s ] }
+          .map do |doc|
+            children = branch(by_parent, doc.key)
+            children.any? ? { "entry" => doc.key, "children" => children } : { "entry" => doc.key }
+          end
       end
 
       def redirects = []
@@ -40,9 +58,12 @@ module Nibble
         end
 
         text = @root.join(relative).read
-        data = Markdown.front_matter(text).merge(@field => rewrite(body(text), relative))
-        Document.new(kind: "collections", handle: @collection, locale: @locale,
-                     key: [ @collection, *slugs ].join("/"), data:, file: relative)
+        front = Markdown.front_matter(text)
+        key = [ @collection, *slugs ].join("/")
+        # Where a page sits in the tree, which is Nibble's to know rather than a field of the blueprint.
+        @order[key] = front.delete("order")
+        data = front.merge(@field => rewrite(body(text), relative))
+        Document.new(kind: "collections", handle: @collection, locale: @locale, key:, data:, file: relative)
       end
 
       def key_for(relative)
