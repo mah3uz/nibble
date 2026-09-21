@@ -303,7 +303,9 @@ module Nibble
       def update(doc, record)
         context = Context.new(@references, doc.locale, strict: true)
         fields = record.blueprint_fields.all.select { |handle, _| doc.data.key?(handle) }
-        attrs = fields.to_h { |handle, field| [ handle, field.fieldtype.import(doc.data[handle], context) ] }
+        attrs = fields.to_h do |handle, field|
+          [ handle, field.fieldtype.carry_row_ids(record.values[handle], field.fieldtype.import(doc.data[handle], context)) ]
+        end
         columns = doc.kind == "collections" ? doc.data.slice("published_at", "unpublish_at", "template", "position") : {}
         return false if unchanged?(record, attrs, columns) && !moved?(record) && !(doc.kind == "collections" && doc.status == "published" && !record.live?)
 

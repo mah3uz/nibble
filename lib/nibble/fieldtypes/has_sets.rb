@@ -5,6 +5,19 @@ module Nibble
 
       def self.generate_id = SecureRandom.alphanumeric(8)
 
+      # A row id is bookkeeping the control panel follows a row by, not content, so a file carries none. Keep
+      # the ids already stored, by position, or every import would mint new ones and never look unchanged.
+      def self.carry_ids(stored, incoming)
+        stored = Array(stored)
+        Array(incoming).each_with_index.map do |row, index|
+          row = row.to_h.stringify_keys
+          next row if row[ROW_ID].present?
+
+          id = stored[index].to_h.stringify_keys[ROW_ID]
+          id.present? ? row.merge(ROW_ID => id) : row
+        end
+      end
+
       # Accepts grouped sets ({ group => { sets: { handle => set } } }) and the flat form ({ handle => set }).
       def sets_config
         sets = config("sets").to_h.deep_stringify_keys

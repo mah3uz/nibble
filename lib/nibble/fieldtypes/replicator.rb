@@ -63,6 +63,7 @@ module Nibble
       def search_text(value) = set_search_text(value)
 
       def import(value, ctx = nil) = transfer(value, ctx, :import)
+      def carry_row_ids(stored, incoming) = HasSets.carry_ids(stored, incoming)
       def export(value, ctx = nil) = transfer(value, ctx, :export)
 
       def transfer(value, ctx, direction)

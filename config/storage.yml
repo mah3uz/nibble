@@ -7,14 +7,14 @@ local:
   root: <%= Rails.root.join("storage") %>
 
 # Use bin/rails credentials:edit to set the AWS secrets (as aws:access_key_id|secret_access_key)
-# Production and staging (config/environments/production.rb). Bucket per environment:
-# Set AWS_BUCKET_NAME, or it falls back to nibble-<environment>.
+# Production and staging use this only once AWS_BUCKET_NAME is set; without it they store files locally.
 amazon:
   service: S3
   access_key_id: <%= Rails.application.credentials.dig(:aws, :access_key_id) %>
   secret_access_key: <%= Rails.application.credentials.dig(:aws, :secret_access_key) %>
   region: <%= ENV.fetch("AWS_REGION", "ap-southeast-2") %>
   bucket: <%= ENV.fetch("AWS_BUCKET_NAME", "nibble-#{Rails.env}") %>
+  # A named bucket is what turns this on, so there is no silent half-configured state.
 
 # Remember not to checkin your GCS keyfile to a repository
 # google:

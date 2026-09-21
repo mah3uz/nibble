@@ -12,6 +12,27 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### Changed
+
+- **Uploads go to local storage until S3 is configured.** Production and staging named `:amazon` whatever the
+  settings said, so a site with no bucket could not serve an upload at all. Name `AWS_BUCKET_NAME` and it is S3
+  as before; leave it unset and files are stored on the server, under the volume a Kamal deploy already keeps.
+  A site can now run before it has object storage.
+
+### What's fixed
+
+- **A folder of Markdown with a grid field no longer rewrites itself on every sync.** A grid row carries an id
+  the control panel follows it by, a file carries none, and one was minted each time — so the page never looked
+  unchanged, and every deploy wrote a revision, purged its cache and raised events for a page nobody had
+  touched. The row ids already stored are now kept. The same applies to a replicator.
+
+### Upgrade
+
+- **If you run on S3 without setting `AWS_BUCKET_NAME`**, uploads were going to a bucket named
+  `nibble-<environment>` by default. That default no longer selects S3 at all: without the variable this
+  release stores files on the server instead, and anything already in that bucket stops being found. Set
+  `AWS_BUCKET_NAME` before upgrading and nothing changes. A site that has never used S3 needs to do nothing.
+
 ## 0.9.1 — 2026-09-22
 
 ### What's fixed

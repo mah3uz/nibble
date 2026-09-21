@@ -74,6 +74,7 @@ module Nibble
       def relations(value) = nested_row_values(value, :relations)
       def dependencies(value) = nested_row_values(value, :dependencies)
       def import(value, ctx = nil) = transfer(value, ctx, :import)
+      def carry_row_ids(stored, incoming) = HasSets.carry_ids(stored, incoming)
       def export(value, ctx = nil) = transfer(value, ctx, :export)
 
       def transfer(value, ctx, direction)

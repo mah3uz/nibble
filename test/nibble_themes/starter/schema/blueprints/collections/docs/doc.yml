@@ -10,3 +10,9 @@ tabs:
             field: { type: text }
           - handle: body
             field: { type: markdown }
+          - handle: links
+            field:
+              type: grid
+              fields:
+                - handle: label
+                  field: { type: text }

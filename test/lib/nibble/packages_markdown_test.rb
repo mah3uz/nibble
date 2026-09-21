@@ -181,6 +181,19 @@ class Nibble::PackagesMarkdownTest < ActiveSupport::TestCase
     assert_equal "Everything.", Nibble::Records::Entry.kept.sole.values["body"]
   end
 
+  test "a row of a grid keeps the id it was given, so a deploy that re-runs this writes nothing" do
+    dir = folder("guides/index.md" => "---\ntitle: Guides\nlinks:\n  - label: One\n  - label: Two\n---\n\nEverything.\n")
+    folder_for(dir).call
+    before = Nibble::Records::Entry.kept.sole.values["links"].map { |row| row["id"] }
+
+    second = folder_for(dir).call
+
+    assert_empty second.report.updated, "nothing in the folder changed, so nothing should be written"
+    assert_equal before, Nibble::Records::Entry.kept.sole.values["links"].map { |row| row["id"] },
+      "a row id is bookkeeping, not content: minting new ones would rewrite the page on every deploy"
+    assert_equal %w[One Two], Nibble::Records::Entry.kept.sole.values["links"].map { |row| row["label"] }
+  end
+
   test "a source folder cannot reach outside content/, which is the only place files are read from" do
     inside = { "markdown" => "docs" }
     outside = [ { "markdown" => "../app" }, { "markdown" => "/etc" }, { "markdown" => "docs/../../app" } ]

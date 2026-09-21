@@ -99,6 +99,8 @@ module Nibble
     def search_text(_raw) = nil
     def export(raw, _ctx = nil) = raw
     def import(value, _ctx = nil) = value
+    # Only the fieldtypes that mint row ids override this; for everything else the incoming value stands.
+    def carry_row_ids(_stored, incoming) = incoming
     def queryable_value(_raw) = nil
     def ts_type = "unknown"
   end
