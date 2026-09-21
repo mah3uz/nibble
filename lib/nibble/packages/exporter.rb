@@ -1,7 +1,7 @@
 module Nibble
   module Packages
     class Exporter
-      COLUMN_KEYS = %w[blueprint status published_at unpublish_at template].freeze
+      COLUMN_KEYS = %w[blueprint status published_at unpublish_at template position].freeze
       ASSET_KEYS = %w[title alt caption credit focal_x focal_y focal_zoom tags].freeze
 
       def initialize(root, collections: nil, taxonomies: nil, locales: nil, status: nil)
@@ -72,7 +72,7 @@ module Nibble
         columns = {
           "blueprint" => entry.blueprint, "status" => %w[published scheduled].include?(entry.status) ? "published" : "draft",
           "published_at" => entry.published_at&.utc&.iso8601, "unpublish_at" => entry.unpublish_at&.utc&.iso8601,
-          "template" => entry.template
+          "template" => entry.template, "position" => entry.position
         }.compact
         columns.merge(values(entry))
       end

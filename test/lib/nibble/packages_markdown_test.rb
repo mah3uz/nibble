@@ -53,6 +53,19 @@ class Nibble::PackagesMarkdownTest < ActiveSupport::TestCase
     assert_match(/guides\/ has no index.md/, errors.sole)
   end
 
+  test "position is a column Nibble sets, so a folder of files can state its own order" do
+    dir = folder("guides/index.md" => "---\ntitle: Guides\n---\n\nEverything.\n",
+                 "guides/second.md" => "---\ntitle: Second\nposition: 2\n---\n\nB.\n",
+                 "guides/first.md" => "---\ntitle: First\nposition: 1\n---\n\nA.\n")
+
+    result = folder_for(dir).call
+    assert result.ok?, result.report.errors.join("\n")
+
+    ordered = Nibble::Records::Entry.where(collection: "docs").where.not(position: nil).order(:position).pluck(:title)
+    assert_equal %w[First Second], ordered,
+      "published_at is the only other handle on order, and a page in a folder has no publication date to sort by"
+  end
+
   test "an index at the root is the collection's own page, not an error that loses the whole folder" do
     dir = folder("index.md" => "---\ntitle: Home\n---\n\nHome.\n",
                  "guides/index.md" => "---\ntitle: Guides\n---\n\nEverything.\n")

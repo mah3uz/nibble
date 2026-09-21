@@ -7,7 +7,7 @@ module Nibble
       MAX_PER_PAGE = 100
 
       Condition = Data.define(:field, :operator, :value, :relation)
-      Sort = Data.define(:column, :direction)
+      Sort = Data.define(:column, :direction, :field)
 
       attr_reader :source, :conditions, :exclusions, :q, :locale, :sorts, :paginate, :limit, :offset, :include, :fields, :raw
 
@@ -72,10 +72,11 @@ module Nibble
         raw = @raw["sort"] || source.schema_item(@schema)["sort"]
         Array(raw).map do |entry|
           column, direction = entry.to_s.split(":", 2)
-          raise Invalid.new("sort", "'#{column}' isn't a sortable column") unless source.columns.include?(column)
+          field = !source.columns.include?(column) && source.fields(@schema).key?(column)
+          raise Invalid.new("sort", "'#{column}' isn't a sortable column or field") unless source.columns.include?(column) || field
           raise Invalid.new("sort", "direction must be asc or desc") unless [ nil, "asc", "desc" ].include?(direction)
 
-          Sort.new(column:, direction: (direction || "asc").to_sym)
+          Sort.new(column:, direction: (direction || "asc").to_sym, field:)
         end
       end
 

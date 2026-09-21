@@ -40,12 +40,19 @@ module Nibble
       scope = scope.where(locale: context.resolve(spec.locale || "$locale"))
       spec.conditions.each { |condition| scope = scope.where(node(model, condition)) }
       spec.exclusions.each { |condition| scope = scope.where(node(model, condition).not) }
-      spec.sorts.each { |sort| scope = scope.order(sort.column => sort.direction) }
+      spec.sorts.each { |sort| scope = sort.field ? scope.order(field_order(model, sort)) : scope.order(sort.column => sort.direction) }
       scope = scope.order(:id)
       spec.column_fields_only? ? scope.select(*(PRESENTER_COLUMNS & model.column_names), *(spec.fields & model.column_names)) : scope
     end
 
     private
+
+    # ->> is the SQL/JSON operator every database Nibble could run on understands, so a blueprint field can be
+    # sorted on without reaching for json_extract, which is SQLite's own spelling.
+    def field_order(model, sort)
+      path = Arel::Nodes::InfixOperation.new("->>", model.arel_table[:data], Arel::Nodes.build_quoted(sort.column))
+      sort.direction == :desc ? path.desc : path.asc
+    end
 
     def search_result
       per_page = spec.paginate&.dig("per_page") || spec.limit || 20

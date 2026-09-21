@@ -136,7 +136,7 @@ module Nibble
 
     class Importer
       MODES = %w[create update].freeze
-      COLUMN_KEYS = %w[blueprint status published_at unpublish_at template].freeze
+      COLUMN_KEYS = %w[blueprint status published_at unpublish_at template position].freeze
       ASSET_KEYS = %w[title alt caption credit focal_x focal_y focal_zoom tags].freeze
 
       def initialize(root, mode: "create", dry_run: false, notify: false, reader: nil)
@@ -281,7 +281,7 @@ module Nibble
         model.blueprint = doc.data["blueprint"] || Array(item["blueprints"]).first
         attrs = plain_values(doc, model).merge("slug" => doc.slug)
         if doc.kind == "collections"
-          attrs.merge!(doc.data.slice("published_at", "unpublish_at", "template"))
+          attrs.merge!(doc.data.slice("published_at", "unpublish_at", "template", "position"))
           attrs["parent_id"] = @references.id("entry", doc.locale, doc.parent_key) if doc.parent_key
         end
         record = succeed!(doc, Lifecycle.call(model, :create, attrs, mode: @lifecycle_mode))
@@ -304,7 +304,7 @@ module Nibble
         context = Context.new(@references, doc.locale, strict: true)
         fields = record.blueprint_fields.all.select { |handle, _| doc.data.key?(handle) }
         attrs = fields.to_h { |handle, field| [ handle, field.fieldtype.import(doc.data[handle], context) ] }
-        columns = doc.kind == "collections" ? doc.data.slice("published_at", "unpublish_at", "template") : {}
+        columns = doc.kind == "collections" ? doc.data.slice("published_at", "unpublish_at", "template", "position") : {}
         return false if unchanged?(record, attrs, columns) && !(doc.kind == "collections" && doc.status == "published" && !record.live?)
 
         succeed!(doc, Lifecycle.call(record, :save, attrs.merge(columns), mode: @lifecycle_mode))

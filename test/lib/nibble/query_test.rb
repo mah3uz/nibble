@@ -20,6 +20,18 @@ class Nibble::QueryTest < ActiveSupport::TestCase
     assert_equal [ "About", "Blog", "Home" ], titles({ from: "entries:pages", where: { parent_id: { null: true } }, sort: "title:asc" })
   end
 
+  test "a blueprint field sorts as well as a column, so a collection can order on what it actually holds" do
+    %w[delta alpha charlie bravo].each_with_index do |excerpt, index|
+      @posts[index].update_columns(data: @posts[index].data.merge("excerpt" => excerpt))
+    end
+
+    assert_equal [ "Grids", "Type scales", "Remote work", "Colour theory" ],
+      titles({ from: "entries:posts", sort: "excerpt:asc" }),
+      "published_at and title are columns; an order the blueprint holds was unreachable before"
+    assert_equal [ "Colour theory", "Remote work", "Type scales", "Grids" ],
+      titles({ from: "entries:posts", sort: "excerpt:desc" })
+  end
+
   test "variables read from the current entry, term and declared params" do
     grids = @posts[1]
     spec = { from: "entries:posts", where: { topics: "$entry.topics" }, not: { id: "$entry.id" }, sort: "title:asc" }
@@ -61,7 +73,7 @@ class Nibble::QueryTest < ActiveSupport::TestCase
       { from: "entries:posts", where: { title: { like: "x" } } } => "where.title.like",
       { from: "entries:posts", where: { topics: { eq: 1 } } } => "where.topics.eq",
       { from: "entries:posts", paginate: { per_page: 500 } } => "paginate.per_page",
-      { from: "entries:posts", sort: "excerpt:asc" } => "sort",
+      { from: "entries:posts", sort: "nope:asc" } => "sort",
       { from: "entries:posts", include: [ "excerpt" ] } => "include",
       { from: "entries:posts", fields: [ "nope" ] } => "fields",
       { from: "entries:posts", limit: 5, paginate: { per_page: 5 } } => "paginate",
