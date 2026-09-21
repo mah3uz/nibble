@@ -12,6 +12,8 @@ class Nibble::PackagesMarkdownTest < ActiveSupport::TestCase
     dir
   end
 
+  def folder_for(dir) = Nibble::Packages::Folder.new("docs", root: dir, field: "body")
+
   def read(dir, **options)
     reader = Nibble::Packages::MarkdownReader.new(dir, collection: "posts", **options)
     [ reader.documents, reader.errors ]
@@ -70,5 +72,31 @@ class Nibble::PackagesMarkdownTest < ActiveSupport::TestCase
     assert_equal "How we test.", testing.values["body"]
     assert_equal "guides", testing.parent&.slug, "the folder is the page above it"
     assert_equal "Testing", testing.title, "frontmatter reaches the columns an import sets, not only fields"
+  end
+
+  test "the folder decides what exists: a page whose file has gone is trashed, not left live" do
+    dir = folder("guides/index.md" => "---\ntitle: Guides\n---\n\nEverything.\n",
+                 "guides/testing.md" => "---\ntitle: Testing\n---\n\nHow we test.\n")
+    folder_for(dir).call
+
+    dir.join("guides/testing.md").delete
+    result = folder_for(dir).call
+
+    assert result.ok?, result.report.errors.join("\n")
+    assert_equal 1, result.trashed.size, "the page whose file went, and only that page"
+    assert_nil Nibble::Records::Entry.kept.find_by(slug: "testing")
+    assert Nibble::Records::Entry.kept.find_by(slug: "guides"), "the pages still written are left alone"
+  end
+
+  test "running it again changes nothing, which is what makes it safe at every deploy" do
+    dir = folder("guides/index.md" => "---\ntitle: Guides\n---\n\nEverything.\n")
+    first = folder_for(dir).call
+
+    second = folder_for(dir).call
+
+    assert_equal 1, first.report.created.size
+    assert_empty second.report.created
+    assert_empty second.trashed
+    assert_equal "Everything.", Nibble::Records::Entry.kept.sole.values["body"]
   end
 end

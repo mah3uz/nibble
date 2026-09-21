@@ -31,6 +31,17 @@ class NibbleContentCommand < Rails::Command::Base
     end
   end
 
+  desc "markdown [COLLECTION]", "Make every collection written as Markdown match its folder (all of them by default)"
+  option :dry_run, type: :boolean, desc: "Report what would change without writing anything"
+  def markdown(collection = nil)
+    boot_application!
+    handles = collection ? [ collection ] : Nibble::Packages::Folder.declared.map(&:handle)
+    abort "no collection declares a source folder" if handles.empty?
+
+    handles.each { |handle| report(Nibble::Packages::Folder.for(handle, dry_run: !!options[:dry_run]).call) }
+    Nibble::Events.dispatch_pending
+  end
+
   desc "export DIR", "Export this site's content as a package"
   option :collections, desc: "Only these collections, comma-separated"
   option :taxonomies, desc: "Only these taxonomies, comma-separated"
@@ -56,5 +67,15 @@ class NibbleContentCommand < Rails::Command::Base
     end
     Nibble::Events.dispatch_pending unless options[:dry_run]
     puts results.empty? ? "no pending content migrations" : "#{options[:dry_run] ? 'dry run, nothing written' : 'ran'}: #{results.size} migration(s)"
+  end
+
+  private
+
+  def report(result)
+    result.report.errors.each { |error| puts "✗ #{error}" }
+    abort "#{result.collection}: nothing written, #{result.report.errors.size} problem(s)" unless result.ok?
+
+    puts "#{result.collection}: created #{result.report.created.size}, updated #{result.report.updated.size}, " \
+         "trashed #{result.trashed.size}"
   end
 end
