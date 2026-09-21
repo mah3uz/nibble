@@ -12,6 +12,25 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### Changed
+
+- **Nibble has a public home.** The code is at `https://github.com/mah3uz/nibble.git`, and the project's site is
+  at `https://nibble.ink`. `install.sh`, the README and the constants that say where releases come from all
+  name them now.
+- **The control panel reads the release notes from `https://nibble.ink/api/v1/releases`** rather than a raw file
+  in a git repository. It serves the same notes, so nothing looks different; the address is one we can keep
+  serving whatever happens to where the code is hosted.
+
+### Upgrade
+
+- **This release moves where upgrades are fetched from, which the release before it cannot know.**
+  `bin/nibble-upgrade` reads the address out of the version you already have, so the upgrade that takes you to
+  this one still asks the old host. Run it once as
+  `NIBBLE_REPO=https://github.com/mah3uz/nibble.git bin/nibble-upgrade`, and every upgrade after this one finds
+  its own way.
+- **A control panel older than this release keeps asking the old address for its notes**, so its update check
+  quietly stops finding anything once that address goes. Upgrading is the fix; nothing else is affected.
+
 ## 0.8.0 — 2026-09-22
 
 ### What's new

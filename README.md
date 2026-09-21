@@ -63,10 +63,10 @@ and migrates — asking about the files it cannot decide for you. See [Upgrading
 MIT — see `LICENSE`. Use it, change it, sell it, rebrand the control panel; keep the copyright notice with
 copies. It comes with no warranty and no support promise.
 
-[site]: https://gitea.tlbn.app/mahfuz/nibble_site
-[users]: https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/users/index.md
-[editors]: https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/editors/index.md
-[themes]: https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/themes/index.md
-[extensions]: https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/extensions/index.md
-[developers]: https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/developers/index.md
-[upgrading]: https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/users/upgrading.md
+[site]: https://nibble.ink
+[users]: https://nibble.ink/docs/users
+[editors]: https://nibble.ink/docs/editors
+[themes]: https://nibble.ink/docs/themes
+[extensions]: https://nibble.ink/docs/extensions
+[developers]: https://nibble.ink/docs/developers
+[upgrading]: https://nibble.ink/docs/upgrading

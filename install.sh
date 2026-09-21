@@ -2,7 +2,7 @@
 # Install Nibble: check this machine has what it needs, fetch the code, then hand over to Ruby.
 set -euo pipefail
 
-REPO="${NIBBLE_REPO:-https://gitea.tlbn.app/mahfuz/nibble.git}"
+REPO="${NIBBLE_REPO:-https://github.com/mah3uz/nibble.git}"
 DIR="${1:-nibble}"
 
 red()  { printf '\033[31m%s\033[0m\n' "$1"; }
