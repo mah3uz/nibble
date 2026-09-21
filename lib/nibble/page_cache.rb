@@ -38,7 +38,14 @@ module Nibble
       def version_key(tag) = "nibble:tagv:#{tag}"
       def next_version = Process.clock_gettime(Process::CLOCK_REALTIME, :nanosecond)
       def digest(tags, versions) = Digest::SHA256.hexdigest(tags.map { |tag| versions[version_key(tag)] }.join(","))
-      def build_version = ENV["KAMAL_VERSION"].presence || Rails.application.config.x.try(:build_version).presence || "dev"
+      def build_version = ENV["KAMAL_VERSION"].presence || Rails.application.config.x.try(:build_version).presence || asset_version
+
+      # A deploy gets a new version for free, but a local `bin/vite build` renames every hashed asset under a
+      # version that never moves, so the cached HTML goes on pointing at files that 404 until the process restarts.
+      def asset_version
+        mtimes = ViteRuby.config.manifest_paths.filter_map { |path| path.mtime.to_i if path.exist? }
+        mtimes.any? ? mtimes.max.to_s : "dev"
+      end
     end
   end
 end
