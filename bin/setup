@@ -13,6 +13,10 @@ SITE_FILES = %w[config/nibble.yml config/deploy.yml config/deploy.staging.yml .n
                 config/credentials.yml.enc config/credentials/ db/schema.rb].freeze
 
 def ignore_own_site_files
+  # A site commits every one of these, so it must never inherit them: they would be invisible to git status,
+  # and a generated file left untracked is one a deploy builds without.
+  return puts "a site commits its own settings, nothing to ignore" if File.exist?(File.join(APP_ROOT, ".nibble/install.yml"))
+
   exclude = File.join(APP_ROOT, ".git/info/exclude")
   return puts "not a git checkout, nothing to ignore" unless File.exist?(exclude)
 

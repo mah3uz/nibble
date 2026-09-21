@@ -12,6 +12,21 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **A site no longer inherits Nibble's own local git excludes.** `bin/setup` hides the files Nibble generates
+  but must never commit — `config/nibble.yml`, `config/deploy.yml`, `.nibble/`, the credentials, `db/schema.rb`
+  — by writing them into `.git/info/exclude`. A site commits every one of those, so in a site the list was
+  backwards: the files never appeared in `git status`, and a generated file left untracked is one a deploy
+  builds without. A theme's generated `types.d.ts` went missing from the image this way, failing the build.
+  `bin/setup` now leaves a site's excludes alone.
+
+### Upgrade
+
+- **If you installed before this release, clear the list once**: open `.git/info/exclude`, delete everything
+  under `# Generated for this checkout`, then check what `git status` reveals. A theme's
+  `.nibble/types.d.ts` in particular has to be committed — the production build reads it.
+
 ## 0.10.0 — 2026-09-22
 
 ### Changed
