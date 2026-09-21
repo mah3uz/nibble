@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.9.1 — 2026-09-22
+
 ### What's fixed
 
 - **A site's own content migrations no longer reach Nibble's tests.** The migration runner built its own list of
