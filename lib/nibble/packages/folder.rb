@@ -3,6 +3,7 @@ module Nibble
     # A collection whose pages are written as Markdown in a folder: the folder decides what exists.
     class Folder
       ROOT = "content".freeze
+      IMAGES = %w[png jpg jpeg gif webp avif svg].freeze
 
       Result = Data.define(:report, :trashed, :collection) do
         def ok? = report.ok?
@@ -46,7 +47,7 @@ module Nibble
       end
 
       def call
-        reader = MarkdownReader.new(@root, collection: @handle, field: @field)
+        reader = MarkdownReader.new(@root, collection: @handle, field: @field, images: @dry_run ? {} : images)
         report = Importer.new(@root, mode: "update", dry_run: @dry_run, reader:).call
         return Result.new(report:, trashed: [], collection: @handle) unless report.ok? && !@dry_run
 
@@ -54,6 +55,28 @@ module Nibble
       end
 
       private
+
+      # An image beside the pages is an asset like any other, in a folder that mirrors where it was written.
+      def images
+        Dir.glob("**/*.{#{IMAGES.join(',')}}", base: @root).sort.filter_map do |relative|
+          asset = asset_for(relative) or next nil
+          [ relative, asset.id.to_s ]
+        end.to_h
+      end
+
+      def asset_for(relative)
+        folder = [ @handle, File.dirname(relative) ].reject { |part| part == "." }.join("/")
+        filename = Assets.clean_filename(File.basename(relative))
+        existing = Records::Asset.kept.find_by(folder:, filename:)
+        return existing if existing && existing.blob.checksum == checksum(relative)
+
+        blob = ActiveStorage::Blob.create_and_upload!(io: @root.join(relative).open, filename:)
+        return Assets::Upload.replace(existing, blob).record if existing
+
+        Assets::Upload.call(blob, { "folder" => folder }).record
+      end
+
+      def checksum(relative) = Digest::MD5.base64digest(@root.join(relative).read)
 
       def trash(documents)
         keys = documents.map(&:key).to_set

@@ -111,4 +111,49 @@ class Nibble::PackagesMarkdownTest < ActiveSupport::TestCase
     assert_equal Rails.root.join("content/docs"), Nibble::Packages::Folder.path("docs")
     outside.each { |source| assert_not Nibble::Schema::Rules::SOURCE.(source), "#{source['markdown']} should be refused" }
   end
+
+  test "a link between files becomes a link between pages, and survives either of them moving" do
+    dir = folder("guides/index.md" => "---\ntitle: Guides\n---\n\nStart with [testing](testing.md).\n",
+                 "guides/testing.md" => "---\ntitle: Testing\n---\n\nBack to [guides](index.md#top), or [home](../start.md).\n",
+                 "start.md" => "---\ntitle: Start\n---\n\nHere.\n")
+    folder_for(dir).call
+
+    guides = Nibble::Records::Entry.kept.find_by!(slug: "guides")
+    testing = Nibble::Records::Entry.kept.find_by!(slug: "testing")
+
+    assert_equal "Start with [testing](nibble://page/docs/guides/testing).", guides.values["body"],
+      "stored as a reference, so the file's own path is not baked into the page"
+    html = testing.blueprint_fields.add_values(testing.values).augment.values["body"]
+    assert_includes html, %(href="#{guides.uri}#top"), "and rendered as wherever that page is now"
+    assert_includes html, %(href="#{Nibble::Records::Entry.kept.find_by!(slug: 'start').uri}")
+  end
+
+  test "a link to a page that does not exist renders as a dead link, not as a scheme nobody can follow" do
+    dir = folder("start.md" => "---\ntitle: Start\n---\n\nSee [gone](gone.md).\n")
+    folder_for(dir).call
+
+    entry = Nibble::Records::Entry.kept.sole
+    html = entry.blueprint_fields.add_values(entry.values).augment.values["body"]
+
+    assert_includes html, %(href="#")
+    assert_not_includes html, "nibble://"
+  end
+
+  test "an image beside the pages becomes an asset, and the same image twice stays one asset" do
+    dir = folder("start.md" => "---\ntitle: Start\n---\n\n![A desk](images/desk.jpg)\n")
+    dir.join("images").mkpath
+    FileUtils.cp(file_fixture("photo.jpg"), dir.join("images/desk.jpg"))
+
+    folder_for(dir).call
+    asset = Nibble::Records::Asset.kept.sole
+    entry = Nibble::Records::Entry.kept.sole
+
+    assert_equal "docs/images", asset.folder, "filed where it was written, not in a heap"
+    assert_equal "![A desk](nibble://asset/#{asset.id})", entry.values["body"]
+
+    folder_for(dir).call
+
+    assert_equal 1, Nibble::Records::Asset.kept.count, "running again uploads it again only if it changed"
+    assert_includes entry.reload.blueprint_fields.add_values(entry.values).augment.values["body"], asset.url
+  end
 end

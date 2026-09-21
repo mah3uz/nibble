@@ -3,14 +3,18 @@ module Nibble
     # A folder of Markdown files, read as the documents Importer already knows how to write.
     class MarkdownReader
       DEFAULT_FIELD = "body".freeze
+      # A link to another page, written as a path between files, which only means something once both are pages.
+      LINK = /(\]\()(?!\w+:|\/)([^)\s#]+\.md)(#[^)\s]*)?(\))/
+      IMAGE = /(!\[[^\]]*\]\()(?!\w+:|\/)([^)\s]+)(\))/
 
       attr_reader :errors
 
-      def initialize(root, collection:, field: DEFAULT_FIELD, locale: nil)
+      def initialize(root, collection:, field: DEFAULT_FIELD, locale: nil, images: {})
         @root = Pathname(root)
         @collection = collection
         @field = field || DEFAULT_FIELD
         @locale = locale || Nibble.config.default_locale.code
+        @images = images
         @errors = []
       end
 
@@ -36,7 +40,7 @@ module Nibble
         end
 
         text = @root.join(relative).read
-        data = Markdown.front_matter(text).merge(@field => body(text))
+        data = Markdown.front_matter(text).merge(@field => rewrite(body(text), relative))
         Document.new(kind: "collections", handle: @collection, locale: @locale,
                      key: [ @collection, *slugs ].join("/"), data:, file: relative)
       end
@@ -47,6 +51,29 @@ module Nibble
       end
 
       def body(text) = text.sub(/\A---\n.*?\n---\n/m, "").strip
+
+      # Both are rewritten to references, so a page keeps its link when the page or the file it points at moves.
+      def rewrite(text, relative)
+        link_pages(image_assets(text, relative), relative)
+      end
+
+      def image_assets(text, relative)
+        here = Pathname(relative).dirname
+        text.gsub(IMAGE) do
+          open_bracket, target, close = Regexp.last_match.captures
+          id = @images[here.join(target).cleanpath.to_s]
+          id ? "#{open_bracket}nibble://asset/#{id}#{close}" : Regexp.last_match(0)
+        end
+      end
+
+      def link_pages(text, relative)
+        here = Pathname(relative).dirname
+        text.gsub(LINK) do
+          open_bracket, target, anchor, close = Regexp.last_match.captures
+          key = key_for(here.join(target).cleanpath.to_s)
+          "#{open_bracket}nibble://page/#{[ @collection, *key ].join('/')}#{anchor}#{close}"
+        end
+      end
 
       def error(file, message)
         @errors << "#{file}: #{message}"

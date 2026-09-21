@@ -2,6 +2,7 @@ module Nibble
   module Fieldtypes
     class Markdown < Fieldtype
       ASSET_URL = %r{nibble://asset/([^\s)"']+)}
+      PAGE_URL = %r{nibble://page/([^\s)"'#]+)(#[^\s)"']*)?}
 
       self.categories = %w[text structured]
       self.contract_samples = [ "## Heading\n\nSome **text**.", nil ]
@@ -26,7 +27,7 @@ module Nibble
         text = value.to_s
         return nil if text.blank?
 
-        Nibble::Markdown.render(resolve_assets(text), sanitize: config("sanitize") == true)
+        Nibble::Markdown.render(resolve_pages(resolve_assets(text)), sanitize: config("sanitize") == true)
       end
 
       def import(value, ctx = nil) = transfer(value, ctx)
@@ -49,6 +50,29 @@ module Nibble
 
         found = Resolvers.find("asset").find(ids).index_by { |summary| summary["id"] }
         text.gsub(ASSET_URL) { found.dig(Regexp.last_match(1), "url") || Regexp.last_match(0) }
+      end
+
+      # A page is named by where it sits, not by its id, because the files it was written from say nothing else.
+      def resolve_pages(text)
+        text.gsub(PAGE_URL) do
+          entry = page_at(Regexp.last_match(1))
+          next "#" unless entry
+
+          Dependencies.add("entry:#{entry.id}")
+          "#{entry.uri}#{Regexp.last_match(2)}"
+        end
+      end
+
+      def page_at(key)
+        collection, *slugs = key.split("/")
+        return nil if slugs.empty?
+
+        slugs.reduce(nil) do |parent, slug|
+          found = Records::Entry.kept.live.find_by(collection:, parent_id: parent&.id, slug:)
+          break nil unless found
+
+          found
+        end
       end
 
       def transfer(value, ctx)
