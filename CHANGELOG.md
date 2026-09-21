@@ -11,6 +11,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.7.0 — 2026-09-21
+
 ## What's new
 
 - **A collection can be written as Markdown files.** Name a folder inside `content/` in the collection's schema
