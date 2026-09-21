@@ -17,6 +17,13 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   and `bin/rails nibble:content:markdown` makes the collection match it: a file is a page, a folder's `index.md`
   is the page its files sit under, frontmatter becomes fields, and a page whose file has gone is trashed. It is
   safe to run again, so a deploy can run it every time.
+  - A link to another `.md` file becomes a link to that page, resolved when the page renders, so it survives
+    either page moving. An image beside the pages becomes an asset, filed where it was written and uploaded
+    again only when it changes.
+  - The folders are a navigation tree, ordered by `order` in the frontmatter — the sidebar a documentation site
+    needs, without maintaining one by hand.
+  - Those pages are read-only in the control panel, and each one says which file it is written in and what to
+    run after changing it.
 
 ## Changed
 
