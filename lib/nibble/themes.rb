@@ -4,8 +4,7 @@ module Nibble
     COOKIE = "nibble_theme".freeze
     CHOICES = %w[light dark].freeze
 
-    # Anything else is treated as no choice at all: the value reaches an HTML attribute, and a theme's
-    # stylesheet decides what data-theme means, so only the two registers Nibble defines are passed through.
+    # Allowlisted because the value reaches an HTML attribute.
     def self.chosen(cookies) = CHOICES.find { |choice| choice == cookies[COOKIE] }
   end
 end

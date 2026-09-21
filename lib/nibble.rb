@@ -27,8 +27,7 @@ module Nibble
 
     def build_theme = config.theme
 
-    # A theme that ships no stylesheet gets no link. Where one exists, a missing manifest entry still
-    # raises, because serving a page without the CSS it was built for is the failure worth hearing about.
+    # A missing manifest entry still raises: the wrong CSS is worse than none.
     def theme_stylesheet
       return nil unless config.theme_path&.join("styles", "theme.css")&.file?
 

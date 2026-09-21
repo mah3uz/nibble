@@ -65,8 +65,7 @@ module Nibble
         Document.new(kind: "collections", handle: @collection, locale: @locale, key:, data:, file: relative)
       end
 
-      # A folder's index.md is the page its files sit under, and at the root that page is the collection's
-      # own — the root entry structure.root already names, rather than a file with no slug left.
+      # At the root there is no slug left, so the page is the collection's own root entry.
       def key_for(relative)
         parts = relative.delete_suffix(".md").split("/")
         parts = parts[0..-2] if parts.last == "index"

@@ -78,7 +78,6 @@ module Nibble
       }
     end
 
-    # A byline wants a name, and the bare id a view used to get was no use to it.
     def author(record)
       user = @preload.author(record.try(:author_id)) or return nil
       { "id" => user.id, "name" => user.name }

@@ -47,8 +47,7 @@ module Nibble
 
     private
 
-    # ->> is the standard SQL/JSON operator, understood by every database Nibble could run on, so sorting on a
-    # blueprint field needs none of SQLite's own extraction functions.
+    # ->> is standard SQL/JSON, so this stays portable.
     def field_order(model, sort)
       path = Arel::Nodes::InfixOperation.new("->>", model.arel_table[:data], Arel::Nodes.build_quoted(sort.column))
       sort.direction == :desc ? path.desc : path.asc

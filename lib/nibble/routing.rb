@@ -3,7 +3,6 @@ module Nibble
     Match = Data.define(:kind, :record, :taxonomy, :collection, :locale, :template, :redirect) do
       def self.redirect(to) = new(kind: :redirect, record: nil, taxonomy: nil, collection: nil, locale: nil, template: nil, redirect: to)
 
-      # The schema item behind the page, whichever kind of index or record it turned out to be.
       def item = taxonomy || collection || record&.collection_item
     end
 

@@ -2,7 +2,6 @@ module Nibble
   module ContentMigrations
     module Operations
       NAMES = %w[rename_field change_blueprint set_default move_to_taxonomy delete_collection].freeze
-      # The one operation whose target is a collection the schema no longer has — that is the point of it.
       REMOVED = %w[delete_collection].freeze
       COLUMNS = %w[title slug].freeze
 
@@ -69,8 +68,7 @@ module Nibble
         end
       end
 
-      # Renaming a collection strands its old records: nibble:check reports them and nothing could clear them.
-      # They are removed outright rather than trashed, because there is no longer a schema to restore them under.
+      # Removed outright rather than trashed: there is no schema left to restore them under.
       def delete_collection(args)
         handle = args["collection"]
         entries = Records::Entry.where(collection: handle)

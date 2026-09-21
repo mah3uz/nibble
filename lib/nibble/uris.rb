@@ -33,8 +33,6 @@ module Nibble
         {
           "slug" => record.slug,
           "parent_uri" => parent ? parent.uri : "",
-          # The ancestors' slugs alone, so a route can nest a structure under a prefix of its own without
-          # the parent's whole URI — which already carries that prefix — doubling it.
           "parent_slugs" => ancestor_slugs(parent),
           "year" => date&.strftime("%Y"),
           "month" => date&.strftime("%m"),

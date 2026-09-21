@@ -15,7 +15,6 @@ module Nibble
         document(title: source.title, path: "/feed-#{source.handle}.xml", updated: updated_at(scope(source)), entries:)
       end
 
-      # Everything that publishes a feed, newest first, so a site can offer one address for all of it.
       def site_xml
         records = sources.flat_map { |source| scope(source).to_a }.sort_by(&:published_at).reverse.first(DEFAULT_LIMIT)
         document(title: site_name, path: "/feed.xml", updated: records.first&.published_at, entries: records.map { |entry| entry_xml(entry) })

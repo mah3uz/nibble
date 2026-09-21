@@ -10,8 +10,6 @@ class RoutesLayeringTest < ActiveSupport::TestCase
     assert_equal ROUTE_FILES, drawn
   end
 
-  # A site adds its own routes to config/routes.rb, so the property worth holding is that none of Nibble's
-  # are declared there — not that the file is empty, which is only true of a site that has added nothing.
   NIBBLE_PATHS = [ "/forms/:handle", "/assets/:uuid/:filename", "/robots.txt", "/sitemap.xml", "/*path" ].freeze
 
   test "config/routes.rb belongs to the site, so Nibble draws none of its own routes there" do
