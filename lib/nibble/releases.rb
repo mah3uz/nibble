@@ -34,7 +34,7 @@ module Nibble
       url = REPOSITORY.delete_suffix(".git")
       releases = Pathname(changelog).read.scan(SECTION).first(KEEP_RELEASES).map do |version, date, body|
         { "version" => version, "date" => date, "url" => "#{url}/releases/tag/v#{version}",
-          "security" => body.match?(/^##\s+Security\b/i), "body" => body.strip }
+          "security" => body.match?(/^\#+\s+Security\b/i), "body" => body.strip }
       end
       Pathname(to).write("#{JSON.pretty_generate(releases)}\n")
       releases

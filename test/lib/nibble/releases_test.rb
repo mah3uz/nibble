@@ -158,17 +158,17 @@ class Nibble::ReleasesTest < ActiveSupport::TestCase
 
       ## 0.2.0 — 2026-02-01
 
-      ## Security
+      ### Security
 
       - A fix that matters.
 
-      ## What's new
+      ### What's new
 
       - Something else.
 
       ## 0.1.0 — 2026-01-01
 
-      ## What's new
+      ### What's new
 
       - The first one.
     MD

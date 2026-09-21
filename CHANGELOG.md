@@ -1,6 +1,7 @@
 # Changelog
 
-What changed for a site running Nibble, under **What's new**, **What's fixed**, **Changed** and **Security**.
+What changed for a site running Nibble. Each release is a `##` heading, and inside it **What's new**, **What's
+fixed**, **Changed** and **Security** are `###`.
 Anything that needs you to act has an **Upgrade** note; releases without one are safe to take as they come. A
 release whose database migrations cannot be undone says so in its entry, so you know the snapshot is the only way
 back. The control panel shows these same notes, read from the feed the documentation site publishes, which is
@@ -13,7 +14,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## 0.7.0 — 2026-09-21
 
-## What's new
+### What's new
 
 - **A collection can be written as Markdown files.** Name a folder inside `content/` in the collection's schema
   and `bin/rails nibble:content:markdown` makes the collection match it: a file is a page, a folder's `index.md`
@@ -27,14 +28,14 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   - Those pages are read-only in the control panel, and each one says which file it is written in and what to
     run after changing it.
 
-## Changed
+### Changed
 
 - `bin/nibble-release` offers the push rather than printing it, and offers to publish the feed in the repository
   it was written to. `--push` answers both without asking.
 
 ## 0.6.0 — 2026-09-21
 
-## What's new
+### What's new
 
 - A **markdown** fieldtype: write Markdown in any blueprint, with a preview rendered by the server so it shows
   what a theme will actually receive. Assets are referenced rather than linked, so replacing one does not leave
@@ -49,7 +50,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - Writing in the control panel reads as prose: headings, quotes, tables, callouts and a code panel that looks
   like code, in both colour schemes.
 
-## Changed
+### Changed
 
 - **The documentation is no longer part of Nibble.** It is a site of its own, written in Markdown, which is also
   what publishes the release notes your control panel shows. Every site that installed Nibble was carrying a copy
@@ -63,7 +64,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - Choosing a term or an entry says **Choose…**, or whatever `placeholder` the field sets, rather than naming what
   the control is made of.
 
-## What's fixed
+### What's fixed
 
 - **A Markdown field with an image in it could not be imported.** Exporting wrote the asset's path where its id
   had been, and importing that file failed on the first slash, so content carrying one could not move between
@@ -75,7 +76,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## 0.5.0 — 2026-09-21
 
-## Changed
+### Changed
 
 - **Everything of Nibble's now lives under `lib/nibble/`, and `app/` is yours.** Your models, controllers, jobs
   and views sit where a Rails application puts them, with nothing of ours beside them, and your views are looked
@@ -91,7 +92,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   **Upgrade:** taking this release deletes our copy from your tree. If you had put your own workflows there, git
   stops on the conflict — keep your side.
 
-## What's new
+### What's new
 
 - `site/test/` is yours for your own tests, run by `bin/ci` and by `bin/rails test site/test`, with Nibble's
   `test_helper` available. Nibble's own tests stay in `test/`.
@@ -99,7 +100,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## 0.4.0 — 2026-09-21
 
-## What's new
+### What's new
 
 - `bin/rails nibble:generate:view NAME --collection=posts` writes a view and its query sidecar into your own
   theme, typed for that collection's records, and says how to wire it up. It refuses to write into Nibble's
@@ -107,12 +108,12 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## 0.3.0 — 2026-09-21
 
-## What's new
+### What's new
 
 - `bin/rails nibble:generate:theme HANDLE` copies the starter theme into `themes/HANDLE`, names it as this site's
   theme and leaves ours alone, so a site never edits `themes/crumbs` to change how it looks.
 
-## What's fixed
+### What's fixed
 
 - The asset build ignored the theme named in `config/nibble.yml` and always bundled `themes/crumbs`, so a site
   with its own theme edited `.vue` files that were never built — silently, with nothing to see in any log. The
@@ -130,12 +131,12 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## 0.2.1 — 2026-09-21
 
-## What's fixed
+### What's fixed
 
 - The Updates screen showed only "Up to date" when you were already on the newest release, hiding every release's
   notes. It now lists them whatever version you are on, with the one you are running marked.
 
-## Changed
+### Changed
 
 - `package-lock.json` is shared, not ours alone: a site with its own theme or packages has to change it. An
   upgrade now rebuilds it with `npm install` rather than installing from it, so a merged lockfile repairs itself.
@@ -148,7 +149,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## 0.2.0 — 2026-09-21
 
-## What's new
+### What's new
 
 - `bin/nibble-upgrade` takes this site to a release: it snapshots the database, gates on the incoming release's
   requirements, merges, installs dependencies and migrates. It runs on a workstation only.
@@ -162,7 +163,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - Settings a person changes in the control panel are kept in a `settings` table, separate from `config/nibble.yml`,
   which stays a file you edit by hand.
 
-## Changed
+### Changed
 
 - The first administrator is made by asking, not by environment variables: `bin/rails nibble:admin:create` asks
   for a name, email address and password, and refuses a password the rules reject. `ADMIN_EMAIL`,
@@ -174,7 +175,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## 0.1.0 — 2026-09-20
 
-## What's new
+### What's new
 
 - `schema/` holds a site's own collections, blueprints, taxonomies, globals, navigation and forms. It is read after
   Nibble's and after the theme's, so a file here replaces one of ours whole.
@@ -192,7 +193,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - A licence: MIT (`LICENSE`). Use it, change it, sell it, rebrand the control panel; keep the copyright notice
   with copies. No warranty, no support promise.
 
-## Changed
+### Changed
 
 - Passwords must be at least 12 characters and mix lower case, upper case, a number and a symbol. The rule is on
   the model, so the control panel, password resets, invitations and the installer all apply it.
