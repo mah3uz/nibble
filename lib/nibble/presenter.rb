@@ -73,8 +73,15 @@ module Nibble
         "uri" => record.uri, "url" => self.class.url(record.uri),
         "status" => record.respond_to?(:status) ? record.status : nil,
         "published_at" => record.respond_to?(:published_at) ? record.published_at&.utc&.iso8601 : nil,
-        "updated_at" => record.updated_at&.utc&.iso8601
+        "updated_at" => record.updated_at&.utc&.iso8601,
+        "author" => author(record)
       }
+    end
+
+    # A byline wants a name, and the bare id a view used to get was no use to it.
+    def author(record)
+      user = @preload.author(record.try(:author_id)) or return nil
+      { "id" => user.id, "name" => user.name }
     end
 
     def nodes(list)

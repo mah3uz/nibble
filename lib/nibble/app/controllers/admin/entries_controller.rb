@@ -164,6 +164,11 @@ module Admin
         items << { "handle" => "parent", "field" => { "type" => "entries", "display" => "Parent", "max_items" => 1,
                                                       "collections" => [ entry.collection ], "create" => false } }
       end
+      # Reassigning a byline is editing someone else's entry, so it follows the same ability.
+      if Nibble::Access.can?(Current.user, ability("edit"), entry)
+        items << { "handle" => "author_id", "field" => { "type" => "select", "display" => "Author", "clearable" => true,
+                                                        "options" => ::User.order(:name).pluck(:id, :name).map { |id, name| { "value" => id.to_s, "label" => name } } } }
+      end
       items += taxonomy_items(entry)
       items << { "handle" => "template", "field" => { "type" => "select", "display" => "Template",
                                                       "options" => Nibble::Views.templates, "clearable" => true,
@@ -193,8 +198,9 @@ module Admin
     end
 
     def sidebar_values(entry)
-      values = entry.snapshot.slice(*Nibble::Records::Entry::COLUMNS).except("parent_id", "position", "author_id")
-      values.merge("parent" => entry.parent_id ? [ entry.parent_id.to_s ] : [])
+      values = entry.snapshot.slice(*Nibble::Records::Entry::COLUMNS).except("parent_id", "position")
+      values.merge("parent" => entry.parent_id ? [ entry.parent_id.to_s ] : [],
+                   "author_id" => entry.author_id&.to_s)
     end
 
     def meta_props(entry)

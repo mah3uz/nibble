@@ -74,6 +74,7 @@ module Nibble
       def initialize(context:)
         @context = context
         @records = Hash.new { |hash, type| hash[type] = {} }
+        @authors = {}
         @loaded_sources = Set.new
       end
 
@@ -82,7 +83,10 @@ module Nibble
           .merge("asset" => AssetResolver.new(self, Resolvers.find("asset")))
       end
 
+      def author(id) = id && @authors[id]
+
       def load(sources)
+        load_authors(sources)
         pending = sources.reject { |source| @loaded_sources.include?([ source.record_type, source.id ]) }
         pending.each { |source| @loaded_sources << [ source.record_type, source.id ] }
         return if pending.empty?
@@ -98,6 +102,13 @@ module Nibble
           scope = scope.where(status: "published") if type == "entry" && @context.public?
           scope.each { |record| @records[type][record.id] = record }
         end
+      end
+
+      def load_authors(sources)
+        ids = sources.filter_map { |source| source.try(:author_id) }.uniq - @authors.keys
+        return if ids.empty?
+
+        ::User.where(id: ids).each { |user| @authors[user.id] = user }
       end
 
       def record(type, id)

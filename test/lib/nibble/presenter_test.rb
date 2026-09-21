@@ -10,9 +10,25 @@ class Nibble::PresenterTest < ActiveSupport::TestCase
 
   test "every record has the same stable base shape, whatever its blueprint" do
     data = present([ @posts[0] ]).first
-    assert_equal %w[id uuid type collection blueprint locale title slug uri url status published_at updated_at], data.keys.first(13)
+    assert_equal %w[id uuid type collection blueprint locale title slug uri url status published_at updated_at author], data.keys.first(14)
     assert_equal [ "entry", "posts", "https://example.test/blog/colour-theory" ], data.values_at("type", "collection", "url")
     assert_equal [ { "id" => @design.id.to_s, "type" => "term", "title" => "Design", "uri" => "/topics/design", "url" => "https://example.test/topics/design", "taxonomy" => "topics" } ], data["topics"]
+  end
+
+  test "an entry carries its author as a name, which is what a byline needs" do
+    author = users(:editor)
+    @posts.each { |post| post.update_columns(author_id: author.id) }
+
+    assert_equal({ "id" => author.id, "name" => author.name }, present([ @posts[0] ]).first["author"])
+    assert_nil present([ @home ]).first["author"], "a page nobody is recorded against has no byline to show"
+  end
+
+  test "authors are loaded once for the whole response, not per entry" do
+    @posts.each { |post| post.update_columns(author_id: users(:editor).id) }
+
+    queries = count_queries { present(Nibble::Records::Entry.where(collection: "posts").to_a) }
+
+    assert_operator queries, :<=, 4, "a byline per entry would put the listing back to one query each"
   end
 
   test "relations are preloaded once for the whole response, not per record" do

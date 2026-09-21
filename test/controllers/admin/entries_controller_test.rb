@@ -75,7 +75,7 @@ class Admin::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Editable", props["values"]["title"]
     assert_equal %w[main sidebar], props["blueprint"]["tabs"].map { |tab| tab["handle"] }
     sidebar = props["blueprint"]["tabs"].last["sections"].first["fields"].map { |field| field["handle"] }
-    assert_equal %w[slug published_at unpublish_at template], sidebar, "the record's own columns are edited as fields"
+    assert_equal %w[slug published_at unpublish_at author_id template], sidebar, "the record's own columns are edited as fields"
     assert_equal true, props["can"]["publish"]
     assert_equal "entry", props["resource_key"]
     assert_equal "/admin/collections/articles/entries/#{entry.id}/preview", props["urls"]["preview"]

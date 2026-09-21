@@ -2,7 +2,7 @@ module Nibble
   class Query
     Result = Data.define(:records, :pagination, :spec, :snippets)
 
-    PRESENTER_COLUMNS = %w[id uuid collection taxonomy blueprint locale title slug uri status published_at updated_at].freeze
+    PRESENTER_COLUMNS = %w[id uuid collection taxonomy blueprint locale title slug uri status published_at updated_at author_id].freeze
 
     def self.build(spec, context) = new(spec.is_a?(Spec) ? spec : Spec.parse(spec), context)
 
@@ -47,8 +47,8 @@ module Nibble
 
     private
 
-    # ->> is the SQL/JSON operator every database Nibble could run on understands, so a blueprint field can be
-    # sorted on without reaching for json_extract, which is SQLite's own spelling.
+    # ->> is the standard SQL/JSON operator, understood by every database Nibble could run on, so sorting on a
+    # blueprint field needs none of SQLite's own extraction functions.
     def field_order(model, sort)
       path = Arel::Nodes::InfixOperation.new("->>", model.arel_table[:data], Arel::Nodes.build_quoted(sort.column))
       sort.direction == :desc ? path.desc : path.asc
