@@ -34,7 +34,7 @@ module Nibble
     def layers
       list = [ [ :core, Nibble.core_schema_path ] ]
       list << [ :theme, Nibble.config.theme_path.join("schema") ] if Nibble.config.theme_path
-      list << [ :site, Nibble.site_schema_path ]
+      list << [ :site, Nibble.config.site_schema_path ]
     end
 
     def read(name, path)

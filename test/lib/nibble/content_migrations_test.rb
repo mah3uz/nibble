@@ -160,4 +160,17 @@ class Nibble::ContentMigrationsTest < ActiveSupport::TestCase
 
     assert_equal %w[theme/2026_10_01_first theme/2026_10_02_second], Nibble::ContentMigrations.pending.map(&:name)
   end
+
+  test "a site's own migrations belong to that site, not to whatever runs these tests" do
+    site = Rails.root.join("schema/migrations")
+    site.mkpath
+    path = site.join("2026_10_03_a_site_of_its_own.yml")
+    path.write({ "operations" => [ { "delete_collection" => { "collection" => "gone" } } ] }.to_yaml)
+
+    names = Nibble::ContentMigrations.pending.map(&:name)
+
+    assert_empty names, "the schema layers are configured, so a real site's migrations cannot reach a fixture"
+  ensure
+    path&.delete
+  end
 end

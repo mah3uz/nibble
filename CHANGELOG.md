@@ -12,6 +12,12 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **A site's own content migrations no longer reach Nibble's tests.** The migration runner built its own list of
+  schema layers and read the site's `schema/migrations/` directly, so adding a migration to a site made Nibble's
+  suite fail in a site that had done nothing wrong. It now reads the layers the rest of the schema does.
+
 ## 0.9.0 — 2026-09-22
 
 ### What's new
