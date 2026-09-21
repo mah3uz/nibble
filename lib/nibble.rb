@@ -25,7 +25,7 @@ module Nibble
 
     def reset_schema! = @schema = nil
 
-    def build_theme = ENV["NIBBLE_THEME"].presence || DEFAULT_THEME
+    def build_theme = config.theme
 
     def site_url = ENV["SITE_URL"].presence || "http://localhost:#{ENV.fetch("PORT", 3100)}"
 

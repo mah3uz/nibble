@@ -19,6 +19,15 @@ class Nibble::ConfigTest < ActiveSupport::TestCase
     assert_equal Rails.root.join("themes/starter"), config("theme" => "starter").theme_path
   end
 
+  test "the theme the layout asks for is the theme the settings name" do
+    Nibble.config = config("theme" => "starter")
+
+    assert_equal "starter", Nibble.build_theme,
+      "vite compiles the theme config/nibble.yml names, so a shell asking for another one serves a site the wrong stylesheet"
+  ensure
+    Nibble.config = nil
+  end
+
   test "routing and queries need exactly one default locale to fall back to" do
     error = assert_raises(Nibble::ConfigError) { config("locales" => [ { "code" => "en" }, { "code" => "de" } ]) }
     assert_match "exactly one locale must be the default", error.message
