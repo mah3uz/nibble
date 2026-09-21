@@ -4,7 +4,7 @@ import { installHistoryGuard } from '../nibble-admin/lib/history-guard'
 import { inertiaDefaults, layoutFor } from '../nibble-admin/lib/inertia-shared'
 import { resolvePage } from '../nibble-admin/lib/resolve-page'
 
-// CMS layouts load on demand so public pages don't download the admin UI (sidebar, reka-ui): 7.5.
+// CMS layouts load on demand so public pages don't download the admin UI (sidebar, reka-ui).
 const AdminLayout = defineAsyncComponent(() => import('../nibble-admin/layouts/AdminLayout.vue'))
 const AuthLayout = defineAsyncComponent(() => import('../nibble-admin/layouts/AuthLayout.vue'))
 

@@ -43,7 +43,15 @@ also why `bin/dev` sometimes logs `Inertia SSR: process exited … restarting in
 
 That is possible because `lib/nibble/frontend/ssr/ssr.ts` calls `createServer` itself, with
 `port: process.env.INERTIA_SSR_PORT`, rather than letting `@inertiajs/vite` write that call on its fixed port.
-Production sets nothing and gets 13714, which is what `config/initializers/inertia_rails.rb` expects.
+`config/initializers/inertia_rails.rb` reads the same variable, so both ends move together and an instance that
+sets nothing gets 13714.
+
+Give a second instance a port of its own, or it will fight the first for 13714 and one of them will sit in Puma's
+restart loop:
+
+```bash
+INERTIA_SSR_PORT=13715 RAILS_ENV=test bin/rails s -p 3300
+```
 
 It also checks its port is free again before exiting: a server left behind is a failure the next run inherits.
 

@@ -11,4 +11,6 @@ InertiaRails.configure do |config|
   # Node SSR process (`bin/vite ssr`) renders when its bundle has been built.
   config.ssr_enabled = ViteRuby.config.ssr_build_enabled
   config.ssr_bundle = Rails.root.join("public/vite-ssr/ssr.js").to_s
+  # Puma spawns the SSR process with this environment, so one variable moves both ends of the conversation.
+  config.ssr_url = "http://localhost:#{ENV.fetch('INERTIA_SSR_PORT', 13714)}"
 end
