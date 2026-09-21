@@ -81,7 +81,7 @@ class NibbleSeoTest < ActionDispatch::IntegrationTest
   test "the sitemap index lists a sitemap per routed collection and taxonomy" do
     get "/sitemap.xml"
     locs = Nokogiri::XML(response.body).remove_namespaces!.xpath("//loc").map(&:text)
-    assert_equal %w[https://example.test/sitemap-pages.xml https://example.test/sitemap-posts.xml https://example.test/sitemap-taxonomy-topics.xml], locs
+    assert_equal %w[https://example.test/sitemap-docs.xml https://example.test/sitemap-pages.xml https://example.test/sitemap-posts.xml https://example.test/sitemap-taxonomy-topics.xml], locs
   end
 
   test "a collection sitemap lists live, indexable entries only" do

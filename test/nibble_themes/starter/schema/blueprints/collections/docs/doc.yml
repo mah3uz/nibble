@@ -1,0 +1,12 @@
+schema: 1
+title: Doc
+tabs:
+  main:
+    sections:
+      - fields:
+          - handle: title
+            field: { type: text, required: true }
+          - handle: description
+            field: { type: text }
+          - handle: body
+            field: { type: markdown }

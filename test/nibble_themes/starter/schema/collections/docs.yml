@@ -1,0 +1,10 @@
+schema: 1
+title: Docs
+route: "{parent_uri}/{slug}"
+structure:
+  max_depth: 3
+blueprints: [doc]
+template: docs/show
+source:
+  markdown: content/docs
+  field: body

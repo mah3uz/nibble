@@ -139,10 +139,10 @@ module Nibble
       COLUMN_KEYS = %w[blueprint status published_at unpublish_at template].freeze
       ASSET_KEYS = %w[title alt caption credit focal_x focal_y focal_zoom tags].freeze
 
-      def initialize(root, mode: "create", dry_run: false, notify: false)
+      def initialize(root, mode: "create", dry_run: false, notify: false, reader: nil)
         raise Error, "MODE=#{mode} isn't supported (available: #{MODES.join(', ')})" unless MODES.include?(mode.to_s)
 
-        @reader = Reader.new(root)
+        @reader = reader || Reader.new(root)
         @update = mode.to_s == "update"
         @dry_run = dry_run
         @lifecycle_mode = notify ? :import_notify : :import

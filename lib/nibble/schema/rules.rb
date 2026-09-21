@@ -14,6 +14,7 @@ module Nibble
       end
       WORKFLOW = ->(value) { %w[simple review].include?(value) }
       SORT = ->(value) { value.is_a?(String) && value.match?(/\A[a-z_]+:(asc|desc)\z/) }
+      SOURCE = ->(value) { value.is_a?(Hash) && STRING.(value["markdown"]) && OPTIONAL_STRING.(value["field"]) }
 
       KINDS = {
         "collections" => {
@@ -22,7 +23,7 @@ module Nibble
             "title" => STRING, "route" => ROUTE, "dated" => BOOLEAN, "expires" => BOOLEAN, "structure" => STRUCTURE,
             "taxonomies" => STRINGS, "blueprints" => STRINGS, "template" => STRING, "layout" => STRING,
             "workflow" => WORKFLOW, "requires_slugs" => BOOLEAN, "revisions" => HASH, "sitemap" => HASH, "search" => ->(v) { v == false || STRING.(v) },
-            "api" => BOOLEAN, "localizable" => BOOLEAN, "sort" => SORT, "icon" => STRING
+            "api" => BOOLEAN, "localizable" => BOOLEAN, "sort" => SORT, "icon" => STRING, "source" => SOURCE
           }
         },
         "taxonomies" => {
