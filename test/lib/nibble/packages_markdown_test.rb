@@ -53,13 +53,15 @@ class Nibble::PackagesMarkdownTest < ActiveSupport::TestCase
     assert_match(/guides\/ has no index.md/, errors.sole)
   end
 
-  test "an index at the root would have no slug, and says so" do
-    dir = folder("index.md" => "Home.\n")
+  test "an index at the root is the collection's own page, not an error that loses the whole folder" do
+    dir = folder("index.md" => "---\ntitle: Home\n---\n\nHome.\n",
+                 "guides/index.md" => "---\ntitle: Guides\n---\n\nEverything.\n")
 
     documents, errors = read(dir)
 
-    assert_empty documents
-    assert_match(/no slug/, errors.sole)
+    assert_empty errors
+    assert_equal [ "posts/guides", "posts/home" ], documents.map(&:key).sort,
+      "refusing the root index used to write nothing at all for the collection, losing every other page with it"
   end
 
   test "a folder of Markdown imports as entries, through the pipeline a package already uses" do

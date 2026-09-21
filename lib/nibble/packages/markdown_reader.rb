@@ -3,6 +3,7 @@ module Nibble
     # A folder of Markdown files, read as the documents Importer already knows how to write.
     class MarkdownReader
       DEFAULT_FIELD = "body".freeze
+      ROOT_SLUG = "home".freeze
       # A link to another page, written as a path between files, which only means something once both are pages.
       LINK = /(\]\()(?!\w+:|\/)([^)\s#]+\.md)(#[^)\s]*)?(\))/
       IMAGE = /(!\[[^\]]*\]\()(?!\w+:|\/)([^)\s]+)(\))/
@@ -50,8 +51,6 @@ module Nibble
 
       def document(relative)
         slugs = key_for(relative)
-        return error(relative, "would have no slug — name it something other than index.md") if slugs.empty?
-
         parent = slugs[0..-2]
         if parent.any? && !@root.join(*parent, "index.md").file?
           return error(relative, "#{parent.join('/')}/ has no index.md, so #{slugs.last} has no page to sit under")
@@ -66,9 +65,12 @@ module Nibble
         Document.new(kind: "collections", handle: @collection, locale: @locale, key:, data:, file: relative)
       end
 
+      # A folder's index.md is the page its files sit under, and at the root that page is the collection's
+      # own — the root entry structure.root already names, rather than a file with no slug left.
       def key_for(relative)
         parts = relative.delete_suffix(".md").split("/")
-        parts.last == "index" ? parts[0..-2] : parts
+        parts = parts[0..-2] if parts.last == "index"
+        parts.presence || [ ROOT_SLUG ]
       end
 
       def body(text) = text.sub(/\A---\n.*?\n---\n/m, "").strip
