@@ -26,6 +26,7 @@ module Nibble
           required: %w[title blueprints],
           keys: {
             "title" => STRING, "route" => ROUTE, "dated" => BOOLEAN, "expires" => BOOLEAN, "structure" => STRUCTURE,
+            "index_route" => ROUTE, "index_template" => STRING,
             "taxonomies" => STRINGS, "blueprints" => STRINGS, "template" => STRING, "layout" => STRING,
             "workflow" => WORKFLOW, "requires_slugs" => BOOLEAN, "revisions" => HASH, "sitemap" => HASH, "search" => ->(v) { v == false || STRING.(v) },
             "api" => BOOLEAN, "localizable" => BOOLEAN, "sort" => SORT, "icon" => STRING, "source" => SOURCE

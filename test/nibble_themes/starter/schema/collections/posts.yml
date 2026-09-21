@@ -7,3 +7,5 @@ blueprints: [post]
 template: posts/show
 workflow: simple
 sort: published_at:desc
+index_route: /journal
+index_template: posts/index

@@ -153,6 +153,10 @@ module Nibble
       Theme::REQUIRED_VIEWS.each { |view| problem(theme.views_path, "required view '#{view}.vue' is missing") unless theme.view?(view) }
       problem(theme.layouts_path, "required layout 'default.vue' is missing") unless theme.layout?("default")
       set_handles(schema).each { |set| problem(theme.views_path, "set '#{set}' has no view sets/#{set}.vue") unless theme.view?("sets/#{set}") }
+      schema.collections.select { |item| item["index_route"] }.each do |item|
+        view = item["index_template"] || "collections/index"
+        problem(item.path, "index_route needs the view #{view}.vue, which #{theme.handle} doesn't have") unless theme.view?(view)
+      end
       types = TypeGenerator.theme_output(@config)
       current = capture(types) { TypeGenerator.new(schema, config: @config).generate }
       if current && (!types.file? || types.read != current)

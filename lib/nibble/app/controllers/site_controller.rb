@@ -44,7 +44,7 @@ class SiteController < ApplicationController
     Nibble::Records::NotFound.record(request.path, referrer: request.referer)
     locale = Nibble::Routing.locale_for(request.path)
     @nibble_integrations = Nibble::Integrations.settings if Nibble::Seo.indexable?
-    error_match = Nibble::Routing::Match.new(kind: :error, record: nil, taxonomy: nil, locale:, template: "errors/404", redirect: nil)
+    error_match = Nibble::Routing::Match.new(kind: :error, record: nil, taxonomy: nil, collection: nil, locale:, template: "errors/404", redirect: nil)
     (page, more) = Nibble::QueryCounter.count { Nibble::PageProps.new(error_match, request_path: request.path).build }
     @nibble_seo = page.seo
     props = { "site" => page.props["site"], "seo" => @nibble_seo }

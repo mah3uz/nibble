@@ -8,7 +8,7 @@ module Admin
       entry = Nibble::Records::Entry.where(collection: collection.handle).find(params[:id])
 
       preview = preview_entry(entry)
-      match = Nibble::Routing::Match.new(kind: :entry, record: preview, taxonomy: nil, locale: preview.locale,
+      match = Nibble::Routing::Match.new(kind: :entry, record: preview, taxonomy: nil, collection: nil, locale: preview.locale,
         template: template_for(preview), redirect: nil)
       page = Nibble::PageProps.new(match, params: request.query_parameters, request_path: preview.uri || "/", preview: true).build
 

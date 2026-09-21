@@ -17,6 +17,14 @@ class Nibble::RoutingTest < ActiveSupport::TestCase
     assert_equal [ :taxonomy, "taxonomies/index" ], Nibble::Routing.resolve("/topics").then { |m| [ m.kind, m.template ] }
   end
 
+  test "a collection's index route is its own landing page, not a second collection carrying one entry" do
+    match = Nibble::Routing.resolve("/journal")
+
+    assert_equal [ :collection, "posts/index" ], [ match.kind, match.template ]
+    assert_equal "posts", match.collection.handle
+    assert_nil match.record, "the index is the collection itself, so there is no entry behind it"
+  end
+
   test "only live entries resolve, and non-canonical spellings redirect" do
     ok Nibble::Lifecycle.call(@about, :unpublish)
     assert_nil Nibble::Routing.resolve("/about")
