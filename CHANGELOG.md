@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.10.0 — 2026-09-22
+
 ### Changed
 
 - **Uploads go to local storage until S3 is configured.** Production and staging named `:amazon` whatever the
