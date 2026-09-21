@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+require "optparse"
 require "pathname"
 
 ROOT = Pathname(__dir__).parent
@@ -6,7 +7,14 @@ VERSION_FILE = ROOT.join("lib/nibble.rb")
 CHANGELOG = ROOT.join("CHANGELOG.md")
 def fail!(message) = abort("release refused: #{message}")
 
-version = ARGV.first or fail!("usage: bin/nibble-release <version>, e.g. bin/nibble-release 0.2.0")
+feed = nil
+parser = OptionParser.new do |opts|
+  opts.banner = "usage: bin/nibble-release <version> [--feed PATH], e.g. bin/nibble-release 0.2.0"
+  opts.on("--feed PATH", "Write the release feed here once tagged, e.g. ../nibble_site/content/docs/releases.json") { |path| feed = path }
+end
+parser.parse!
+
+version = ARGV.first or fail!(parser.help)
 fail!("#{version} isn't a version like 1.2.3") unless version.match?(/\A\d+\.\d+\.\d+\z/)
 
 
@@ -35,4 +43,11 @@ system("git", "-C", ROOT.to_s, "tag", "-a", "v#{version}", "--cleanup=verbatim",
 
 repository = VERSION_FILE.read[/REPOSITORY = "([^"]+)"/, 1]
 puts "tagged v#{version}. Push it with: git push #{repository} main --follow-tags"
-puts "then publish the notes from the documentation site: bin/rails nibble:releases:feed content/docs/releases.json"
+
+if feed
+  written = system(ROOT.join("bin/rails").to_s, "runner",
+                   "Nibble::Releases.publish(Rails.root.join('CHANGELOG.md'), #{feed.inspect})")
+  warn written ? "wrote #{feed} — commit it where it lives" : "could not write the feed to #{feed}"
+else
+  puts "the notes a site reads come from the feed: re-run with --feed <documentation site>/content/docs/releases.json"
+end
