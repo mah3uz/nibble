@@ -64,6 +64,7 @@ module Admin
 
     def run(action, notice, permission: "edit")
       authorize!(ability(permission), @entry)
+      return refuse_file_backed if written_in_files?
       result = Nibble::Lifecycle.call(@entry, action, attrs, actor: Current.user)
       return render_conflict(result) if result.conflict?
       return render_errors(@entry, result) unless result.ok?
@@ -100,6 +101,18 @@ module Admin
     end
 
     def ability(action) = "entries.#{@collection.handle}.#{action}"
+    def written_in_files? = @collection["source"].is_a?(Hash)
+
+    def refuse_file_backed
+      redirect_to edit_admin_collection_entry_path(@collection.handle, @entry),
+        alert: "#{@collection['title']} is written in files. Change it there and deploy."
+    end
+
+    def source_props(entry)
+      return nil unless written_in_files? && entry.persisted?
+
+      { file: Nibble::Packages::Folder.file_for(entry), command: "bin/rails nibble:content:markdown" }
+    end
     def blueprint_handle = params[:blueprint].presence || Array(@collection["blueprints"]).first
     def locale = params[:locale].presence || Nibble.config.default_locale.code
 
@@ -124,10 +137,11 @@ module Admin
         field_meta: fields.meta,
         meta: meta_props(entry),
         draft: draft_props(entry),
+        source: source_props(entry),
         can: {
-          edit: Nibble::Access.can?(Current.user, ability("edit"), entry),
-          publish: Nibble::Access.can?(Current.user, ability("publish"), entry),
-          delete: Nibble::Access.can?(Current.user, ability("delete"), entry),
+          edit: !written_in_files? && Nibble::Access.can?(Current.user, ability("edit"), entry),
+          publish: !written_in_files? && Nibble::Access.can?(Current.user, ability("publish"), entry),
+          delete: !written_in_files? && Nibble::Access.can?(Current.user, ability("delete"), entry),
           review: Nibble::Access.can?(Current.user, "workflow.approve.#{@collection.handle}")
         },
         urls: urls(entry),

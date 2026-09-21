@@ -14,6 +14,7 @@ defineProps<{
   draft: DraftMeta
   can: Can
   urls: EditUrls
+  source?: { file: string | null; command: string } | null
 }>()
 </script>
 
@@ -29,5 +30,6 @@ defineProps<{
     :draft="draft"
     :can="can"
     :urls="urls"
+    :source="source"
   />
 </template>

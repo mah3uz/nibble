@@ -23,6 +23,21 @@ module Nibble
         new(handle, root: path(source["markdown"]), field: source["field"], dry_run:)
       end
 
+      # Where a page is written, which is what the control panel shows instead of letting anyone edit it.
+      def self.file_for(entry)
+        source = Nibble.schema.collection(entry.collection)&.data&.dig("source") or return nil
+
+        slugs = []
+        record = entry
+        while record
+          slugs.unshift(record.slug)
+          record = record.parent
+        end
+        # A page with pages under it is a folder, and a folder's page is its index.
+        file = entry.children.kept.exists? ? [ *slugs, "index.md" ] : [ *slugs[0..-2], "#{slugs.last}.md" ]
+        path(source["markdown"]).join(*file).relative_path_from(Rails.root).to_s
+      end
+
       def initialize(handle, root:, field: nil, dry_run: false)
         @handle = handle
         @root = Pathname(root)
