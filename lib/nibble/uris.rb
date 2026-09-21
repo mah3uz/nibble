@@ -6,9 +6,10 @@ module Nibble
       def for(record)
         route = record.route
         return nil if route.blank? || record.slug.blank?
-        return normalize(Nibble.config.locale(record.locale)&.url_prefix) if record.respond_to?(:home?) && record.home?
 
         values = tokens(record)
+        # A folder's own page answers where the folder does: /docs/{slug} without a slug left is /docs.
+        values = values.merge("slug" => "", "parent_slugs" => "", "parent_uri" => "") if record.respond_to?(:home?) && record.home?
         path = route.gsub(TOKEN) { values.fetch(Regexp.last_match(1)) { return nil } || (return nil) }
         normalize(path)
       end

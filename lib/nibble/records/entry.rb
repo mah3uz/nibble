@@ -46,12 +46,22 @@ module Nibble
       def expires? = collection_item["expires"] == true
       def structured? = collection_item["structure"].is_a?(Hash)
       def max_depth = structured? ? collection_item["structure"]["max_depth"] : nil
-      def route = collection_item["route"]
+      def route
+        route = collection_item["route"].to_s
+        return route unless folder_sourced? && structured?
+        return route if route.include?("{parent_slugs}") || route.include?("{parent_uri}")
+
+        # A folder of Markdown is addressed by where a page sits in it, so the site needn't say so in the route.
+        route.sub("/{slug}", "{parent_slugs}/{slug}")
+      end
+
+      def folder_sourced? = collection_item["source"].is_a?(Hash)
       def revisions_keep = collection_item.data.dig("revisions", "keep") || DEFAULT_REVISIONS_KEEP
 
       def live? = status == "published" && deleted_at.nil?
       def depth = parent ? parent.depth + 1 : 1
-      def home? = structured? && collection_item["structure"]["root"] == true && parent_id.nil? && slug == "home"
+      def home? = structured? && parent_id.nil? && slug == "home" &&
+        (collection_item["structure"]["root"] == true || folder_sourced?)
 
       def values = data.to_h.merge("title" => title)
 

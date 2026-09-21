@@ -12,6 +12,24 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's new
+
+- **A folder of Markdown decides its own addresses.** A collection written as files now answers where its files
+  sit: `content/docs/index.md` is `/docs`, `content/docs/something.md` is `/docs/something`, and
+  `content/docs/a/b.md` is `/docs/a/b`. Give the collection `route: /docs/{slug}` and a view, and that is the
+  whole of it — nested pages no longer need `{parent_slugs}` spelled out, and a folder's own `index.md` no
+  longer lands at `/docs/home`.
+  A route that already places its pages — one naming `{parent_slugs}` or `{parent_uri}` — is left exactly as
+  written.
+
+### What's fixed
+
+- **Changing where a collection lives now moves the pages already in it.** A route is not a file, so the
+  Markdown sync had nothing to compare and reported no changes: the schema said one address and the database
+  held another, with nothing reporting the difference. The next edit to a single page would then have moved
+  that page on its own. The sync now treats a page whose address no longer matches its route as out of date,
+  like any other difference between the folder and the site.
+
 ### Changed
 
 - **Nibble has a public home.** The code is at `https://github.com/mah3uz/nibble.git`, and the project's site is
@@ -23,6 +41,11 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ### Upgrade
 
+- **A Markdown collection routed `/x/{slug}` will see its nested pages move.** A page written at
+  `content/x/a/b.md` answered at `/x/b` and now answers at `/x/a/b`, and a root `index.md` moves from `/x/home`
+  to `/x`. The move happens on the next `bin/rails nibble:content:markdown`, and **no redirects are recorded
+  for it** — if anything links to the old addresses, write the redirects yourself before running it. A
+  collection whose route already names `{parent_slugs}` or `{parent_uri}` is unaffected.
 - **This release moves where upgrades are fetched from, which the release before it cannot know.**
   `bin/nibble-upgrade` reads the address out of the version you already have, so the upgrade that takes you to
   this one still asks the old host. Run it once as

@@ -14,6 +14,29 @@ class Nibble::PackagesMarkdownTest < ActiveSupport::TestCase
 
   def folder_for(dir) = Nibble::Packages::Folder.new("docs", root: dir, field: "body", navigation: "docs")
 
+  # The site layer is the last to define a handle, which is how a site states a route of its own.
+  def routed(route)
+    dir = Pathname(Dir.mktmpdir("nibble-site-schema"))
+    dir.join("collections").mkpath
+    dir.join("collections/docs.yml").write(<<~YAML)
+      schema: 1
+      title: Docs
+      route: "#{route}"
+      structure:
+        max_depth: 3
+      blueprints: [doc]
+      template: docs/show
+      source:
+        markdown: docs
+        field: body
+        navigation: docs
+    YAML
+    Nibble.config = Nibble::Config.new({ "theme" => "starter", "url" => "https://example.test",
+      "locales" => [ { "code" => "en", "default" => true } ] },
+      themes_path: Rails.root.join("test/nibble_themes"), site_schema_path: dir)
+    Nibble.reset_schema!
+  end
+
   def entry_in(node) = Nibble::Records::Entry.find(node["entry"] || node["id"])
 
   def read(dir, **options)
@@ -103,6 +126,47 @@ class Nibble::PackagesMarkdownTest < ActiveSupport::TestCase
     assert_equal 1, result.trashed.size, "the page whose file went, and only that page"
     assert_nil Nibble::Records::Entry.kept.find_by(slug: "testing")
     assert Nibble::Records::Entry.kept.find_by(slug: "guides"), "the pages still written are left alone"
+  end
+
+  test "a folder addresses its pages by where they sit, so a site writes no route of its own" do
+    dir = folder("index.md" => "---\ntitle: Docs\n---\n\nStart here.\n",
+                 "something.md" => "---\ntitle: Something\n---\n\nA page.\n",
+                 "a/index.md" => "---\ntitle: A\n---\n\nA folder.\n",
+                 "a/b.md" => "---\ntitle: B\n---\n\nInside it.\n")
+
+    result = folder_for(dir).call
+
+    assert result.ok?, result.report.errors.join("\n")
+    uri = ->(slug) { Nibble::Records::Entry.kept.find_by!(slug:).uri }
+    assert_equal "/docs", uri.("home"), "the folder's own index.md answers where the folder does"
+    assert_equal "/docs/something", uri.("something")
+    assert_equal "/docs/a", uri.("a"), "a sub-folder's index.md answers at the sub-folder"
+    assert_equal "/docs/a/b", uri.("b"), "and a page inside it keeps the folder it was written in"
+  end
+
+  test "a route that already places its own pages is left as the site wrote it" do
+    routed("/docs{parent_uri}/{slug}")
+    dir = folder("a/index.md" => "---\ntitle: A\n---\n\nA folder.\n",
+                 "a/b.md" => "---\ntitle: B\n---\n\nInside it.\n")
+
+    folder_for(dir).call
+
+    assert_equal "/docs/docs/a/b", Nibble::Records::Entry.kept.find_by!(slug: "b").uri,
+      "the site asked for parent_uri and got it, repetition and all: Nibble doesn't second-guess a written route"
+  end
+
+  test "changing where a collection lives moves the pages already imported" do
+    dir = folder("a/index.md" => "---\ntitle: A\n---\n\nA folder.\n",
+                 "a/b.md" => "---\ntitle: B\n---\n\nInside it.\n")
+    folder_for(dir).call
+    assert_equal "/docs/a/b", Nibble::Records::Entry.kept.find_by!(slug: "b").uri
+
+    routed("/manual/{slug}")
+    result = folder_for(dir).call
+
+    assert result.ok?, result.report.errors.join("\n")
+    assert_equal "/manual/a/b", Nibble::Records::Entry.kept.find_by!(slug: "b").uri,
+      "a route is not a file, so nothing in the folder changed: the sync has to notice on its own"
   end
 
   test "running it again changes nothing, which is what makes it safe at every deploy" do

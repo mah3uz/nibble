@@ -305,12 +305,15 @@ module Nibble
         fields = record.blueprint_fields.all.select { |handle, _| doc.data.key?(handle) }
         attrs = fields.to_h { |handle, field| [ handle, field.fieldtype.import(doc.data[handle], context) ] }
         columns = doc.kind == "collections" ? doc.data.slice("published_at", "unpublish_at", "template", "position") : {}
-        return false if unchanged?(record, attrs, columns) && !(doc.kind == "collections" && doc.status == "published" && !record.live?)
+        return false if unchanged?(record, attrs, columns) && !moved?(record) && !(doc.kind == "collections" && doc.status == "published" && !record.live?)
 
         succeed!(doc, Lifecycle.call(record, :save, attrs.merge(columns), mode: @lifecycle_mode))
         publish(doc, record) if doc.kind == "collections" && doc.status == "published"
         true
       end
+
+      # A collection's route can change without any file changing, and the folder is meant to match the site.
+      def moved?(record) = record.is_a?(Records::Entry) && Uris.for(record) != record.uri
 
       def unchanged?(record, attrs, columns)
         stored = record.blueprint_fields.add_values(record.values).values

@@ -1,6 +1,6 @@
 schema: 1
 title: Docs
-route: "{parent_uri}/{slug}"
+route: /docs/{slug}
 structure:
   max_depth: 3
 blueprints: [doc]
