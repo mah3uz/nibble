@@ -259,8 +259,6 @@
     }
   }
 
-  /* A fenced block should read as a block of code: its own panel, dark in both themes, scrolling rather
-     than wrapping, with the gutter a line of code expects. */
   && :where(pre) {
     border: 1px solid var(--color-gray-800);
     border-radius: var(--radius-md);
@@ -279,8 +277,8 @@
     padding: 0;
   }
 
-  /* highlight.js token names, as the rich text editor's lowlight decorations emit them. */
-  && :where(.hljs-title, .hljs-name, .hljs-tag, .hljs-selector-tag, .hljs-section) {
+  /* Token names as lowlight emits them. */
+  && :where(.hljs-title, .hljs-name, .hljs-section, .hljs-selector-tag, .hljs-selector-class, .hljs-selector-id) {
     color: var(--color-pink-400);
   }
 
@@ -297,6 +295,7 @@
       .hljs-property,
       .hljs-attribute,
       .hljs-variable,
+      .hljs-template-variable,
       .hljs-built_in,
       .hljs-type,
       .hljs-regexp
@@ -304,7 +303,7 @@
     color: var(--color-sky-300);
   }
 
-  && :where(.hljs-comment, .hljs-quote, .hljs-operator, .hljs-punctuation, .hljs-meta) {
+  && :where(.hljs-comment, .hljs-quote, .hljs-operator, .hljs-punctuation, .hljs-meta, .hljs-tag) {
     color: var(--color-slate-400);
   }
 

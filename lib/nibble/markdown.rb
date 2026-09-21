@@ -1,14 +1,10 @@
 require "commonmarker"
 
 module Nibble
-  # Markdown written by people we trust — the docs, release notes, a Markdown field — rendered on the server.
-  # It converts and nothing more; sanitising is asked for, because where the text came from decides whether it
-  # is needed. See Markdown::Sanitizer.
   module Markdown
     OPTIONS = {
       parse: { smart: true },
-      # hardbreaks defaults to on, which turns every wrapped line of a document into a <br>. github_pre_lang
-      # would put the language on the <pre>; every highlighter looks for it on the <code>.
+      # Comrak wraps every line by default, and puts the language on the <pre>; highlighters read the <code>.
       render: { unsafe: false, github_pre_lang: false, hardbreaks: false },
       extension: {
         table: true, strikethrough: true, tasklist: true, autolink: true,
@@ -16,8 +12,7 @@ module Nibble
       }
     }.freeze
 
-    # Comrak highlights code itself, in inline styles and a theme of its own choosing. The language survives on
-    # the code element instead, for a theme to highlight however it likes, or not at all.
+    # Comrak's own highlighter writes inline styles; a theme highlights from the language class instead.
     PLUGINS = { syntax_highlighter: nil }.freeze
 
     module_function

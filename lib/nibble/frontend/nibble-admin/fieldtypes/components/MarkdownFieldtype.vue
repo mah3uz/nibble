@@ -23,7 +23,6 @@ const previewClasses =
 const html = ref('')
 const failed = ref(false)
 
-// The server renders it, so the preview is what the theme will receive rather than an approximation.
 async function preview() {
   showing.value = !showing.value
   if (!showing.value) return

@@ -1,0 +1,42 @@
+code[class*='language-'] {
+  color: var(--color-slate-50);
+}
+
+.hljs-title,
+.hljs-name,
+.hljs-section,
+.hljs-selector-tag,
+.hljs-selector-class,
+.hljs-selector-id {
+  color: var(--color-pink-400);
+}
+
+.hljs-keyword,
+.hljs-attr,
+.hljs-selector-attr,
+.hljs-doctag {
+  color: var(--color-slate-300);
+}
+
+.hljs-string,
+.hljs-symbol,
+.hljs-number,
+.hljs-literal,
+.hljs-property,
+.hljs-attribute,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-built_in,
+.hljs-type,
+.hljs-regexp {
+  color: var(--color-sky-300);
+}
+
+.hljs-comment,
+.hljs-quote,
+.hljs-operator,
+.hljs-punctuation,
+.hljs-meta,
+.hljs-tag {
+  color: var(--color-slate-400);
+}

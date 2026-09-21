@@ -4,9 +4,6 @@
   "version": "0.1.0",
   "type": "module",
   "dependencies": {
-    "prismjs": "^1.30.0"
-  },
-  "devDependencies": {
-    "@types/prismjs": "^1.26.6"
+    "highlight.js": "^11.12.0"
   }
 }

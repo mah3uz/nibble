@@ -6,7 +6,6 @@ import { codeLanguages } from '@/fieldtypes/rich-text/extensions'
 
 const props = defineProps(nodeViewProps)
 
-// The theme highlights the published page off this class, so an unset language leaves it plain there.
 const language = computed({
   get: () => String(props.node.attrs.language ?? ''),
   set: (value: string) => props.updateAttributes({ language: value || null }),
