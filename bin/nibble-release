@@ -7,10 +7,21 @@ VERSION_FILE = ROOT.join("lib/nibble.rb")
 CHANGELOG = ROOT.join("CHANGELOG.md")
 def fail!(message) = abort("release refused: #{message}")
 
+# A tag nobody can fetch is not a release, so the last step is offered rather than left as a note.
+def confirm?(question, assumed)
+  return true if assumed
+  return false unless $stdin.tty?
+
+  print "#{question} [y/N] "
+  $stdin.gets.to_s.strip.casecmp?("y")
+end
+
 feed = nil
+push = false
 parser = OptionParser.new do |opts|
-  opts.banner = "usage: bin/nibble-release <version> [--feed PATH], e.g. bin/nibble-release 0.2.0"
+  opts.banner = "usage: bin/nibble-release <version> [--feed PATH] [--push], e.g. bin/nibble-release 0.2.0"
   opts.on("--feed PATH", "Write the release feed here once tagged, e.g. ../nibble_site/content/docs/releases.json") { |path| feed = path }
+  opts.on("--push", "Push without asking") { push = true }
 end
 parser.parse!
 
@@ -42,12 +53,31 @@ system("git", "-C", ROOT.to_s, "commit", "-qm", "Release #{version}") or fail!("
 system("git", "-C", ROOT.to_s, "tag", "-a", "v#{version}", "--cleanup=verbatim", "-m", "Nibble #{version}\n\n#{notes}") or fail!("could not tag the release")
 
 repository = VERSION_FILE.read[/REPOSITORY = "([^"]+)"/, 1]
-puts "tagged v#{version}. Push it with: git push #{repository} main --follow-tags"
+puts "tagged v#{version}"
 
-if feed
-  written = system(ROOT.join("bin/rails").to_s, "runner",
-                   "Nibble::Releases.publish(Rails.root.join('CHANGELOG.md'), #{feed.inspect})")
-  warn written ? "wrote #{feed} — commit it where it lives" : "could not write the feed to #{feed}"
+if confirm?("push main and v#{version} to #{repository}?", push)
+  system("git", "-C", ROOT.to_s, "push", repository, "main", "--follow-tags") or warn "could not push"
 else
+  puts "not pushed. When ready: git push #{repository} main --follow-tags"
+end
+
+unless feed
   puts "the notes a site reads come from the feed: re-run with --feed <documentation site>/content/docs/releases.json"
+  exit
+end
+
+unless system(ROOT.join("bin/rails").to_s, "runner",
+              "Nibble::Releases.publish(Rails.root.join('CHANGELOG.md'), #{feed.inspect})")
+  abort "could not write the feed to #{feed}"
+end
+puts "wrote #{feed}"
+
+# Its own repository, so only that one file is committed and nothing else there is touched.
+site = Pathname(feed).expand_path.dirname
+if confirm?("commit and push it in #{site}?", push)
+  system("git", "-C", site.to_s, "add", "--", feed) &&
+    system("git", "-C", site.to_s, "commit", "-qm", "Publish #{version}'s notes", "--", feed) &&
+    system("git", "-C", site.to_s, "push") or warn "could not publish the feed — commit it where it lives"
+else
+  puts "not published. Commit #{feed} where it lives, and a control panel will see #{version}."
 end

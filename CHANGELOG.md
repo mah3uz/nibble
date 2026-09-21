@@ -11,6 +11,11 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## Changed
+
+- `bin/nibble-release` offers the push rather than printing it, and offers to publish the feed in the repository
+  it was written to. `--push` answers both without asking.
+
 ## 0.6.0 — 2026-09-21
 
 ## What's new
