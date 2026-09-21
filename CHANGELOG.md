@@ -12,6 +12,59 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's new
+
+- **A collection can have a landing page of its own.** Give it an `index_route`, and optionally an
+  `index_template`, and that address renders the collection rather than one of its entries — the same pair
+  taxonomies already had. A second single-entry collection carrying an index is no longer the way to do it.
+- **A feed.** `feed: true` on a collection publishes it at `/feed-<handle>.xml`, everything that publishes one
+  is merged into `/feed.xml`, and every page points at it so a reader finds it without being told. Atom, so
+  dates need no interpreting. Set `feed: { title:, limit: }` to say more.
+- **A visitor's light or dark choice survives the first paint.** The shell reads the `nibble_theme` cookie and
+  writes `data-theme` on `<html>`, so a visitor who has chosen against their system preference no longer sees
+  the other register flash before the page settles. A theme that writes that cookie needs no other change.
+- **An entry's author reaches the theme**, as `author: { id, name }` on its props, loaded once for a whole
+  listing rather than once per entry. Anyone who may edit a collection's entries can reassign it in the
+  control panel.
+- **A listing can sort by a blueprint field**, not only by a column, so a collection can be ordered by what it
+  actually holds.
+- **`{parent_slugs}` in a route.** A structured collection can now sit under a prefix of its own —
+  `/docs{parent_slugs}/{slug}` — where `{parent_uri}` would have repeated the prefix at every level.
+- **`position` can be set in frontmatter**, so a folder of Markdown can state its own order instead of
+  depending on publication dates.
+- **`delete_collection`** is a content migration operation. Renaming a collection used to leave its old records
+  behind, reported by `nibble:check` with nothing available to clear them.
+
+### What's fixed
+
+- **The theme named in `config/nibble.yml` is the one that gets served.** The build compiled the theme the
+  settings named while the page asked for the default theme's stylesheet, so a site with its own theme rendered
+  its own markup with someone else's CSS and nothing said why. There was one way to resolve the active theme;
+  now there is.
+- **A folder of Markdown with an `index.md` at its root imports.** That file used to be refused for having no
+  slug left, and the refusal discarded **every other page in the collection** along with it. It now becomes the
+  collection's own root entry.
+- **The page cache no longer outlives a local asset rebuild.** After `bin/vite build` the cached HTML went on
+  naming hashed files that no longer existed until the process restarted. A deploy was never affected.
+- **Nibble's own tests no longer assume the site around them is empty.** They took the site's schema, theme and
+  routes as their own, so declaring a collection, bringing a theme or adding a route made Nibble's suite fail in
+  a site that had done nothing wrong.
+
+### Changed
+
+- A theme that ships no `styles/theme.css` is served no stylesheet link, rather than being handed another
+  theme's. A theme that has one whose build is missing still raises.
+- `bin/ssr-smoke` proves the render for whatever theme is active, instead of looking for the default theme's
+  404 copy.
+
+### Upgrade
+
+- **If you set `NIBBLE_THEME` to work around the theme being ignored, you can stop.** `config/nibble.yml`
+  decides now, and the variable only overrides it. Where the two disagreed, the file wins — check they name the
+  theme you meant before deploying.
+- **If a folder of Markdown has an `index.md` at its root**, the next `bin/rails nibble:content:markdown`
+  creates a page for it where it previously created nothing at all for that collection.
+
 ## 0.7.0 — 2026-09-21
 
 ### What's new
