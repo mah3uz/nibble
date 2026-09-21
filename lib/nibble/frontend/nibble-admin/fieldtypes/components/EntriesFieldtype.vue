@@ -20,7 +20,7 @@ const scope = computed(() => ({ collections: props.config.collections ?? [] }))
     :scope="scope"
     :max-items="Number(config.max_items) || 0"
     :read-only="isReadOnly"
-    label="Choose entries…"
+    :label="(config.placeholder as string) || 'Choose…'"
     @update="update"
     @update-meta="updateMeta"
   />
