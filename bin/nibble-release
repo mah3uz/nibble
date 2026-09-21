@@ -5,7 +5,7 @@ require "json"
 ROOT = Pathname(__dir__).parent
 VERSION_FILE = ROOT.join("lib/nibble.rb")
 CHANGELOG = ROOT.join("CHANGELOG.md")
-FEED = ROOT.join("docs/releases.json")
+FEED = ROOT.join("releases.json")
 
 # Kept to the most recent releases: every install reads this file, and it must not grow without limit.
 KEEP_RELEASES = 25

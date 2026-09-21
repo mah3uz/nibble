@@ -127,7 +127,7 @@ control panel · themes as npm workspaces under `themes/*` · Kamal on a VPS · 
 - `themes/<theme>/` — `layouts/`, `views/` (each `.vue` may have a `.yml` query sidecar), `views/sets/`,
   `components/`, `styles/`, `schema/`, `content/` (its content package); `@theme` resolves to the active one,
   named in `config/nibble.yml`, then `NIBBLE_THEME`, defaulting to `crumbs`. `nibble:generate:theme` starts one.
-- `docs/` — the documentation, plain Markdown, one folder per reader.
+- The documentation is not here. It is the site at `~/Projects/nibble_site`, whose `content/docs/` it is.
 
 **Public request flow:**
 1. `NibbleRedirectsMiddleware`, backed by the `redirects` table and cached.

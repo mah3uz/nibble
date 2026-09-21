@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/nibble-banner.svg" alt="Nibble" width="100%">
+  <img src="nibble-banner.svg" alt="Nibble" width="100%">
 </p>
 
 # Nibble
@@ -19,7 +19,7 @@ your own schema and your own settings. Upgrades arrive as releases you merge.
 
 It checks for what it needs — git, Ruby, Node, npm, SQLite, libvips, ffmpeg — names anything missing, then
 clones, installs dependencies and asks the handful of questions it needs. See
-[Installing](docs/users/installing.md).
+[Installing](https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/users/installing.md).
 
 ```sh
 bin/dev                  # the site on :3100, the control panel at /admin
@@ -31,11 +31,11 @@ bin/rails nibble:check   # the schema, theme, roles and settings are sound
 
 | For | Read |
 |---|---|
-| running a site | [Running a site](docs/users/index.md) |
-| writing and publishing | [Editing content](docs/editors/index.md) |
-| building the site's looks | [Building a theme](docs/themes/index.md) |
-| extending Nibble | [Extending Nibble](docs/extensions/index.md) |
-| working on Nibble itself | [Developing Nibble](docs/developers/index.md) |
+| running a site | [Running a site](https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/users/index.md) |
+| writing and publishing | [Editing content](https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/editors/index.md) |
+| building the site's looks | [Building a theme](https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/themes/index.md) |
+| extending Nibble | [Extending Nibble](https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/extensions/index.md) |
+| working on Nibble itself | [Developing Nibble](https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/developers/index.md) |
 
 ## What belongs to you
 
@@ -53,7 +53,7 @@ bin/nibble-upgrade
 ```
 
 On your own machine, never on a server. It snapshots the database, gates on the release's requirements, merges,
-and migrates — asking about the files it cannot decide for you. See [Upgrading](docs/users/upgrading.md).
+and migrates — asking about the files it cannot decide for you. See [Upgrading](https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/users/upgrading.md).
 
 ## Licence
 
