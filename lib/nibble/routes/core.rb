@@ -173,4 +173,6 @@ Rails.application.routes.draw do
   get "robots.txt", to: "sitemaps#robots", format: false
   get "sitemap.xml", to: "sitemaps#index", format: false
   get "sitemap-:handle.xml", to: "sitemaps#show", format: false, constraints: { handle: /[a-z0-9_-]+/ }
+  get "feed.xml", to: "feeds#index", format: false
+  get "feed-:handle.xml", to: "feeds#show", format: false, constraints: { handle: /[a-z0-9_-]+/ }
 end

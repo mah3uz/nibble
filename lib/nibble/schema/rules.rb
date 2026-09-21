@@ -29,7 +29,8 @@ module Nibble
             "index_route" => ROUTE, "index_template" => STRING,
             "taxonomies" => STRINGS, "blueprints" => STRINGS, "template" => STRING, "layout" => STRING,
             "workflow" => WORKFLOW, "requires_slugs" => BOOLEAN, "revisions" => HASH, "sitemap" => HASH, "search" => ->(v) { v == false || STRING.(v) },
-            "api" => BOOLEAN, "localizable" => BOOLEAN, "sort" => SORT, "icon" => STRING, "source" => SOURCE
+            "api" => BOOLEAN, "localizable" => BOOLEAN, "sort" => SORT, "icon" => STRING, "source" => SOURCE,
+            "feed" => ->(value) { [ true, false ].include?(value) || value.is_a?(Hash) }
           }
         },
         "taxonomies" => {
