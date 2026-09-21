@@ -9,8 +9,11 @@ class SiteController < ApplicationController
 
     @nibble_locale = match.locale
     @nibble_integrations = Nibble::Integrations.settings if Nibble::Seo.indexable?
+    @nibble_feed = Nibble::Presenter.url("/feed.xml") if Nibble::Feeds.any?
     declared = Nibble::PageProps.declared_params(match.template, request.query_parameters)
-    key = Nibble::PageCache.key(request.host, request.path, declared.sort, request.headers["X-Inertia"].present?) if cacheable?
+    # The chosen register is rendered into the shell, so two visitors with different choices are two pages.
+    key = Nibble::PageCache.key(request.host, request.path, declared.sort, request.headers["X-Inertia"].present?,
+                                Nibble::Themes.chosen(cookies)) if cacheable?
     return render_cached(key) if key && Nibble::PageCache.read(key)
 
     @nibble_view = match.template

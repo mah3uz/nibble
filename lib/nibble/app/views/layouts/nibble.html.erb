@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="<%= @nibble_locale || "en" %>">
+<html lang="<%= @nibble_locale || "en" %>" <%= tag.attributes({ "data-theme" => Nibble::Themes.chosen(cookies) }.compact) %>>
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -19,6 +19,7 @@
       <% seo["verification"].each do |tag| %><meta name="<%= tag["name"] %>" content="<%= tag["content"] %>"><% end %>
       <% seo["json_ld"].each do |node| %><script type="application/ld+json"><%= json_escape(node.to_json).html_safe %></script><% end %>
     <% end %>
+    <% if @nibble_feed %><link rel="alternate" type="application/atom+xml" href="<%= @nibble_feed %>"><% end %>
     <%= csp_meta_tag %>
     <% if (theme_css = Nibble.theme_stylesheet) %><%= vite_stylesheet_tag theme_css %><% end %>
     <%= vite_client_tag %>

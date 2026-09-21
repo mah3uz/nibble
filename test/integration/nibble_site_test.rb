@@ -65,6 +65,33 @@ class NibbleSiteTest < ActionDispatch::IntegrationTest
     assert_includes tags, "term:#{@design.id}"
   end
 
+  test "a chosen register is rendered into the shell, so the first paint already matches it" do
+    get "/blog"
+    assert_no_match(/data-theme/, response.body, "a visitor who has chosen nothing gets their system preference")
+
+    get "/blog", headers: { "Cookie" => "nibble_theme=dark" }
+
+    assert_match(/<html[^>]+data-theme="dark"/, response.body,
+      "the choice lives in a cookie so the server can honour it before any script runs, and the flash goes")
+  end
+
+  test "one visitor's chosen register is never served to another from the cache" do
+    get "/blog", headers: { "Cookie" => "nibble_theme=dark" }
+    assert_match(/data-theme="dark"/, response.body)
+
+    get "/blog", headers: { "Cookie" => "nibble_theme=light" }
+
+    assert_match(/data-theme="light"/, response.body,
+      "the register is rendered into the HTML, so it has to be part of what the page is cached against")
+  end
+
+  test "a cookie naming anything but a register is ignored, because the value reaches an attribute" do
+    get "/blog", headers: { "Cookie" => "nibble_theme=#{CGI.escape('"><script>alert(1)</script>')}" }
+
+    assert_no_match(/<script>alert/, response.body)
+    assert_no_match(/data-theme/, response.body)
+  end
+
   test "publishing purges exactly the pages that depend on the change" do
     %w[/blog?page=2 /topics/culture /about/team].each { |path| get path }
 
