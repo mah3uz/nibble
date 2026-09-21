@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.8.0 — 2026-09-22
+
 ### What's new
 
 - **A collection can have a landing page of its own.** Give it an `index_route`, and optionally an
