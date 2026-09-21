@@ -4,12 +4,14 @@
 
 # Nibble
 
-A schema-driven CMS. Rails 8 serves the public site and the control panel through Inertia + Vue 3 with
-server-side rendering. Collections, taxonomies, globals, navigation, assets and forms are defined in YAML
-(Nibble's own, then the theme's, then yours), and their content lives in SQLite.
+A content management system you run as your own application. Clone it, install it, and it becomes your site —
+your theme, your content, your server.
 
-You run Nibble as your whole application: clone it, install it, and make the site yours through your own theme,
-your own schema and your own settings. Upgrades arrive as releases you merge.
+Rails 8 serves both the public site and the control panel through Inertia and Vue 3, rendered on the server.
+Collections, taxonomies, globals, navigation and forms are declared in YAML — Nibble's, then your theme's, then
+yours — and the content itself lives in SQLite. Uploads go to S3. Deployment is Kamal onto one machine.
+
+Upgrades arrive as releases you merge.
 
 ## Install
 
@@ -18,33 +20,34 @@ your own schema and your own settings. Upgrades arrive as releases you merge.
 ```
 
 It checks for what it needs — git, Ruby, Node, npm, SQLite, libvips, ffmpeg — names anything missing, then
-clones, installs dependencies and asks the handful of questions it needs. See
-[Installing](https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/users/installing.md).
+clones, installs dependencies and asks a handful of questions.
 
 ```sh
 bin/dev                  # the site on :3100, the control panel at /admin
-bin/ci                   # every check Nibble runs on itself
 bin/rails nibble:check   # the schema, theme, roles and settings are sound
+bin/ci                   # every check Nibble runs on itself
 ```
 
 ## Documentation
 
+The documentation is its own site, written in Markdown and published from [nibble_site][site].
+
 | For | Read |
 |---|---|
-| running a site | [Running a site](https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/users/index.md) |
-| writing and publishing | [Editing content](https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/editors/index.md) |
-| building the site's looks | [Building a theme](https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/themes/index.md) |
-| extending Nibble | [Extending Nibble](https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/extensions/index.md) |
-| working on Nibble itself | [Developing Nibble](https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/developers/index.md) |
+| running a site | [Running a site][users] |
+| writing and publishing | [Editing content][editors] |
+| building the site's looks | [Building a theme][themes] |
+| extending Nibble | [Extending Nibble][extensions] |
+| working on Nibble itself | [Developing Nibble][developers] |
 
 ## What belongs to you
 
 **Everything under `lib/nibble/` is Nibble's. Everything else is yours** — including `app/`, so your own models,
 controllers and jobs sit where a Rails application puts them.
 
-To change one of Nibble's files, `bin/rails nibble:eject <path>` copies it where yours is found first and records
-that you now maintain it. `bin/rails nibble:check` then tells you when the original moves on, and reports
-anything of Nibble's you changed without ejecting — the files an upgrade will stop on.
+To take one of Nibble's files on, `bin/rails nibble:eject <path>` copies it somewhere yours is found first and
+records that you now maintain it. `bin/rails nibble:check` then tells you when the original moves on, and
+reports anything of Nibble's you changed *without* ejecting — the files an upgrade would otherwise stop on.
 
 ## Upgrading
 
@@ -52,10 +55,18 @@ anything of Nibble's you changed without ejecting — the files an upgrade will 
 bin/nibble-upgrade
 ```
 
-On your own machine, never on a server. It snapshots the database, gates on the release's requirements, merges,
-and migrates — asking about the files it cannot decide for you. See [Upgrading](https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/users/upgrading.md).
+On your own machine, never on a server. It snapshots the database, checks the release's requirements, merges,
+and migrates — asking about the files it cannot decide for you. See [Upgrading][upgrading].
 
 ## Licence
 
-MIT — see `LICENSE`. Use it, change it, sell it, rebrand the control panel; keep the copyright notice with copies.
-It comes with no warranty and no support promise.
+MIT — see `LICENSE`. Use it, change it, sell it, rebrand the control panel; keep the copyright notice with
+copies. It comes with no warranty and no support promise.
+
+[site]: https://gitea.tlbn.app/mahfuz/nibble_site
+[users]: https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/users/index.md
+[editors]: https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/editors/index.md
+[themes]: https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/themes/index.md
+[extensions]: https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/extensions/index.md
+[developers]: https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/developers/index.md
+[upgrading]: https://gitea.tlbn.app/mahfuz/nibble_site/src/branch/main/content/docs/users/upgrading.md
