@@ -14,6 +14,9 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ### What's fixed
 
+- **Every page of a folder-backed collection renders again.** Its navigation tree left `children` off any
+  link that had none, while the tree built from records always carries one — so a theme walking the tree,
+  as the `Link` type says it may, threw on the first leaf and the page came back blank below its header.
 - **A collection ordered on a number is ordered by the number.** A folder of files compared the field as
   text, where `"20"` comes before `"9"`, so any list with more than nine ranked pages came out shuffled —
   most visibly the release notes, which ran 0.14.2, 0.14.1, then jumped to 0.9.1 and left the newest

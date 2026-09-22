@@ -122,4 +122,16 @@ class Nibble::FilesTest < ActiveSupport::TestCase
 
     assert_equal %w[First Second], index.tree("docs").map { |link| link["title"] }
   end
+
+  # Link declares children as always there, so a theme that walks them cannot be made to check for a leaf first.
+  test "every link in the tree carries children, whether or not it has any" do
+    index = index_for("docs/index.md" => page(id: "docs-home", title: "Docs"),
+                      "docs/leaf.md" => page(id: "leaf", title: "Leaf"),
+                      "docs/section/index.md" => page(id: "section", title: "Section"),
+                      "docs/section/child.md" => page(id: "child", title: "Child"))
+
+    links = index.tree("docs")
+
+    assert_equal [ [], [ "Child" ] ], links.map { |link| link.fetch("children").map { |child| child["title"] } }
+  end
 end

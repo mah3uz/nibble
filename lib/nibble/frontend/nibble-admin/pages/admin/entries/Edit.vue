@@ -14,7 +14,7 @@ defineProps<{
   draft: DraftMeta
   can: Can
   urls: EditUrls
-  source?: { file: string | null; command: string } | null
+  source?: { file: string | null } | null
 }>()
 </script>
 

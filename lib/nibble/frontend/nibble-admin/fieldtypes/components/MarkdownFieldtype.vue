@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { highlightBlocks } from '@/lib/highlight'
 import { Textarea } from '@/components/ui/textarea'
@@ -18,7 +18,7 @@ watch(
 
 const limit = computed(() => Number(props.config.character_limit) || 0)
 const previewable = computed(() => props.config.preview !== false)
-const showing = ref(false)
+const showing = ref(isReadOnly.value)
 const previewClasses =
   'prose prose-sm prose-nibble rounded-md border border-gray-200 px-3.5 py-2.5 dark:border-gray-700'
 const rendered = useTemplateRef<HTMLElement>('rendered')
@@ -27,8 +27,14 @@ const failed = ref(false)
 
 async function preview() {
   showing.value = !showing.value
-  if (!showing.value) return
+  if (showing.value) await render()
+}
 
+onMounted(() => {
+  if (isReadOnly.value) render()
+})
+
+async function render() {
   failed.value = false
   const csrf = document.querySelector<HTMLMetaElement>('meta[name=csrf-token]')?.content ?? ''
   try {
@@ -68,7 +74,7 @@ async function preview() {
     <p v-if="showing && failed" class="text-sm text-destructive">The preview could not be rendered.</p>
 
     <div class="flex items-center justify-between">
-      <Button v-if="previewable" type="button" variant="ghost" size="sm" @click="preview">
+      <Button v-if="previewable && !isReadOnly" type="button" variant="ghost" size="sm" @click="preview">
         {{ showing ? 'Write' : 'Preview' }}
       </Button>
       <p

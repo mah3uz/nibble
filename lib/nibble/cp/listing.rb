@@ -241,7 +241,10 @@ module Nibble
         end
       end
 
+      # The file is the truth, so publishing, moving or trashing a row would change nothing anyone can see.
       def actions
+        return [] if item["files"].present?
+
         list = []
         if entries? && Access.can?(user, ability("publish"))
           list << action("publish", "Publish", confirm: nil)

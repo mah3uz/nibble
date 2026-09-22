@@ -69,9 +69,9 @@ module Nibble
 
       def branch(by_parent, key)
         Array(by_parent[key]).sort_by { |page| [ page.position || Float::INFINITY, page.title ] }.map do |page|
-          children = branch(by_parent, page.key)
-          link = { "entry" => page.key, "title" => page.title, "url" => page.uri }
-          children.any? ? link.merge("children" => children) : link
+          # Link declares children as always there, and a theme walks a leaf the same way it walks a branch.
+          { "entry" => page.key, "title" => page.title, "url" => page.uri,
+            "children" => branch(by_parent, page.key) }
         end
       end
 

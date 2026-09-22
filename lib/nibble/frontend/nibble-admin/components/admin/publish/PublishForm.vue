@@ -38,7 +38,7 @@ const props = defineProps<{
   draft: DraftMeta
   can: Can
   urls: EditUrls
-  source?: { file: string | null; command: string } | null
+  source?: { file: string | null } | null
 }>()
 
 registerCoreFieldtypes()
@@ -147,9 +147,8 @@ async function destroy() {
         v-if="source"
         class="rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-850 dark:text-gray-400"
       >
-        Written in <code class="font-mono text-[0.8125rem]">{{ source.file ?? 'a file that has since moved' }}</code
-        >. Change it there, then run <code class="font-mono text-[0.8125rem]">{{ source.command }}</code> to bring it
-        across.
+        Written in <code class="font-mono text-[0.8125rem]">{{ source.file ?? 'a file' }}</code
+        >. Change it there and deploy.
       </p>
 
       <ErrorSummary :errors="errors" :blueprint="blueprint" @jump="onJump" />
