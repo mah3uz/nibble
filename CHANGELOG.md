@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.14.0 — 2026-09-23
+
 ### What's fixed
 
 - **Re-running `nibble:install` no longer makes a site's own edits look like Nibble's.** Install recorded the
