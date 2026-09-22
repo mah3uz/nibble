@@ -27,6 +27,16 @@ class NibbleFilesPagesTest < ActionDispatch::IntegrationTest
     "---\nid: #{id}\ntitle: #{title}\n---\n\n#{body}\n"
   end
 
+  # A rank is only worth writing if it is obeyed, and as text "20" comes before "9", which reverses the list.
+  test "a collection sorted on a number orders by the number, not by how the number reads" do
+    write({ "docs/index.md" => page("docs-home", "Docs") }.merge(
+      (0..11).to_h { |n| [ "docs/p#{n}.md", "---\nid: p#{n}\ntitle: Page #{n}\nrank: #{n}\n---\n\nWords.\n" ] }))
+
+    result = Nibble::Query.build({ from: "entries:docs", sort: "rank:asc" }, Nibble::Query::Context.public).result
+
+    assert_equal (0..11).to_a, result.records.filter_map { |record| record.values["rank"] }
+  end
+
   # Nothing was written to the database, so this proves the page is served from the file and not from a row.
   test "a page written as a file is served without a record existing for it" do
     write("docs/index.md" => page("docs-home", "Docs"),

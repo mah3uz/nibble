@@ -8,6 +8,8 @@ tabs:
             field: { type: text, required: true }
           - handle: description
             field: { type: text }
+          - handle: rank
+            field: { type: integer }
           - handle: body
             field: { type: markdown }
           - handle: links

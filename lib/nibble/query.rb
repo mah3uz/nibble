@@ -54,7 +54,7 @@ module Nibble
     def files_result
       pages = Files.index.of(spec.source.handle)
       spec.sorts.each do |sort|
-        pages = pages.sort_by { |page| page.values[sort.column].to_s }
+        pages = pages.sort_by { |page| sort_key(page.values[sort.column]) }
         pages = pages.reverse if sort.direction.to_s == "desc"
       end
       total = pages.size
@@ -70,6 +70,9 @@ module Nibble
       end
       Result.new(records: pages, pagination:, spec:, snippets: {})
     end
+
+    # Frontmatter keeps a number a number, and as text "20" comes before "9", which undoes any numeric order.
+    def sort_key(value) = value.is_a?(Numeric) ? [ 0, value, "" ] : [ 1, 0, value.to_s ]
 
     # ->> is standard SQL/JSON, so this stays portable.
     def field_order(model, sort)

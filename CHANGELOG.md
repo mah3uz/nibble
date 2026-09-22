@@ -12,6 +12,17 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **A collection ordered on a number is ordered by the number.** A folder of files compared the field as
+  text, where `"20"` comes before `"9"`, so any list with more than nine ranked pages came out shuffled —
+  most visibly the release notes, which ran 0.14.2, 0.14.1, then jumped to 0.9.1 and left the newest
+  releases scattered below the oldest.
+- **A release's notes carry the time it was cut, back to the first one.** The nineteen releases that
+  predate recorded times take theirs from their own tag's commit, so every entry is a real instant rather
+  than an implied midnight. No release's date changed.
+
+
 ## 0.14.2 — 2026-09-23 01:36 +0600
 
 ### Changed
@@ -41,7 +52,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   feed carries `released_at` alongside `date`, which stays the calendar day a site shows.
 
 
-## 0.14.0 — 2026-09-23
+## 0.14.0 — 2026-09-23 00:56 +0600
 
 ### What's fixed
 
@@ -62,7 +73,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   the images published from `content/`, `SOLID_QUEUE_IN_PUMA`, and `SITE_URL`.
 
 
-## 0.13.0 — 2026-09-23
+## 0.13.0 — 2026-09-23 00:17 +0600
 
 ### What's new
 
@@ -141,7 +152,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **A collection written as files needs `files:` where it said `source:`**, and every page needs an `id:` in
   its frontmatter. `bin/rails nibble:build` names every file that is missing one.
 
-## 0.12.0 — 2026-09-22
+## 0.12.0 — 2026-09-22 19:33 +0600
 
 ### What's fixed
 
@@ -159,7 +170,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   records over and re-indexes them for search. Addresses come from the route, so a rename moves nothing.
 
 
-## 0.11.2 — 2026-09-22
+## 0.11.2 — 2026-09-22 17:14 +0600
 
 ### Changed
 
@@ -171,7 +182,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   the same word. **Upgrade:** nothing to do unless one of your own files names the old constant, which only a
   site that reads it in `site/initializers/` or a check of its own would.
 
-## 0.11.1 — 2026-09-22
+## 0.11.1 — 2026-09-22 07:07 +0600
 
 ### What's fixed
 
@@ -182,7 +193,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   found in the list of things libvips claims to support — so the same class of gap degrades to the next format
   instead of failing the request, on any build where an encoder turns out to be missing.
 
-## 0.11.0 — 2026-09-22
+## 0.11.0 — 2026-09-22 06:43 +0600
 
 ### What's new
 
@@ -196,7 +207,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   site has none, it now says so and exits cleanly. It used to exit non-zero, which — as of this release, where
   it runs at boot — would have stopped the container starting for every site that writes no Markdown.
 
-## 0.10.1 — 2026-09-22
+## 0.10.1 — 2026-09-22 06:01 +0600
 
 ### What's fixed
 
@@ -213,7 +224,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   under `# Generated for this checkout`, then check what `git status` reveals. A theme's
   `.nibble/types.d.ts` in particular has to be committed — the production build reads it.
 
-## 0.10.0 — 2026-09-22
+## 0.10.0 — 2026-09-22 05:40 +0600
 
 ### Changed
 
@@ -236,7 +247,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   release stores files on the server instead, and anything already in that bucket stops being found. Set
   `AWS_BUCKET_NAME` before upgrading and nothing changes. A site that has never used S3 needs to do nothing.
 
-## 0.9.1 — 2026-09-22
+## 0.9.1 — 2026-09-22 05:01 +0600
 
 ### What's fixed
 
@@ -244,7 +255,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   schema layers and read the site's `schema/migrations/` directly, so adding a migration to a site made Nibble's
   suite fail in a site that had done nothing wrong. It now reads the layers the rest of the schema does.
 
-## 0.9.0 — 2026-09-22
+## 0.9.0 — 2026-09-22 04:40 +0600
 
 ### What's new
 
@@ -288,7 +299,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **A control panel older than this release keeps asking the old address for its notes**, so its update check
   quietly stops finding anything once that address goes. Upgrading is the fix; nothing else is affected.
 
-## 0.8.0 — 2026-09-22
+## 0.8.0 — 2026-09-22 02:41 +0600
 
 ### What's new
 
@@ -343,7 +354,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **If a folder of Markdown has an `index.md` at its root**, the next `bin/rails nibble:content:markdown`
   creates a page for it where it previously created nothing at all for that collection.
 
-## 0.7.0 — 2026-09-21
+## 0.7.0 — 2026-09-21 21:39 +0600
 
 ### What's new
 
@@ -364,7 +375,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - `bin/nibble-release` offers the push rather than printing it, and offers to publish the feed in the repository
   it was written to. `--push` answers both without asking.
 
-## 0.6.0 — 2026-09-21
+## 0.6.0 — 2026-09-21 20:32 +0600
 
 ### What's new
 
@@ -405,7 +416,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - Server rendering takes its port from `INERTIA_SSR_PORT` at both ends. A second instance — a test server beside
   a development one — fought the first for 13714, and the loser sat in a restart loop.
 
-## 0.5.0 — 2026-09-21
+## 0.5.0 — 2026-09-21 03:34 +0600
 
 ### Changed
 
@@ -429,7 +440,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   `test_helper` available. Nibble's own tests stay in `test/`.
 - The README says how to send a change back rather than carry it, and states the ownership rule in one line.
 
-## 0.4.0 — 2026-09-21
+## 0.4.0 — 2026-09-21 02:26 +0600
 
 ### What's new
 
@@ -437,7 +448,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   theme, typed for that collection's records, and says how to wire it up. It refuses to write into Nibble's
   theme, which is what `nibble:generate:theme` is for.
 
-## 0.3.0 — 2026-09-21
+## 0.3.0 — 2026-09-21 02:20 +0600
 
 ### What's new
 
@@ -460,7 +471,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   writes the file when there is something to migrate. If you have no `db/schema.rb`, run
   `bin/rails db:schema:dump` once, or take this release and it is written for you.
 
-## 0.2.1 — 2026-09-21
+## 0.2.1 — 2026-09-21 01:10 +0600
 
 ### What's fixed
 
@@ -478,7 +489,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   **Upgrade:** the merge removes our copy. Run `bin/rails db:prepare` to regenerate yours, then commit it. If git
   reports a conflict on it instead, keep your side and run the same command.
 
-## 0.2.0 — 2026-09-21
+## 0.2.0 — 2026-09-21 01:00 +0600
 
 ### What's new
 
@@ -504,7 +515,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   your settings without asking again. Installs made before this keep working; the upgrade says it cannot
   re-render them.
 
-## 0.1.0 — 2026-09-20
+## 0.1.0 — 2026-09-20 21:40 +0600
 
 ### What's new
 
