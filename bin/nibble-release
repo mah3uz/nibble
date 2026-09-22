@@ -20,7 +20,7 @@ feed = nil
 push = false
 parser = OptionParser.new do |opts|
   opts.banner = "usage: bin/nibble-release <version> [--feed PATH] [--push], e.g. bin/nibble-release 0.2.0"
-  opts.on("--feed PATH", "Write the release feed here once tagged, e.g. ../nibble_site/content/docs/releases.json") { |path| feed = path }
+  opts.on("--feed PATH", "Write the release feed here once tagged, e.g. ../nibble_site/content/docs/releases.json") { |path| feed = Pathname(path).expand_path.to_s }
   opts.on("--push", "Push without asking") { push = true }
 end
 parser.parse!
@@ -72,12 +72,20 @@ unless system(ROOT.join("bin/rails").to_s, "runner",
 end
 puts "wrote #{feed}"
 
-# Its own repository, so only that one file is committed and nothing else there is touched.
-site = Pathname(feed).expand_path.dirname
-if confirm?("commit and push it in #{site}?", push)
-  system("git", "-C", site.to_s, "add", "--", feed) &&
-    system("git", "-C", site.to_s, "commit", "-qm", "Publish #{version}'s notes", "--", feed) &&
-    system("git", "-C", site.to_s, "push") or warn "could not publish the feed — commit it where it lives"
+site = IO.popen([ "git", "-C", Pathname(feed).dirname.to_s, "rev-parse", "--show-toplevel" ], err: File::NULL, &:read).strip
+abort "#{feed} is not in a git repository" if site.empty?
+
+# A site may project the feed into pages of its own, and they belong in the same commit as the feed.
+pages = Pathname(site).join("bin/release-pages")
+if pages.executable?
+  system(pages.to_s) or abort "#{pages} failed — the feed is written, its pages are not"
+end
+
+# Its own repository, so only its content is committed and nothing else there is touched.
+if confirm?("commit and push #{site}'s content?", push)
+  system("git", "-C", site, "add", "-A", "--", "content") &&
+    system("git", "-C", site, "commit", "-qm", "Publish #{version}'s notes", "--", "content") &&
+    system("git", "-C", site, "push") or warn "could not publish the feed — commit it where it lives"
 else
-  puts "not published. Commit #{feed} where it lives, and a control panel will see #{version}."
+  puts "not published. Commit #{site}'s content where it lives, and a control panel will see #{version}."
 end
