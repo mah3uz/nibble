@@ -24,7 +24,7 @@ module Nibble
       on
     end
 
-    def self.feed_url = checking? ? RELEASES_FEED : nil
+    def self.feed_url = checking? ? CHANGELOGS_FEED : nil
 
     # The feed is a projection of CHANGELOG.md, so the file a site reads cannot drift from the notes.
     KEEP_RELEASES = 25

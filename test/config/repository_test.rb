@@ -6,9 +6,9 @@ class RepositoryTest < ActiveSupport::TestCase
   end
 
   test "the release feed is ours to publish, over TLS, at an address no site has to be told" do
-    assert_match %r{\Ahttps://\S+\z}, Nibble::RELEASES_FEED,
+    assert_match %r{\Ahttps://\S+\z}, Nibble::CHANGELOGS_FEED,
       "a site never sets this: an install has to know where to look without being told"
-    refute_match %r{localhost|127\.0\.0\.1}, Nibble::RELEASES_FEED
+    refute_match %r{localhost|127\.0\.0\.1}, Nibble::CHANGELOGS_FEED
   end
 
   test "the installer clones the same repository the app knows about" do

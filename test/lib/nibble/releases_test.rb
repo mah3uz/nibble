@@ -34,7 +34,7 @@ class Nibble::ReleasesTest < ActiveSupport::TestCase
   end
 
   test "where to look is ours, so an install checks without being told where" do
-    assert_equal Nibble::RELEASES_FEED, Nibble::Releases.feed_url
+    assert_equal Nibble::CHANGELOGS_FEED, Nibble::Releases.feed_url
     assert Nibble::Releases.checking?, "a site that says nothing still gets told a release exists"
   end
 

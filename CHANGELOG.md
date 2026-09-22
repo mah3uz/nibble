@@ -12,6 +12,16 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### Changed
+
+- **The update check reads `https://nibble.ink/api/v1/changelogs`.** The documentation site serves its release
+  notes at `/changelogs`, and the feed behind them now answers on the matching address. The old
+  `/api/v1/releases` still returns the identical feed, so an installation checks successfully either side of
+  this release and nothing has to be upgraded in a particular order.
+- **`Nibble::RELEASES_FEED` is now `Nibble::CHANGELOGS_FEED`.** The address and the constant that holds it say
+  the same word. **Upgrade:** nothing to do unless one of your own files names the old constant, which only a
+  site that reads it in `site/initializers/` or a check of its own would.
+
 ## 0.11.1 — 2026-09-22
 
 ### What's fixed
