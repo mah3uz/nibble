@@ -46,11 +46,14 @@ module Nibble
 
       def latest(root: Rails.root) = tags(root:).last
 
-      # Written by install and upgrade: without it there is no baseline to tell a site's edits from ours.
-      def record_install(version:, commit:, answers: nil, root: Rails.root)
+      # Written by install and upgrade: without it there is no baseline to tell a site's edits from ours. Only
+      # an upgrade moves that baseline; installing into a site again would move it to the site's own HEAD and
+      # every file it had touched since would read as ours, changed in place.
+      def record_install(version:, commit: nil, answers: nil, root: Rails.root)
         file = root.join(RECORD)
         file.dirname.mkpath
         kept = answers.presence || installed(root:)&.answers || {}
+        commit ||= installed(root:)&.commit.presence || Eject.commit(root:)
         file.write({ "version" => version, "commit" => commit, "at" => Date.current.to_s,
                      "answers" => kept.deep_stringify_keys }.to_yaml)
       end

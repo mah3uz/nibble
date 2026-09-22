@@ -14,6 +14,10 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ### What's fixed
 
+- **Re-running `nibble:install` no longer makes a site's own edits look like Nibble's.** Install recorded the
+  site's current commit as the baseline `nibble:upgrade` and `nibble:check` compare against, so every file the
+  site had touched since its last upgrade read as ours and changed in place. Only an upgrade moves that
+  baseline now.
 - **`nibble:build` no longer asks a build for secrets it cannot have.** It checked the master key, the mail
   credentials and the backup bucket — none of which exist while an image is being built — so the build failed
   on settings that only mean anything where the site runs. Those are checked at boot, where they can be true.

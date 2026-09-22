@@ -11,7 +11,8 @@ class NibbleCommand < Rails::Command::Base
   def build
     boot_application!
     check = Nibble::Check.run(static: true)
-    check.findings.each { |finding| warn "✗ #{finding}" }
+    check.warnings.each { |warning| warn "! #{warning}" }
+    check.problems.each { |problem| warn "✗ #{problem}" }
     abort "the schema has #{check.problems.size} problem(s)" unless check.ok?
 
     index = Nibble::Files.reload!
@@ -69,7 +70,7 @@ class NibbleCommand < Rails::Command::Base
     result.written.each { |path| say_status :create, path, :green }
     result.skipped.each { |path| say_status :keep, "#{path} — yours already, left alone", :yellow }
     master_key
-    Nibble::Release.record_install(version: Nibble::VERSION, commit: Nibble::Eject.commit, answers:)
+    Nibble::Release.record_install(version: Nibble::VERSION, answers:)
     say_status :record, ".nibble/install.yml — this install is #{Nibble::VERSION}", :green
     options[:defaults] || options[:only] ? admin_reminder : set_up_database
     next_steps(kamal)

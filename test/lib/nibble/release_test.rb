@@ -118,4 +118,26 @@ class Nibble::ReleaseTest < ActiveSupport::TestCase
     path.dirname.mkpath
     path.write(body)
   end
+
+  # Installing again into a live site must not move the baseline to the site's own HEAD: every file it had
+  # touched since would then read as one of ours, changed in place.
+  test "installing again keeps the commit a site was upgraded to" do
+    root = Pathname(Dir.mktmpdir("record"))
+    Nibble::Release.record_install(version: "1.0.0", commit: "abc123", root:)
+    Nibble::Release.record_install(version: "1.0.0", root:)
+
+    assert_equal "abc123", Nibble::Release.installed(root:).commit
+  ensure
+    FileUtils.rm_rf(root)
+  end
+
+  test "an upgrade moves the baseline deliberately" do
+    root = Pathname(Dir.mktmpdir("record"))
+    Nibble::Release.record_install(version: "1.0.0", commit: "abc123", root:)
+    Nibble::Release.record_install(version: "1.1.0", commit: "def456", root:)
+
+    assert_equal "def456", Nibble::Release.installed(root:).commit
+  ensure
+    FileUtils.rm_rf(root)
+  end
 end
