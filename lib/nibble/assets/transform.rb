@@ -6,7 +6,23 @@ module Nibble
       module_function
 
       def format_for(asset, accept)
-        FORMATS.find { |mime, _| accept.to_s.include?(mime) }&.last || (asset.extension == "png" ? "png" : "jpg")
+        FORMATS.find { |mime, format| accept.to_s.include?(mime) && encodable?(format) }&.last ||
+          (asset.extension == "png" ? "png" : "jpg")
+      end
+
+      # libvips can report a format among its suffixes while lacking the encoder plugin that saves it — Debian
+      # splits codecs like AV1 into separate packages, so ".avif" reads without ever being able to write. The
+      # only way to know for certain is to try, once, and remember the answer for the life of the process.
+      def encodable?(format)
+        @encodable ||= {}
+        @encodable.fetch(format) { @encodable[format] = probe_encodable(format) }
+      end
+
+      def probe_encodable(format)
+        Vips::Image.black(1, 1).write_to_buffer(".#{format}")
+        true
+      rescue Vips::Error
+        false
       end
 
       def transformations(asset, preset, width: nil, format: "jpg")

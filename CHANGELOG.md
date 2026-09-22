@@ -12,6 +12,15 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **A browser that asks for AVIF no longer 500s on a transformed image.** libvips can report a format among the
+  ones it reads without carrying the plugin that writes it — Debian splits AV1 encoding into its own package,
+  so a stock image had every reason to believe it could produce AVIF and none to actually try. The AV1 encoder
+  is now installed, and a format is only offered to a browser once it has genuinely been encoded, not merely
+  found in the list of things libvips claims to support — so the same class of gap degrades to the next format
+  instead of failing the request, on any build where an encoder turns out to be missing.
+
 ## 0.11.0 — 2026-09-22
 
 ### What's new

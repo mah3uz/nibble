@@ -16,9 +16,11 @@ FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 # Rails app lives here
 WORKDIR /rails
 
-# Install base packages (libvips for image transforms, ffmpeg for video and audio facts and video thumbnails, sqlite3 for the database console)
+# Install base packages (libvips for image transforms, ffmpeg for video and audio facts and video thumbnails,
+# sqlite3 for the database console). libvips reports AVIF among its formats without libheif-plugin-aomenc: it
+# can read one but raises "Unsupported compression" trying to write one, so a variant in that format 500s.
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl ffmpeg libjemalloc2 libvips sqlite3 && \
+    apt-get install --no-install-recommends -y curl ffmpeg libheif-plugin-aomenc libjemalloc2 libvips sqlite3 && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
