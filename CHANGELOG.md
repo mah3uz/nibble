@@ -12,6 +12,15 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **A folder-backed collection sorts on `published_at` and `position` again.** Both are the page's own —
+  one parsed into an instant, the other read from `order:` in the frontmatter — and the sort was looking for
+  them among the frontmatter fields, where neither is. A collection ordered by either got whatever order the
+  files happened to be read in. Sorting on a date now compares instants, so pages written in different
+  offsets fall in the right order rather than in alphabetical order of their text.
+
+
 ## 0.14.3 — 2026-09-23 02:05 +0600
 
 ### What's fixed

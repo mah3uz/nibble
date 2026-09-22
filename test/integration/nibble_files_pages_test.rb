@@ -27,6 +27,19 @@ class NibbleFilesPagesTest < ActionDispatch::IntegrationTest
     "---\nid: #{id}\ntitle: #{title}\n---\n\n#{body}\n"
   end
 
+  # published_at is parsed into an instant on the page, so a sort on it must read that and not the raw text.
+  test "a dated collection sorts on the instant a page carries, newest first" do
+    write({ "docs/index.md" => page("docs-home", "Docs"),
+            "docs/early.md" => "---\nid: early\ntitle: Early\npublished_at: 2026-01-02 09:00 +0600\n---\n\nWords.\n",
+            "docs/late.md" => "---\nid: late\ntitle: Late\npublished_at: 2026-01-02 23:00 +0600\n---\n\nWords.\n",
+            "docs/abroad.md" => "---\nid: abroad\ntitle: Abroad\npublished_at: 2026-01-02 19:00 +0100\n---\n\nWords.\n" })
+
+    result = Nibble::Query.build({ from: "entries:docs", sort: "published_at:desc" }, Nibble::Query::Context.public).result
+
+    assert_equal %w[Abroad Late Early], result.records.reject { |r| r.id == "docs-home" }.map(&:title),
+      "read as text these run Late, Abroad, Early; read as instants Abroad's 18:00 UTC leads Late's 17:00"
+  end
+
   # A rank is only worth writing if it is obeyed, and as text "20" comes before "9", which reverses the list.
   test "a collection sorted on a number orders by the number, not by how the number reads" do
     write({ "docs/index.md" => page("docs-home", "Docs") }.merge(
