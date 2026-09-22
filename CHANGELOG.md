@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.10.1 — 2026-09-22
+
 ### What's fixed
 
 - **A site no longer inherits Nibble's own local git excludes.** `bin/setup` hides the files Nibble generates
