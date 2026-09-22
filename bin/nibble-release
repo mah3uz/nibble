@@ -20,7 +20,7 @@ feed = nil
 push = false
 parser = OptionParser.new do |opts|
   opts.banner = "usage: bin/nibble-release <version> [--feed PATH] [--push], e.g. bin/nibble-release 0.2.0"
-  opts.on("--feed PATH", "Write the release feed here once tagged, e.g. ../nibble_site/content/docs/releases.json") { |path| feed = Pathname(path).expand_path.to_s }
+  opts.on("--feed PATH", "Write the release feed here once tagged, e.g. ../nibble_site/content/changelogs/releases.json") { |path| feed = Pathname(path).expand_path.to_s }
   opts.on("--push", "Push without asking") { push = true }
 end
 parser.parse!
@@ -62,7 +62,7 @@ else
 end
 
 unless feed
-  puts "the notes a site reads come from the feed: re-run with --feed <documentation site>/content/docs/releases.json"
+  puts "the notes a site reads come from the feed: re-run with --feed <documentation site>/content/changelogs/releases.json"
   exit
 end
 
