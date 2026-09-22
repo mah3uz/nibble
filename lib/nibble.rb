@@ -1,5 +1,5 @@
 module Nibble
-  VERSION = "0.11.0".freeze
+  VERSION = "0.11.1".freeze
   # Where releases come from.
   REPOSITORY = "https://github.com/mah3uz/nibble.git".freeze
   RELEASES_FEED = "https://nibble.ink/api/v1/releases".freeze

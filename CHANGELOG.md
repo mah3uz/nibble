@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.11.1 — 2026-09-22
+
 ### What's fixed
 
 - **A browser that asks for AVIF no longer 500s on a transformed image.** libvips can report a format among the
