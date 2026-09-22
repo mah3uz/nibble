@@ -1,8 +1,8 @@
 module Nibble
   module ContentMigrations
     module Operations
-      NAMES = %w[rename_field change_blueprint set_default move_to_taxonomy delete_collection].freeze
-      REMOVED = %w[delete_collection].freeze
+      NAMES = %w[rename_field change_blueprint set_default move_to_taxonomy delete_collection rename_collection].freeze
+      REMOVED = %w[delete_collection rename_collection].freeze
       COLUMNS = %w[title slug].freeze
 
       module_function
@@ -85,6 +85,28 @@ module Nibble
         Records::Entry.where(collection: handle).update_all(parent_id: nil)
         entries.delete_all
         [ "delete #{handle}", count ]
+      end
+
+      # A handle is stored on every record, so renaming one in the schema strands them all. Addresses come from
+      # the route and are left alone: a rename is not a move.
+      def rename_collection(args)
+        from, to = args.values_at("from", "to")
+        entries = Records::Entry.where(collection: from)
+        count = entries.count
+        entries.update_all(collection: to)
+        # The index files a record under its collection, so every one of them is now under the wrong scope.
+        Records::Entry.where(collection: to).find_each { |entry| Search.index_record(entry) }
+        PageCache.purge("collection:#{from}")
+        [ "rename #{from} to #{to}", count ]
+      end
+
+      def rename_collection_problem(args, _item)
+        from, to = args.values_at("from", "to")
+        return "needs from and to" if from.blank? || to.blank?
+        return "from and to are the same collection" if from == to
+        return "collection '#{from}' is still in the schema" if Nibble.schema.collection(from)
+
+        "collection '#{to}' isn't in the schema" unless Nibble.schema.collection(to)
       end
 
       def delete_collection_problem(args, _item)

@@ -12,6 +12,22 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **A site that removes or renames a collection can boot again.** An upgrade checks for drift before it runs
+  content migrations and refuses to start on what it finds — but records left behind by a dropped collection
+  were reported even when a pending migration existed to clear them. `delete_collection` is the answer to that
+  very issue, so the only remedy was unreachable: the container could not start, and starting was what would
+  have applied it. A pending migration now covers the issue it resolves, as it already did for a removed
+  blueprint or field.
+
+### What's new
+
+- **`rename_collection`** is a content migration operation. A collection's handle is stored on every record, so
+  renaming one in the schema stranded all of them with nothing available to bring them across. It carries the
+  records over and re-indexes them for search. Addresses come from the route, so a rename moves nothing.
+
+
 ## 0.11.2 — 2026-09-22
 
 ### Changed

@@ -144,6 +144,47 @@ class Nibble::ContentMigrationsTest < ActiveSupport::TestCase
     assert_equal "Still here", kept.reload.title, "only the removed collection's records go"
   end
 
+  # The handle is a column on every record, so a site that renames a collection in its schema strands all of
+  # them; without this there is no way to bring them across, and the site refuses to boot.
+  test "a renamed collection's records are carried over to the new handle" do
+    doc = create_entry("docs", { "title" => "Carried" })
+    kept = create_entry("articles", { "title" => "Still here" })
+    uri = doc.uri
+    @nibble_themes.join("records/schema/collections/docs.yml").delete
+    FileUtils.rm_rf(@nibble_themes.join("records/schema/blueprints/collections/docs"))
+    Nibble.reset_schema!
+
+    migration("2026_10_01_rename_docs", { "rename_collection" => { "from" => "docs", "to" => "articles" } })
+    run_migrations
+
+    assert_empty Nibble::Records::Entry.where(collection: "docs")
+    assert_equal "articles", doc.reload.collection
+    assert_equal "Carried", doc.title, "a rename moves the handle and nothing else"
+    assert_equal uri, doc.uri, "addresses come from the route, so a rename is not a move"
+    assert_equal "articles", kept.reload.collection
+  end
+
+  test "a collection still in the schema is never renamed away from" do
+    create_entry("articles", { "title" => "One" })
+    migration("2026_10_01_rename_live", { "rename_collection" => { "from" => "articles", "to" => "docs" } })
+
+    error = assert_raises(Nibble::Error) { run_migrations }
+
+    assert_match "still in the schema", error.message
+    assert_equal 1, Nibble::Records::Entry.where(collection: "articles").count
+  end
+
+  test "a rename to a collection the schema does not have is refused" do
+    @nibble_themes.join("records/schema/collections/docs.yml").delete
+    FileUtils.rm_rf(@nibble_themes.join("records/schema/blueprints/collections/docs"))
+    Nibble.reset_schema!
+    migration("2026_10_01_rename_nowhere", { "rename_collection" => { "from" => "docs", "to" => "nowhere" } })
+
+    error = assert_raises(Nibble::Error) { run_migrations }
+
+    assert_match "isn't in the schema", error.message
+  end
+
   test "a collection still in the schema is never deleted by a migration" do
     create_entry("articles", { "title" => "One" })
     migration("2026_10_01_drop_articles", { "delete_collection" => { "collection" => "articles" } })

@@ -55,6 +55,31 @@ class Nibble::DriftTest < ActiveSupport::TestCase
     assert_equal [ "collections/news: collection 'news' was removed and 1 record still belong to it" ], issues
   end
 
+  # An upgrade checks for drift before it runs content migrations and refuses to boot on what it finds. A
+  # migration written to empty the collection is the answer to this issue, so reporting it anyway makes the
+  # only remedy unreachable: the site cannot start, and starting is what would have applied the fix.
+  test "a collection the schema dropped is not reported when a migration is pending to empty it" do
+    create_entry("articles", { "title" => "A" }).update_columns(collection: "news")
+
+    migration("2026_10_02_drop", { "delete_collection" => { "collection" => "news" } })
+    assert_empty issues
+  end
+
+  test "a collection the schema dropped is not reported when a migration is pending to rename it" do
+    create_entry("articles", { "title" => "A" }).update_columns(collection: "news")
+
+    migration("2026_10_02_rename", { "rename_collection" => { "from" => "news", "to" => "articles" } })
+    assert_empty issues
+  end
+
+  # A migration for some other collection says nothing about this one.
+  test "a collection the schema dropped is still reported when the pending migration is for another" do
+    create_entry("articles", { "title" => "A" }).update_columns(collection: "news")
+
+    migration("2026_10_02_other", { "delete_collection" => { "collection" => "bulletins" } })
+    assert_equal [ "collections/news: collection 'news' was removed and 1 record still belong to it" ], issues
+  end
+
   test "a field whose type changed while holding data is caught against the last snapshot" do
     create_entry("articles", { "title" => "A", "summary" => "Some text" })
     assert_empty issues, "no snapshot yet, so nothing to compare types with"

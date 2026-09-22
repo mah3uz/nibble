@@ -12,7 +12,7 @@ module Nibble
       scan = Scan.new(schema)
       snapshot = Records::SchemaSnapshot.latest&.types.to_h
       [
-        *scan.orphaned_parents.map { |kind, handle, count| removed_parent(kind, handle, count) },
+        *scan.orphaned_parents.filter_map { |kind, handle, count| removed_parent(kind, handle, count) unless covered.parent?(kind, handle) },
         *scan.orphaned_blueprints.filter_map { |scope, blueprint, count| removed_blueprint(scope, blueprint, count) unless covered.blueprint?(scope, blueprint) },
         *scan.stranded.filter_map { |(scope, field), count| removed_field(scope, field, count) unless covered.field?(scope, field) },
         *changed_types(scan, snapshot, covered)
@@ -70,6 +70,17 @@ module Nibble
 
       def blueprint?(scope, blueprint)
         @operations.any? { |name, args| name == "change_blueprint" && scope == scope_of(args) && args["from"] == blueprint }
+      end
+
+      # The operations that exist to empty a collection of its records, so a migration written to answer this
+      # very issue is not reported as the reason a site cannot boot.
+      def parent?(kind, handle)
+        return false unless kind == "collections"
+
+        @operations.any? do |name, args|
+          (name == "delete_collection" && args["collection"] == handle) ||
+            (name == "rename_collection" && args["from"] == handle)
+        end
       end
 
       private
