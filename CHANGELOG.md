@@ -12,6 +12,15 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### Changed
+
+- **Deploying scaffolds with `kamal init`, and Nibble changes only what is its own.** A site is a Rails
+  application, so it gets Kamal's own config, secrets and hooks rather than copies Nibble maintained — the
+  hooks in particular are Kamal's examples and were going stale in our tree. What Nibble writes over the top
+  is what a Nibble site cannot do without: the storage volume its database lives in, `asset_path` covering
+  the images published from `content/`, `SOLID_QUEUE_IN_PUMA`, and `SITE_URL`.
+
+
 ## 0.13.0 — 2026-09-23
 
 ### What's new

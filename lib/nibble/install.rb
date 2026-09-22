@@ -2,8 +2,10 @@ module Nibble
   class Install
     # Every install needs these; deploy files only when a site says how it deploys.
     CORE = { "nibble.yml.erb" => "config/nibble.yml", "env.erb" => ".env", "CLAUDE.md.erb" => "CLAUDE.md" }.freeze
-    KAMAL = { "deploy.yml.erb" => "config/deploy.yml", "Dockerfile.erb" => "Dockerfile",
-              ".dockerignore.erb" => ".dockerignore", "kamal/secrets.erb" => ".kamal/secrets" }.freeze
+    KAMAL = { "Dockerfile.erb" => "Dockerfile", ".dockerignore.erb" => ".dockerignore" }.freeze
+    # Kamal scaffolds its own config, secrets and hooks; only what a Nibble site needs differently is ours.
+    OVERLAY = "deploy.overlay.yml.erb".freeze
+    DEPLOY_FILE = "config/deploy.yml".freeze
     TEMPLATES = CORE.merge(KAMAL).freeze
 
     TEMPLATES_DIR = "lib/nibble/install/templates".freeze
@@ -71,6 +73,9 @@ module Nibble
         path.write(render(template))
         written << destination
       end
+      if @kamal || @only == [ "deploy" ]
+        @root.join(DEPLOY_FILE).file? && !@force ? skipped << DEPLOY_FILE : written.concat(deploy)
+      end
       Result.new(written:, skipped:)
     end
 
@@ -103,6 +108,29 @@ module Nibble
     def self.templates_path = Pathname(__dir__).join("install/templates")
 
     private
+
+    # Kamal writes the file it owns, then the keys a Nibble site cannot do without are merged over it.
+    def deploy
+      scaffold = kamal_init
+      path = @root.join(DEPLOY_FILE)
+      return [] unless path.file?
+
+      # Wholesale, not merged into: proxy names a host where we name hosts, and a leftover would be someone
+      # else's domain sitting in a deploy config.
+      scaffolded = YAML.safe_load(path.read, aliases: true) || {}
+      path.write(YAML.dump(scaffolded.merge(YAML.safe_load(render(OVERLAY)))))
+      scaffold + [ DEPLOY_FILE ]
+    end
+
+    def kamal_init
+      return [] if @root.join(DEPLOY_FILE).file?
+
+      unless system("kamal", "init", chdir: @root.to_s, out: File::NULL, err: File::NULL)
+        raise Error, "kamal init failed, so there is nothing to deploy with: run it by hand in #{@root}"
+      end
+
+      [ ".kamal/secrets", ".kamal/hooks" ].select { |path| @root.join(path).exist? }
+    end
 
     def selected
       available = @kamal ? TEMPLATES : CORE

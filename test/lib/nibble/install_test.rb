@@ -1,8 +1,30 @@
 require "test_helper"
 
 class Nibble::InstallTest < ActiveSupport::TestCase
-  setup { @root = Pathname(Dir.mktmpdir("nibble-install")) }
-  teardown { FileUtils.rm_rf(@root) }
+  setup do
+    @root = Pathname(Dir.mktmpdir("nibble-install"))
+    stub_kamal
+  end
+
+  # Deploying scaffolds with Kamal's own init, so a test needs one that behaves like it and touches nothing.
+  def stub_kamal
+    @bin_dir = Pathname(Dir.mktmpdir("nibble-bin"))
+    ENV["PATH"] = "#{@bin_dir}:#{ENV['PATH']}"
+    bin = @bin_dir.join("kamal")
+    bin.dirname.mkpath
+    bin.write(<<~SH)
+      #!/bin/sh
+      mkdir -p config .kamal/hooks
+      printf 'service: my-app\nimage: my-user/my-app\nservers:\n  web:\n    - 192.168.0.1\n' > config/deploy.yml
+      printf 'KAMAL_REGISTRY_PASSWORD=$KAMAL_REGISTRY_PASSWORD\n' > .kamal/secrets
+      touch .kamal/hooks/pre-deploy.sample
+    SH
+    bin.chmod(0o755)
+  end
+  teardown do
+    ENV["PATH"] = ENV["PATH"].sub("#{@bin_dir}:", "") if @bin_dir
+    FileUtils.rm_rf([ @root, @bin_dir ].compact)
+  end
 
   def install(force: false, only: nil, kamal: false, **answers) = Nibble::Install.new(answers:, root: @root, force:, only:, kamal:)
 
@@ -16,15 +38,15 @@ class Nibble::InstallTest < ActiveSupport::TestCase
   test "saying Kamal is how you deploy adds the deploy files" do
     result = install(name: "acme", kamal: true).run
 
-    assert_equal [ "config/nibble.yml", ".env", "CLAUDE.md", "config/deploy.yml", "Dockerfile",
-                   ".dockerignore", ".kamal/secrets" ], result.written
+    assert_equal [ "config/nibble.yml", ".env", "CLAUDE.md", "Dockerfile", ".dockerignore",
+                   ".kamal/secrets", ".kamal/hooks", "config/deploy.yml" ], result.written
   end
 
   test "deploy files can be added later without redoing the install" do
     install(name: "acme").run
     result = install(name: "acme", only: "deploy").run
 
-    assert_equal [ "config/deploy.yml", "Dockerfile", ".dockerignore", ".kamal/secrets" ], result.written
+    assert_equal [ "Dockerfile", ".dockerignore", ".kamal/secrets", ".kamal/hooks", "config/deploy.yml" ], result.written
   end
 
   test "the generated settings load, so an install is never one restart from a config error" do
@@ -53,7 +75,7 @@ class Nibble::InstallTest < ActiveSupport::TestCase
 
     assert_includes result.skipped, "config/deploy.yml"
     assert_equal "service: edited-by-hand\n", @root.join("config/deploy.yml").read
-    assert_equal "service: other\n", install(name: "other", force: true, only: "deploy.yml").run.then { @root.join("config/deploy.yml").read[/^service: .*\n/] }
+    assert_equal "service: other\n", install(name: "other", force: true, only: "deploy").run.then { @root.join("config/deploy.yml").read[/^service: .*\n/] }
   end
 
   test "answers reach every file that needs them" do

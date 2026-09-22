@@ -1,0 +1,42 @@
+service: <%= name %>
+image: <%= registry_user %>/<%= name %>
+
+servers:
+  web:
+    - <%= server %>
+
+proxy:
+  ssl: true
+  hosts:
+    - <%= host %>
+
+registry:
+  username: <%= registry_user %>
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  secret:
+    - RAILS_MASTER_KEY
+  clear:
+    SITE_URL: <%= url %>
+    SMTP_ADDRESS: smtp.postmarkapp.com
+    SMTP_PORT: 587
+    SOLID_QUEUE_IN_PUMA: true
+
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell: app exec --interactive --reuse "bash"
+  logs: app logs -f
+  dbc: app exec --interactive --reuse "bin/rails dbconsole"
+
+ssh:
+  user: <%= ssh_user %>
+
+volumes:
+  - <%= name %>-storage:/rails/storage
+
+asset_path: /rails/public
+
+builder:
+  arch: amd64
