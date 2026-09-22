@@ -13,6 +13,24 @@ class Nibble::DriftTest < ActiveSupport::TestCase
 
   def strand(entry, values) = entry.tap { entry.update_columns(data: entry.data.merge(values)) }
 
+  def serve_from_files(handle)
+    path = @nibble_themes.join("records/schema/collections/#{handle}.yml")
+    path.write(YAML.safe_load(path.read).merge("files" => handle).to_yaml)
+    Nibble.reset_schema!
+  end
+
+  # No operation empties a collection the schema still has, so reporting one served from files asks for a
+  # migration that cannot be written — and the rows it is measuring are read by nothing.
+  test "a collection served from files is not measured against the rows it left behind" do
+    2.times { |index| strand(create_entry("articles", { "title" => "A#{index}" }), "intro" => "Old") }
+
+    assert_not_empty issues, "as rows, a removed field they still hold is real drift"
+
+    serve_from_files("articles")
+
+    assert_empty issues
+  end
+
   test "a field the schema no longer has, with data still in it, is reported with how much" do
     2.times { |index| strand(create_entry("articles", { "title" => "A#{index}" }), "intro" => "Old") }
 

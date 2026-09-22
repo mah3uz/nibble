@@ -110,8 +110,10 @@ module Nibble
 
       def run
         { "collections" => [ Records::Entry, :collection ], "taxonomies" => [ Records::Term, :taxonomy ] }.each do |kind, (model, column)|
-          known = @schema.all(kind).to_h { |item| [ item.handle, fields_by_blueprint(item) ] }
-          count_orphans(kind, model.group(column).count, known)
+          # A folder is the collection's content, so rows left from before it became one are read by nothing.
+          from_files, from_rows = @schema.all(kind).partition { |item| item["files"].present? }
+          known = from_rows.to_h { |item| [ item.handle, fields_by_blueprint(item) ] }
+          count_orphans(kind, model.group(column).count.except(*from_files.map(&:handle)), known)
           scan_rows(kind, model.where(column => known.keys).in_batches, column, known)
         end
         scan_globals

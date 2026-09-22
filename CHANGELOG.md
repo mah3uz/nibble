@@ -14,6 +14,10 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ### What's fixed
 
+- **A collection served from files is no longer measured against the rows it left behind.** Turning one into
+  a folder leaves its old records in place, read by nothing — but `nibble:check` still held the schema to
+  them, so removing a field from the blueprint stranded rows nobody serves and stopped the site booting. The
+  advice it gave could not be taken either: no migration operation empties a collection the schema still has.
 - **A refused release leaves the tree as it found it.** `bin/nibble-release` writes the version and the
   changelog heading before running the checks, so a release that failed them left both files modified with
   nothing committed or tagged — and the next attempt refused, because `Unreleased` had already been emptied.
