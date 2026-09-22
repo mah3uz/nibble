@@ -36,7 +36,8 @@ class NibbleContentCommand < Rails::Command::Base
   def markdown(collection = nil)
     boot_application!
     handles = collection ? [ collection ] : Nibble::Packages::Folder.declared.map(&:handle)
-    abort "no collection declares a source folder" if handles.empty?
+    # Syncing every folder when a site has none is nothing to do, not a failure: this runs at every boot.
+    return puts "no collection is written as Markdown" if handles.empty?
 
     handles.each { |handle| report(Nibble::Packages::Folder.for(handle, dry_run: !!options[:dry_run]).call) }
     Nibble::Events.dispatch_pending

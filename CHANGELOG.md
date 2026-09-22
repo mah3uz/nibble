@@ -12,6 +12,18 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's new
+
+- **A folder of Markdown is synced when the container boots.** `bin/rails nibble:content:markdown` now runs
+  beside `nibble:upgrade` before the server accepts a request, so merging a page publishes it and deleting one
+  trashes it with no step to remember. The sync is idempotent, so a boot that changes nothing writes nothing.
+
+### Changed
+
+- **`nibble:content:markdown` over no collections is no longer an error.** Asked to sync every folder when a
+  site has none, it now says so and exits cleanly. It used to exit non-zero, which — as of this release, where
+  it runs at boot — would have stopped the container starting for every site that writes no Markdown.
+
 ## 0.10.1 — 2026-09-22
 
 ### What's fixed
