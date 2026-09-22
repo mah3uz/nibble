@@ -1,8 +1,7 @@
 # syntax=docker/dockerfile:1
 # check=error=true
 
-# Production image (also used for staging with RAILS_ENV=staging). Deploy with Kamal
-# (config/deploy.yml, config/deploy.staging.yml) or build and run by hand:
+# Production image. Deploy with Kamal (config/deploy.yml) or build and run by hand:
 #   docker build -t nibble .
 #   docker run -d -p 80:80 -e RAILS_MASTER_KEY=<config/credentials/production.key> -v nibble-storage:/rails/storage nibble
 #

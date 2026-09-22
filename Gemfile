@@ -71,7 +71,7 @@ gem "json", "~> 2.21", ">= 2.21.2"
 
 gem "csv", "= 3.3.6"
 
-# Active Storage on S3 (production and staging)
+# Active Storage on S3 in production
 gem "aws-sdk-s3", "= 1.232.0", require: false
 
 gem "rotp", "~> 6.3"

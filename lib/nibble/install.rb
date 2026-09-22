@@ -1,8 +1,9 @@
 module Nibble
   class Install
     # Every install needs these; deploy files only when a site says how it deploys.
-    CORE = { "nibble.yml.erb" => "config/nibble.yml", "env.erb" => ".env" }.freeze
-    KAMAL = { "deploy.yml.erb" => "config/deploy.yml", "deploy.staging.yml.erb" => "config/deploy.staging.yml" }.freeze
+    CORE = { "nibble.yml.erb" => "config/nibble.yml", "env.erb" => ".env", "CLAUDE.md.erb" => "CLAUDE.md" }.freeze
+    KAMAL = { "deploy.yml.erb" => "config/deploy.yml", "Dockerfile.erb" => "Dockerfile",
+              ".dockerignore.erb" => ".dockerignore", "kamal/secrets.erb" => ".kamal/secrets" }.freeze
     TEMPLATES = CORE.merge(KAMAL).freeze
 
     TEMPLATES_DIR = "lib/nibble/install/templates".freeze
@@ -18,8 +19,6 @@ module Nibble
     KAMAL_QUESTIONS = {
       host: "Production domain",
       server: "Production server address",
-      staging_host: "Staging domain",
-      staging_server: "Staging server address",
       registry_user: "Container registry username",
       ssh_user: "SSH user on the servers"
     }.freeze
@@ -30,8 +29,7 @@ module Nibble
       name: [ /\A[a-z][a-z0-9-]*\z/, "lowercase letters, numbers and dashes — it names containers and volumes" ],
       theme: [ /\A[a-z][a-z0-9_-]*\z/, "a theme handle: lowercase letters, numbers, dashes and underscores" ],
       url: [ %r{\Ahttps?://[^\s]+\z}, "a full URL including http:// or https://" ],
-      host: [ /\A[a-z0-9.-]+\.[a-z]{2,}\z/i, "a domain like example.com, with no scheme or path" ],
-      staging_host: [ /\A[a-z0-9.-]+\.[a-z]{2,}\z/i, "a domain like staging.example.com, with no scheme or path" ]
+      host: [ /\A[a-z0-9.-]+\.[a-z]{2,}\z/i, "a domain like example.com, with no scheme or path" ]
     }.freeze
 
     def self.problem_with(key, value)
@@ -49,7 +47,6 @@ module Nibble
       {
         name:, url: Nibble.site_url, theme: Nibble.build_theme,
         host: "example.com", server: "203.0.113.10",
-        staging_host: "staging.example.com", staging_server: "203.0.113.11",
         registry_user: "your-registry-user", ssh_user: "root"
       }
     end
@@ -110,6 +107,8 @@ module Nibble
     def selected
       available = @kamal ? TEMPLATES : CORE
       return available if @only.blank?
+      # Deploying is one answer, not one file: a site adding it later needs everything that makes it deployable.
+      return KAMAL if @only == [ "deploy" ]
 
       TEMPLATES.select { |_, destination| @only.any? { |name| destination.include?(name) } }
     end

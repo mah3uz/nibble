@@ -38,6 +38,18 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ### Changed
 
+- **How a site builds and deploys is generated at install, not shipped.** `Dockerfile`, `.dockerignore`,
+  `.kamal/secrets` and a `CLAUDE.md` stub are written once, alongside `config/deploy.yml`, and belong to the
+  site from then on. They used to be Nibble's, which meant an upgrade merged over anything a site changed.
+- **`NIBBLE-ARCHITECTURE.md` describes the CMS to whoever reads it**, an agent included: where the code lives,
+  how a request becomes a page, what a site owns. It arrives with each release; the `CLAUDE.md` beside it is
+  the site's and says so.
+- **There is no staging environment.** Whether a site has one, what it is called and how it is protected are
+  the site's to decide, so Nibble ships neither the environment, its deploy file, nor the basic auth that
+  guarded it.
+- **`asset_path` covers the whole of `public/`**, so images published from `content/` bridge a deploy the way
+  Vite's bundles already did.
+
 - **`files:` replaces `source:` on a collection**, and a collection written as files no longer has rows: no
   drafts, revisions, workflow, trash, content migrations or recorded redirects, none of which mean anything for
   a page whose truth is a file in git. Deleting the file is the whole of deleting the page.

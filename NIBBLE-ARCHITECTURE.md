@@ -1,86 +1,11 @@
-# CLAUDE.md
+# Nibble
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+How this CMS is put together: where its code lives, how a request becomes a page, what a site owns, and the
+rules the codebase holds itself to. Written for whoever — or whatever — needs to understand Nibble before
+changing a site built with it.
 
-These rules apply to every task in this project unless explicitly overridden.
-Bias: caution over speed on non-trivial work. Use judgment on trivial tasks.
-
-## Rule 0 — No Code comments
-
-Default to writing no comments. Comments explain WHY (non-obvious constraints or workarounds), never WHAT.
-Never write multi-line comment blocks or restate what the code makes obvious.
-No reference to tickets, plans, or external sources. No narrative comments.
-Never mention a plan, a plan file, or a plan's phases or task numbers in code comments or git commit messages.
-
-## Rule 1 — Think Before Coding
-
-State assumptions explicitly. If uncertain, ask rather than guess.
-Present multiple interpretations when ambiguity exists.
-Push back when a simpler approach exists.
-Stop when confused. Name what's unclear.
-
-## Rule 2 — Simplicity First
-
-Minimum code that solves the problem. Nothing speculative.
-No features beyond what was asked. No abstractions for single-use code.
-Test: would a senior engineer say this is overcomplicated? If yes, simplify.
-
-## Rule 3 — Surgical Changes
-
-Touch only what you must. Clean up only your own mess.
-Don't "improve" adjacent code, comments, or formatting.
-Don't refactor what isn't broken. Match existing style.
-
-## Rule 4 — Goal-Driven Execution
-
-Define success criteria. Loop until verified.
-Don't follow steps. Define success and iterate.
-Strong success criteria let you loop independently.
-
-## Rule 5 — Use the model only for judgment calls
-
-Use me for: classification, drafting, summarization, extraction.
-Do NOT use me for: routing, retries, deterministic transforms.
-If code can answer, code answers.
-
-## Rule 6 — Token budgets are not advisory
-
-Per-task: 4,000 tokens. Per-session: 30,000 tokens.
-If approaching budget, summarize and start fresh.
-Surface the breach. Do not silently overrun.
-
-## Rule 7 — Surface conflicts, don't average them
-
-If two patterns contradict, pick one (more recent / more tested).
-Explain why. Flag the other for cleanup.
-Don't blend conflicting patterns.
-
-## Rule 8 — Read before you write
-
-Before adding code, read exports, immediate callers, shared utilities.
-"Looks orthogonal" is dangerous. If unsure why code is structured a way, ask.
-
-## Rule 9 — Tests verify intent, not just behavior
-
-Tests must encode WHY behavior matters, not just WHAT it does.
-A test that can't fail when business logic changes is wrong.
-
-## Rule 10 — Checkpoint after every significant step
-
-Summarize what was done, what's verified, what's left.
-Don't continue from a state you can't describe back.
-If you lose track, stop and restate.
-
-## Rule 11 — Match the codebase's conventions, even if you disagree
-
-Conformance > taste inside the codebase.
-If you genuinely think a convention is harmful, surface it. Don't fork silently.
-
-## Rule 12 — Fail loud
-
-"Completed" is wrong if anything was skipped silently.
-"Tests pass" is wrong if any were skipped.
-Default to surfacing uncertainty, not hiding it.
+This file is Nibble's and arrives with each release. A site's own conventions belong in its `CLAUDE.md`, and its own architecture notes in whatever file it
+likes — this name is taken so that one is not.
 
 ## Project status
 
@@ -154,13 +79,6 @@ the audit log, notifications, the page cache, the search index and webhooks.
 - **Content import:** package import and content migrations are idempotent and safely re-runnable.
 - **Versioned contracts:** `Nibble::SCHEMA_FORMAT`, `THEME_API_VERSION` and `CONTENT_FORMAT_VERSION` in `lib/nibble.rb`
   change only with a migration or upgrade path.
-
-## File searching and grep
-For any file search or grep in the current git-indexed directory, use fff tools.
-
-## Git & Version Control
-
-- **NEVER add to message**. Do not add or mention co-authors by Anthropic or any other AI in commit messages. Keep commit messages clean and focused on the code changes.
 
 ## Commands
 

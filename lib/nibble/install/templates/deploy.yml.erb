@@ -1,6 +1,5 @@
 # Kamal deploy for <%= host %>.   Usage: bin/kamal deploy
-# Staging overlay: config/deploy.staging.yml (bin/kamal deploy -d staging).
-# Secrets come from .kamal/secrets (production) and .kamal/secrets.staging.
+# Secrets come from .kamal/secrets.
 
 service: <%= name %>
 
@@ -54,8 +53,9 @@ ssh:
 volumes:
   - <%= name %>-storage:/rails/storage
 
-# Bridge fingerprinted Vite assets between versions to avoid 404s on in-flight requests.
-asset_path: /rails/public/vite
+# Bridge fingerprinted assets between versions so a request in flight during a deploy still finds the file it
+# was served: Vite's bundles and the images published from content/ both live here.
+asset_path: /rails/public
 
 builder:
   arch: amd64

@@ -38,5 +38,3 @@ production: &production
     queue: maintenance
     schedule: at 3:45am every day
 
-staging:
-  <<: *production

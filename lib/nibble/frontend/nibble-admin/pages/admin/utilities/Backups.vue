@@ -35,7 +35,7 @@ useBreadcrumbs([{ label: 'Utilities', url: '/admin/utilities' }, { label: 'Backu
         </template>
         <p v-else class="text-sm text-gray-600 dark:text-gray-400">
           No backup has been taken on this server yet. The nightly job runs at 3am wherever the job queue runs, which is
-          production and staging.
+          production.
         </p>
       </AdminPanel>
 

@@ -9,21 +9,22 @@ class Nibble::InstallTest < ActiveSupport::TestCase
   test "an install writes only what every site needs, leaving deployment alone" do
     result = install(name: "acme", url: "https://acme.test").run
 
-    assert_equal [ "config/nibble.yml", ".env" ], result.written
+    assert_equal [ "config/nibble.yml", ".env", "CLAUDE.md" ], result.written
     assert_not @root.join("config/deploy.yml").exist?, "a site that hasn't said how it deploys gets no deploy files"
   end
 
   test "saying Kamal is how you deploy adds the deploy files" do
     result = install(name: "acme", kamal: true).run
 
-    assert_equal [ "config/nibble.yml", ".env", "config/deploy.yml", "config/deploy.staging.yml" ], result.written
+    assert_equal [ "config/nibble.yml", ".env", "CLAUDE.md", "config/deploy.yml", "Dockerfile",
+                   ".dockerignore", ".kamal/secrets" ], result.written
   end
 
   test "deploy files can be added later without redoing the install" do
     install(name: "acme").run
     result = install(name: "acme", only: "deploy").run
 
-    assert_equal [ "config/deploy.yml", "config/deploy.staging.yml" ], result.written
+    assert_equal [ "config/deploy.yml", "Dockerfile", ".dockerignore", ".kamal/secrets" ], result.written
   end
 
   test "the generated settings load, so an install is never one restart from a config error" do

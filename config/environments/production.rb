@@ -62,7 +62,7 @@ Rails.application.configure do
   config.action_mailer.default_url_options = { host: URI(ENV.fetch("SITE_URL", "https://example.com")).host, protocol: "https" }
 
   # Outgoing mail (password resets, user invitations). Add smtp credentials with
-  # bin/rails credentials:edit (--environment staging for staging).
+  # bin/rails credentials:edit
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
     address: ENV.fetch("SMTP_ADDRESS", "smtp.postmarkapp.com"),

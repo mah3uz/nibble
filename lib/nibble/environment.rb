@@ -2,7 +2,7 @@ module Nibble
   module Environment
     Finding = Data.define(:source, :message, :level)
 
-    DEPLOYED = %w[production staging].freeze
+    DEPLOYED = %w[production].freeze
 
     class Unfit < Error; end
 

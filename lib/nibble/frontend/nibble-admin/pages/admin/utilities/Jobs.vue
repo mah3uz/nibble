@@ -65,8 +65,8 @@ useBreadcrumbs([{ label: 'Utilities', url: '/admin/utilities' }, { label: 'Jobs'
 
     <AdminPanel v-if="!jobs.available">
       <p class="text-sm text-gray-600 dark:text-gray-400">
-        Jobs run inside the app in this environment, so there’s no queue to show. In production and staging they run
-        through Solid Queue, and this screen lists them.
+        Jobs run inside the app in this environment, so there’s no queue to show. In production they run through Solid
+        Queue, and this screen lists them.
       </p>
     </AdminPanel>
 

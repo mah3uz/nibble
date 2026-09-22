@@ -9,7 +9,7 @@ end
 
 # A site commits its generated settings, so they can't be in the shipped .gitignore. This checkout is
 # where Nibble itself is built, and must never commit them — .git/info/exclude is local and ships nowhere.
-SITE_FILES = %w[config/nibble.yml config/deploy.yml config/deploy.staging.yml .nibble/
+SITE_FILES = %w[config/nibble.yml config/deploy.yml .nibble/ CLAUDE.md Dockerfile .dockerignore .kamal/
                 config/credentials.yml.enc config/credentials/ db/schema.rb].freeze
 
 def ignore_own_site_files
