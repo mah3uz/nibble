@@ -12,6 +12,16 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### Changed
+
+- **Nibble no longer picks a site's time zone.** It ran on Australian time wherever in the world a site was,
+  set in a file a site cannot own. `config/nibble.yml` takes a `time_zone` now — an IANA name such as
+  `Asia/Dhaka` — and with nothing set Nibble leaves Rails' own default, UTC, alone. It is the clock editors
+  write against, what scheduled publishing goes by, and what the control panel shows dates in.
+  **Upgrade:** set `time_zone` to keep the clock you had, or take UTC by leaving it out. Times already stored
+  keep the instant they always were; what moves is the clock they are read and entered against.
+
+
 ## 0.14.1 — 2026-09-23 01:15 +0600
 
 ### What's fixed

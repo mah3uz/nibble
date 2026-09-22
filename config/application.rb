@@ -44,8 +44,10 @@ module NibbleApp
     #
     # config.eager_load_paths << Rails.root.join("extras")
 
-    # Editors and scheduled publishing work in Australian time.
-    config.time_zone = "Sydney"
+    # A site's own, read from the file because this runs long before Nibble.config can be autoloaded.
+    if File.exist?("#{__dir__}/nibble.yml") && (zone = config_for(:nibble)[:time_zone]).present?
+      config.time_zone = zone
+    end
 
     require_relative "../lib/middleware/nibble_redirects_middleware"
     require_relative "../lib/middleware/form_request_limit_middleware"
