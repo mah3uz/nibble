@@ -77,6 +77,20 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **A command given a path that is not a content package says so in one line**, instead of printing a Ruby
   backtrace. Every `nibble:*` command now fails the same way.
 
+### Upgrade
+
+- **This release deletes files it used to ship and you now own.** `Dockerfile`, `.dockerignore`,
+  `.kamal/secrets`, `.kamal/hooks/` and `CLAUDE.md` were ours and are now generated once at install, so the
+  merge removes them from your checkout — without a conflict, because you had not changed them. **A hook you
+  wrote yourself goes with them**, so check `.kamal/hooks/` before merging and keep a copy of anything real.
+  Afterwards, `bin/rails nibble:install --only=deploy` writes the deploy files back and
+  `bin/rails nibble:install` writes `CLAUDE.md`.
+- **Your `config/deploy.yml` is left alone, so it keeps `asset_path: /rails/public/vite`.** Images published
+  from `content/` live under `public/` too now, so widen it to `/rails/public` or a changed image's old
+  address disappears mid-deploy.
+- **A collection written as files needs `files:` where it said `source:`**, and every page needs an `id:` in
+  its frontmatter. `bin/rails nibble:build` names every file that is missing one.
+
 ## 0.12.0 — 2026-09-22
 
 ### What's fixed
