@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.11.0 — 2026-09-22
+
 ### What's new
 
 - **A folder of Markdown is synced when the container boots.** `bin/rails nibble:content:markdown` now runs
