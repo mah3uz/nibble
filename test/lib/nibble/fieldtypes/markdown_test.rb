@@ -26,8 +26,27 @@ class Nibble::Fieldtypes::MarkdownTest < ActiveSupport::TestCase
     asset = create_asset({ "alt" => "A photo" })
     html = field.fieldtype.augment("![A photo](nibble://asset/#{asset.id})\n")
 
-    assert_includes html, asset.url, "the reference resolves to wherever the asset is now"
+    assert_includes html, asset.url("content"), "the reference resolves to wherever the asset is now"
     assert_not_includes html, "nibble://"
+  end
+
+  # Without these a phone fetches the desktop image, and the default sizes cannot fetch more than that.
+  test "an image carries the widths a browser can choose between" do
+    asset = create_asset({ "alt" => "A photo" })
+    html = field.fieldtype.augment("![A photo](nibble://asset/#{asset.id})\n")
+
+    assert_includes html, "640w"
+    assert_includes html, "1440w"
+    assert_includes html, 'sizes="100vw"'
+  end
+
+  # A page should not hand a phone the original upload, so the field's preset decides what is served.
+  test "an image is served at the field's preset, not at whatever size it was uploaded" do
+    asset = create_asset({ "alt" => "A photo" })
+    html = field.fieldtype.augment("![A photo](nibble://asset/#{asset.id})\n")
+
+    assert_includes html, "/content/", "the content preset is in the url"
+    assert_not_includes html, asset.url, "and the original is not what a page links to"
   end
 
   test "an asset reference is what a content package carries, not a URL from another site" do

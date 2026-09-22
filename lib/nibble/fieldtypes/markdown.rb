@@ -27,7 +27,8 @@ module Nibble
         text = value.to_s
         return nil if text.blank?
 
-        Nibble::Markdown.render(resolve_pages(resolve_assets(text)), sanitize: config("sanitize") == true)
+        @srcsets = {}
+        responsive(Nibble::Markdown.render(resolve_pages(resolve_assets(text)), sanitize: config("sanitize") == true))
       end
 
       def import(value, ctx = nil) = transfer(value, ctx)
@@ -44,12 +45,26 @@ module Nibble
 
       # Stored as a reference rather than a URL, so an asset can move or be replaced without every document
       # that points at it going stale.
+      # The browser's own assumption, so this cannot fetch more than no srcset would; a theme narrows it in CSS.
+      def responsive(html)
+        html.gsub(/<img\s+src="([^"]+)"/) do
+          url = Regexp.last_match(1)
+          set = @srcsets[url].presence || Nibble::Files.srcset_for_url(url)
+          set ? %(<img src="#{url}" srcset="#{set}" sizes="100vw") : Regexp.last_match(0)
+        end
+      end
+
       def resolve_assets(text)
         ids = asset_ids(text)
         return text if ids.empty?
 
-        found = Resolvers.find("asset").find(ids).index_by { |summary| summary["id"] }
-        text.gsub(ASSET_URL) { found.dig(Regexp.last_match(1), "url") || Regexp.last_match(0) }
+        found = Resolvers.find("asset").find(ids, scope: { "preset" => [ config("image_preset") ] })
+                         .index_by { |summary| summary["id"] }
+        text.gsub(ASSET_URL) do
+          summary = found[Regexp.last_match(1)] or next Regexp.last_match(0)
+          @srcsets[summary["url"]] = summary["srcset"]
+          summary["url"]
+        end
       end
 
       # A page is named by where it sits, not by its id, because the files it was written from say nothing else.

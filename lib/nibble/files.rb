@@ -3,6 +3,8 @@ module Nibble
     ROOT = "content".freeze
     # Namespaced, because a site is free to want /content for pages of its own.
     PUBLISHED = "nibble-assets".freeze
+    PRESET = "content".freeze
+    VECTOR = ".svg".freeze
     TOKEN = /\{[a-z_]+\}/
     IMAGE = /(!\[[^\]]*\]\()(?!\w+:|\/)([^)\s]+)(\))/
     # Only means anything once both ends are pages, so it is resolved against the index rather than rewritten.
@@ -29,6 +31,7 @@ module Nibble
       def index = @index || reload!
 
       def reload!
+        @published_urls = nil
         @index = Index.build
         publish_assets!
         @index
@@ -51,13 +54,17 @@ module Nibble
       # under public/ where the server sends it without Ruby, and thrown away rather than kept current.
       def publish_assets!
         root = Nibble.config.published_path
-        wanted = index.files.to_h { |relative, asset| [ digested(relative, asset.digest), asset.path ] }
+        wanted = {}
+        index.files.each do |relative, asset|
+          wanted[digested(relative, asset.digest)] = asset.path
+          widths_for(asset).each { |width| wanted[digested(relative, asset.digest, width)] = [ asset.path, width ] }
+        end
         wanted.each do |relative, source|
           target = root.join(relative)
           next if target.file?
 
           target.dirname.mkpath
-          FileUtils.cp(source, target)
+          source.is_a?(Array) ? resize(source.first, target, source.last) : FileUtils.cp(source, target)
         end
         discard(root, wanted)
       rescue SystemCallError => error
@@ -65,9 +72,29 @@ module Nibble
         Rails.logger&.warn("nibble: could not publish content assets: #{error.message}")
       end
 
-      def asset_url(relative)
+      def asset_url(relative, width = nil)
         asset = index.file(relative) or return nil
-        "/#{PUBLISHED}/#{digested(relative, asset.digest)}"
+        "/#{PUBLISHED}/#{digested(relative, asset.digest, width)}"
+      end
+
+      def published_urls
+        @published_urls ||= index.files.to_h { |relative, asset| [ asset_url(relative), relative ] }
+      end
+
+      def widths_for(asset)
+        return [] if asset.path.extname.downcase == VECTOR
+
+        Array(Assets.preset(PRESET)&.dig("srcset")).select { |width| width < asset.width.to_i }
+      end
+
+      def srcset_for_url(url) = published_urls[url]&.then { |relative| srcset_for(relative) }
+
+      def srcset_for(relative)
+        asset = index.file(relative) or return nil
+        widths = widths_for(asset)
+        return nil if widths.empty?
+
+        (widths.map { |w| "#{asset_url(relative, w)} #{w}w" } + [ "#{asset_url(relative)} #{asset.width}w" ]).join(", ")
       end
 
       private
@@ -89,9 +116,16 @@ module Nibble
         end
       end
 
-      def digested(relative, digest)
+      def digested(relative, digest, width = nil)
         file = Pathname(relative)
-        file.dirname.join("#{file.basename(file.extname)}-#{digest}#{file.extname}").to_s.delete_prefix("./")
+        name = "#{file.basename(file.extname)}-#{digest}#{width ? "-#{width}" : ""}#{file.extname}"
+        file.dirname.join(name).to_s.delete_prefix("./")
+      end
+
+      def resize(source, target, width)
+        ImageProcessing::Vips.source(source).resize_to_limit(width, nil).call(destination: target.to_s)
+      rescue StandardError => error
+        Rails.logger&.warn("nibble: could not resize #{source}: #{error.message}")
       end
 
       def discard(root, wanted)

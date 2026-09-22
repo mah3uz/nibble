@@ -19,6 +19,10 @@ class NibbleFilesPagesTest < ActionDispatch::IntegrationTest
     Nibble.reset_schema!
   end
 
+  def image_bytes(width)
+    Vips::Image.black(width, (width * 0.6).to_i).cast(:uchar).write_to_buffer(".png")
+  end
+
   def page(id, title, body: "Words.")
     "---\nid: #{id}\ntitle: #{title}\n---\n\n#{body}\n"
   end
@@ -87,6 +91,19 @@ class NibbleFilesPagesTest < ActionDispatch::IntegrationTest
 
     assert url, "expected a digested url, got: #{body}"
     assert published(url.delete_prefix("/nibble-assets/")).file?, "the url names a file that was published"
+  end
+
+  # A page written as a file gets the same responsive image a page written in the panel does.
+  test "a published image reaches the page with the widths it was published at" do
+    write("docs/index.md" => page("docs-home", "Docs", body: "![A diagram](diagram.png)"),
+          "docs/diagram.png" => image_bytes(1600))
+
+    get "/docs"
+
+    html = page_props.dig("props", "page", "body")
+
+    assert_includes html, "640w"
+    assert_includes html, 'sizes="100vw"'
   end
 
   # The digest is the content, so an edit publishes a new address and nothing has to be invalidated.

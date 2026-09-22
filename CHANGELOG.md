@@ -22,6 +22,10 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
     changes its address and keeps its identity; editing it changes neither.
   - Resolving one of these addresses is a lookup in memory rather than a query, so it is quicker than the rows
     it replaces. In development a file watcher rebuilds the index as you edit.
+- **An image in a page is offered at the widths a browser can choose between.** Whether it was written beside
+  the page or uploaded in the control panel, it renders with a `srcset` — so a phone stops fetching a
+  screenshot meant for a desktop. `sizes` defaults to the full viewport, which is what a browser assumes
+  anyway, and a theme narrows it in CSS where it knows the layout.
 - **An image beside a page is published, not uploaded.** Write it next to the page, reference it as
   `![alt](diagram.png)`, and it is published under a digested name at `/nibble-assets/…` and served as a static
   file — cacheable forever, changing address only when the image itself changes. There is no upload step and
@@ -50,6 +54,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ### What's fixed
 
+- **An image in Markdown is served at the field's preset.** `image_preset` was declared on the field, shown
+  when editing it, and never reached the resolver — so an upload was rendered at whatever size it arrived at.
 - **A page written as a file serves its words again.** The body of a Markdown file reached the theme as an
   empty string, so every file-backed page rendered its title and nothing else. It fills the field the
   blueprint writes as Markdown.

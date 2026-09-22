@@ -3,7 +3,7 @@ module Nibble
     # Nothing here is authoritative, so a stale index is fixed by building another rather than repairing it.
     class Index
       SERVABLE = %w[png jpg jpeg gif webp avif svg].freeze
-      Asset = Data.define(:path, :digest)
+      Asset = Data.define(:path, :digest, :width)
 
       attr_reader :pages, :problems, :files
 
@@ -47,8 +47,17 @@ module Nibble
 
         Dir.glob("**/*.{#{SERVABLE.join(',')}}", base: root).to_h do |relative|
           file = root.join(relative)
-          [ relative, Asset.new(path: file, digest: Digest::SHA1.hexdigest(file.read).first(8)) ]
+          [ relative, Asset.new(path: file, digest: Digest::SHA1.hexdigest(file.read).first(8), width: width_of(file)) ]
         end
+      end
+
+      # Read from the header, so knowing how wide an image is costs no decoding.
+      def width_of(file)
+        return nil if file.extname.casecmp(".svg").zero?
+
+        Vips::Image.new_from_file(file.to_s, access: :sequential).width
+      rescue StandardError
+        nil
       end
 
       def read(item)
