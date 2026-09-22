@@ -46,7 +46,7 @@ VERSION_FILE.write(VERSION_FILE.read.sub(/VERSION = "[^"]+"/, %(VERSION = "#{ver
 CHANGELOG.write(CHANGELOG.read.sub(/^## Unreleased\n/, "## Unreleased\n\n## #{version} — #{date}\n"))
 
 puts "running bin/ci"
-system(ROOT.join("bin/ci").to_s) or fail!("bin/ci failed — nothing was committed or tagged")
+system({ "CI" => "1" }, ROOT.join("bin/ci").to_s) or fail!("bin/ci failed — nothing was committed or tagged")
 
 system("git", "-C", ROOT.to_s, "add", VERSION_FILE.to_s, CHANGELOG.to_s) or fail!("could not stage the release")
 system("git", "-C", ROOT.to_s, "commit", "-qm", "Release #{version}") or fail!("could not commit the release")

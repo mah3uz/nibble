@@ -2,6 +2,7 @@
 require "rubygems"
 require "bundler/setup"
 
-ARGV.unshift("--ensure-latest")
+# Downloads the gem index to check, which is a cost a release should pay and a test run should not.
+ARGV.unshift("--ensure-latest") if ENV["CI"]
 
 load Gem.bin_path("brakeman", "brakeman")
