@@ -2,7 +2,10 @@ module Nibble
   module Files
     # Nothing here is authoritative, so a stale index is fixed by building another rather than repairing it.
     class Index
-      attr_reader :pages, :problems
+      SERVABLE = %w[png jpg jpeg gif webp avif svg].freeze
+      Asset = Data.define(:path, :digest)
+
+      attr_reader :pages, :problems, :files
 
       def self.build(schema: Nibble.schema) = new(Files.collections(schema))
 
@@ -13,6 +16,7 @@ module Nibble
         @by_id = @pages.index_by(&:id)
         @by_collection = @pages.group_by(&:collection)
         @by_path = @pages.index_by { |page| page.path.to_s }
+        @files = servable
         detect_duplicates
       end
 
@@ -31,7 +35,21 @@ module Nibble
         branch(by_parent, nil)
       end
 
+      # Every file a page may point at, found once. Serving is then a lookup of something known to exist,
+      # never a path built from what a request asked for.
+      def file(relative) = @files[relative.to_s]
+
       private
+
+      def servable
+        root = Nibble.config.content_path
+        return {} unless root.directory?
+
+        Dir.glob("**/*.{#{SERVABLE.join(',')}}", base: root).to_h do |relative|
+          file = root.join(relative)
+          [ relative, Asset.new(path: file, digest: Digest::SHA1.hexdigest(file.read).first(8)) ]
+        end
+      end
 
       def read(item)
         reader = Reader.new(item)

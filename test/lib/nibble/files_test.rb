@@ -94,6 +94,17 @@ class Nibble::FilesTest < ActiveSupport::TestCase
     assert_equal "See [Installing](/docs/users/installing).", index.page("/docs").body
   end
 
+  # Only what the index found under content/ can ever be pointed at, so a path out of it names nothing.
+  test "only files found under the content folder are known" do
+    index = index_for("docs/index.md" => page(id: "docs-home", title: "Docs"), "docs/diagram.png" => "bytes")
+
+    assert index.file("docs/diagram.png"), "a file inside is found"
+    assert_nil index.file("../../etc/passwd")
+    assert_nil index.file("docs/../../../etc/passwd")
+    assert_nil index.file("/etc/passwd")
+    assert_nil index.file("docs/index.md"), "a page is not something a page can point at"
+  end
+
   test "the tree follows the folders, ordered by what the frontmatter says" do
     index = index_for("docs/index.md" => page(id: "docs-home", title: "Docs"),
                       "docs/second.md" => page(id: "second", title: "Second", order: 2),

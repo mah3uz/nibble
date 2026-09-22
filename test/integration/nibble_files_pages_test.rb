@@ -14,7 +14,8 @@ class NibbleFilesPagesTest < ActionDispatch::IntegrationTest
     Nibble.config = Nibble::Config.new({ "theme" => "starter", "url" => "https://example.test",
       "locales" => [ { "code" => "en", "default" => true } ] },
       themes_path: Rails.root.join("test/nibble_themes"),
-      site_schema_path: Rails.root.join("test/nibble_themes/no_site_schema"), content_path: dir)
+      site_schema_path: Rails.root.join("test/nibble_themes/no_site_schema"), content_path: dir,
+      published_path: @published ||= Pathname(Dir.mktmpdir("nibble-published")))
     Nibble.reset_schema!
   end
 
@@ -62,6 +63,50 @@ class NibbleFilesPagesTest < ActionDispatch::IntegrationTest
                                     { "title" => "Pricing", "slug" => "pricing" })
 
     assert result.ok?, result.errors.inspect
+  end
+
+  def published(relative) = Nibble.config.published_path.join(relative)
+
+  # Served straight from public/ by whatever is in front, so a page's image never costs a Ruby request.
+  test "an image beside a page is published under a digested name and linked by it" do
+    write("docs/index.md" => page("docs-home", "Docs", body: "![A diagram](diagram.png)"),
+          "docs/diagram.png" => "bytes")
+
+    body = Nibble::Files.index.page("/docs").body
+    url = body[%r{/nibble-assets/docs/diagram-[0-9a-f]{8}\.png}]
+
+    assert url, "expected a digested url, got: #{body}"
+    assert published(url.delete_prefix("/nibble-assets/")).file?, "the url names a file that was published"
+  end
+
+  # The digest is the content, so an edit publishes a new address and nothing has to be invalidated.
+  test "editing an image changes the address it is published at" do
+    write("docs/index.md" => page("docs-home", "Docs", body: "![A](diagram.png)"), "docs/diagram.png" => "one")
+    before = Nibble::Files.index.page("/docs").body
+
+    write("docs/index.md" => page("docs-home", "Docs", body: "![A](diagram.png)"), "docs/diagram.png" => "two")
+
+    assert_not_equal before, Nibble::Files.index.page("/docs").body
+  end
+
+  test "a file that is not an image is never published" do
+    write("docs/index.md" => page("docs-home", "Docs"), "docs/secret.txt" => "words")
+    Nibble::Files.index
+
+    assert_empty Dir.glob(published("docs/secret*"))
+    assert_empty Dir.glob(published("docs/index*"))
+  end
+
+  # A published file that outlives the one it came from is the staleness this design exists to remove.
+  test "an image whose file is gone stops being published" do
+    write("docs/index.md" => page("docs-home", "Docs"), "docs/going.png" => "bytes")
+    Nibble::Files.index
+    assert_not_empty Dir.glob(published("docs/going-*.png"))
+
+    write("docs/index.md" => page("docs-home", "Docs"))
+    Nibble::Files.index
+
+    assert_empty Dir.glob(published("docs/going-*.png"))
   end
 
   # Deleting the file is the whole of deleting the page: nothing is left behind to clean up.

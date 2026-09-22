@@ -13,11 +13,12 @@ module Nibble
 
     attr_reader :problems, :warnings
 
-    def self.run(config: Nibble.config, allow_data_loss: false) = new(config:, allow_data_loss:).tap(&:run)
+    def self.run(config: Nibble.config, allow_data_loss: false, static: false) = new(config:, allow_data_loss:, static:).tap(&:run)
 
-    def initialize(config:, allow_data_loss: false)
+    def initialize(config:, allow_data_loss: false, static: false)
       @config = config
       @allow_data_loss = allow_data_loss
+      @static = static
       @problems = []
       @warnings = []
     end
@@ -51,9 +52,12 @@ module Nibble
           Forms.problems(form, schema:).each { |message| problem(item.path, message) }
         end
       end
-      check_roles(schema)
-      capture("schema/migrations") { ContentMigrations.pending } if @config.equal?(Nibble.config)
-      check_drift(schema) if @config.equal?(Nibble.config)
+      # Everything below this line reads the database, and a build has none.
+      unless @static
+        check_roles(schema)
+        capture("schema/migrations") { ContentMigrations.pending } if @config.equal?(Nibble.config)
+        check_drift(schema) if @config.equal?(Nibble.config)
+      end
       check_navigation(schema)
       check_icons(schema)
       check_search(schema)

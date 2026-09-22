@@ -1,6 +1,10 @@
 module Nibble
   module Files
+    ROOT = "content".freeze
+    # Namespaced, because a site is free to want /content for pages of its own.
+    PUBLISHED = "nibble-assets".freeze
     TOKEN = /\{[a-z_]+\}/
+    IMAGE = /(!\[[^\]]*\]\()(?!\w+:|\/)([^)\s]+)(\))/
     # Only means anything once both ends are pages, so it is resolved against the index rather than rewritten.
     LINK = /(\]\()(?!\w+:|\/)([^)\s#]+\.md)(#[^)\s]*)?(\))/
 
@@ -22,20 +26,48 @@ module Nibble
         Uris.normalize(path.gsub(TOKEN, ""))
       end
 
-      def index = @index ||= Index.build
+      def index = @index || reload!
 
-      def reload! = @index = Index.build
+      def reload!
+        @index = Index.build
+        publish_assets!
+        @index
+      end
 
       def reset! = @index = nil
 
       # The folder is the content, so a change to it is a change to the site and must land between requests.
       def watch!
-        @watcher ||= ActiveSupport::FileUpdateChecker.new([], Nibble.config.content_path.to_s => %w[md]) { reload! }
+        @watcher ||= ActiveSupport::FileUpdateChecker.new([], Nibble.config.content_path.to_s => nil) { reload! }
         @watcher.execute_if_updated
       end
 
       def body(path)
-        rewrite(path.read.sub(/\A---\n.*?\n---\n/m, "").strip, path)
+        text = path.read.sub(/\A---\n.*?\n---\n/m, "").strip
+        images(rewrite(text, path), path)
+      end
+
+      # Build output rather than a second copy of the content: named by digest so it can be cached forever,
+      # under public/ where the server sends it without Ruby, and thrown away rather than kept current.
+      def publish_assets!
+        root = Nibble.config.published_path
+        wanted = index.files.to_h { |relative, asset| [ digested(relative, asset.digest), asset.path ] }
+        wanted.each do |relative, source|
+          target = root.join(relative)
+          next if target.file?
+
+          target.dirname.mkpath
+          FileUtils.cp(source, target)
+        end
+        discard(root, wanted)
+      rescue SystemCallError => error
+        # A read-only filesystem is somebody's deployment, not a reason to refuse to start.
+        Rails.logger&.warn("nibble: could not publish content assets: #{error.message}")
+      end
+
+      def asset_url(relative)
+        asset = index.file(relative) or return nil
+        "/#{PUBLISHED}/#{digested(relative, asset.digest)}"
       end
 
       private
@@ -44,6 +76,30 @@ module Nibble
         body.gsub(LINK) do
           target = resolve(path, Regexp.last_match(2))
           target ? "#{Regexp.last_match(1)}#{target}#{Regexp.last_match(3)}#{Regexp.last_match(4)}" : Regexp.last_match(0)
+        end
+      end
+
+      def images(body, path)
+        body.gsub(IMAGE) do
+          file = path.dirname.join(Regexp.last_match(2)).cleanpath
+          relative = file.relative_path_from(Nibble.config.content_path).to_s
+          url = asset_url(relative) or next Regexp.last_match(0)
+
+          "#{Regexp.last_match(1)}#{url}#{Regexp.last_match(3)}"
+        end
+      end
+
+      def digested(relative, digest)
+        file = Pathname(relative)
+        file.dirname.join("#{file.basename(file.extname)}-#{digest}#{file.extname}").to_s.delete_prefix("./")
+      end
+
+      def discard(root, wanted)
+        return unless root.directory?
+
+        Dir.glob("**/*", base: root).each do |relative|
+          path = root.join(relative)
+          path.delete if path.file? && !wanted.key?(relative)
         end
       end
 

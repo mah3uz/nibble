@@ -22,10 +22,15 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
     changes its address and keeps its identity; editing it changes neither.
   - Resolving one of these addresses is a lookup in memory rather than a query, so it is quicker than the rows
     it replaces. In development a file watcher rebuilds the index as you edit.
+- **An image beside a page is published, not uploaded.** Write it next to the page, reference it as
+  `![alt](diagram.png)`, and it is published under a digested name at `/nibble-assets/…` and served as a static
+  file — cacheable forever, changing address only when the image itself changes. There is no upload step and
+  nothing to keep in step. Only images are published, and a published file whose original has gone is removed.
 - **`bin/rails nibble:build`** checks everything derived from files and generates what a build needs. It opens
   no database, so it runs in CI and in the image build — a page with no `id:`, unreadable frontmatter, a field
   no blueprint has, two pages claiming one id, or a page under a folder with no `index.md` all fail there
-  rather than in a container.
+  rather than in a container. It checks the schema too — everything `nibble:check` does that needs no
+  database.
 
 ### Changed
 

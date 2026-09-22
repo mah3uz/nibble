@@ -38,6 +38,7 @@
 /node_modules
 /public/vite*
 /public/assets
+/public/nibble-assets
 /public/ssr
 .vite
 
@@ -52,4 +53,3 @@
 # Vite uses dotenv and suggests to ignore local-only env files. See
 # https://vitejs.dev/guide/env-and-mode.html#env-files
 *.local
-

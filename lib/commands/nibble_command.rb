@@ -10,6 +10,10 @@ class NibbleCommand < Rails::Command::Base
   desc "build", "Check everything derived from files, and generate what a build needs"
   def build
     boot_application!
+    check = Nibble::Check.run(static: true)
+    check.findings.each { |finding| warn "✗ #{finding}" }
+    abort "the schema has #{check.problems.size} problem(s)" unless check.ok?
+
     index = Nibble::Files.reload!
     index.problems.each { |problem| warn "✗ #{problem}" }
     abort "content has #{index.problems.size} problem(s)" if index.problems.any?

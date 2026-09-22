@@ -3,7 +3,7 @@ module Nibble
     Locale = Data.define(:code, :default, :url_prefix, :search_tokenizer)
 
     # A site can add reserved paths but never drop these: without /admin an entry can claim the control panel.
-    RESERVED_PATHS = %w[/admin /api /forms /assets /up /sitemap.xml /robots.txt /.well-known].freeze
+    RESERVED_PATHS = %w[/admin /api /forms /assets /nibble-assets /up /sitemap.xml /robots.txt /.well-known].freeze
 
     DEFAULTS = {
       "load_defaults" => "0.0",
@@ -27,11 +27,12 @@ module Nibble
     attr_reader :load_defaults, :theme, :url, :locales, :reserved_paths, :disable, :trash_retention_days, :asset_extensions, :asset_presets, :max_upload_bytes,
                 :outbound_allowed_hosts, :outbound_secrets, :outbound_config
 
-    def initialize(values, themes_path: nil, site_schema_path: nil, content_path: nil)
+    def initialize(values, themes_path: nil, site_schema_path: nil, content_path: nil, published_path: nil)
       values = DEFAULTS.deep_merge(values.to_h.deep_stringify_keys.compact)
       @themes_path = themes_path && Pathname(themes_path)
       @site_schema_path = site_schema_path && Pathname(site_schema_path)
       @content_path = content_path && Pathname(content_path)
+      @published_path = published_path && Pathname(published_path)
       @load_defaults = values["load_defaults"].presence.to_s
       @theme = values["theme"].presence
       @url = values["url"].to_s
@@ -63,6 +64,9 @@ module Nibble
     def site_schema_path = @site_schema_path || Nibble.site_schema_path
 
     def content_path = @content_path || Nibble.content_path
+
+    # Owned outright: what is not published from the folder is deleted from it.
+    def published_path = @published_path || Rails.public_path.join(Files::PUBLISHED)
 
     def active_theme = theme_path && Theme.load(theme_path)
 
