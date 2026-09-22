@@ -101,7 +101,7 @@ module Admin
     end
 
     def ability(action) = "entries.#{@collection.handle}.#{action}"
-    def written_in_files? = @collection["source"].is_a?(Hash)
+    def written_in_files? = @collection["files"].present?
 
     def refuse_file_backed
       redirect_to edit_admin_collection_entry_path(@collection.handle, @entry),
@@ -111,7 +111,7 @@ module Admin
     def source_props(entry)
       return nil unless written_in_files? && entry.persisted?
 
-      { file: Nibble::Packages::Folder.file_for(entry), command: "bin/rails nibble:content:markdown" }
+      { file: Nibble::Files.index.find(entry.id.to_s)&.path&.relative_path_from(Rails.root)&.to_s }
     end
     def blueprint_handle = params[:blueprint].presence || Array(@collection["blueprints"]).first
     def locale = params[:locale].presence || Nibble.config.default_locale.code

@@ -90,6 +90,8 @@ module Nibble
     end
 
     def present_navigation(presenter, record, handle)
+      # A folder is its own tree, so a navigation named after one is read from the files rather than a record.
+      return Files.index.tree(handle) if Files.collections.any? { |item| item.handle == handle }
       return presenter.present_navigation(record) if record
 
       Dependencies.add("navigation:#{handle}")

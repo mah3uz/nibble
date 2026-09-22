@@ -21,10 +21,12 @@ module Nibble
 
       def urlset_xml(source)
         urls = +""
-        scope(source).where.not(uri: nil).find_each(cursor: %i[uri id]) do |record|
-          next if record.data.to_h.dig("seo", "noindex")
+        records = (scope(source).where.not(uri: nil).to_a + file_pages(source)).sort_by(&:uri)
+        records.each do |record|
+          next if record.values.to_h.dig("seo", "noindex")
 
-          urls << "<url><loc>#{escape(Presenter.url(record.uri))}</loc><lastmod>#{record.updated_at.utc.iso8601}</lastmod>" \
+          lastmod = (record.updated_at || Time.current).utc.iso8601
+          urls << "<url><loc>#{escape(Presenter.url(record.uri))}</loc><lastmod>#{lastmod}</lastmod>" \
                   "<changefreq>#{source.changefreq}</changefreq><priority>#{source.priority}</priority></url>"
         end
         %(<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">#{urls}</urlset>\n)
@@ -44,6 +46,10 @@ module Nibble
 
         prefix = scope_column == :collection ? "" : "taxonomy-"
         Source.new(handle: "#{prefix}#{item.handle}", item:, model:, scope_column:, priority: config["priority"] || 0.5, changefreq: config["changefreq"] || "weekly")
+      end
+
+      def file_pages(source)
+        source.scope_column == :collection ? Files.index.of(source.item.handle) : []
       end
 
       def scope(source)

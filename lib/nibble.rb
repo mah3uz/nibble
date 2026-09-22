@@ -25,7 +25,11 @@ module Nibble
       @schema ||= Schema.load(config)
     end
 
-    def reset_schema! = @schema = nil
+    # The index is read against the schema, so it cannot outlive one.
+    def reset_schema!
+      @schema = nil
+      Files.reset!
+    end
 
     def build_theme = config.theme
 
@@ -71,6 +75,7 @@ module Nibble
 
     def core_schema_path = Rails.root.join("lib/nibble/core_schema")
     def site_schema_path = Rails.root.join("schema")
+    def content_path = Rails.root.join("content")
     def themes_path = Rails.root.join("themes")
 
     private

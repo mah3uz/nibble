@@ -4,6 +4,7 @@ CI.run do
   step "Setup", "bin/setup --skip-server"
 
   step "Style: Ruby", "bin/rubocop"
+  step "Content: nibble:build", "bin/rails nibble:build"
   step "Schema: nibble:check", "bin/rails nibble:check"
   step "Style: Vue/TypeScript lint", "npm run lint"
   step "Style: Prettier", "npm run format:check"

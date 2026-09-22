@@ -69,7 +69,8 @@ RUN bundle exec bootsnap precompile -j 1 app/ lib/
 
 # Build the client and SSR bundles (vite:build_all) without requiring RAILS_MASTER_KEY.
 # The SSR bundle is self-contained (ssr.noExternal in vite.config.ts), so node_modules can go.
-RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile && \
+RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails nibble:build && \
+    SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile && \
     test -f public/vite-ssr/ssr.js && \
     rm -rf node_modules
 

@@ -28,7 +28,10 @@ module Nibble
       def rebuild
         TABLES.each_value { |table| run_sql("DELETE FROM #{table}", []) }
         indexes.each_value do |definition|
-          Array(definition["collections"]).each { |handle| Records::Entry.live.where(collection: handle).find_each { |entry| index_record(entry) } }
+          Array(definition["collections"]).each do |handle|
+            Records::Entry.live.where(collection: handle).find_each { |entry| index_record(entry) }
+            Files.index.of(handle).each { |page| index_record(page) }
+          end
           Array(definition["taxonomies"]).each { |handle| Records::Term.kept.where(taxonomy: handle).find_each { |term| index_record(term) } }
         end
       end
@@ -45,7 +48,7 @@ module Nibble
             "SELECT record_type, record_id, snippet(#{table}, 1, ?, ?, '…', 16) FROM #{table} WHERE #{where} ORDER BY rank LIMIT ? OFFSET ?",
             "Nibble search", [ MARK_OPEN, MARK_CLOSE, *binds, limit, offset ]
           )
-          Page.new(hits: rows.map { |type, id, snippet| Hit.new(record_type: type, record_id: id.to_i, snippet: highlight(snippet)) }, total:)
+          Page.new(hits: rows.map { |type, id, snippet| Hit.new(record_type: type, record_id: id, snippet: highlight(snippet)) }, total:)
         end
       end
 
@@ -61,6 +64,7 @@ module Nibble
 
       def searchable?(record) = record.is_a?(Records::Term) ? !record.trashed? : record.live?
 
+
       def memberships(record)
         key = record.is_a?(Records::Term) ? "taxonomies" : "collections"
         scope = record.is_a?(Records::Term) ? record.taxonomy : record.collection
@@ -71,10 +75,13 @@ module Nibble
         fields = record.blueprint_fields
         handles = Array(definition["fields"]) - [ "title" ]
         handles = fields.handles - [ "title" ] if handles.empty?
-        handles.filter_map do |handle|
+        text = handles.filter_map do |handle|
           field = fields.get(handle) or next
           field.fieldtype.search_text(record.values[handle])
-        end.join("\n")
+        end
+        # A file's words are in the file, not in a field, so they are read rather than looked up.
+        text << record.body if record.is_a?(Files::Page)
+        text.join("\n")
       end
 
       def match_expression(query, tokenizer)

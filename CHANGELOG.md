@@ -12,7 +12,29 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's new
+
+- **A folder of Markdown is served without a database copy of it.** Declare a collection with `files: docs`,
+  give it a view, and the folder is the collection: its shape is the address, a folder's own `index.md` answers
+  for the folder, and the folders are the navigation tree. Nothing is synced, nothing is migrated, and there is
+  no step to remember on a deploy.
+  - Each page declares an `id:` in its frontmatter, which is what links to it hold. Moving or renaming a file
+    changes its address and keeps its identity; editing it changes neither.
+  - Resolving one of these addresses is a lookup in memory rather than a query, so it is quicker than the rows
+    it replaces. In development a file watcher rebuilds the index as you edit.
+- **`bin/rails nibble:build`** checks everything derived from files and generates what a build needs. It opens
+  no database, so it runs in CI and in the image build — a page with no `id:`, unreadable frontmatter, a field
+  no blueprint has, two pages claiming one id, or a page under a folder with no `index.md` all fail there
+  rather than in a container.
+
 ### Changed
+
+- **`files:` replaces `source:` on a collection**, and a collection written as files no longer has rows: no
+  drafts, revisions, workflow, trash, content migrations or recorded redirects, none of which mean anything for
+  a page whose truth is a file in git. Deleting the file is the whole of deleting the page.
+- **`nibble:content:markdown` is gone**, and with it the sync on the boot path. `bin/docker-entrypoint` runs
+  `nibble:upgrade` and nothing else, so a folder of files can no longer stop a container starting.
+- A record cannot be saved onto an address a file already holds; it is refused where the save is made.
 
 - **A theme no longer ships content.** A theme is layouts, views, components, styles and schema; content is a
   site's own. The example pages and posts a new install offers are Nibble's now, not the starter theme's, and

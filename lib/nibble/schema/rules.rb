@@ -16,10 +16,6 @@ module Nibble
       SORT = ->(value) { value.is_a?(String) && value.match?(/\A[a-z_]+:(asc|desc)\z/) }
       # A folder inside content/, named without the prefix, so a collection cannot read from anywhere else.
       IN_CONTENT = ->(value) { STRING.(value) && !value.start_with?("/") && !value.split("/").include?("..") }
-      SOURCE = ->(value) do
-        value.is_a?(Hash) && IN_CONTENT.(value["markdown"]) && OPTIONAL_STRING.(value["field"]) &&
-          OPTIONAL_STRING.(value["navigation"])
-      end
 
       KINDS = {
         "collections" => {
@@ -29,7 +25,7 @@ module Nibble
             "index_route" => ROUTE, "index_template" => STRING,
             "taxonomies" => STRINGS, "blueprints" => STRINGS, "template" => STRING, "layout" => STRING,
             "workflow" => WORKFLOW, "requires_slugs" => BOOLEAN, "revisions" => HASH, "sitemap" => HASH, "search" => ->(v) { v == false || STRING.(v) },
-            "api" => BOOLEAN, "localizable" => BOOLEAN, "sort" => SORT, "icon" => STRING, "source" => SOURCE,
+            "api" => BOOLEAN, "localizable" => BOOLEAN, "sort" => SORT, "icon" => STRING, "files" => IN_CONTENT,
             "feed" => ->(value) { [ true, false ].include?(value) || value.is_a?(Hash) }
           }
         },

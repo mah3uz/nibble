@@ -5,7 +5,4 @@ structure:
   max_depth: 3
 blueprints: [doc]
 template: docs/show
-source:
-  markdown: docs
-  field: body
-  navigation: docs
+files: docs

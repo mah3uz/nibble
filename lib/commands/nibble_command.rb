@@ -7,6 +7,17 @@ class NibbleCommand < Rails::Command::Base
 
   BUDGETS = { cached: 50, uncached: 300, queries: 15, listing: 150, listing_queries: 12 }.freeze
 
+  desc "build", "Check everything derived from files, and generate what a build needs"
+  def build
+    boot_application!
+    index = Nibble::Files.reload!
+    index.problems.each { |problem| warn "✗ #{problem}" }
+    abort "content has #{index.problems.size} problem(s)" if index.problems.any?
+
+    puts "content: #{index.pages.size} page(s) in #{Nibble::Files.collections.size} collection(s)"
+    Rails::Command.invoke "nibble:schema:types"
+  end
+
   desc "check", "Check the schema, theme, roles, pending content migrations and data the schema no longer covers"
   option :allow_data_loss, type: :boolean, desc: "Report data the schema no longer covers as warnings instead of failing"
   option :support, type: :boolean, desc: "Also print a summary of this install to paste into an issue"

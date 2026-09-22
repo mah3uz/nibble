@@ -20,6 +20,11 @@ module Nibble
       private
 
       def find(path, schema)
+        # A hash lookup before a query, not a precedence: a save cannot take an address a file already holds.
+        if (page = Files.index.page(path))
+          return Match.new(kind: :entry, record: page, taxonomy: nil, collection: nil, locale: page.locale,
+                           template: entry_template(page), redirect: nil)
+        end
         if (entry = Records::Entry.live.find_by(uri: path))
           return Match.new(kind: :entry, record: entry, taxonomy: nil, collection: nil, locale: entry.locale, template: entry_template(entry), redirect: nil)
         end

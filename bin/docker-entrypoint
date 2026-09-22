@@ -1,10 +1,8 @@
 #!/bin/bash -e
 
-# Before the server starts, bring the database and the folders of Markdown up to this release; a refusal stops
-# the boot. Seeding a new database from a theme's content package is a one-time step, so it is not done here.
+# Before the server starts, bring the database up to this release; a refusal stops the boot.
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   ./bin/rails nibble:upgrade
-  ./bin/rails nibble:content:markdown
 fi
 
 exec "${@}"

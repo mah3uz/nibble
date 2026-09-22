@@ -16,6 +16,7 @@ module Nibble
     def result
       Dependencies.add(spec.source.tag)
       return search_result if spec.source.search?
+      return files_result if files_source?
 
       scope = relation
       pagination = nil
@@ -47,6 +48,29 @@ module Nibble
 
     private
 
+    # A folder is a different store, so a query over one filters the index instead of building a relation.
+    def files_source? = spec.source.entries? && Files.collections.any? { |item| item.handle == spec.source.handle }
+
+    def files_result
+      pages = Files.index.of(spec.source.handle)
+      spec.sorts.each do |sort|
+        pages = pages.sort_by { |page| page.values[sort.column].to_s }
+        pages = pages.reverse if sort.direction.to_s == "desc"
+      end
+      total = pages.size
+      pagination = nil
+      if spec.paginate
+        per_page = spec.paginate["per_page"]
+        page = [ Integer(context.params[spec.paginate["param"]].to_s, exception: false) || 1, 1 ].max
+        pages = pages[((page - 1) * per_page), per_page] || []
+        pagination = { "current_page" => page, "per_page" => per_page, "total" => total, "last_page" => [ (total / per_page.to_f).ceil, 1 ].max }
+      else
+        pages = pages.drop(spec.offset.to_i)
+        pages = pages.first(spec.limit) if spec.limit
+      end
+      Result.new(records: pages, pagination:, spec:, snippets: {})
+    end
+
     # ->> is standard SQL/JSON, so this stays portable.
     def field_order(model, sort)
       path = Arel::Nodes::InfixOperation.new("->>", model.arel_table[:data], Arel::Nodes.build_quoted(sort.column))
@@ -60,13 +84,15 @@ module Nibble
       locale = context.resolve(spec.locale || "$locale")
       found = Nibble::Search.search(spec.source.handle, context.resolve(spec.q), locale:, limit: per_page, offset:)
       loaded = found.hits.group_by(&:record_type).flat_map do |type, hits|
+        next hits.filter_map { |hit| Files.index.find(hit.record_id) } if type == Files::Page::RECORD_TYPE
+
         scope = Records.model(type).where(id: hits.map(&:record_id), deleted_at: nil)
         scope = scope.where(status: "published") if type == "entry" && context.public?
         scope.to_a
-      end.index_by { |record| [ record.record_type, record.id ] }
-      hits = found.hits.select { |hit| loaded.key?([ hit.record_type, hit.record_id ]) }
+      end.index_by { |record| [ record.record_type, record.id.to_s ] }
+      hits = found.hits.select { |hit| loaded.key?([ hit.record_type, hit.record_id.to_s ]) }
       pagination = spec.paginate && { "current_page" => page, "per_page" => per_page, "total" => found.total, "last_page" => [ (found.total / per_page.to_f).ceil, 1 ].max }
-      Result.new(records: hits.map { |hit| loaded[[ hit.record_type, hit.record_id ]] }, pagination:, spec:,
+      Result.new(records: hits.map { |hit| loaded[[ hit.record_type, hit.record_id.to_s ]] }, pagination:, spec:,
         snippets: hits.to_h { |hit| [ "#{hit.record_type}:#{hit.record_id}", hit.snippet ] })
     end
 

@@ -30,18 +30,6 @@ class NibbleContentCommand < Rails::Command::Base
     end
   end
 
-  desc "markdown [COLLECTION]", "Make every collection written as Markdown match its folder (all of them by default)"
-  option :dry_run, type: :boolean, desc: "Report what would change without writing anything"
-  def markdown(collection = nil)
-    boot_application!
-    handles = collection ? [ collection ] : Nibble::Packages::Folder.declared.map(&:handle)
-    # Syncing every folder when a site has none is nothing to do, not a failure: this runs at every boot.
-    return puts "no collection is written as Markdown" if handles.empty?
-
-    handles.each { |handle| report(Nibble::Packages::Folder.for(handle, dry_run: !!options[:dry_run]).call) }
-    Nibble::Events.dispatch_pending
-  end
-
   desc "export DIR", "Export this site's content as a package"
   option :collections, desc: "Only these collections, comma-separated"
   option :taxonomies, desc: "Only these taxonomies, comma-separated"
