@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.12.0 — 2026-09-22
+
 ### What's fixed
 
 - **A site that removes or renames a collection can boot again.** An upgrade checks for drift before it runs
