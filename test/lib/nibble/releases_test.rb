@@ -160,7 +160,7 @@ class Nibble::ReleasesTest < ActiveSupport::TestCase
 
       ### What's new
 
-      - Cut at breakfast in Sydney, which is still the day before in London.
+      - Cut in the morning east of UTC, where UTC is still on the day before.
 
       ## 0.1.0 — 2026-01-01
 

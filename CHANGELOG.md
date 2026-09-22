@@ -24,9 +24,9 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ### Changed
 
-- **A release records the moment it was cut, not just the day.** A bare date is a different day either side
-  of UTC, so a release published from Sydney could be dated yesterday by anything that read the feed as UTC.
-  The feed carries `released_at` alongside `date`, which stays the calendar day a site shows.
+- **A release records the moment it was cut, not just the day.** A bare date carries no time zone, so
+  anything reading the feed as UTC could date a release the day either side of the one it was cut on. The
+  feed carries `released_at` alongside `date`, which stays the calendar day a site shows.
 
 
 ## 0.14.0 — 2026-09-23
