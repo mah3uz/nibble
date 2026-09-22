@@ -12,6 +12,14 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **A refused release leaves the tree as it found it.** `bin/nibble-release` writes the version and the
+  changelog heading before running the checks, so a release that failed them left both files modified with
+  nothing committed or tagged — and the next attempt refused, because `Unreleased` had already been emptied.
+  It now puts both back on any exit that does not reach the commit.
+
+
 ## 0.14.4 — 2026-09-23 02:19 +0600
 
 ### What's fixed
