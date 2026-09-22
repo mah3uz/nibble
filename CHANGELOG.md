@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.14.2 — 2026-09-23 01:36 +0600
+
 ### Changed
 
 - **Nibble no longer picks a site's time zone.** It ran on Australian time wherever in the world a site was,
