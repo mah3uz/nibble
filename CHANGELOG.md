@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.14.1 — 2026-09-23 01:15 +0600
+
 ### What's fixed
 
 - **`bin/ci` passes in a site whose content is files.** Nibble's own tests read the site's `content/` while
