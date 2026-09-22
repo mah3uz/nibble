@@ -10,9 +10,18 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     path.write(content.is_a?(String) ? content : content.deep_stringify_keys.to_yaml)
   end
 
-  def check(theme: "check")
+  def check(theme: "check", static: false)
     config = Nibble::Config.new({ "theme" => theme, "locales" => [ { "code" => "en", "default" => true } ] }, themes_path: @themes)
-    Nibble::Check.run(config:)
+    Nibble::Check.run(config:, static:)
+  end
+
+  # An image is built without the key that reads secrets, so a build that asked for them could never pass.
+  test "a static check says nothing about settings it cannot see from a build" do
+    sources = check(static: true).findings.map(&:source)
+
+    assert_not_includes sources, "RAILS_MASTER_KEY"
+    assert_not_includes sources, "mail"
+    assert_not_includes sources, "backups"
   end
 
   test "the shipped core baseline schema passes, so a fresh install boots on a valid schema" do

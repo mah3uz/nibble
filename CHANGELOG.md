@@ -12,6 +12,12 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **`nibble:build` no longer asks a build for secrets it cannot have.** It checked the master key, the mail
+  credentials and the backup bucket — none of which exist while an image is being built — so the build failed
+  on settings that only mean anything where the site runs. Those are checked at boot, where they can be true.
+
 ### Changed
 
 - **Deploying scaffolds with `kamal init`, and Nibble changes only what is its own.** A site is a Rails

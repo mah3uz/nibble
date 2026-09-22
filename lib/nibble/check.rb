@@ -52,7 +52,7 @@ module Nibble
           Forms.problems(form, schema:).each { |message| problem(item.path, message) }
         end
       end
-      # Everything below this line reads the database, and a build has none.
+      # A build has no database and no secrets, so what needs either is checked where the site runs.
       unless @static
         check_roles(schema)
         capture("schema/migrations") { ContentMigrations.pending } if @config.equal?(Nibble.config)
@@ -64,7 +64,7 @@ module Nibble
       check_sidecars(schema)
       check_theme(schema)
       check_ejections if @config.equal?(Nibble.config)
-      check_environment
+      check_environment unless @static
       self
     end
 
