@@ -20,6 +20,12 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **A page naming a blueprint the schema has not got is reported, not raised.** `nibble:build` names it the
   way it names a missing `id:`, so one page cannot take the whole index down.
 
+### Changed
+
+- **A release records the moment it was cut, not just the day.** A bare date is a different day either side
+  of UTC, so a release published from Sydney could be dated yesterday by anything that read the feed as UTC.
+  The feed carries `released_at` alongside `date`, which stays the calendar day a site shows.
+
 
 ## 0.14.0 — 2026-09-23
 

@@ -28,12 +28,13 @@ module Nibble
 
     # The feed is a projection of CHANGELOG.md, so the file a site reads cannot drift from the notes.
     KEEP_RELEASES = 25
-    SECTION = /^## (\d+\.\d+\.\d+) — (\d{4}-\d{2}-\d{2})\n(.*?)(?=^## \d+\.\d+\.\d+ — |\z)/m
+    SECTION = /^## (\d+\.\d+\.\d+) — (\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2} [-+]\d{4})?)\n(.*?)(?=^## \d+\.\d+\.\d+ — |\z)/m
 
     def self.publish(changelog, to)
       url = REPOSITORY.delete_suffix(".git")
-      releases = Pathname(changelog).read.scan(SECTION).first(KEEP_RELEASES).map do |version, date, body|
-        { "version" => version, "date" => date, "url" => "#{url}/releases/tag/v#{version}",
+      releases = Pathname(changelog).read.scan(SECTION).first(KEEP_RELEASES).map do |version, released_at, body|
+        { "version" => version, "date" => released_at[0, 10], "released_at" => released_at,
+          "url" => "#{url}/releases/tag/v#{version}",
           "security" => body.match?(/^\#+\s+Security\b/i), "body" => body.strip }
       end
       Pathname(to).write("#{JSON.pretty_generate(releases)}\n")

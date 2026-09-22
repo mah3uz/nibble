@@ -41,7 +41,7 @@ fail!("working tree isn't clean") unless `git -C #{ROOT} status --porcelain`.str
 notes = CHANGELOG.read[/^## Unreleased\n(.*?)(?=^## \d+\.\d+\.\d+ |\z)/m, 1].to_s.strip
 fail!("CHANGELOG.md has nothing under Unreleased") if notes.empty?
 
-date = Time.now.strftime("%Y-%m-%d")
+date = Time.now.strftime("%Y-%m-%d %H:%M %z")
 VERSION_FILE.write(VERSION_FILE.read.sub(/VERSION = "[^"]+"/, %(VERSION = "#{version}")))
 CHANGELOG.write(CHANGELOG.read.sub(/^## Unreleased\n/, "## Unreleased\n\n## #{version} — #{date}\n"))
 

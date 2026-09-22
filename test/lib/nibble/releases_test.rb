@@ -149,6 +149,34 @@ class Nibble::ReleasesTest < ActiveSupport::TestCase
     Nibble::Releases.fetcher = nil
   end
 
+  test "a release records when it was cut, so a feed read from another zone lands on the same day" do
+    changelog = Pathname(Dir.mktmpdir).join("CHANGELOG.md")
+    changelog.write(<<~MD)
+      # Changelog
+
+      ## Unreleased
+
+      ## 0.2.0 — 2026-02-01 04:56 +1000
+
+      ### What's new
+
+      - Cut at breakfast in Sydney, which is still the day before in London.
+
+      ## 0.1.0 — 2026-01-01
+
+      ### What's new
+
+      - From before a release carried a time.
+    MD
+
+    releases = Nibble::Releases.publish(changelog, changelog.dirname.join("releases.json"))
+
+    assert_equal "2026-02-01 04:56 +1000", releases.first["released_at"], "the instant, offset and all, is what a page can be dated by"
+    assert_equal "2026-02-01", releases.first["date"], "the day a site shows is the day it was cut, not the day UTC was on"
+    assert_equal "2026-01-01", releases.last["released_at"], "an entry written before this still reads, as the day itself"
+    assert_equal "2026-01-01", releases.last["date"]
+  end
+
   test "the feed is a projection of the changelog, so what a site reads cannot drift from the notes" do
     changelog = Pathname(Dir.mktmpdir).join("CHANGELOG.md")
     changelog.write(<<~MD)
