@@ -7,4 +7,4 @@ lib/nibble/frontend/nibble-admin/styles/*.css
 *.md
 lib/nibble/frontend/nibble-admin/components/ui/
 themes/*/.nibble/
-themes/*/content/
+lib/nibble/starter_content/

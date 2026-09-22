@@ -12,6 +12,20 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### Changed
+
+- **A theme no longer ships content.** A theme is layouts, views, components, styles and schema; content is a
+  site's own. The example pages and posts a new install offers are Nibble's now, not the starter theme's, and
+  the question `nibble:install` asks is unchanged.
+- **`nibble:content:import` takes the directory to import.** It used to default to the active theme's
+  `content/`, which is the assumption above in another form. A site keeps its package wherever it likes and
+  names it.
+
+### What's fixed
+
+- **A command given a path that is not a content package says so in one line**, instead of printing a Ruby
+  backtrace. Every `nibble:*` command now fails the same way.
+
 ## 0.12.0 — 2026-09-22
 
 ### What's fixed

@@ -177,10 +177,10 @@ class NibbleCommand < Rails::Command::Base
   end
 
   def import_starter_content
-    package = Nibble.config.theme_path&.join("content")
-    return unless package&.directory?
+    package = Nibble::STARTER_CONTENT
+    return unless package.directory?
 
-    say "  The #{Nibble.config.theme} theme ships example pages and posts. Skip this for an empty site.", :white
+    say "  Nibble can start you off with example pages and posts. Skip this for an empty site.", :white
     wanted = yes?("  Import them?", :cyan)
     say ""
     return say_status(:keep, "no content imported — the site starts empty", :yellow) unless wanted
@@ -189,7 +189,7 @@ class NibbleCommand < Rails::Command::Base
     return report.errors.each { |error| say "  #{error}", :red } unless report.ok?
 
     Nibble::Events.dispatch_pending
-    say_status :create, "#{report.created.size} items of starter content from themes/#{Nibble.config.theme}/content", :green
+    say_status :create, "#{report.created.size} items of starter content", :green
   end
 
   def next_steps(kamal)
@@ -227,9 +227,9 @@ class NibbleCommand < Rails::Command::Base
   end
 
   def seed(posts)
-    if Nibble.config.theme_path&.join("content")&.directory?
-      report = Nibble::Packages::Importer.new(Nibble.config.theme_path.join("content")).call
-      abort "the theme's demo package didn't import: #{report.errors.join('; ')}" unless report.ok?
+    if Nibble::STARTER_CONTENT.directory?
+      report = Nibble::Packages::Importer.new(Nibble::STARTER_CONTENT).call
+      abort "the starter package didn't import: #{report.errors.join('; ')}" unless report.ok?
     end
     missing = posts - Nibble::Records::Entry.kept.where(collection: "posts").count
     return if missing <= 0

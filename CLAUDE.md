@@ -126,7 +126,7 @@ control panel · themes as npm workspaces under `themes/*` · Kamal on a VPS · 
   can name. `bin/rails nibble:eject <path>` is how a site takes one of our files over, recorded in
   `.nibble/`.
 - `themes/<theme>/` — `layouts/`, `views/` (each `.vue` may have a `.yml` query sidecar), `views/sets/`,
-  `components/`, `styles/`, `schema/`, `content/` (its content package); `@theme` resolves to the active one,
+  `components/`, `styles/`, `schema/`; **a theme never ships content**; `@theme` resolves to the active one,
   named in `config/nibble.yml`, then `NIBBLE_THEME`, defaulting to `crumbs`. `nibble:generate:theme` starts one.
 - The documentation is not here. It is the site at `~/Projects/nibble_site`, whose `content/docs/` it is.
 

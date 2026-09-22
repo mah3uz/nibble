@@ -4,7 +4,7 @@ module CleanFailures
 
   def perform(command, args, config)
     super
-  rescue Thor::Error => e
+  rescue Thor::Error, Nibble::Error => e
     warn e.message
     exit 1
   end

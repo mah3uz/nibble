@@ -7,6 +7,8 @@ module Nibble
   THEME_API_VERSION = 1
   CONTENT_FORMAT_VERSION = 1
   DEFAULT_THEME = "crumbs".freeze
+  # A theme is layouts, views and schema; content is a site's own. This is the installer's to offer, not a theme's to carry.
+  STARTER_CONTENT = Pathname(__dir__).join("nibble/starter_content").freeze
 
   class << self
     def config

@@ -11,7 +11,7 @@ class NibbleCrumbsTest < ActionDispatch::IntegrationTest
     Nibble.boot!
     Nibble::PageCache.store = ActiveSupport::Cache::MemoryStore.new
     [ Nibble::Records::Entry, Nibble::Records::Term, Nibble::Records::GlobalSet, Nibble::Records::NavigationTree ].each(&:delete_all)
-    report = Nibble::Packages::Importer.new(Rails.root.join("themes/crumbs/content")).call
+    report = Nibble::Packages::Importer.new(Nibble::STARTER_CONTENT).call
     assert report.ok?, report.errors.join("\n")
     Nibble::Events.dispatch_pending
     Nibble::PageCache.store.clear

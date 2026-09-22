@@ -13,13 +13,12 @@ class NibbleContentCommand < Rails::Command::Base
     puts "content package is valid"
   end
 
-  desc "import [DIR]", "Import a content package, validating everything first (the active theme's package by default)"
+  desc "import DIR", "Import a content package, validating everything first"
   option :mode, default: "create", enum: %w[create update], desc: "create adds what's missing; update also refreshes what's there"
   option :dry_run, type: :boolean, desc: "Validate and report without writing anything"
   option :webhooks, type: :boolean, desc: "Deliver webhooks for the imported changes"
-  def import(dir = nil)
+  def import(dir)
     boot_application!
-    dir ||= Nibble.config.theme_path&.join("content")&.to_s or abort "a package directory is required (no active theme content)"
     report = Nibble::Packages::Importer.new(dir, mode: options[:mode], dry_run: options[:dry_run], notify: options[:webhooks]).call
     report.errors.each { |error| puts "✗ #{error}" }
     abort "nothing imported: #{report.errors.size} problem(s)" unless report.ok?
