@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.14.6 — 2026-09-23 03:42 +0600
+
 ### What's fixed
 
 - **`where` and `not` narrow a folder-backed collection.** They were built into SQL and so applied only to
