@@ -2,6 +2,8 @@ module Admin
   class EntriesController < BaseController
     before_action :load_collection
     before_action :load_entry, except: %i[new create reorder]
+    # Everything but reading it: a file is the record's truth, and a row written here would answer to nobody.
+    before_action :refuse_file_backed, except: %i[edit], if: :written_in_files?
 
     def new
       authorize!(ability("create"))
@@ -64,7 +66,6 @@ module Admin
 
     def run(action, notice, permission: "edit")
       authorize!(ability(permission), @entry)
-      return refuse_file_backed if written_in_files?
       result = Nibble::Lifecycle.call(@entry, action, attrs, actor: Current.user)
       return render_conflict(result) if result.conflict?
       return render_errors(@entry, result) unless result.ok?
@@ -104,8 +105,8 @@ module Admin
     def written_in_files? = @collection["files"].present?
 
     def refuse_file_backed
-      redirect_to edit_admin_collection_entry_path(@collection.handle, @entry),
-        alert: "#{@collection['title']} is written in files. Change it there and deploy."
+      target = @entry ? edit_admin_collection_entry_path(@collection.handle, @entry) : admin_collection_root_path(@collection.handle)
+      redirect_to target, alert: "#{@collection['title']} is written in files. Change it there and deploy."
     end
 
     def source_props(entry)

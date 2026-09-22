@@ -12,6 +12,15 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **The control panel stops offering to write into a folder.** A collection written as files refused a save
+  but still let you start a new entry, create one and trash one — rows that answer to nobody, since the folder
+  is what serves. Every way of writing to such a collection is refused now; opening one to read it is not.
+- **A blueprint of a folder-backed collection counts its pages.** The blueprint listing counted records, so a
+  collection served from files read as empty however many pages it had.
+
+
 ## 0.14.5 — 2026-09-23 02:34 +0600
 
 ### What's fixed

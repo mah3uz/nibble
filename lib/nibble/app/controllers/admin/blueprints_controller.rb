@@ -29,7 +29,10 @@ module Admin
     end
 
     def count_for(parent, item)
-      if parent.kind == "collections"
+      # A folder's pages are its content, and the records it may have left behind are read by nothing.
+      if parent["files"].present?
+        Nibble::Files.index.of(parent.handle).count { |page| page.blueprint == item.handle }
+      elsif parent.kind == "collections"
         Nibble::Records::Entry.kept.where(collection: parent.handle, blueprint: item.handle).count
       else
         Nibble::Records::Term.kept.where(taxonomy: parent.handle, blueprint: item.handle).count

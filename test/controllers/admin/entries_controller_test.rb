@@ -8,6 +8,34 @@ class Admin::EntriesControllerTest < ActionDispatch::IntegrationTest
   def props = JSON.parse(Nokogiri::HTML(response.body).at_css("script[data-page]").text)["props"]
   def entries_path(collection = "articles") = "/admin/collections/#{collection}/entries"
 
+  def serve_from_files(handle)
+    path = @nibble_themes.join("records/schema/collections/#{handle}.yml")
+    path.write(YAML.safe_load(path.read).merge("files" => handle).to_yaml)
+    Nibble.reset_schema!
+  end
+
+  # A row written here would answer to nobody: the folder is what serves, and the panel is not where it changes.
+  test "a collection written as files refuses every way of writing to it, and still opens to be read" do
+    entry = create_entry("articles", { "title" => "From before it was a folder" })
+    serve_from_files("articles")
+
+    get "#{entries_path}/new"
+    assert_redirected_to "/admin/collections/articles"
+
+    assert_no_difference -> { Nibble::Records::Entry.count } do
+      post entries_path, params: { entry: { title: "Sneaked in" } }
+    end
+
+    patch "#{entries_path}/#{entry.id}", params: { entry: { title: "Changed" } }
+    assert_equal "From before it was a folder", entry.reload.title
+
+    delete "#{entries_path}/#{entry.id}"
+    assert Nibble::Records::Entry.exists?(entry.id), "trashing a row changes nothing about the file"
+
+    get "#{entries_path}/#{entry.id}/edit"
+    assert_response :success, "reading it is the one thing that still makes sense"
+  end
+
   test "the listing is built from the schema: columns, filters and rows from the query engine" do
     create_entry("articles", { "title" => "Kept draft" })
     published = publish_entry(create_entry("articles", { "title" => "Live one" }))
