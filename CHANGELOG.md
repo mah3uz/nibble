@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.13.0 — 2026-09-23
+
 ### What's new
 
 - **A folder of Markdown is served without a database copy of it.** Declare a collection with `files: docs`,
