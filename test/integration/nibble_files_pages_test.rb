@@ -23,8 +23,32 @@ class NibbleFilesPagesTest < ActionDispatch::IntegrationTest
     Vips::Image.black(width, (width * 0.6).to_i).cast(:uchar).write_to_buffer(".png")
   end
 
+  def titles(spec) = Nibble::Query.build(spec, Nibble::Query::Context.public).result.records.map(&:title)
+
   def page(id, title, body: "Words.")
     "---\nid: #{id}\ntitle: #{title}\n---\n\n#{body}\n"
+  end
+
+  # A filter that is quietly dropped is worse than one that fails: the page looks narrowed and is not.
+  test "where and not narrow a folder the way they narrow records" do
+    write({ "docs/index.md" => page("docs-home", "Docs"),
+            "docs/a.md" => "---\nid: a\ntitle: Alpha\nblueprint: doc\n---\n\nWords.\n",
+            "docs/b.md" => "---\nid: b\ntitle: Beta\nblueprint: doc\n---\n\nWords.\n" })
+
+    assert_equal %w[Alpha], titles({ from: "entries:docs", where: { title: "Alpha" } })
+    assert_equal %w[Alpha Beta], titles({ from: "entries:docs", where: { id: { in: %w[a b] } } }).sort
+    assert_equal %w[Alpha Beta Docs], titles({ from: "entries:docs", not: { id: "nothing" } }).sort
+    assert_equal %w[Docs], titles({ from: "entries:docs", not: { id: { in: %w[a b] } } })
+  end
+
+  # A folder has no relations table, so answering a relation is not something it can quietly decline.
+  test "a relation filter on a folder says it cannot be answered" do
+    write({ "docs/index.md" => page("docs-home", "Docs") })
+
+    error = assert_raises(Nibble::Query::Invalid) do
+      titles({ from: "entries:docs", where: { topics: { in: [ "1" ] } } })
+    end
+    assert_match "relations", error.message
   end
 
   # published_at is parsed into an instant on the page, so a sort on it must read that and not the raw text.

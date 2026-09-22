@@ -14,6 +14,14 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ### What's fixed
 
+- **`where` and `not` narrow a folder-backed collection.** They were built into SQL and so applied only to
+  records: a query over a folder dropped them without a word, and the view got everything it asked to filter
+  out. They are answered against the pages now, with the same operators. A filter that reads a relation is
+  refused rather than ignored — a folder has no relations to read.
+
+
+### What's fixed
+
 - **The control panel stops offering to write into a folder.** A collection written as files refused a save
   but still let you start a new entry, create one and trash one — rows that answer to nobody, since the folder
   is what serves. Every way of writing to such a collection is refused now; opening one to read it is not.

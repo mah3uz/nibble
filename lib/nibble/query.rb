@@ -53,6 +53,8 @@ module Nibble
 
     def files_result
       pages = Files.index.of(spec.source.handle)
+      spec.conditions.each { |condition| pages = pages.select { |page| matches?(page, condition) } }
+      spec.exclusions.each { |condition| pages = pages.reject { |page| matches?(page, condition) } }
       spec.sorts.each do |sort|
         pages = pages.sort_by { |page| sort_key(value_for(page, sort.column)) }
         pages = pages.reverse if sort.direction.to_s == "desc"
@@ -72,7 +74,26 @@ module Nibble
     end
 
     # A page's own, already parsed; a frontmatter field of the same name would be the unparsed half of it.
-    ATTRIBUTES = %w[published_at position].freeze
+    ATTRIBUTES = %w[id collection slug uri title blueprint locale template published_at position].freeze
+
+    # A folder has no relations table, so a condition that reads one cannot be answered rather than ignored.
+    def matches?(page, condition)
+      raise Invalid.new("where", "cannot read relations on a collection kept as files") if condition.relation
+
+      actual = value_for(page, condition.field)
+      value = context.resolve(condition.value)
+      case condition.operator
+      when "eq" then actual == value
+      when "ne" then actual != value
+      when "in" then Array.wrap(value).include?(actual)
+      when "lt" then sort_key(actual) < sort_key(value)
+      when "lte" then sort_key(actual) <= sort_key(value)
+      when "gt" then sort_key(actual) > sort_key(value)
+      when "gte" then sort_key(actual) >= sort_key(value)
+      when "null" then value ? actual.nil? : !actual.nil?
+      when "prefix" then actual.to_s.downcase.start_with?(value.to_s.downcase)
+      end
+    end
 
     def value_for(page, column) = ATTRIBUTES.include?(column) ? page.public_send(column) : page.values[column]
 
