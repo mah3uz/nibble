@@ -69,6 +69,16 @@ class Nibble::FilesTest < ActiveSupport::TestCase
     assert_match "has no id", index.problems.sole.to_s
   end
 
+  # A build is where content mistakes are named, so an unknown blueprint cannot be what takes the index down.
+  test "a page naming a blueprint the schema has not got is a problem, not a crash" do
+    index = index_for("docs/index.md" => page(id: "docs-home", title: "Docs"),
+                      "docs/odd.md" => page(id: "odd", title: "Odd", blueprint: "nowhere"))
+
+    assert_not index.ok?
+    assert_equal 1, index.pages.size
+    assert_match "nowhere", index.problems.sole.to_s
+  end
+
   # Two pages at one address is a content mistake that must be named, not resolved by whichever read first.
   test "two pages claiming one id are reported" do
     index = index_for("docs/index.md" => page(id: "same", title: "Docs"),

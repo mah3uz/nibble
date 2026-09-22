@@ -12,6 +12,15 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **`bin/ci` passes in a site whose content is files.** Nibble's own tests read the site's `content/` while
+  running against their fixture schemas, so every page in it was measured against a blueprint that schema
+  had never heard of and the suite fell over. Tests now read content of their own.
+- **A page naming a blueprint the schema has not got is reported, not raised.** `nibble:build` names it the
+  way it names a missing `id:`, so one page cannot take the whole index down.
+
+
 ## 0.14.0 — 2026-09-23
 
 ### What's fixed

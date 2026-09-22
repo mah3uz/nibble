@@ -40,6 +40,8 @@ module Nibble
         page = Page.new(id: id.to_s, collection: @collection, slugs:, uri: Files.uri_for(@item, slugs),
                         path: @root.join(relative), digest: digest(relative), position: front["order"],
                         data: front.except("id", "order"), locale: @locale)
+        page.blueprint_item or return problem(relative, "names a blueprint, #{page.blueprint}, that the schema has not got")
+
         stray = page.data.keys - page.blueprint_fields.handles - RESERVED
         stray.any? ? problem(relative, "has no #{'field'.pluralize(stray.size)} #{stray.join(', ')} in the #{page.blueprint} blueprint") : page
       end

@@ -10,6 +10,7 @@ module NibbleStarterHelper
       "assets" => { "presets" => { "og" => { "w" => 1200, "h" => 630, "fit" => "crop" } } } },
       themes_path: Rails.root.join("test/nibble_themes"),
       site_schema_path: Rails.root.join("test/nibble_themes/no_site_schema"),
+      content_path: Rails.root.join("test/nibble_content"),
       published_path: Pathname(Dir.mktmpdir("nibble-published")))
     Nibble.reset_schema!
     Nibble.boot!
