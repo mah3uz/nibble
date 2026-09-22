@@ -50,6 +50,10 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ### What's fixed
 
+- **A page written as a file serves its words again.** The body of a Markdown file reached the theme as an
+  empty string, so every file-backed page rendered its title and nothing else. It fills the field the
+  blueprint writes as Markdown.
+
 - **A command given a path that is not a content package says so in one line**, instead of printing a Ruby
   backtrace. Every `nibble:*` command now fails the same way.
 

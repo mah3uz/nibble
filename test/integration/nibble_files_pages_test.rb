@@ -9,7 +9,7 @@ class NibbleFilesPagesTest < ActionDispatch::IntegrationTest
     dir = Pathname(Dir.mktmpdir("nibble-content"))
     files.each do |path, text|
       dir.join(path).dirname.mkpath
-      dir.join(path).write(text)
+      dir.join(path).binwrite(text)
     end
     Nibble.config = Nibble::Config.new({ "theme" => "starter", "url" => "https://example.test",
       "locales" => [ { "code" => "en", "default" => true } ] },
@@ -34,6 +34,16 @@ class NibbleFilesPagesTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal 0, Nibble::Records::Entry.where(collection: "docs").count, "no row backs a file-backed page"
     assert_equal "Installing", page_props.dig("props", "page", "title")
+  end
+
+  # The words are the point of the page, and a title arriving without them looks like success.
+  test "the file's body reaches the view, in the field the blueprint writes as Markdown" do
+    write("docs/index.md" => page("docs-home", "Docs", body: "The first paragraph."))
+
+    get "/docs"
+
+    assert_equal "<p>The first paragraph.</p>", page_props.dig("props", "page", "body").strip,
+                 "rendered server-side, as a theme receives it"
   end
 
   test "a folder's own index.md answers at the folder's address" do

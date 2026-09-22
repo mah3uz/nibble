@@ -30,8 +30,11 @@ module Nibble
       def blueprint_fields = Blueprint.for(blueprint_item).fields
       def template = data["template"]
 
-      def values = data
+      # A file's prose has no field of its own, so it fills the one written as Markdown.
+      def values = body_field ? data.merge(body_field => body) : data
       def has_attribute?(name) = name.to_s == "data"
+
+      def body_field = @body_field ||= blueprint_fields.all.find { |_, field| field.type == "markdown" }&.first
 
       def status = "published"
       def live? = true
