@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.14.3 — 2026-09-23 02:05 +0600
+
 ### What's fixed
 
 - **Every page of a folder-backed collection renders again.** Its navigation tree left `children` off any
