@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.11.2 — 2026-09-22
+
 ### Changed
 
 - **The update check reads `https://nibble.ink/api/v1/changelogs`.** The documentation site serves its release
