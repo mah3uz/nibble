@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.14.5 — 2026-09-23 02:34 +0600
+
 ### What's fixed
 
 - **A collection served from files is no longer measured against the rows it left behind.** Turning one into
