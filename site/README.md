@@ -6,7 +6,7 @@ touch what you put in it.
 To change one of Nibble's control panel screens, copy it to the same path under `site/` and edit the copy:
 
 ```
-app/frontend/pages/admin/entries/Edit.vue   ->   site/pages/admin/entries/Edit.vue
+lib/nibble/frontend/nibble-admin/pages/admin/entries/Edit.vue   ->   site/pages/admin/entries/Edit.vue
 ```
 
 Yours is loaded instead of ours. Nothing else changes, and Nibble's file stays where it is.

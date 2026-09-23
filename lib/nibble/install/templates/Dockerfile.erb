@@ -3,7 +3,7 @@
 
 # Production image. Deploy with Kamal (config/deploy.yml) or build and run by hand:
 #   docker build -t nibble .
-#   docker run -d -p 80:80 -e RAILS_MASTER_KEY=<config/credentials/production.key> -v nibble-storage:/rails/storage nibble
+#   docker run -d -p 80:80 -e RAILS_MASTER_KEY=<config/master.key> -v nibble-storage:/rails/storage nibble
 #
 # Puma serves the app behind Thruster; the inertia_ssr Puma plugin runs the Node SSR server
 # (public/vite-ssr/ssr.js, bundled with its dependencies) inside the same container.

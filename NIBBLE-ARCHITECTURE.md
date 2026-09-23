@@ -47,7 +47,7 @@ control panel · themes as npm workspaces under `themes/*` · Kamal on a VPS · 
   site's, not ours.** Nibble ships templates and generates them at install; it never writes them again. A site's
   own `app/` loads beside ours and its views are looked in first. `site/pages/<same path as ours>.vue` replaces a
   control panel screen, `site/slots/*.vue` replace chrome, `site/initializers/*.rb` run at boot, `site/test/` is
-  for its own tests, and `content/` is where content kept as files lives — the only place a collection's `source`
+  for its own tests, and `content/` is where content kept as files lives — the only place a collection's `files`
   can name. `bin/rails nibble:eject <path>` is how a site takes one of our files over, recorded in
   `.nibble/`.
 - `themes/<theme>/` — `layouts/`, `views/` (each `.vue` may have a `.yml` query sidecar), `views/sets/`,
