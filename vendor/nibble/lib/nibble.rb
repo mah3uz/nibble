@@ -31,7 +31,8 @@ module Nibble
       Files.reset!
     end
 
-    # Only the development watcher calls this: the theme's types follow the schema without anyone running a command.
+    # Only development calls this, from the watcher and as a server starts: the types follow the schema and the theme
+    # without anyone running a command.
     def schema_changed!
       reset_schema!
       TypeGenerator.write!
