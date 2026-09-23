@@ -1,8 +1,8 @@
 module Nibble
-  # Composes realistic posts from db/dev_content.yml: for clicking through a development site and for
+  # Composes realistic posts from vendor/nibble/db/dev_content.yml: for clicking through a development site and for
   # benchmarks that need the shape of real content (images, several topics, authors, mixed states).
   class DemoContent
-    BANK = Rails.root.join("db/dev_content.yml")
+    BANK = Nibble.core_root.join("db/dev_content.yml")
 
     def initialize(images:, actor: nil, random: Random.new(42))
       @bank = YAML.load_file(BANK)

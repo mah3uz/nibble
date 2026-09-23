@@ -26,14 +26,14 @@ class NibbleSchemaCommand < Rails::Command::Base
     puts Nibble::Drift.record_snapshot! ? "schema snapshot recorded" : "schema unchanged since the last snapshot"
   end
 
-  desc "types", "Generate TypeScript types for schema-defined content (the active theme's .nibble/types.d.ts by default)"
+  desc "types", "Generate TypeScript types for schema-defined content (site/types.d.ts by default)"
   option :output, desc: "Write the types here instead"
   def types
     boot_application!
     output = if options[:output]
       Rails.root.join(options[:output])
     else
-      Nibble::TypeGenerator.theme_output || Rails.root.join("tmp/nibble/schema.d.ts")
+      Nibble::TypeGenerator.output || Rails.root.join("tmp/nibble/schema.d.ts")
     end
     FileUtils.mkdir_p(output.dirname)
     output.write(Nibble::TypeGenerator.new.generate)

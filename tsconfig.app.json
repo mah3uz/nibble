@@ -27,7 +27,8 @@
       "@nibble-admin/*": ["./vendor/nibble/frontend/nibble-admin/*"],
       "@nibble": ["./vendor/nibble/frontend/nibble/index.ts"],
       "@nibble/*": ["./vendor/nibble/frontend/nibble/*"],
-      "@theme/*": ["./vendor/nibble/themes/crumbs/*"]
+      "@theme/*": ["./vendor/nibble/themes/crumbs/*"],
+      "@site/*": ["./site/*"]
     }
   },
 
@@ -39,7 +40,6 @@
     "vendor/nibble/themes/*/**/*.ts",
     "site/themes/*/**/*.vue",
     "vendor/nibble/themes/*/**/*.vue",
-    "site/themes/*/.nibble/*.d.ts",
-    "vendor/nibble/themes/*/.nibble/*.d.ts"
+    "site/types.d.ts"
   ]
 }

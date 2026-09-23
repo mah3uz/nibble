@@ -1,0 +1,24 @@
+{
+  "all": {
+    "sourceCodeDir": "vendor/nibble/frontend",
+    "watchAdditionalPaths": [
+      "site/themes/**/*", "vendor/nibble/themes/**/*"
+    ],
+    "ssrBuildEnabled": true,
+    "additionalEntrypoints": [
+      "~/nibble-admin/{assets,fonts,icons,images}/**/*",
+      "site/themes/*/styles/theme.css", "vendor/nibble/themes/*/styles/theme.css"
+    ]
+  },
+  "development": {
+    "autoBuild": true,
+    "skipProxy": true,
+    "publicOutputDir": "vite-dev",
+    "port": 3136
+  },
+  "test": {
+    "autoBuild": false,
+    "publicOutputDir": "vite-test",
+    "port": 3037
+  }
+}

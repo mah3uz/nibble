@@ -145,11 +145,10 @@ module Nibble
       end
 
       def view_body(name, item, schema)
-        depth = "../" * (name.count("/") + 1)
         record = item ? record_type(item, schema) : "RecordBase"
         <<~VUE
           <script setup lang="ts">
-          import type { ViewProps, #{record} } from '#{depth}.nibble/types'
+          import type { ViewProps, #{record} } from '@site/types'
 
           defineProps<ViewProps['#{name}'] & { page: #{record} }>()
           </script>

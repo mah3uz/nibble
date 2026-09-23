@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3'
 import { Blocks } from '@nibble'
-import type { PagesPage, ViewProps } from '../.nibble/types'
+import type { PagesPage, ViewProps } from '@site/types'
 import ContactForm from '../components/ContactForm.vue'
 import PageHeading from '../components/PageHeading.vue'
 

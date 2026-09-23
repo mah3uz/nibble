@@ -2,7 +2,7 @@
 import { Link, usePage } from '@inertiajs/vue3'
 import { useGlobals, useNavigation } from '@nibble'
 import { nextTick, ref, useTemplateRef } from 'vue'
-import type { SiteGlobals } from '../.nibble/types'
+import type { SiteGlobals } from '@site/types'
 import ThemeSwitch from './ThemeSwitch.vue'
 
 const site = useGlobals<SiteGlobals>('site')

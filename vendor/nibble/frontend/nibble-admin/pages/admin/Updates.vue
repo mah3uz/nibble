@@ -29,7 +29,7 @@ const copied = ref(false)
 const waiting = computed(() => props.releases.filter((release) => release.status === 'newer'))
 const risky = computed(() => waiting.value.some((release) => release.security))
 
-const command = (release: Release) => `bin/nibble-upgrade ${release.version}`
+const command = (release: Release) => `bin/rails nibble:upgrade ${release.version}`
 
 const released = (value: string | null) =>
   value ? new Date(value).toLocaleDateString(undefined, { dateStyle: 'medium' }) : null

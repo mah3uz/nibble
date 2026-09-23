@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3'
 import { useGlobals, useNavigation } from '@nibble'
-import type { SiteGlobals } from '../.nibble/types'
+import type { SiteGlobals } from '@site/types'
 
 const site = useGlobals<SiteGlobals>('site')
 const links = useNavigation('main')

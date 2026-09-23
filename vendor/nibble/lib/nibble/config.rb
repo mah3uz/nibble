@@ -27,11 +27,12 @@ module Nibble
     attr_reader :load_defaults, :theme, :url, :locales, :reserved_paths, :disable, :trash_retention_days, :asset_extensions, :asset_presets, :max_upload_bytes,
                 :outbound_allowed_hosts, :outbound_secrets, :outbound_config
 
-    def initialize(values, themes_path: nil, site_schema_path: nil, content_path: nil, published_path: nil)
+    def initialize(values, themes_path: nil, site_schema_path: nil, content_path: nil, published_path: nil, types_path: nil)
       values = DEFAULTS.deep_merge(values.to_h.deep_stringify_keys.compact)
       @themes_path = themes_path && Pathname(themes_path)
       @site_schema_path = site_schema_path && Pathname(site_schema_path)
       @content_path = content_path && Pathname(content_path)
+      @types_path = types_path && Pathname(types_path)
       @published_path = published_path && Pathname(published_path)
       @load_defaults = values["load_defaults"].presence.to_s
       @theme = values["theme"].presence
@@ -64,6 +65,8 @@ module Nibble
     def site_schema_path = @site_schema_path || Nibble.site_schema_path
 
     def content_path = @content_path || Nibble.content_path
+
+    def types_path = @types_path || Nibble.site_root.join("types.d.ts")
 
     # Owned outright: what is not published from the folder is deleted from it.
     # Behaviour a site would notice ships switched off until the site raises load_defaults to the release that brought it.

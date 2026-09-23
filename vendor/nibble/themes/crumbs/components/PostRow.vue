@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3'
-import type { PostsPost } from '../.nibble/types'
+import type { PostsPost } from '@site/types'
 import { formatDate, isoDate } from '../lib/format'
 
 defineProps<{ post: PostsPost }>()

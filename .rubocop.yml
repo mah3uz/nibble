@@ -13,6 +13,7 @@ AllCops:
     - ".git/**/*"
     - "bin/*"
     - "db/*schema.rb"
+    - "vendor/nibble/templates/db/*schema.rb"
     - "log/**/*"
     - "public/**/*"
     - "storage/**/*"

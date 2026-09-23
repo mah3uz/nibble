@@ -4,8 +4,11 @@ module CleanFailures
 
   def perform(command, args, config)
     super
-  rescue Thor::Error, Nibble::Error => e
+  rescue *CleanFailures.handled => e
     warn e.message
     exit 1
   end
+
+  # Nibble isn't loaded until a command boots the application, and a command may refuse before that.
+  def self.handled = [ Thor::Error, (Nibble::Error if defined?(Nibble::Error)) ].compact
 end

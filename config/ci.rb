@@ -16,6 +16,7 @@ CI.run do
 
   step "Build: client + SSR bundles", "env RAILS_ENV=production SECRET_KEY_BASE_DUMMY=1 bin/vite build && env RAILS_ENV=production SECRET_KEY_BASE_DUMMY=1 bin/vite build --ssr"
   step "Tests: SSR smoke", "bin/ssr-smoke"
+  step "Tests: fresh install", "bin/install-smoke"
 
   # Build test assets up front so no test triggers (and races) an on-demand Vite build.
   step "Build: test assets", "env RAILS_ENV=test bin/vite build"

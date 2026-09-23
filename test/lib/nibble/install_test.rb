@@ -28,25 +28,61 @@ class Nibble::InstallTest < ActiveSupport::TestCase
 
   def install(force: false, only: nil, kamal: false, **answers) = Nibble::Install.new(answers:, root: @root, force:, only:, kamal:)
 
-  test "an install writes only what every site needs, leaving deployment alone" do
+  test "an install writes the whole application around Nibble, leaving deployment alone" do
     result = install(name: "acme", url: "https://acme.test").run
 
-    assert_equal [ "config/nibble.yml", ".env", "CLAUDE.md" ], result.written
+    assert_includes result.written, "Gemfile", "without it nothing loads vendor/nibble"
+    assert_includes result.written, "config/application.rb"
+    assert_includes result.written, "config/nibble.yml"
+    assert_includes result.written, "site/schema/README.md"
+    assert_includes result.written, ".gitignore", "without it a site commits its logs, keys and builds"
+    assert_not_includes result.written, "Dockerfile"
+    assert_not_includes result.written, "bin/docker-entrypoint"
     assert_not @root.join("config/deploy.yml").exist?, "a site that hasn't said how it deploys gets no deploy files"
   end
 
-  test "saying Kamal is how you deploy adds the deploy files" do
-    result = install(name: "acme", kamal: true).run
+  test "an install never writes into vendor/nibble, which an upgrade replaces whole" do
+    written = install(name: "acme").run.written
 
-    assert_equal [ "config/nibble.yml", ".env", "CLAUDE.md", "Dockerfile", ".dockerignore",
-                   ".kamal/secrets", ".kamal/hooks", "config/deploy.yml" ], result.written
+    assert_empty written.grep(%r{\Avendor/})
+  end
+
+  test "scripts stay executable, or the first command a new site runs fails" do
+    install(name: "acme").run
+
+    assert @root.join("bin/rails").executable?
+    assert @root.join("bin/setup").executable?
+    assert_not @root.join("config/routes.rb").executable?
+  end
+
+  test "the editor and the build look for the chosen theme where it lives" do
+    install(name: "acme", theme: "crumbs").run
+    assert_includes @root.join("tsconfig.app.json").read, "./vendor/nibble/themes/crumbs/*"
+
+    other = Pathname(Dir.mktmpdir("nibble-install"))
+    Nibble::Install.new(answers: { name: "acme", theme: "almanac" }, root: other).run
+    assert_includes other.join("tsconfig.app.json").read, "./site/themes/almanac/*",
+                    "a theme Nibble doesn't ship can only be the site's own"
+  ensure
+    FileUtils.rm_rf(other) if other
+  end
+
+  test "saying Kamal is how you deploy adds the deploy files" do
+    written = install(name: "acme", kamal: true).run.written
+
+    assert_includes written, "Dockerfile"
+    assert_includes written, ".dockerignore"
+    assert_includes written, "bin/docker-entrypoint"
+    assert @root.join("bin/docker-entrypoint").executable?, "the image can't start without it"
+    assert_equal [ ".kamal/secrets", ".kamal/hooks", "config/deploy.yml" ], written.last(3)
   end
 
   test "deploy files can be added later without redoing the install" do
     install(name: "acme").run
     result = install(name: "acme", only: "deploy").run
 
-    assert_equal [ "Dockerfile", ".dockerignore", ".kamal/secrets", ".kamal/hooks", "config/deploy.yml" ], result.written
+    assert_equal [ ".dockerignore", ".kamal/hooks", ".kamal/secrets", "Dockerfile", "bin/docker-entrypoint", "config/deploy.yml" ],
+                 result.written.sort
   end
 
   test "the generated settings load, so an install is never one restart from a config error" do
@@ -152,7 +188,7 @@ class Nibble::InstallTest < ActiveSupport::TestCase
     baseline = commit_all("the release this site installed from")
     return baseline unless touch
 
-    templates.join("nibble.yml.erb").write("#{templates.join('nibble.yml.erb').read}\n# our template moved on\n")
+    templates.join("config/nibble.yml.erb").write("#{templates.join('config/nibble.yml.erb').read}\n# our template moved on\n")
     commit_all("a later release, which changed it")
     baseline
   end

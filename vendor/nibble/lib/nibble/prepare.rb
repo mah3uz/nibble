@@ -1,5 +1,5 @@
 module Nibble
-  class Upgrade
+  class Prepare
     Stopped = Class.new(Error)
     Result = Data.define(:migrations, :snapshot, :warnings)
 

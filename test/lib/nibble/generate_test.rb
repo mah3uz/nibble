@@ -106,7 +106,7 @@ class Nibble::GenerateTest < ActiveSupport::TestCase
     body = @root.join("site/themes/almanac/views/guides/index.vue").read
     assert_includes body, "ViewProps['guides/index']"
     assert_includes body, "PostsPost", "typing it for the collection is why the collection is asked for"
-    assert_includes body, "'../../.nibble/types'", "a nested view has to reach the theme's types"
+    assert_includes body, "'@site/types'", "a view at any depth has to reach the site's types"
     assert_match "site/schema/collections/posts.yml", written.last.note
   end
 

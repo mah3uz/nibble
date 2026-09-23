@@ -21,10 +21,10 @@ class Nibble::TypeGeneratorTest < ActiveSupport::TestCase
     FileUtils.cp_r(Rails.root.join("test/nibble_themes/starter"), themes.join("starter"))
     Nibble.config = Nibble::Config.new({ "theme" => "starter", "url" => "https://example.test",
       "locales" => [ { "code" => "en", "default" => true } ] },
-      themes_path: themes, site_schema_path: Rails.root.join("test/nibble_themes/no_site_schema"),
+      themes_path: themes, types_path: themes.join("types.d.ts"), site_schema_path: Rails.root.join("test/nibble_themes/no_site_schema"),
       content_path: Rails.root.join("test/nibble_content"))
     Nibble.reset_schema!
-    yield themes.join("starter/.nibble/types.d.ts"), themes.join("starter/schema/blueprints/collections/posts/post.yml")
+    yield themes.join("types.d.ts"), themes.join("starter/schema/blueprints/collections/posts/post.yml")
   ensure
     FileUtils.rm_rf(themes)
   end

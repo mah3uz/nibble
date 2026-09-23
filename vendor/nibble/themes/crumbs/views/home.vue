@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3'
-import type { PagesPage, ViewProps } from '../.nibble/types'
+import type { PagesPage, ViewProps } from '@site/types'
 import PostCard from '../components/PostCard.vue'
 import { formatDate, isoDate } from '../lib/format'
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { PagesPage, ViewProps } from '../../.nibble/types'
+import type { PagesPage, ViewProps } from '@site/types'
 import PageHeading from '../../components/PageHeading.vue'
 import Pager from '../../components/Pager.vue'
 import PostRow from '../../components/PostRow.vue'

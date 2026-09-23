@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3'
-import type { TopicsTopic, ViewProps } from '../../.nibble/types'
+import type { TopicsTopic, ViewProps } from '@site/types'
 import PageHeading from '../../components/PageHeading.vue'
 import Pager from '../../components/Pager.vue'
 import PostCard from '../../components/PostCard.vue'

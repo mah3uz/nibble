@@ -161,7 +161,7 @@ module Nibble
         view = item["index_template"] || "collections/index"
         problem(item.path, "index_route needs the view #{view}.vue, which #{theme.handle} doesn't have") unless theme.view?(view)
       end
-      types = TypeGenerator.theme_output(@config)
+      types = TypeGenerator.output(@config)
       current = capture(types) { TypeGenerator.new(schema, config: @config).generate }
       if current && (!types.file? || types.read != current)
         problem(types, "generated types are out of date: run bin/rails nibble:schema:types")

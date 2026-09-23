@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3'
-import type { ViewProps } from '../../.nibble/types'
+import type { ViewProps } from '@site/types'
 import PageHeading from '../../components/PageHeading.vue'
 
 defineProps<ViewProps['topics/index'] & { page: { title: string } }>()

@@ -26,6 +26,22 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   exists; `nibble:generate:theme` copies it into `site/themes/`.
   **Upgrade:** `git mv schema site/schema`, `git mv content site/content`, `git mv site/pages site/cp/pages`,
   `git mv site/slots site/cp/slots`, and `git mv themes/<yours> site/themes/<yours>` for a theme of your own.
+- **Generated types are `site/types.d.ts`,** imported as `@site/types`, rather than a file inside the active theme,
+  so a theme that ships with Nibble is never written to.
+  **Upgrade:** in your theme, replace imports from `'../.nibble/types'` (at any depth) with `'@site/types'`, delete
+  its `.nibble/` folder and run `bin/rails nibble:schema:types`.
+- **What Nibble needs from Rails' configuration comes with Nibble.** Its initializers (Inertia, WebAuthn, the
+  `media` inflection, the assets prefix, the baseline content security policy) and its production settings (storage
+  service, Solid Cache and Solid Queue, mail from `SITE_URL` and SMTP) are part of the engine, and its recurring jobs
+  are read from `vendor/nibble/config/recurring.yml`. A site's own `config/` holds Rails' defaults, which it can
+  change and which win over Nibble's.
+  **Upgrade:** re-render `CLAUDE.md` when the upgrade offers it. If you changed any of the moved initializers, put
+  your change in an initializer of your own.
+- **Taking a release is `bin/rails nibble:upgrade`; bringing a database up to it is `bin/rails nibble:prepare`.** The
+  first was `bin/nibble-upgrade`, a script beside yours; it is now a command that ships with Nibble. The second was
+  called `nibble:upgrade`, and is named after Rails' `db:prepare`, which it stands in for when a server starts.
+  **Upgrade:** in `bin/docker-entrypoint`, or wherever your deploy runs it, change `nibble:upgrade` to
+  `nibble:prepare`, and take releases from now on with `bin/rails nibble:upgrade`.
 
 ## 0.15.0 — 2026-09-23 21:11 +0600
 

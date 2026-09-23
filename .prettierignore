@@ -7,6 +7,5 @@ vendor/nibble/frontend/nibble-admin/styles/typography.js
 vendor/nibble/frontend/nibble-admin/styles/*.css
 *.md
 vendor/nibble/frontend/nibble-admin/components/ui/
-site/themes/*/.nibble/
-vendor/nibble/themes/*/.nibble/
+site/types.d.ts
 vendor/nibble/starter_content/

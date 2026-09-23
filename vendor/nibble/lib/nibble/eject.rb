@@ -1,7 +1,8 @@
 module Nibble
   module Eject
     AREAS = { "vendor/nibble/frontend/nibble-admin/pages" => "site/cp/pages" }.freeze
-    RESERVED = %w[vendor/nibble bin test Gemfile package.json vite.config.ts Dockerfile config/application.rb config/environments config/initializers].freeze
+    # Everything else was rendered once at install and is the site's to change.
+    RESERVED = %w[vendor/nibble].freeze
     MANIFEST = ".nibble/ejected.yml".freeze
 
     Ejection = Data.define(:source, :target, :commit, :at)

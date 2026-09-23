@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AuthorsAuthor, ViewProps } from '../../.nibble/types'
+import type { AuthorsAuthor, ViewProps } from '@site/types'
 import Pager from '../../components/Pager.vue'
 import PostCard from '../../components/PostCard.vue'
 

@@ -72,7 +72,7 @@ module Nibble
       def ruby_floor = Rails.root.join(".ruby-version").read.strip.delete_prefix("ruby-")
 
       def node_floor
-        engines = JSON.parse(Rails.root.join("package.json").read)["engines"].to_h
+        engines = JSON.parse(Nibble.core_root.join("package.json").read)["engines"].to_h
         engines["node"].to_s.delete_prefix(">=").presence || "0"
       end
 

@@ -1,14 +1,16 @@
 module Nibble
   class Install
-    # Every install needs these; deploy files only when a site says how it deploys.
-    CORE = { "nibble.yml.erb" => "config/nibble.yml", "env.erb" => ".env", "CLAUDE.md.erb" => "CLAUDE.md" }.freeze
-    KAMAL = { "Dockerfile.erb" => "Dockerfile", ".dockerignore.erb" => ".dockerignore" }.freeze
+    # Every file a site starts with, at the path it is written to; a .erb one is rendered from the answers.
+    TEMPLATES_DIR = "vendor/nibble/templates".freeze
+    TEMPLATES_PATH = Pathname(__dir__).join("../../templates").expand_path.freeze
+    TEMPLATES = TEMPLATES_PATH.glob("**/*", File::FNM_DOTMATCH).select(&:file?).sort
+      .to_h { |path| path.relative_path_from(TEMPLATES_PATH).to_s.then { |template| [ template, template.delete_suffix(".erb") ] } }.freeze
+    # Deploy files only when a site says how it deploys; a site deploying some other way never gets them.
+    KAMAL = TEMPLATES.select { |_, destination| %w[Dockerfile .dockerignore bin/docker-entrypoint].include?(destination) }.freeze
+    CORE = TEMPLATES.except(*KAMAL.keys).freeze
     # Kamal scaffolds its own config, secrets and hooks; only what a Nibble site needs differently is ours.
-    OVERLAY = "deploy.overlay.yml.erb".freeze
+    OVERLAY = Pathname(__dir__).join("install/deploy.overlay.yml.erb").freeze
     DEPLOY_FILE = "config/deploy.yml".freeze
-    TEMPLATES = CORE.merge(KAMAL).freeze
-
-    TEMPLATES_DIR = "vendor/nibble/lib/nibble/install/templates".freeze
 
     Regenerated = Data.define(:destination, :rendered, :current)
 
@@ -71,6 +73,7 @@ module Nibble
 
         path.dirname.mkpath
         path.write(render(template))
+        path.chmod(self.class.templates_path.join(template).stat.mode)
         written << destination
       end
       if @kamal || @only == [ "deploy" ]
@@ -99,13 +102,14 @@ module Nibble
     end
 
     def render(template)
-      source = self.class.templates_path.join(template)
+      source = template == OVERLAY ? OVERLAY : self.class.templates_path.join(template)
       raise Error, "no install template #{template}" unless source.file?
+      return source.read unless source.extname == ".erb"
 
       ERB.new(source.read, trim_mode: "-").result(context)
     end
 
-    def self.templates_path = Pathname(__dir__).join("install/templates")
+    def self.templates_path = TEMPLATES_PATH
 
     private
 
@@ -141,8 +145,16 @@ module Nibble
       TEMPLATES.select { |_, destination| @only.any? { |name| destination.include?(name) } }
     end
 
+    # Where the answered theme will be found: the site's own first, then one that ships with Nibble.
+    def theme_dir
+      theme = answers[:theme].to_s
+      return "site/themes/#{theme}" if @root.join("site/themes", theme).directory?
+
+      Nibble.core_root.join("themes", theme).directory? ? "vendor/nibble/themes/#{theme}" : "site/themes/#{theme}"
+    end
+
     def context
-      values = answers.merge(version: @version)
+      values = answers.merge(version: @version, theme_dir:)
       binding_object = Object.new
       values.each { |key, value| binding_object.define_singleton_method(key) { value } }
       binding_object.instance_eval { binding }

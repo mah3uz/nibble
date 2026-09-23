@@ -52,7 +52,7 @@ reports anything of Nibble's you changed *without* ejecting — the files an upg
 ## Upgrading
 
 ```sh
-bin/nibble-upgrade
+bin/rails nibble:upgrade
 ```
 
 On your own machine, never on a server. It snapshots the database, checks the release's requirements, merges,

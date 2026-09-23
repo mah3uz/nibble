@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Blocks } from '@nibble'
-import type { PagesPage } from '../../.nibble/types'
+import type { PagesPage } from '@site/types'
 import PageHeading from '../../components/PageHeading.vue'
 
 defineProps<{ page: PagesPage }>()

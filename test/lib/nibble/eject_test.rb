@@ -100,6 +100,23 @@ class Nibble::EjectTest < ActiveSupport::TestCase
     assert_equal [ "vendor/nibble/lib/nibble/search.rb" ], Nibble::Eject.unmanaged(root: @root)
   end
 
+  test "a file the installer wrote is the site's to edit, so changing it is never reported" do
+    git("init", "-q")
+    write("config/application.rb", "module Site; end")
+    write("Gemfile", %(eval_gemfile "vendor/nibble/Gemfile"))
+    git("add", "-A")
+    commit("first")
+    base = IO.popen([ "git", "-C", @root.to_s, "rev-parse", "HEAD" ], &:read).strip
+    Nibble::Release.record_install(version: "0.1.0", commit: base, root: @root)
+
+    @root.join("config/application.rb").write("module Site; config.time_zone = 'Sydney'; end")
+    @root.join("Gemfile").write(%(eval_gemfile "vendor/nibble/Gemfile"\ngem "money"))
+    git("add", "-A")
+    commit("site edits")
+
+    assert_empty Nibble::Eject.unmanaged(root: @root)
+  end
+
   test "an upgrade can show what changed upstream since a file was ejected" do
     git("init", "-q")
     git("add", "-A")

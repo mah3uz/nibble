@@ -1,8 +1,10 @@
 require_relative "clean_failures"
 require_relative "admin_interview"
+require_relative "release_upgrade"
 
 class NibbleCommand < Rails::Command::Base
   include AdminInterview
+  include ReleaseUpgrade
   extend CleanFailures
 
   BUDGETS = { cached: 50, uncached: 300, queries: 15, listing: 150, listing_queries: 12 }.freeze
@@ -39,21 +41,24 @@ class NibbleCommand < Rails::Command::Base
     end
   end
 
-  desc "upgrade", "Bring the database up to this release: compatibility, database and content migrations, check, schema snapshot"
+  desc "prepare", "Bring the database up to this release: compatibility, database and content migrations, check, schema snapshot"
   option :allow_data_loss, type: :boolean, desc: "Carry on even when the schema no longer covers some stored data"
-  def upgrade
+  def prepare
     boot_application!
-    result = Nibble::Upgrade.run(allow_data_loss: options[:allow_data_loss], log: ->(line) { puts line })
+    result = Nibble::Prepare.run(allow_data_loss: options[:allow_data_loss], log: ->(line) { puts line })
     result.warnings.each { |warning| warn "! #{warning}" }
     result.migrations.each do |migration|
       puts "content migration #{migration.name}"
       migration.counts.each { |label, count| puts "  #{label}: #{count}" }
     end
     puts result.snapshot ? "schema snapshot recorded" : "schema unchanged since the last snapshot"
-    puts "upgrade complete"
-  rescue Nibble::Upgrade::Stopped => e
-    abort "upgrade stopped: #{e.message}"
+    puts "prepared for #{Nibble::VERSION}"
+  rescue Nibble::Prepare::Stopped => e
+    abort "prepare stopped: #{e.message}"
   end
+
+  desc "upgrade [VERSION]", "Take a Nibble release (the latest by default): snapshot, merge, re-render, migrate"
+  def upgrade(version = nil) = take_release(version)
 
   desc "install", "Set up this checkout as a site: settings, deploy files, database, first admin"
   option :defaults, type: :boolean, desc: "Take every default instead of asking"

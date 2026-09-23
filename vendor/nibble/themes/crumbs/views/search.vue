@@ -2,7 +2,7 @@
 import { Link } from '@inertiajs/vue3'
 import { useSite } from '@nibble'
 import { computed } from 'vue'
-import type { PagesPage, ViewProps } from '../.nibble/types'
+import type { PagesPage, ViewProps } from '@site/types'
 import PageHeading from '../components/PageHeading.vue'
 import Pager from '../components/Pager.vue'
 

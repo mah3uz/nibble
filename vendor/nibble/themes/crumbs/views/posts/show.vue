@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/vue3'
 import { Image } from '@nibble'
 import Prose from '../../components/Prose.vue'
 import { computed } from 'vue'
-import type { PostsPost, ViewProps } from '../../.nibble/types'
+import type { PostsPost, ViewProps } from '@site/types'
 import PostCard from '../../components/PostCard.vue'
 import { formatDate, isoDate } from '../../lib/format'
 
