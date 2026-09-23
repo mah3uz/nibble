@@ -33,7 +33,7 @@ class Admin::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert Nibble::Records::Entry.exists?(entry.id), "trashing a row changes nothing about the file"
 
     get "#{entries_path}/#{entry.id}/edit"
-    assert_response :success, "reading it is the one thing that still makes sense"
+    assert_response :not_found, "a row the folder left behind is not one of its pages, so it is not what the panel opens"
   end
 
   test "the listing is built from the schema: columns, filters and rows from the query engine" do

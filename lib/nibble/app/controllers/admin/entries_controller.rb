@@ -23,7 +23,7 @@ module Admin
 
     def edit
       authorize!(ability("view"))
-      render inertia: "admin/entries/Edit", props: editor_props(@entry)
+      render inertia: "admin/entries/Edit", props: written_in_files? ? file_props(@entry) : editor_props(@entry)
     end
 
     def update = run(:save, "Saved.")
@@ -98,21 +98,41 @@ module Admin
     end
 
     def load_entry
-      @entry = Nibble::Records::Entry.where(collection: @collection.handle).find(params[:id])
+      return @entry = Nibble::Records::Entry.where(collection: @collection.handle).find(params[:id]) unless written_in_files?
+
+      @entry = Nibble::Files.index.find(params[:id].to_s)
+      raise ActiveRecord::RecordNotFound unless @entry&.collection == @collection.handle
     end
 
     def ability(action) = "entries.#{@collection.handle}.#{action}"
     def written_in_files? = @collection["files"].present?
 
     def refuse_file_backed
-      target = @entry ? edit_admin_collection_entry_path(@collection.handle, @entry) : admin_collection_root_path(@collection.handle)
+      target = @entry ? edit_admin_collection_entry_path(@collection.handle, @entry.id) : admin_collection_root_path(@collection.handle)
       redirect_to target, alert: "#{@collection['title']} is written in files. Change it there and deploy."
     end
 
-    def source_props(entry)
-      return nil unless written_in_files? && entry.persisted?
-
-      { file: Nibble::Files.index.find(entry.id.to_s)&.path&.relative_path_from(Rails.root)&.to_s }
+    # A file has no draft, revision or workflow, so it gets the form and nothing that would act on a row.
+    def file_props(page)
+      blueprint = Nibble::Blueprint.for(page.blueprint_item)
+      fields = blueprint.fields.add_values(page.values)
+      listing = admin_collection_root_path(@collection.handle)
+      {
+        title: page.title.presence || "Untitled",
+        breadcrumbs: [ { label: @collection["title"], url: listing } ],
+        resource_key: "entry",
+        blueprint: blueprint.to_publish_h,
+        values: fields.pre_process.values,
+        field_meta: fields.meta,
+        meta: { id: page.id, status: page.status, live: true, lock_version: nil, permalink: "#{Nibble.config.url}#{page.uri}",
+                updated_at: nil, updated_by: nil, workflow: "simple", workflow_status: nil },
+        draft: nil,
+        source: { file: page.path.relative_path_from(Rails.root).to_s },
+        can: { edit: false, publish: false, delete: false, review: false },
+        urls: { update: nil, publish: nil, unpublish: nil, submit: nil, approve: nil, reject: nil, discard: nil, trash: nil,
+                preview: nil, versions: nil, comments: nil, listing:, create_another: nil },
+        parents: []
+      }
     end
     def blueprint_handle = params[:blueprint].presence || Array(@collection["blueprints"]).first
     def locale = params[:locale].presence || Nibble.config.default_locale.code
@@ -138,11 +158,11 @@ module Admin
         field_meta: fields.meta,
         meta: meta_props(entry),
         draft: draft_props(entry),
-        source: source_props(entry),
+        source: nil,
         can: {
-          edit: !written_in_files? && Nibble::Access.can?(Current.user, ability("edit"), entry),
-          publish: !written_in_files? && Nibble::Access.can?(Current.user, ability("publish"), entry),
-          delete: !written_in_files? && Nibble::Access.can?(Current.user, ability("delete"), entry),
+          edit: Nibble::Access.can?(Current.user, ability("edit"), entry),
+          publish: Nibble::Access.can?(Current.user, ability("publish"), entry),
+          delete: Nibble::Access.can?(Current.user, ability("delete"), entry),
           review: Nibble::Access.can?(Current.user, "workflow.approve.#{@collection.handle}")
         },
         urls: urls(entry),

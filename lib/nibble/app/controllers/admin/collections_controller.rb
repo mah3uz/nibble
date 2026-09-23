@@ -34,7 +34,7 @@ module Admin
     end
 
     def create_link(collection)
-      return nil unless Nibble::Access.can?(Current.user, "entries.#{collection.handle}.create")
+      return nil if collection["files"].present? || !Nibble::Access.can?(Current.user, "entries.#{collection.handle}.create")
 
       { label: "New #{collection['title'].to_s.singularize.downcase}", url: "/admin/collections/#{collection.handle}/entries/new" }
     end
@@ -47,10 +47,26 @@ module Admin
     end
 
     def tree(collection)
+      return file_nodes(collection) if collection["files"].present?
+
       entries = Nibble::Records::Entry.kept.where(collection: collection.handle, locale: locale).order(:position, :title)
       by_parent = entries.group_by(&:parent_id)
       build_nodes(by_parent, nil, collection)
     end
+
+    # The folders are the structure: a page sits under its folder's index.md, not under a parent anyone chose.
+    def file_nodes(collection, parent_key = nil, by_parent = nil)
+      by_parent ||= file_pages(collection).group_by(&:parent_key)
+      by_parent.fetch(parent_key, []).sort_by { |page| [ page.position || Float::INFINITY, page.title ] }.map do |page|
+        {
+          id: page.id, title: page.title, status: page.status, uri: page.uri, parent_id: nil,
+          edit_url: "/admin/collections/#{collection.handle}/entries/#{page.id}/edit",
+          children: page.root? ? [] : file_nodes(collection, page.key, by_parent)
+        }
+      end
+    end
+
+    def file_pages(collection) = Nibble::Files.index.of(collection.handle).select { |page| page.locale == locale }
 
     def build_nodes(by_parent, parent_id, collection)
       by_parent.fetch(parent_id, []).map do |entry|
@@ -66,8 +82,12 @@ module Admin
       scale = params[:scale] == "week" ? "week" : "month"
       date = parse_date(params[:date])
       from, to = scale == "week" ? [ date.beginning_of_week(:sunday), date.end_of_week(:sunday) ] : month_range(date)
-      entries = Nibble::Records::Entry.kept.where(collection: collection.handle, locale: locale)
-        .where(published_at: from.beginning_of_day..to.end_of_day).order(:published_at)
+      range = from.beginning_of_day..to.end_of_day
+      entries = if collection["files"].present?
+        file_pages(collection).select { |page| page.published_at && range.cover?(page.published_at) }.sort_by(&:published_at)
+      else
+        Nibble::Records::Entry.kept.where(collection: collection.handle, locale: locale).where(published_at: range).order(:published_at)
+      end
 
       {
         scale:, date: date.iso8601, from: from.iso8601, to: to.iso8601,

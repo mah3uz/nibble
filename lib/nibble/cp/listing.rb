@@ -17,6 +17,7 @@ module Nibble
       end
 
       def entries? = item.kind == "collections"
+      def files? = entries? && item["files"].present?
       def handle = "#{entries? ? 'collections' : 'taxonomies'}.#{item.handle}"
       def ability(action) = "#{entries? ? 'entries' : 'terms'}.#{item.handle}.#{action}"
 
@@ -24,7 +25,7 @@ module Nibble
         visible = columns.select { |column| column["visible"] }
         CSV.generate do |csv|
           csv << visible.map { |column| column["label"] }
-          relation.find_each do |record|
+          (files? ? file_records : relation.find_each).each do |record|
             fields = record.blueprint_fields
             values = record.values
             csv << visible.map { |column| csv_value(cell(record, fields, values, column["handle"])) }
@@ -92,7 +93,7 @@ module Nibble
 
       def filters
         list = []
-        if entries?
+        if entries? && !files?
           list << { "handle" => "status", "label" => "Status", "type" => "select", "value" => params[:status],
                     "options" => Records::Entry::STATUSES.map { |status| { "value" => status, "label" => status.humanize } } }
         end
@@ -104,7 +105,7 @@ module Nibble
           list << { "handle" => "locale", "label" => "Locale", "type" => "select", "value" => params[:locale],
                     "options" => Nibble.config.locales.map { |locale| { "value" => locale.code, "label" => locale.code } } }
         end
-        list + taxonomy_filters
+        files? ? list : list + taxonomy_filters
       end
 
       def taxonomy_fields
@@ -140,8 +141,33 @@ module Nibble
       def only_own? = entries? && !Access.can?(user, ability("view")) && Access.can?(user, ability("edit_own"))
 
       def page_of_records
+        if files?
+          list = file_records
+          return [ list.slice((page - 1) * per_page, per_page) || [], list.size ]
+        end
+
         scope = relation
         [ scope.offset((page - 1) * per_page).limit(per_page).to_a, scope.count ]
+      end
+
+      # A folder is read from the index, which is small and in memory, so it is filtered here rather than queried.
+      def file_records
+        pages = Files.index.of(item.handle)
+        pages = pages.select { |record| record.blueprint == params[:blueprint] } if params[:blueprint].present?
+        pages = pages.select { |record| record.locale == params[:locale] } if params[:locale].present?
+        pages = pages.select { |record| record.title.downcase.include?(params[:q].to_s.downcase) } if params[:q].present?
+        sorted, unsorted = pages.partition { |record| !file_sort_value(record).nil? }
+        sorted = sorted.sort_by { |record| [ file_sort_value(record), record.title ] }
+        sorted.reverse! if sort_direction == "desc"
+        sorted + unsorted.sort_by(&:title)
+      end
+
+      def file_sort_value(record)
+        case sort_column
+        when "title" then record.title.downcase
+        when "published_at" then record.published_at
+        when "position" then record.position
+        end
       end
 
       def page = [ params[:page].to_i, 1 ].max
@@ -225,6 +251,8 @@ module Nibble
 
       def row_actions(record)
         available = []
+        return available if files?
+
         available << "publish" if entries? && Access.can?(user, ability("publish"), record) && record.status != "published"
         available << "unpublish" if entries? && Access.can?(user, ability("publish"), record) && %w[published scheduled].include?(record.status)
         available << "move" if entries? && item["structure"].is_a?(Hash) && Access.can?(user, ability("edit"), record)
@@ -294,12 +322,12 @@ module Nibble
 
       def presets
         saved = Array(UserPreferences.get(user, "listings.#{preference_key}.presets"))
-        built_in = entries? ? [ { "handle" => "drafts", "label" => "Drafts", "query" => { "status" => "draft" }, "built_in" => true } ] : []
+        built_in = entries? && !files? ? [ { "handle" => "drafts", "label" => "Drafts", "query" => { "status" => "draft" }, "built_in" => true } ] : []
         built_in + saved.map { |preset| preset.merge("built_in" => false) }
       end
 
       def create_link
-        return nil unless Access.can?(user, ability("create"))
+        return nil if files? || !Access.can?(user, ability("create"))
 
         label = "New #{item['title'].to_s.singularize.downcase}"
         url = entries? ? "/admin/collections/#{item.handle}/entries/new" : "/admin/taxonomies/#{item.handle}/terms/new"

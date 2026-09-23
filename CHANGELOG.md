@@ -12,6 +12,13 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **A collection written as files shows its pages in the control panel.** The listing, the tree and the
+  calendar read records, and a folder has none, so the collection looked empty while it served every page. They
+  read the folder now: each page opens with its fields locked and names the file it is written in, and nothing
+  offers to create, publish, move or trash one.
+
 ## 0.14.6 — 2026-09-23 03:42 +0600
 
 ### What's fixed
