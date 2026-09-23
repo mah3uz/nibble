@@ -13,4 +13,15 @@ class SsrPortTest < ActiveSupport::TestCase
   test "an instance that sets nothing renders through 13714" do
     assert_equal "http://localhost:#{ENV.fetch(VARIABLE, 13714)}", InertiaRails.configuration.ssr_url
   end
+
+  test "while the Vite dev server runs, pages render through it rather than a bundle built for another theme" do
+    original = InertiaRails::SSR.method(:vite_dev_server_url)
+    InertiaRails::SSR.define_singleton_method(:vite_dev_server_url) { "http://localhost:3136" }
+
+    url = InertiaRails::SSRRenderer.new(InertiaRails.configuration, page: {}).send(:url)
+
+    assert_equal "http://localhost:3136/__inertia_ssr", url, "a built bundle is whatever theme last built it"
+  ensure
+    InertiaRails::SSR.define_singleton_method(:vite_dev_server_url, original)
+  end
 end

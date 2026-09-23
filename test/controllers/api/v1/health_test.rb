@@ -6,7 +6,8 @@ class Api::V1::HealthTest < ActionDispatch::IntegrationTest
 
   def with_ssr(url)
     config = InertiaRails.configuration
-    was = [ config.ssr_enabled, config.ssr_url ]
+    # Read raw: the URL is a lambda, and restoring what it returned would leave a fixed URL for every later test.
+    was = config.send(:options).values_at(:ssr_enabled, :ssr_url)
     config.ssr_enabled = true
     config.ssr_url = url
     yield

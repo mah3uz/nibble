@@ -35,6 +35,8 @@ registry:
 # Configure builder setup.
 builder:
   arch: amd64
+  context: .
+  dockerfile: Dockerfile
   # The image bundles the theme it will serve, and this repository's own settings name crumbs.
   args:
     NIBBLE_THEME: bite
