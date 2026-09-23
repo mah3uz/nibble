@@ -69,7 +69,11 @@ module Nibble
       skipped = []
       selected.each do |template, destination|
         path = @root.join(destination)
-        next skipped << destination if path.exist? && !@force
+        if path.exist? && !@force
+          # A file already the same as ours was put there by bin/install, and is nobody's to be told about.
+          skipped << destination unless path.file? && path.read == render(template)
+          next
+        end
 
         path.dirname.mkpath
         path.write(render(template))

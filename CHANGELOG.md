@@ -42,6 +42,15 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   called `nibble:upgrade`, and is named after Rails' `db:prepare`, which it stands in for when a server starts.
   **Upgrade:** in `bin/docker-entrypoint`, or wherever your deploy runs it, change `nibble:upgrade` to
   `nibble:prepare`, and take releases from now on with `bin/rails nibble:upgrade`.
+- **A site is installed from a release, not a clone.** `curl -fsSL nibble.ink/install.sh | bash` asks for the site's
+  name and makes its folder from it, downloads the release's archive, checks it against the published checksum,
+  unpacks it into `vendor/nibble` and writes every other file from its templates, starting from the gem and npm
+  versions that release was tested with. It works from any shell, fish included, and no longer needs `git`.
+- **A new site's credentials include a `secret_key_base`.** Without one, production refused to boot.
+  **Upgrade:** if `bin/rails runner 'p Rails.application.credentials.secret_key_base.present?'` prints `false`, add
+  `secret_key_base: <the output of bin/rails secret>` with `bin/rails credentials:edit`.
+- **Installing with `--defaults` records the answers it used,** so later upgrades can offer the files rendered from
+  them.
 - **Nibble's record of a site lives at the end of `config/nibble.yml`,** below a line that says so: the release it is
   on, the install's answers and what it ejected. Only that part is ever rewritten, so your settings and comments
   above it stay as you wrote them. `.nibble/` is gone.

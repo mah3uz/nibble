@@ -1,37 +1,46 @@
 #!/usr/bin/env ruby
-# Renders every install template into an empty directory beside a copy of this checkout's vendor/nibble, then boots
-# the result, so a template that can't make a working site fails here rather than for someone installing.
+# Packs a release from this checkout and installs it with install.sh into an empty directory, the way someone new
+# would, then boots and serves the site: a release that can't make a working site fails here instead.
 require "fileutils"
 require "tmpdir"
+require "yaml"
+require_relative "../lib/release_archive"
 
 ROOT = File.expand_path("..", __dir__)
-site = Dir.mktmpdir("nibble-install-smoke")
-at_exit { FileUtils.rm_rf(site) unless ENV["KEEP"] }
+work = Dir.mktmpdir("nibble-install-smoke")
+at_exit { FileUtils.rm_rf(work) unless ENV["KEEP"] }
+site = File.join(work, "site")
+
+# Nothing inherited from this checkout's own bundle.
+ENV.delete_if { |key, _| key.start_with?("BUNDLE_") || %w[RUBYOPT RUBYLIB].include?(key) }
 
 def run!(env, *command, chdir:)
   puts "$ #{command.join(' ')}"
   system(env, *command, chdir:, exception: true)
 end
 
-answers = { name: "smoke", url: "https://smoke.example", theme: "crumbs" }
-run!({}, "bin/rails", "runner", "Nibble::Install.new(root: #{site.inspect}, answers: #{answers.inspect}).run", chdir: ROOT)
+def check(truth, message) = truth || abort("install smoke failed: #{message}")
 
-# A copy, not a link: Vite resolves links, and would write the site's build into this checkout.
-FileUtils.mkdir_p(File.join(site, "vendor"))
-FileUtils.cp_r(File.join(ROOT, "vendor/nibble"), File.join(site, "vendor/nibble"))
-File.symlink(File.join(ROOT, "node_modules"), File.join(site, "node_modules"))
+built = ReleaseArchive.new(root: ROOT, out: File.join(work, "release")).build
+run!({ "NIBBLE_ARCHIVE" => built.archive.to_s, "NIBBLE_OFFLINE" => "1" }, File.join(ROOT, "install.sh"), "site", "--defaults",
+     chdir: work)
 
-# Its own Gemfile, resolved from the gems this checkout already has, and nothing inherited from ours.
-env = ENV.keys.grep(/\A(BUNDLE_|RUBYOPT|RUBYLIB)/).to_h { |key| [ key, nil ] }
-env.merge!("BUNDLE_GEMFILE" => File.join(site, "Gemfile"), "RAILS_ENV" => "test")
-run!(env, "bundle", "install", "--local", "--quiet", chdir: site)
+record = YAML.safe_load(File.read(File.join(site, "config/nibble.yml")).partition("# Written by Nibble").last.lines.drop(1).join)
+check record.dig("install", "version") == built.version, "the install record names #{record.dig('install', 'version').inspect}"
+check record.dig("install", "answers").keys.sort == %w[name theme url], "the install recorded #{record.dig('install', 'answers').inspect}"
+check !File.exist?(File.join(site, "Dockerfile")) && !File.exist?(File.join(site, "bin/docker-entrypoint")),
+      "deploy files were written for a site that didn't ask for Kamal"
+check File.exist?(File.join(site, "site/types.d.ts")), "the install didn't generate site/types.d.ts"
+run!({}, "sha256sum", "--quiet", "-c", "MANIFEST", chdir: File.join(site, "vendor/nibble"))
+
+env = { "RAILS_ENV" => "test" }
 run!(env, "bin/rails", "db:prepare", chdir: site)
 run!(env, "bin/rails", "zeitwerk:check", chdir: site)
-run!(env, "bin/rails", "nibble:build", chdir: site)
 run!(env, "bin/rails", "nibble:check", chdir: site)
 run!(env, "bin/vite", "build", chdir: site)
 run!(env, "bin/vite", "build", "--ssr", chdir: site)
 run!(env, "bin/rails", "runner", <<~'RUBY', chdir: site)
+  abort "the generated credentials have no secret_key_base, so production would refuse to boot" if Rails.application.credentials.secret_key_base.blank?
   { "/" => [ 200, 404 ], "/admin/session/new" => [ 200 ] }.each do |path, statuses|
     status, _, body = Rails.application.call(Rack::MockRequest.env_for(path, "HTTP_HOST" => "www.example.com"))
     html = +""
@@ -41,4 +50,4 @@ run!(env, "bin/rails", "runner", <<~'RUBY', chdir: site)
   end
 RUBY
 
-puts "a fresh install renders, boots and serves"
+puts "a release installs, boots and serves"

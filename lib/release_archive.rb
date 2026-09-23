@@ -7,12 +7,14 @@ require "stringio"
 require "yaml"
 require "zlib"
 
-# Packs vendor/nibble as a release: VERSION and MANIFEST added, Nibble's own JS tests left out. The same tree and
+# Packs vendor/nibble as a release: VERSION, MANIFEST and the tested lockfiles added, Nibble's own JS tests left out. The same tree and
 # commit always give the same bytes, so the checksum published beside the archive means one thing.
 class ReleaseArchive
   Built = Data.define(:version, :archive, :sums, :sha256)
 
   FOLDER = "vendor/nibble".freeze
+  # A new site starts from the versions this repository was tested with, rather than whatever resolves that day.
+  LOCKS = %w[Gemfile.lock package-lock.json].freeze
   LEFT_OUT = %r{(\A|/)__tests__/}
 
   def initialize(root:, out:, mtime: nil)
@@ -26,6 +28,7 @@ class ReleaseArchive
     name = "nibble-#{version}"
     entries = files.to_h { |path| [ path, @root.join(FOLDER, path) ] }
     added = { "VERSION" => declared.to_yaml.delete_prefix("---\n") }
+    LOCKS.each { |lock| added["locks/#{lock}"] = @root.join(lock).read }
     added["MANIFEST"] = manifest(entries, added)
 
     @out.mkpath

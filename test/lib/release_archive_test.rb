@@ -44,6 +44,11 @@ class ReleaseArchiveTest < ActiveSupport::TestCase
     manifest.each { |path, sha| assert_equal Digest::SHA256.hexdigest(@entries.fetch("#{top}#{path}").last), sha, path }
   end
 
+  test "a new site starts from the versions this repository was tested with, not whatever resolves that day" do
+    assert_equal Rails.root.join("Gemfile.lock").read, @entries.fetch("#{top}locks/Gemfile.lock").last
+    assert_equal Rails.root.join("package-lock.json").read, @entries.fetch("#{top}locks/package-lock.json").last
+  end
+
   test "scripts keep their executable bit, or a site's first bin/rails fails" do
     assert_equal 0o755, @entries.fetch("#{top}templates/bin/rails").first
     assert_equal 0o644, @entries.fetch("#{top}templates/config/routes.rb").first

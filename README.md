@@ -4,8 +4,8 @@
 
 # Nibble
 
-A content management system you run as your own application. Clone it, install it, and it becomes your site —
-your theme, your content, your server.
+A content management system you run as your own application. Install it, and it becomes your site — your theme,
+your content, your server.
 
 Rails 8 serves both the public site and the control panel through Inertia and Vue 3, rendered on the server.
 Collections, taxonomies, globals, navigation and forms are declared in YAML — Nibble's, then your theme's, then
@@ -16,17 +16,20 @@ Upgrades arrive as releases you merge.
 ## Install
 
 ```sh
-./install.sh my-site
+curl -fsSL nibble.ink/install.sh | bash
 ```
 
-It checks for what it needs — git, Ruby, Node, npm, SQLite, libvips, ffmpeg — names anything missing, then
-clones, installs dependencies and asks a handful of questions.
+It checks for what it needs — Ruby, Node, npm, SQLite, libvips, ffmpeg — names anything missing, asks for your site's
+name (its folder is named after it), then downloads the latest release, checks it against its published checksum,
+unpacks it into the site's `vendor/nibble` and asks a handful of questions. Everything outside `vendor/nibble` is
+written once, and is yours from then on. `… | bash -s my-site` names the folder without asking.
 
 ```sh
 bin/dev                  # the site on :3100, the control panel at /admin
 bin/rails nibble:check   # the schema, theme, roles and settings are sound
-bin/ci                   # every check Nibble runs on itself
 ```
+
+To work on Nibble itself, clone this repository and run `bin/setup`; `bin/ci` runs every check Nibble runs on itself.
 
 ## Documentation
 

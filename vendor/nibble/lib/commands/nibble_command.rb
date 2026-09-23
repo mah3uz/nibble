@@ -60,7 +60,7 @@ class NibbleCommand < Rails::Command::Base
   desc "upgrade [VERSION]", "Take a Nibble release (the latest by default): snapshot, merge, re-render, migrate"
   def upgrade(version = nil) = take_release(version)
 
-  desc "install", "Set up this checkout as a site: settings, deploy files, database, first admin"
+  desc "install", "Set up this site: settings, deploy files, database, first admin"
   option :defaults, type: :boolean, desc: "Take every default instead of asking"
   option :force, type: :boolean, desc: "Overwrite files a previous install generated"
   option :only, type: :string, desc: "Generate one file only, e.g. --only=deploy"
@@ -69,13 +69,18 @@ class NibbleCommand < Rails::Command::Base
     boot_application!
     banner
     answers, kamal = options[:defaults] ? [ {}, !!options[:kamal] ] : interview
-    result = Nibble::Install.new(answers:, force: options[:force], only: options[:only], kamal:).run
+    installer = Nibble::Install.new(answers:, force: options[:force], only: options[:only], kamal:)
+    result = installer.run
 
     section "Files"
     result.written.each { |path| say_status :create, path, :green }
     result.skipped.each { |path| say_status :keep, "#{path} — yours already, left alone", :yellow }
     master_key
-    Nibble::Release.record_install(version: Nibble::VERSION, answers:)
+    # What was rendered, defaults included, so an upgrade can render the same files again; deploy answers only if asked.
+    # Taking defaults again never replaces what an earlier install recorded.
+    asked = Nibble::Install::QUESTIONS.keys + (kamal ? Nibble::Install::KAMAL_QUESTIONS.keys : [])
+    rendered = installer.answers.slice(*asked) unless options[:defaults] && Nibble::Release.installed
+    Nibble::Release.record_install(version: Nibble::VERSION, answers: rendered)
     say_status :record, "#{Nibble::Metadata::FILE} — this install is #{Nibble::VERSION}", :green
     options[:defaults] || options[:only] ? admin_reminder : set_up_database
     next_steps(kamal)
@@ -140,7 +145,7 @@ class NibbleCommand < Rails::Command::Base
   def banner
     say ""
     say "  Nibble #{Nibble::VERSION}", :green
-    say "  Setting up this checkout as a site. Press enter to take the value in brackets.", :white
+    say "  Setting up this site. Press enter to take the value in brackets.", :white
   end
 
   def section(title)
@@ -236,7 +241,9 @@ class NibbleCommand < Rails::Command::Base
 
     path.write(ActiveSupport::EncryptedFile.generate_key)
     path.chmod(0o600)
-    Rails.application.encrypted("config/credentials.yml.enc").write("# Secrets for this site. Edit with: bin/rails credentials:edit\n")
+    # Production refuses to boot without a secret_key_base, and Rails reads it from here.
+    Rails.application.encrypted("config/credentials.yml.enc")
+      .write("# Secrets for this site. Edit with: bin/rails credentials:edit\nsecret_key_base: #{SecureRandom.hex(64)}\n")
     say_status :create, "config/credentials.yml.enc", :green
     say_status :create, "config/master.key — never commit it, and keep a copy somewhere safe", :green
   end

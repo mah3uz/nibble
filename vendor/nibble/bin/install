@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+# Turns a folder holding only vendor/nibble into a site. Nothing is installed yet, so this uses Ruby alone: it copies
+# the files that need no answers, installs the gems, then hands over to bin/rails nibble:install for the rest.
+require "fileutils"
+require "pathname"
+
+CORE = Pathname(__dir__).parent.expand_path
+ROOT = CORE.parent.parent
+TEMPLATES = CORE.join("templates")
+OFFLINE = ENV["NIBBLE_OFFLINE"] == "1"
+
+def run!(*command)
+  system(*command, chdir: ROOT.to_s) or abort("install stopped: #{command.join(' ')} failed")
+end
+
+abort "install refused: #{ROOT} already has a Gemfile, so it is a site already" if ROOT.join("Gemfile").exist?
+abort "install refused: #{CORE} isn't at vendor/nibble in the site's folder" unless CORE == ROOT.join("vendor/nibble")
+
+# A .erb template needs an answer, and a deploy file needs to know how the site deploys: both wait for nibble:install.
+TEMPLATES.glob("**/*", File::FNM_DOTMATCH).select(&:file?).reject { |template| template.extname == ".erb" }.sort.each do |template|
+  target = ROOT.join(template.relative_path_from(TEMPLATES))
+  next if target.exist?
+
+  target.dirname.mkpath
+  FileUtils.cp(template, target)
+  target.chmod(template.stat.mode)
+end
+
+# The versions this release was tested with; bundle and npm keep them, dropping only what the site doesn't use.
+CORE.join("locks").glob("*").each { |lock| FileUtils.cp(lock, ROOT.join(lock.basename)) unless ROOT.join(lock.basename).exist? }
+
+run!("bundle", "install", *("--local" if OFFLINE))
+run!("bin/rails", "nibble:install", *ARGV)
+run!("npm", "install", "--no-audit", "--no-fund", *("--prefer-offline" if OFFLINE))
+# The theme's views type-check against these, so the first build needs them.
+run!("bin/rails", "nibble:build")

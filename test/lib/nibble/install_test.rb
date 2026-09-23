@@ -41,6 +41,13 @@ class Nibble::InstallTest < ActiveSupport::TestCase
     assert_not @root.join("config/deploy.yml").exist?, "a site that hasn't said how it deploys gets no deploy files"
   end
 
+  test "only a file the site changed is reported as kept, so the report isn't dozens of lines of our own files" do
+    install(name: "acme").run
+    @root.join("config/routes.rb").write("Rails.application.routes.draw { get 'x', to: 'site#show' }\n")
+
+    assert_equal [ "config/routes.rb" ], install(name: "acme").run.skipped
+  end
+
   test "an install never writes into vendor/nibble, which an upgrade replaces whole" do
     written = install(name: "acme").run.written
 
