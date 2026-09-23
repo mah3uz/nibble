@@ -25,7 +25,7 @@ CI.run do
   # Build test assets up front so no test triggers (and races) an on-demand Vite build.
   step "Build: test assets", "env RAILS_ENV=test bin/vite build"
   step "Tests: Rails", "bin/rails test"
-  # This repository's site/ is nibble.ink's own, in a private repository of its own; a clone has none.
+  # site/ isn't tracked here, so a clone has none and skips this.
   step "Tests: nibble.ink", "bin/rails test site/test" if Dir.glob("site/test/**/*_test.rb").any?
 
   step "Tests: Seeds", "env RAILS_ENV=test bin/rails db:seed:replant"

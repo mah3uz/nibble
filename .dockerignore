@@ -54,7 +54,7 @@
 /.dockerignore
 /Dockerfile*
 
-# nibble.ink's site/ is a private repository of its own, and its theme installs its own packages.
+# site/ isn't tracked here: a checkout that has one keeps its git folder and theme packages out of the image.
 /site/.git/
 /site/themes/*/node_modules/
 

@@ -104,7 +104,7 @@ else
   puts "not pushed. When ready: git push #{repository} main --follow-tags, then bin/nibble-release #{version} --pack"
 end
 
-# nibble.ink serves the feed every control panel reads; its site/ is a private repository of its own here.
+# nibble.ink serves the feed every control panel reads, from a site/ that isn't tracked here.
 feed = ROOT.join("site/content/changelogs/releases.json")
 unless ROOT.join("site/content").directory?
   puts "no site/content here, so the feed wasn't written: a control panel sees #{version} once nibble.ink publishes it"
