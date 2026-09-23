@@ -28,7 +28,12 @@ module Nibble
         Uris.normalize(path.gsub(TOKEN, ""))
       end
 
-      def index = @index || reload!
+      def index
+        return @index || reload! unless Rails.application.config.enable_reloading
+
+        watch! unless Current.content_checked
+        @index || refresh!
+      end
 
       def reload!
         @published_urls = nil
@@ -39,9 +44,22 @@ module Nibble
 
       def reset! = @index = nil
 
-      # The folder is the content, so a change to it is a change to the site and must land between requests.
+      # Development only: search follows the folder too. A checkout with no database yet still reads its content.
+      def refresh!
+        reload!.tap { Search.sync_files }
+      rescue ActiveRecord::NoDatabaseError, ActiveRecord::ConnectionNotEstablished, ActiveRecord::StatementInvalid => error
+        Rails.logger&.warn("nibble: pages written as files were not indexed for search: #{error.message}")
+        @index
+      end
+
+      # Checked once a request, as the schema is: a change under content/ alone never makes Rails reload code, so a
+      # to_prepare hook would miss it.
       def watch!
-        @watcher ||= ActiveSupport::FileUpdateChecker.new([], Nibble.config.content_path.to_s => nil) { reload! }
+        Current.content_checked = true
+        path = Nibble.config.content_path.to_s
+        @watcher = nil unless @watched_path == path
+        @watched_path = path
+        @watcher ||= ActiveSupport::FileUpdateChecker.new([], path => nil) { refresh! }
         @watcher.execute_if_updated
       end
 

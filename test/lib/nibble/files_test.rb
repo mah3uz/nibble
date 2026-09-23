@@ -134,4 +134,26 @@ class Nibble::FilesTest < ActiveSupport::TestCase
 
     assert_equal [ [], [ "Child" ] ], links.map { |link| link.fetch("children").map { |child| child["title"] } }
   end
+
+  # The docs promise an edit is on the page when you save it; content/ changes never make Rails reload code.
+  test "in development a change under content/ is picked up on the next request" do
+    index_for({ "docs/index.md" => page(id: "docs-home", title: "Docs"), "docs/a.md" => page(id: "a", title: "Alpha") })
+    root = Nibble.config.content_path
+
+    reloading = Rails.application.config.enable_reloading
+    Rails.application.config.enable_reloading = true
+    Nibble::Current.reset
+    Nibble::Files.index
+    sleep 1.1
+    root.join("docs/a.md").write(page(id: "a", title: "Alpha, edited"))
+    root.join("docs/b.md").write(page(id: "b", title: "Beta"))
+
+    Nibble::Current.reset
+    titles = Nibble::Files.index.of("docs").map(&:title)
+    assert_includes titles, "Alpha, edited", "an edited page shows its new text"
+    assert_includes titles, "Beta", "a new page appears"
+  ensure
+    Rails.application.config.enable_reloading = reloading
+    Nibble::Current.reset
+  end
 end

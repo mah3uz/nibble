@@ -52,4 +52,34 @@ class Nibble::SearchTest < ActiveSupport::TestCase
     assert_equal [ post.id ], hits.map(&:record_id)
     assert_empty Nibble::Search.search("site", "茶店", locale: "ja").hits, "trigram queries need three characters"
   end
+
+  def with_help_folder(files)
+    dir = Pathname(Dir.mktmpdir("nibble-content"))
+    site = Pathname(Dir.mktmpdir("nibble-site-schema"))
+    site.join("search.yml").write({ "schema" => 1, "indexes" => { "site" => { "collections" => %w[pages posts docs] } } }.to_yaml)
+    files.each { |path, text| dir.join(path).dirname.mkpath; dir.join(path).write(text) }
+    Nibble.config = Nibble::Config.new({ "theme" => "starter", "url" => "https://example.test",
+      "locales" => [ { "code" => "en", "default" => true } ] },
+      themes_path: Rails.root.join("test/nibble_themes"), site_schema_path: site, content_path: dir,
+      published_path: Pathname(Dir.mktmpdir("nibble-published")))
+    Nibble.reset_schema!
+    Nibble::Files.reload!
+    yield dir
+  end
+
+  def article(id, title, body) = "---\nid: #{id}\ntitle: #{title}\n---\n\n#{body}\n"
+
+  # A page written as a file publishes no events, so without this nothing would ever put it in the index.
+  test "pages written as files are searchable once synced, and a deleted file's page stops being found" do
+    with_help_folder("docs/index.md" => article("docs-home", "Docs", "Start here."),
+                     "docs/reminders.md" => article("reminders", "Payment reminders", "Chase overdue invoices.")) do |dir|
+      Nibble::Search.sync_files
+      assert_equal [ "Payment reminders" ], search("overdue").records.map(&:title)
+
+      dir.join("docs/reminders.md").delete
+      Nibble::Files.reload!
+      Nibble::Search.sync_files
+      assert_empty search("overdue").records, "a result pointing at a page that 404s is worse than none"
+    end
+  end
 end

@@ -22,6 +22,8 @@ module Nibble
       migrations = ContentMigrations.run
       Events.dispatch_pending
       warnings |= verify!("after content migrations")
+      @log.call("search: indexing pages written as files")
+      Search.sync_files
       Result.new(migrations:, snapshot: Drift.record_snapshot!, warnings:)
     end
 

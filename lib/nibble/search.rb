@@ -12,10 +12,14 @@ module Nibble
 
       def index_record(record)
         remove(record)
-        return unless searchable?(record)
+        insert_record(record) if searchable?(record)
+      end
 
-        memberships(record).each do |index|
-          insert(table_for(record.locale), [ record.title.to_s, body(record, indexes[index]), record.record_type, record.id, index, record.locale ])
+      # Pages written as files publish no events, so the folder is indexed as a whole whenever it is read.
+      def sync_files
+        connection.transaction do
+          TABLES.each_value { |table| run_sql("DELETE FROM #{table} WHERE record_type = ?", [ Files::Page::RECORD_TYPE ]) }
+          Files.index.pages.each { |page| insert_record(page) }
         end
       end
 
@@ -57,6 +61,12 @@ module Nibble
       def connection = Records::Entry.connection
       def run_sql(sql, binds) = connection.exec_query(sql, "Nibble search index", binds)
       def table_for(locale) = TABLES.fetch(Nibble.config.locale(locale)&.search_tokenizer || "porter")
+
+      def insert_record(record)
+        memberships(record).each do |index|
+          insert(table_for(record.locale), [ record.title.to_s, body(record, indexes[index]), record.record_type, record.id, index, record.locale ])
+        end
+      end
 
       def insert(table, values)
         run_sql("INSERT INTO #{table} (title, body, record_type, record_id, index_handle, locale) VALUES (?, ?, ?, ?, ?, ?)", values)

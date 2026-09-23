@@ -101,4 +101,29 @@ class Nibble::UpgradeTest < ActiveSupport::TestCase
 
     assert_equal "# theirs", theirs.read
   end
+
+  # Every deploy boots through nibble:upgrade, and a page written as a file publishes no events, so this is the only
+  # thing that makes a newly deployed article searchable.
+  test "an upgrade indexes pages written as files, with no manual rebuild" do
+    site = @themes.join("site_schema")
+    { "collections/help.yml" => { "schema" => 1, "title" => "Help", "route" => "/help/{slug}", "blueprints" => [ "article" ], "files" => "help" },
+      "blueprints/collections/help/article.yml" => { "schema" => 1, "title" => "Article",
+        "tabs" => { "main" => { "sections" => [ { "fields" => [ { "handle" => "body", "field" => { "type" => "markdown" } } ] } ] } } },
+      "search.yml" => { "schema" => 1, "indexes" => { "site" => { "collections" => %w[pages posts help] } } } }.each do |path, data|
+      site.join(path).dirname.mkpath
+      site.join(path).write(data.to_yaml)
+    end
+    content = @themes.join("content")
+    content.join("help").mkpath
+    content.join("help/index.md").write("---\nid: help\ntitle: Help\n---\n\nStart here.\n")
+    content.join("help/import.md").write("---\nid: import\ntitle: Importing clients\n---\n\nBring your spreadsheet.\n")
+    Nibble.config = Nibble::Config.new(Nibble.config_values.merge("theme" => "crumbs"),
+      themes_path: @themes, site_schema_path: site, content_path: content, published_path: @themes.join("published"))
+    Nibble.reset_schema!
+    Nibble::TypeGenerator.write!
+
+    upgrade
+    hits = Nibble::Search.search("site", "spreadsheet", locale: "en").hits
+    assert_equal [ "import" ], hits.map(&:record_id)
+  end
 end
