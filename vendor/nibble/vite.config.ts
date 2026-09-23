@@ -1,7 +1,7 @@
 import vue from '@vitejs/plugin-vue'
 import inertia from '@inertiajs/vite'
 import tailwindcss from '@tailwindcss/vite'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import RubyPlugin from 'vite-plugin-ruby'
@@ -21,11 +21,15 @@ function activeTheme(): string {
 }
 
 const theme = activeTheme()
+// A site's own theme first, then one that ships with Nibble.
+const themeDir =
+  [resolve(siteRoot, 'site/themes', theme), resolve(import.meta.dirname, 'themes', theme)].find((dir) => existsSync(dir)) ??
+  resolve(siteRoot, 'site/themes', theme)
 
 export default defineConfig(({ command, isSsrBuild }) => ({
   resolve: {
     alias: {
-      '@theme': resolve(siteRoot, 'themes', theme),
+      '@theme': themeDir,
       '@site': resolve(siteRoot, 'site'),
       '@nibble': resolve(import.meta.dirname, 'frontend/nibble'),
       '@nibble-admin': resolve(import.meta.dirname, 'frontend/nibble-admin'),
@@ -56,7 +60,7 @@ export default defineConfig(({ command, isSsrBuild }) => ({
       // the page globs until the dev server restarts.
       name: 'nibble-watch-site',
       configureServer(server) {
-        server.watcher.add([resolve(siteRoot, 'themes', theme), resolve(siteRoot, 'site')])
+        server.watcher.add([themeDir, resolve(siteRoot, 'site')])
       },
     },
     tailwindcss(),

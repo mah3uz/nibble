@@ -3,7 +3,7 @@ import type { DefineComponent } from 'vue'
 import { find, pickCpPage } from './pick-page'
 
 const appPages = import.meta.glob<{ default: DefineComponent }>('../pages/**/*.vue')
-const sitePages = import.meta.glob<{ default: DefineComponent }>('@site/pages/**/*.vue')
+const sitePages = import.meta.glob<{ default: DefineComponent }>('@site/cp/pages/**/*.vue')
 const themeViews = import.meta.glob<{ default: DefineComponent }>(['@theme/views/**/*.vue', '!@theme/views/sets/**'])
 const themeLayouts = import.meta.glob<DefineComponent>('@theme/layouts/*.vue', { eager: true, import: 'default' })
 const themeSets = import.meta.glob<DefineComponent>('@theme/views/sets/*.vue', { eager: true, import: 'default' })

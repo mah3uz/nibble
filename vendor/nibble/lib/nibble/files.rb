@@ -52,7 +52,7 @@ module Nibble
         @index
       end
 
-      # Checked once a request, as the schema is: a change under content/ alone never makes Rails reload code, so a
+      # Checked once a request, as the schema is: a change under site/content/ alone never makes Rails reload code, so a
       # to_prepare hook would miss it.
       def watch!
         Current.content_checked = true

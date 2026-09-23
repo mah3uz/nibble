@@ -20,7 +20,7 @@ export default defineConfigWithVueTs(
   { files: ['vendor/nibble/frontend/nibble/**/*.vue'], rules: { 'vue/multi-word-component-names': 'off', 'vue/no-v-html': 'off' } },
   // Themes are swappable: they may import only @nibble, @theme, relative paths and their own dependencies.
   {
-    files: ['themes/**/*.{ts,vue}'],
+    files: ['site/themes/**/*.{ts,vue}', 'vendor/nibble/themes/**/*.{ts,vue}'],
     rules: {
       'vue/multi-word-component-names': 'off',
       'vue/prop-name-casing': 'off',

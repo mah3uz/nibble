@@ -4,7 +4,7 @@ class NibbleGenerateCommand < Rails::Command::Base
   extend CleanFailures
   namespace "nibble:generate"
 
-  desc "theme HANDLE", "Copy the starter theme into themes/HANDLE and make it this site's"
+  desc "theme HANDLE", "Copy the starter theme into site/themes/HANDLE and make it this site's"
   def theme(handle)
     boot_application!
     Nibble::Generate.theme(handle).each do |written|

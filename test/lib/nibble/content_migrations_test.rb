@@ -203,7 +203,7 @@ class Nibble::ContentMigrationsTest < ActiveSupport::TestCase
   end
 
   test "a site's own migrations belong to that site, not to whatever runs these tests" do
-    site = Rails.root.join("schema/migrations")
+    site = Rails.root.join("site/schema/migrations")
     site.mkpath
     path = site.join("2026_10_03_a_site_of_its_own.yml")
     path.write({ "operations" => [ { "delete_collection" => { "collection" => "gone" } } ] }.to_yaml)

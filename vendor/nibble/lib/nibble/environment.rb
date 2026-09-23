@@ -74,7 +74,7 @@ module Nibble
 
       def theme(config)
         return [ warning("theme", "no theme is set, so only the control panel will serve") ] if config.theme.blank?
-        return [ error("theme", "'#{config.theme}' has no folder in themes/") ] unless config.theme_path&.directory?
+        return [ error("theme", "'#{config.theme}' has no folder in site/themes/ or vendor/nibble/themes/") ] unless config.theme_path&.directory?
 
         config.active_theme.compatible_with_core? ? [] : [ error("theme", "'#{config.theme}' asks for a different Nibble than this one") ]
       rescue Error => e

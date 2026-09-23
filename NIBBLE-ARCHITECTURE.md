@@ -25,7 +25,7 @@ there is no parity baseline to match, and no deviations to log.
 Rails 8 · Inertia Rails + Vue 3 with SSR (Vite, Node SSR process on port 13714) · SQLite (WAL) for all data plus
 Solid Queue/Cache · Tiptap (`@tiptap/vue-3`, free extensions only) for rich text · schema-driven fieldtypes for
 everything else · Active Storage on S3 behind a CDN, served through `AssetFilesController` transforms · shadcn-vue
-control panel · themes as npm workspaces under `themes/*` · Kamal on a VPS · nightly `VACUUM INTO` snapshots to S3
+control panel · themes as npm workspaces under `site/themes/*` and `vendor/nibble/themes/*` · Kamal on a VPS · nightly `VACUUM INTO` snapshots to S3
 (`DatabaseSnapshotJob`). Do not introduce React or Hotwire.
 
 ## Architecture
@@ -43,15 +43,15 @@ evaluates `vendor/nibble/Gemfile`, which loads `Nibble::Engine`; `config/applica
 - `vendor/nibble/frontend/` — `nibble-admin/` (the control panel, `@nibble-admin`, also `@` and `~`), `nibble/` (the
   theme runtime, `@nibble`), `entrypoints/`, `ssr/`. It is Vite's `sourceCodeDir`.
 - `vendor/nibble/core_schema/` — the baseline schema YAML. Schema is read in three layers: this, then the theme's
-  `themes/<theme>/schema/`, then the site's own `schema/`, and the last to define a handle wins.
-- `app/`, `schema/`, `site/`, `content/`, `config/nibble.yml`, `config/deploy*.yml`, `db/migrate`, `Gemfile.local` — **a
-  site's, not ours.** Nibble ships templates and generates them at install; it never writes them again. A site's
-  own `app/` loads beside ours and its views are looked in first. `site/pages/<same path as ours>.vue` replaces a
-  control panel screen, `site/slots/*.vue` replace chrome, `site/initializers/*.rb` run at boot, `site/test/` is
-  for its own tests, and `content/` is where content kept as files lives — the only place a collection's `files`
-  can name. `bin/rails nibble:eject <path>` is how a site takes one of our files over, recorded in
-  `.nibble/`.
-- `themes/<theme>/` — `layouts/`, `views/` (each `.vue` may have a `.yml` query sidecar), `views/sets/`,
+  `schema/`, then the site's own `site/schema/`, and the last to define a handle wins.
+- `app/`, `site/`, `config/nibble.yml`, `config/deploy*.yml`, `db/migrate`, `Gemfile.local` — **a site's, not ours.**
+  Nibble ships templates and generates them at install; it never writes them again. A site's own `app/` loads beside
+  ours and its views are looked in first. Under `site/`: `schema/`, `content/` (content kept as files — the only
+  place a collection's `files` can name), `themes/<its own>/`, `cp/pages/<same path as ours>.vue` replacing a
+  control panel screen, `cp/slots/*.vue` replacing chrome, `initializers/*.rb` run at boot, and `test/` for its own
+  tests. `bin/rails nibble:eject <path>` is how a site takes one of our files over, recorded in `.nibble/`.
+- Themes: `site/themes/<theme>/` is looked in first, then `vendor/nibble/themes/<theme>/`, where `crumbs` ships.
+  Each has `layouts/`, `views/` (each `.vue` may have a `.yml` query sidecar), `views/sets/`,
   `components/`, `styles/`, `schema/`; **a theme never ships content**; `@theme` resolves to the active one,
   named in `config/nibble.yml`, then `NIBBLE_THEME`, defaulting to `crumbs`. `nibble:generate:theme` starts one.
 - The documentation is not here. It is the site at `~/Projects/nibble_site`, whose `content/docs/` it is.

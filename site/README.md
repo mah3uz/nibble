@@ -1,12 +1,20 @@
-# Your control panel overrides
+# Your site
 
-This directory is yours. Nibble ships only this README here and never writes anything else, so an upgrade cannot
-touch what you put in it.
+This directory is yours, and an upgrade never touches what you put in it:
 
-To change one of Nibble's control panel screens, copy it to the same path under `site/` and edit the copy:
+- `schema/` — your collections, taxonomies, blueprints, globals, navigation and forms
+- `content/` — content kept as files
+- `themes/<name>/` — your own theme; one of Nibble's, such as `crumbs`, needs no copy here
+- `cp/` — your control panel overrides
+- `initializers/` — your own Ruby, run at boot
+- `test/` — your own tests
+
+## Control panel overrides
+
+To change one of Nibble's control panel screens, copy it to the same path under `site/cp/` and edit the copy:
 
 ```
-vendor/nibble/frontend/nibble-admin/pages/admin/entries/Edit.vue   ->   site/pages/admin/entries/Edit.vue
+vendor/nibble/frontend/nibble-admin/pages/admin/entries/Edit.vue   ->   site/cp/pages/admin/entries/Edit.vue
 ```
 
 Yours is loaded instead of ours. Nothing else changes, and Nibble's file stays where it is.
@@ -33,7 +41,7 @@ Hooks are published for `:nibble_entry`, `:nibble_term` and `:nibble_asset`.
 ## Slots
 
 Some parts of the control panel take a replacement without ejecting anything. Drop a component at
-`site/slots/<Name>.vue` and it is used instead of ours:
+`site/cp/slots/<Name>.vue` and it is used instead of ours:
 
 | Slot | Replaces |
 |---|---|

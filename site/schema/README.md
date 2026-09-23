@@ -6,7 +6,7 @@ It holds collections, taxonomies, blueprints, fieldsets, globals, navigation and
 uses internally:
 
 ```
-schema/
+site/schema/
   collections/<handle>.yml
   taxonomies/<handle>.yml
   blueprints/collections/<collection>/<handle>.yml

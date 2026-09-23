@@ -45,7 +45,7 @@ module Nibble
     def theme_stylesheet
       return nil unless config.theme_path&.join("styles", "theme.css")&.file?
 
-      "/themes/#{build_theme}/styles/theme.css"
+      "/#{config.theme_path.relative_path_from(Rails.root)}/styles/theme.css"
     end
 
     def site_url = ENV["SITE_URL"].presence || "http://localhost:#{ENV.fetch("PORT", 3100)}"
@@ -83,15 +83,19 @@ module Nibble
 
     def core_root = Engine.root
     def core_schema_path = core_root.join("core_schema")
-    def site_schema_path = Rails.root.join("schema")
-    def content_path = Rails.root.join("content")
-    def themes_path = Rails.root.join("themes")
+    def site_root = Rails.root.join("site")
+    def site_schema_path = site_root.join("schema")
+    def content_path = site_root.join("content")
+    def themes_path = site_root.join("themes")
+
+    # A site's own theme first, then one that ships with Nibble.
+    def theme_path(name) = [ themes_path, core_root.join("themes") ].map { |dir| dir.join(name) }.find(&:directory?) || themes_path.join(name)
 
     private
 
     def schema_reloader
       @schema_reloader ||= begin
-        dirs = [ core_schema_path, site_schema_path, themes_path ].to_h { |dir| [ dir.to_s, [ "yml" ] ] }
+        dirs = [ core_schema_path, site_schema_path, themes_path, core_root.join("themes") ].to_h { |dir| [ dir.to_s, [ "yml" ] ] }
         ActiveSupport::FileUpdateChecker.new([], dirs) { schema_changed! }
       end
     end

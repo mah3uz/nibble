@@ -8,12 +8,13 @@
   "scripts": {
     "check": "vue-tsc -p tsconfig.app.json && tsc -p tsconfig.node.json",
     "lint": "eslint .",
-    "format": "prettier --write vendor/nibble/frontend themes",
-    "format:check": "prettier --check vendor/nibble/frontend themes",
+    "format": "prettier --write vendor/nibble/frontend vendor/nibble/themes",
+    "format:check": "prettier --check vendor/nibble/frontend vendor/nibble/themes",
     "test:js": "vitest run --root vendor/nibble/frontend"
   },
   "workspaces": [
     "vendor/nibble",
-    "themes/*"
+    "vendor/nibble/themes/*",
+    "site/themes/*"
   ]
 }

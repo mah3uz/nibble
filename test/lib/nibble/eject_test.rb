@@ -22,7 +22,7 @@ class Nibble::EjectTest < ActiveSupport::TestCase
   test "ejecting copies our file where the site's copy is looked up first" do
     ejection = Nibble::Eject.run(@source, root: @root)
 
-    assert_equal "site/pages/admin/Dashboard.vue", ejection.target
+    assert_equal "site/cp/pages/admin/Dashboard.vue", ejection.target
     assert_equal "<template>ours</template>", @root.join(ejection.target).read
     assert_equal "<template>ours</template>", @root.join(@source).read, "ours must stay where it was"
   end
@@ -31,21 +31,21 @@ class Nibble::EjectTest < ActiveSupport::TestCase
     Nibble::Eject.run(@source, root: @root)
     entry = Nibble::Eject.manifest(root: @root).fetch(@source)
 
-    assert_equal "site/pages/admin/Dashboard.vue", entry.target
+    assert_equal "site/cp/pages/admin/Dashboard.vue", entry.target
     assert_equal Date.current.to_s, entry.at
     assert Nibble::Eject.ejected?(@source, root: @root)
   end
 
   test "a second eject refuses rather than discarding the site's edits" do
     Nibble::Eject.run(@source, root: @root)
-    @root.join("site/pages/admin/Dashboard.vue").write("<template>theirs</template>")
+    @root.join("site/cp/pages/admin/Dashboard.vue").write("<template>theirs</template>")
 
     error = assert_raises(Nibble::Eject::Refused) { Nibble::Eject.run(@source, root: @root) }
     assert_match "already exists", error.message
-    assert_equal "<template>theirs</template>", @root.join("site/pages/admin/Dashboard.vue").read
+    assert_equal "<template>theirs</template>", @root.join("site/cp/pages/admin/Dashboard.vue").read
 
     Nibble::Eject.run(@source, root: @root, force: true)
-    assert_equal "<template>ours</template>", @root.join("site/pages/admin/Dashboard.vue").read
+    assert_equal "<template>ours</template>", @root.join("site/cp/pages/admin/Dashboard.vue").read
   end
 
   test "only files with somewhere to go can be ejected, so nothing lands outside site/" do

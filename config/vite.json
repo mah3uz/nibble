@@ -2,12 +2,12 @@
   "all": {
     "sourceCodeDir": "vendor/nibble/frontend",
     "watchAdditionalPaths": [
-      "themes/**/*"
+      "site/themes/**/*", "vendor/nibble/themes/**/*"
     ],
     "ssrBuildEnabled": true,
     "additionalEntrypoints": [
       "~/nibble-admin/{assets,fonts,icons,images}/**/*",
-      "themes/*/styles/theme.css"
+      "site/themes/*/styles/theme.css", "vendor/nibble/themes/*/styles/theme.css"
     ]
   },
   "development": {

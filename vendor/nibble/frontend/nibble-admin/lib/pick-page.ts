@@ -3,5 +3,5 @@ export function find<T>(modules: Record<string, T>, suffix: string): T | undefin
 }
 
 export function pickCpPage<T>(name: string, site: Record<string, T>, app: Record<string, T>) {
-  return find(site, `/site/pages/${name}.vue`) ?? app[`../pages/${name}.vue`]
+  return find(site, `/site/cp/pages/${name}.vue`) ?? app[`../pages/${name}.vue`]
 }

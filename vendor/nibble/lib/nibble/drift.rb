@@ -2,7 +2,7 @@ module Nibble
   module Drift
     Issue = Data.define(:source, :message)
 
-    HINT = "add a migration in schema/migrations, or run nibble:check --allow-data-loss".freeze
+    HINT = "add a migration in site/schema/migrations, or run nibble:check --allow-data-loss".freeze
     DRAFT_COLUMNS = %w[title slug parent_id position published_at unpublish_at template blueprint locale status author_id].freeze
 
     module_function

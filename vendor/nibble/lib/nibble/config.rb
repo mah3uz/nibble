@@ -58,7 +58,7 @@ module Nibble
 
     def locale(code) = locales.find { |locale| locale.code == code.to_s }
 
-    def theme_path = theme && (@themes_path || Nibble.themes_path).join(theme)
+    def theme_path = theme && (@themes_path ? @themes_path.join(theme) : Nibble.theme_path(theme))
 
     # A test fixture points this somewhere of its own, so a site's schema can't reach into what it declares.
     def site_schema_path = @site_schema_path || Nibble.site_schema_path

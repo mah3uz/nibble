@@ -20,6 +20,12 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   `vendor/nibble/frontend/`.
   **Upgrade:** re-render `Dockerfile` when the upgrade offers it — the old one copies `vendor/` in a way that no
   longer installs Nibble's gems.
+- **Everything of a site's own that Nibble reads lives in `site/`.** `schema/` is `site/schema/`, `content/` is
+  `site/content/`, a site's theme is `site/themes/<name>/`, and control panel overrides are `site/cp/pages/` and
+  `site/cp/slots/`. `crumbs` ships in `vendor/nibble/themes/` and is used from there unless `site/themes/crumbs/`
+  exists; `nibble:generate:theme` copies it into `site/themes/`.
+  **Upgrade:** `git mv schema site/schema`, `git mv content site/content`, `git mv site/pages site/cp/pages`,
+  `git mv site/slots site/cp/slots`, and `git mv themes/<yours> site/themes/<yours>` for a theme of your own.
 
 ## 0.15.0 — 2026-09-23 21:11 +0600
 

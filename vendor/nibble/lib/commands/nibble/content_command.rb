@@ -44,7 +44,7 @@ class NibbleContentCommand < Rails::Command::Base
     puts "#{files.size} file(s) written to #{dir}"
   end
 
-  desc "migrate", "Run pending content migrations from schema/migrations"
+  desc "migrate", "Run pending content migrations from site/schema/migrations"
   option :dry_run, type: :boolean, desc: "Print what would change, then roll everything back"
   def migrate
     boot_application!

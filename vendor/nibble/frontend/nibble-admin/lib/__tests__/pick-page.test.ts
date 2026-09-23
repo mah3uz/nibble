@@ -12,14 +12,14 @@ describe('pickCpPage', () => {
   })
 
   it('prefers the site copy so a screen can be replaced without editing ours', () => {
-    const site = { '/repo/site/pages/admin/entries/Edit.vue': 'site-edit' }
+    const site = { '/repo/site/cp/pages/admin/entries/Edit.vue': 'site-edit' }
 
     expect(pickCpPage('admin/entries/Edit', site, app)).toBe('site-edit')
     expect(pickCpPage('admin/media/Index', site, app)).toBe('nibble-media')
   })
 
   it('matches on the full path so a nested name cannot be shadowed by a shorter one', () => {
-    const site = { '/repo/site/pages/Edit.vue': 'wrong' }
+    const site = { '/repo/site/cp/pages/Edit.vue': 'wrong' }
 
     expect(pickCpPage('admin/entries/Edit', site, app)).toBe('nibble-edit')
   })

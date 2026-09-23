@@ -14,7 +14,7 @@ module Nibble
       end
       WORKFLOW = ->(value) { %w[simple review].include?(value) }
       SORT = ->(value) { value.is_a?(String) && value.match?(/\A[a-z_]+:(asc|desc)\z/) }
-      # A folder inside content/, named without the prefix, so a collection cannot read from anywhere else.
+      # A folder inside site/content/, named without the prefix, so a collection cannot read from anywhere else.
       IN_CONTENT = ->(value) { STRING.(value) && !value.start_with?("/") && !value.split("/").include?("..") }
 
       KINDS = {

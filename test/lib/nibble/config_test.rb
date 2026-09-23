@@ -15,8 +15,21 @@ class Nibble::ConfigTest < ActiveSupport::TestCase
     assert_nil config.theme_path
   end
 
-  test "the active theme resolves to its folder under themes/" do
-    assert_equal Rails.root.join("themes/starter"), config("theme" => "starter").theme_path
+  test "a theme that ships with Nibble is read from Nibble's folder, so a site needs no copy to use it" do
+    assert_equal Nibble.core_root.join("themes/crumbs"), config("theme" => "crumbs").theme_path
+  end
+
+  test "a site's theme is found before Nibble's of the same name, so a site can replace one outright" do
+    created = Rails.root.join("site/themes").exist? ? Rails.root.join("site/themes/crumbs") : Rails.root.join("site/themes")
+    Rails.root.join("site/themes/crumbs").mkpath
+
+    assert_equal Rails.root.join("site/themes/crumbs"), config("theme" => "crumbs").theme_path
+  ensure
+    FileUtils.rm_rf(created)
+  end
+
+  test "a theme nobody has is looked for where the site would put it, so the error names that folder" do
+    assert_equal Rails.root.join("site/themes/starter"), config("theme" => "starter").theme_path
   end
 
   test "the theme the layout asks for is the theme the settings name" do
@@ -81,7 +94,7 @@ class Nibble::ConfigTest < ActiveSupport::TestCase
 
     assert_equal %i[core theme site], layers.map(&:first)
     assert_equal Nibble.site_schema_path, layers.last.last
-    assert Nibble.site_schema_path.directory?, "schema/ must exist for a site to drop files into"
+    assert Nibble.site_schema_path.directory?, "site/schema/ must exist for a site to drop files into"
   end
 
   test "a site that has not opted in keeps the old behaviour after an upgrade" do

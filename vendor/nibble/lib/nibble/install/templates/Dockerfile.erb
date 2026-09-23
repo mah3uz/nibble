@@ -45,9 +45,8 @@ RUN curl -sL https://github.com/nodenv/node-build/archive/master.tar.gz | tar xz
     /tmp/node-build-master/bin/node-build "${NODE_VERSION}" /usr/local/node && \
     rm -rf /tmp/node-build-master
 
-# Install application gems; Nibble's Gemfile takes its version from lib/nibble.rb
-COPY vendor/nibble/Gemfile vendor/nibble/package.json ./vendor/nibble/
-COPY vendor/nibble/lib/nibble.rb ./vendor/nibble/lib/
+# Install application gems; Nibble's Gemfile and package.json are read from its folder
+COPY vendor/nibble ./vendor/nibble
 COPY Gemfile Gemfile.lock ./
 
 RUN bundle install && \

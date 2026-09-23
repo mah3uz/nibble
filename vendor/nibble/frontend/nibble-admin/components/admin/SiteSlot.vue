@@ -5,8 +5,8 @@ import { find } from '@/lib/pick-page'
 
 const props = defineProps<{ name: string }>()
 
-const overrides = import.meta.glob<DefineComponent>('@site/slots/*.vue', { eager: true, import: 'default' })
-const override = computed(() => find(overrides, `/site/slots/${props.name}.vue`))
+const overrides = import.meta.glob<DefineComponent>('@site/cp/slots/*.vue', { eager: true, import: 'default' })
+const override = computed(() => find(overrides, `/site/cp/slots/${props.name}.vue`))
 </script>
 
 <template>

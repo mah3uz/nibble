@@ -4,8 +4,8 @@ This directory is yours, and it is where content lives as files rather than as r
 written by hand names a folder in here:
 
 ```yaml
-# schema/collections/docs.yml
-files: docs      # the Markdown in content/docs — content/docs says the same thing
+# site/schema/collections/docs.yml
+files: docs      # the Markdown in site/content/docs
 ```
 
 The folder is the collection. The site reads it when it starts, and in development whenever a file changes: a file

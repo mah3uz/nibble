@@ -55,7 +55,7 @@ module Nibble
       # A build has no database and no secrets, so what needs either is checked where the site runs.
       unless @static
         check_roles(schema)
-        capture("schema/migrations") { ContentMigrations.pending } if @config.equal?(Nibble.config)
+        capture("site/schema/migrations") { ContentMigrations.pending } if @config.equal?(Nibble.config)
         check_drift(schema) if @config.equal?(Nibble.config)
       end
       check_navigation(schema)
