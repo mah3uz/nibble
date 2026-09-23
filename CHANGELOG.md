@@ -31,6 +31,10 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   **Upgrade:** if your theme comes from `NIBBLE_THEME`, re-render `Dockerfile` when the upgrade offers it and pass the
   theme under `builder: args:` in `config/deploy.yml`.
 - **Tests follow `config/nibble.yml`,** whatever `NIBBLE_THEME` a shell exports for running the site.
+- **`bin/dev` renders pages on the server with the theme you are working on.** It rendered them with the last
+  production build in `public/vite-ssr` instead, whichever theme that was built for, so a view that build lacked failed
+  with "Page not found" and the rest showed stale markup until the browser replaced it. Server rendering now goes
+  through the Vite dev server whenever it is running.
 
 ### Changed
 
