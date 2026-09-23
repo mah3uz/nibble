@@ -18,6 +18,13 @@ class RepositoryTest < ActiveSupport::TestCase
       "install.sh runs before the app exists, so it carries its own copy — this keeps the two from drifting"
   end
 
+  test "Nibble's own site runs every release's behaviour from the release that brings it" do
+    raised = Rails.root.join("config/nibble.yml").read[/^\s*load_defaults:\s*"([^"]+)"/, 1]
+
+    assert_equal Nibble::VERSION, raised,
+      "bin/nibble-release raises load_defaults with the version; behind it, nothing here runs what a release switched on"
+  end
+
   test "the release command points at the same place" do
     assert_match "REPOSITORY", Rails.root.join("bin/nibble-release").read
   end
