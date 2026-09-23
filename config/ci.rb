@@ -8,7 +8,8 @@ CI.run do
 
   step "Style: Ruby", "bin/rubocop"
   step "Content: nibble:build", "bin/rails nibble:build"
-  step "Schema: nibble:check", "bin/rails nibble:check"
+  # Against the test database: the development one holds whatever content a contributor works on.
+  step "Schema: nibble:check", "env RAILS_ENV=test bin/rails nibble:check"
   step "Style: Vue/TypeScript lint", "npm run lint"
   step "Style: Prettier", "npm run format:check"
   step "Types: vue-tsc", "npm run check"
