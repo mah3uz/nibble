@@ -72,7 +72,10 @@ module Nibble
           items << item("Forms", "/admin/forms", "forms") if forms?(user, schema)
           items << item("Blueprints", "/admin/blueprints", "blueprints") if Access.can?(user, "utilities.view")
           items << item("Trash", "/admin/trash", "trash") if Access.can?(user, "trash.view")
-          items << item("Redirects", "/admin/redirects", "redirects") if Access.can?(user, "redirects.manage")
+          if Access.can?(user, "redirects.manage")
+            children = [ item("Missing pages", "/admin/404s", "magnifying-glass") ]
+            items << item("Redirects", "/admin/redirects", "redirects", children:)
+          end
           items << item("Webhooks", "/admin/webhooks", "webhooks") if Access.can?(user, Webhooks::MANAGE_ABILITY)
           if Access.can?(user, "utilities.view")
             waiting = Releases.summary

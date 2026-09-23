@@ -32,4 +32,13 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
     get admin_root_path
     assert_redirected_to new_session_path
   end
+
+  # The screen existed, but nothing in the control panel led to it.
+  test "missing pages are reachable from the sidebar, under Redirects" do
+    get admin_root_path
+    page = JSON.parse(Nokogiri::HTML(response.body).at_css("script[data-page]").text)
+    redirects = page["props"]["admin"]["nav"].flat_map { |section| section["items"] }.find { |item| item["title"] == "Redirects" }
+
+    assert_equal [ [ "Missing pages", "/admin/404s" ] ], redirects["children"].map { |child| child.values_at("title", "url") }
+  end
 end
