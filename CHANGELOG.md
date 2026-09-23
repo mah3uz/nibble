@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.16.0 — 2026-09-24 04:39 +0600
+
 ### What's new
 
 - **`bin/rails nibble:version` prints the release a site runs,** and says so when the install record in
