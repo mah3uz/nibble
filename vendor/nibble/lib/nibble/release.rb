@@ -1,97 +1,24 @@
 module Nibble
   module Release
+    # The oldest release this one can upgrade from; packed into the archive's VERSION.
     MINIMUM_UPGRADE_FROM = "0.1.0".freeze
-    Blocker = Data.define(:reason)
-    Installed = Data.define(:version, :commit, :at, :answers)
-    Declared = Data.define(:version, :minimum_upgrade_from, :ruby_floor, :node_floor)
+    Installed = Data.define(:version, :at, :answers)
 
     class << self
-      def blockers(from:, ruby: RUBY_VERSION, node: node_version, to: VERSION, release: here(to))
-        [
-          too_old(from, release.version, release.minimum_upgrade_from),
-          below_floor("ruby", ruby, release.ruby_floor),
-          node && below_floor("node", node, release.node_floor)
-        ].compact
-      end
-
-      def too_old(from, to = VERSION, minimum = MINIMUM_UPGRADE_FROM)
-        return Blocker.new(reason: "this install has no recorded version") if from.blank?
-        return nil if at_least?(from, minimum)
-
-        Blocker.new(reason: "#{to} upgrades from #{minimum} and up; this install is #{from}, so go through #{minimum} first")
-      end
-
-      # A release carries its floors in VERSION; this checkout, which has none, reads them from where they are declared.
-      def here(to = VERSION, version_file: Nibble.core_root.join("VERSION"))
-        declared = version_file.file? ? YAML.safe_load_file(version_file).to_h : {}
-        Declared.new(version: to, minimum_upgrade_from: declared["minimum_upgrade_from"] || MINIMUM_UPGRADE_FROM,
-                     ruby_floor: declared["ruby"]&.to_s || ruby_floor, node_floor: declared["node"]&.to_s || node_floor)
-      end
-
-      # An upgrade is gated on the floors of the release being taken, which are only readable from its tag.
-      def declared(ref, root: Rails.root)
-        version = show(ref, "vendor/nibble/lib/nibble.rb", root)[/VERSION = "([^"]+)"/, 1]
-        raise Error, "#{ref} doesn't declare a Nibble version, so it isn't a release" if version.blank?
-
-        Declared.new(
-          version:,
-          minimum_upgrade_from: show(ref, "vendor/nibble/lib/nibble/release.rb", root)[/MINIMUM_UPGRADE_FROM = "([^"]+)"/, 1].presence || version,
-          ruby_floor: show(ref, ".ruby-version", root).strip.delete_prefix("ruby-"),
-          node_floor: JSON.parse(show(ref, "package.json", root).presence || "{}").dig("engines", "node").to_s.delete_prefix(">=").presence || "0"
-        )
-      end
-
-      def tags(root: Rails.root)
-        git("tag", "--list", "v*", root:).lines.map(&:strip)
-          .select { |tag| Gem::Version.correct?(tag.delete_prefix("v")) }
-          .sort_by { |tag| Gem::Version.new(tag.delete_prefix("v")) }
-      end
-
-      def latest(root: Rails.root) = tags(root:).last
-
-      # Written by install and upgrade: without it there is no baseline to tell a site's edits from ours. Only
-      # an upgrade moves that baseline; installing into a site again would move it to the site's own HEAD and
-      # every file it had touched since would read as ours, changed in place.
-      def record_install(version:, commit: nil, answers: nil, root: Rails.root)
+      # Written by install and upgrade. The answers are what let an upgrade render a site's files again, so taking
+      # defaults, or recording only a new version, keeps the ones already there.
+      def record_install(version:, answers: nil, root: Rails.root)
         kept = answers.presence || installed(root:)&.answers || {}
-        commit ||= installed(root:)&.commit.presence || Eject.commit(root:)
-        Metadata.write("install", { "version" => version, "commit" => commit, "at" => Date.current.to_s,
-                                    "answers" => kept.deep_stringify_keys }, root:)
+        Metadata.write("install", { "version" => version, "at" => Date.current.to_s, "answers" => kept.deep_stringify_keys }, root:)
       end
 
       def installed(root: Rails.root)
         data = Metadata.read(root:)["install"] or return nil
 
-        Installed.new(version: data["version"], commit: data["commit"], at: data["at"],
-                      answers: (data["answers"] || {}).symbolize_keys)
+        Installed.new(version: data["version"], at: data["at"], answers: (data["answers"] || {}).symbolize_keys)
       end
 
       def at_least?(version, floor) = Gem::Version.new(version.to_s) >= Gem::Version.new(floor.to_s)
-
-      def ruby_floor = Rails.root.join(".ruby-version").read.strip.delete_prefix("ruby-")
-
-      def node_floor
-        engines = JSON.parse(Nibble.core_root.join("package.json").read)["engines"].to_h
-        engines["node"].to_s.delete_prefix(">=").presence || "0"
-      end
-
-      def node_version
-        IO.popen([ "node", "--version" ], err: File::NULL, &:read).strip.delete_prefix("v").presence
-      rescue Errno::ENOENT
-        nil
-      end
-
-      private
-
-      def git(*args, root:) = IO.popen([ "git", "-C", root.to_s, *args ], err: File::NULL, &:read)
-
-      def show(ref, path, root) = git("show", "#{ref}:#{path}", root:)
-
-      def below_floor(tool, running, floor)
-        return nil if at_least?(running, floor)
-
-        Blocker.new(reason: "#{tool} #{floor} or newer is needed; this machine has #{running}")
-      end
     end
   end
 end

@@ -269,7 +269,8 @@ class NibbleCommand < Rails::Command::Base
     ejected = Nibble::Eject.manifest
     stale = Nibble::Eject.stale.map(&:target)
     puts "--- nibble support ---"
-    puts "commit:   #{Nibble::Eject.commit(root: Rails.root) || "unknown"}"
+    installed = Nibble::Release.installed
+    puts "nibble:   #{Nibble::VERSION} · installed record: #{installed ? "#{installed.version} since #{installed.at}" : "none"}"
     puts "ruby:     #{RUBY_VERSION} · rails: #{Rails.version} · env: #{Rails.env}"
     puts "database: #{ActiveRecord::Base.connection_db_config.adapter}"
     puts "theme:    #{theme ? "#{theme.handle} #{theme.manifest['version']} (nibble #{theme.manifest['nibble']})" : "none"}"

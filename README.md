@@ -64,6 +64,13 @@ refuses if Nibble's own files were changed in place, checks the release's requir
 swaps in the new `vendor/nibble` (keeping the old one in `tmp/`) and migrates — asking about the files it cannot
 decide for you. See [Upgrading][upgrading].
 
+### Switching on new behaviour
+
+An upgrade never changes how your site behaves on its own. When a release changes something a visitor or an editor
+would notice, the change arrives switched off, and its changelog entry says so. The `load_defaults` line in
+`config/nibble.yml` names the release whose behaviour your site uses: when you are ready for a release's changes, set
+it to that release's version and run `bin/rails nibble:check`. `bin/rails nibble` shows where a site stands.
+
 ## Licence
 
 MIT — see `LICENSE`. Use it, change it, sell it, rebrand the control panel; keep the copyright notice with

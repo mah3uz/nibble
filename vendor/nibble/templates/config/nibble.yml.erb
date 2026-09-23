@@ -1,7 +1,9 @@
 # Your settings. Nibble ships defaults for everything not listed here, so keep this file short:
-# what you set, you maintain. See site/schema/README.md for content, and the docs for every key.
+# what you set, you maintain. See site/README.md for what goes where, and the docs for every key.
 default: &default
-  # Behaviour introduced after this version stays off until you raise it. Read the changelog first.
+  # The release whose behaviour this site uses. When a release changes something your site would notice, the change
+  # arrives switched off; set this to that release's version to switch it on, after reading its changelog entry.
+  # Upgrading never changes this line, so an upgrade alone never changes how the site behaves.
   load_defaults: "<%= version %>"
   theme: <%= theme %>
   url: <%= url %>

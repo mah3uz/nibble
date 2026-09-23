@@ -20,14 +20,14 @@ class Nibble::MetadataTest < ActiveSupport::TestCase
   teardown { FileUtils.rm_rf(@root) }
 
   test "recording an install leaves a person's settings and comments exactly as they wrote them" do
-    Nibble::Release.record_install(version: "0.15.0", commit: "abc", answers: { theme: "crumbs" }, root: @root)
+    Nibble::Release.record_install(version: "0.15.0", answers: { theme: "crumbs" }, root: @root)
 
     assert @root.join("config/nibble.yml").read.start_with?(SETTINGS.rstrip), "a YAML dump would have dropped every comment"
-    assert_equal "abc", Nibble::Release.installed(root: @root).commit
+    assert_equal "0.15.0", Nibble::Release.installed(root: @root).version
   end
 
   test "the record never reaches the settings Rails reads" do
-    Nibble::Release.record_install(version: "0.15.0", commit: "abc", answers: { theme: "crumbs" }, root: @root)
+    Nibble::Release.record_install(version: "0.15.0", answers: { theme: "crumbs" }, root: @root)
 
     settings = Rails.application.config_for(@root.join("config/nibble.yml"), env: "production")
 
@@ -37,8 +37,8 @@ class Nibble::MetadataTest < ActiveSupport::TestCase
   end
 
   test "recording again replaces the record rather than stacking a second one" do
-    Nibble::Release.record_install(version: "0.14.0", commit: "abc", root: @root)
-    Nibble::Release.record_install(version: "0.15.0", commit: "def", root: @root)
+    Nibble::Release.record_install(version: "0.14.0", root: @root)
+    Nibble::Release.record_install(version: "0.15.0", root: @root)
 
     assert_equal 1, @root.join("config/nibble.yml").read.scan(Nibble::Metadata::MARKER).size
     assert_equal "0.15.0", Nibble::Release.installed(root: @root).version
@@ -49,23 +49,23 @@ class Nibble::MetadataTest < ActiveSupport::TestCase
     @root.join(source).dirname.mkpath
     @root.join(source).write("<template>ours</template>")
 
-    Nibble::Release.record_install(version: "0.15.0", commit: "abc", root: @root)
+    Nibble::Release.record_install(version: "0.15.0", root: @root)
     Nibble::Eject.run(source, root: @root)
 
-    assert_equal "abc", Nibble::Release.installed(root: @root).commit
+    assert_equal "0.15.0", Nibble::Release.installed(root: @root).version
     assert Nibble::Eject.ejected?(source, root: @root)
   end
 
   test "a site with no settings file yet still gets its record" do
     @root.join("config/nibble.yml").delete
 
-    Nibble::Release.record_install(version: "0.15.0", commit: "abc", root: @root)
+    Nibble::Release.record_install(version: "0.15.0", root: @root)
 
     assert_equal "0.15.0", Nibble::Release.installed(root: @root).version
   end
 
   test "a theme named only in the record is never taken for the site's" do
-    Nibble::Release.record_install(version: "0.15.0", commit: "abc", answers: { theme: "crumbs" }, root: @root)
+    Nibble::Release.record_install(version: "0.15.0", answers: { theme: "crumbs" }, root: @root)
     @root.join("vendor/nibble/themes/crumbs/views").mkpath
     @root.join("vendor/nibble/themes/crumbs/theme.yml").write({ "name" => "Crumbs", "handle" => "crumbs" }.to_yaml)
     @root.join("vendor/nibble/themes/crumbs/package.json").write(%({"name":"@nibble-theme/crumbs","private":true}))

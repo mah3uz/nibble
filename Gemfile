@@ -27,6 +27,3 @@ group :test do
   gem "selenium-webdriver"
   gem "webmock", "~> 3.26", require: false
 end
-
-# A site adds its own gems here; Nibble never ships this file.
-eval_gemfile "Gemfile.local" if File.exist?(File.expand_path("Gemfile.local", __dir__))

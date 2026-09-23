@@ -6,8 +6,26 @@ This directory is yours, and an upgrade never touches what you put in it:
 - `content/` — content kept as files
 - `themes/<name>/` — your own theme; one of Nibble's, such as `crumbs`, needs no copy here
 - `cp/` — your control panel overrides
-- `initializers/` — your own Ruby, run at boot
-- `test/` — your own tests
+
+Your own Ruby lives where Rails puts it — `app/`, `config/initializers/`, `test/` — and is yours as well.
+
+## Schema
+
+Schema is read in three layers — Nibble's own, then your theme's, then `site/schema/` — and the last one to define a
+handle wins, so a file here named after one of Nibble's replaces it. It uses the same layout as Nibble's:
+`collections/<handle>.yml`, `taxonomies/`, `blueprints/collections/<collection>/<handle>.yml`, `fieldsets/`,
+`globals/`, `navigation/`, `forms/`.
+
+**An override replaces the whole file**, not the keys in it: start from a copy of the one you are replacing. To
+remove one of Nibble's collections instead, list it under `disable:` in `config/nibble.yml`. Run
+`bin/rails nibble:check` after editing anything here.
+
+## Content as files
+
+A collection whose pages are written by hand names a folder in `site/content/` with `files: <folder>`. The folder is
+the collection: a file is a page, a folder's `index.md` is the page its files sit under, and frontmatter becomes
+fields. Every page needs an `id:` that never changes. Pages written this way are read-only in the control panel, and
+nothing outside `site/content/` can be named by `files:`.
 
 ## Control panel overrides
 
@@ -27,8 +45,8 @@ prefer the supported extension points first and eject only when there is no othe
 
 ## Your own Ruby
 
-`site/initializers/*.rb` runs after Rails' own initializers. Use it to subscribe to Nibble's load hooks rather than
-reopening its classes:
+An initializer of your own in `config/initializers/` runs after Nibble's. Use it to subscribe to Nibble's load hooks
+rather than reopening its classes:
 
 ```ruby
 ActiveSupport.on_load(:nibble_entry) do

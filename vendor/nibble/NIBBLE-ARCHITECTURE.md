@@ -45,13 +45,13 @@ evaluates `vendor/nibble/Gemfile`, which loads `Nibble::Engine`; `config/applica
   theme runtime, `@nibble`), `entrypoints/`, `ssr/`. It is Vite's `sourceCodeDir`.
 - `vendor/nibble/core_schema/` — the baseline schema YAML. Schema is read in three layers: this, then the theme's
   `schema/`, then the site's own `site/schema/`, and the last to define a handle wins.
-- `app/`, `site/`, `config/nibble.yml`, `config/deploy*.yml`, `db/migrate`, `Gemfile.local` — **a site's, not ours.**
-  Nibble renders them from `vendor/nibble/templates/` at install; it never writes them again. A site's own `app/`
-  loads beside ours and its views are looked in first. Under `site/`: `schema/`, `content/` (content kept as files — the only
-  place a collection's `files` can name), `themes/<its own>/`, `cp/pages/<same path as ours>.vue` replacing a
-  control panel screen, `cp/slots/*.vue` replacing chrome, `initializers/*.rb` run at boot, and `test/` for its own
-  tests; `site/types.d.ts` is generated from the schema and imported as `@site/types`. `bin/rails nibble:eject
-  <path>` is how a site takes one of our files over, recorded in `config/nibble.yml`.
+- Everything outside `vendor/nibble/` — `app/`, `config/`, `db/migrate`, `test/`, `site/`, the `Gemfile` — is **a site's,
+  not ours.** Nibble renders it from `vendor/nibble/templates/` at install and never writes it again; Rails' own
+  `config/initializers/` and `test/` serve a site's Ruby and tests. A site's own `app/` loads beside ours and its views
+  are looked in first. Under `site/`: `schema/`, `content/` (content kept as files — the only place a collection's
+  `files` can name), `themes/<its own>/`, `cp/pages/<same path as ours>.vue` replacing a control panel screen and
+  `cp/slots/*.vue` replacing chrome; `site/types.d.ts` is generated from the schema and imported as `@site/types`.
+  `bin/rails nibble:eject <path>` is how a site takes one of our files over, recorded in `config/nibble.yml`.
 - Themes: `site/themes/<theme>/` is looked in first, then `vendor/nibble/themes/<theme>/`, where `crumbs` ships.
   Each has `layouts/`, `views/` (each `.vue` may have a `.yml` query sidecar), `views/sets/`,
   `components/`, `styles/`, `schema/`; **a theme never ships content**; `@theme` resolves to the active one,

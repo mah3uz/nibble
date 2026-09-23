@@ -37,10 +37,6 @@ module Nibble
       app.config.middleware.insert_before Rack::MethodOverride, FormRequestLimitMiddleware
     end
 
-    initializer "nibble.site_initializers", after: :load_config_initializers do |app|
-      app.root.glob("site/initializers/*.rb").sort.each { |file| load file }
-    end
-
     # Bundler loads Nibble itself, so it outlives a reload; what it memoised would hold the previous classes.
     config.to_prepare do
       ::Nibble.config = nil

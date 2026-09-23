@@ -59,8 +59,8 @@ class ReleaseArchiveTest < ActiveSupport::TestCase
 
     assert_equal Nibble::VERSION, declared["version"]
     assert_equal Nibble::Release::MINIMUM_UPGRADE_FROM, declared["minimum_upgrade_from"]
-    assert_equal Nibble::Release.ruby_floor, declared["ruby"]
-    assert_equal Nibble::Release.node_floor, declared["node"]
+    assert_equal Rails.root.join(".ruby-version").read.strip.delete_prefix("ruby-"), declared["ruby"]
+    assert_equal JSON.parse(Nibble.core_root.join("package.json").read).dig("engines", "node").delete_prefix(">="), declared["node"]
     assert_equal Nibble::THEME_API_VERSION, declared["theme_api"]
   end
 end

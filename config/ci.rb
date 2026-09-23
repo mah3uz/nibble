@@ -21,7 +21,6 @@ CI.run do
   # Build test assets up front so no test triggers (and races) an on-demand Vite build.
   step "Build: test assets", "env RAILS_ENV=test bin/vite build"
   step "Tests: Rails", "bin/rails test"
-  step "Tests: yours", "bin/rails test site/test" if Dir.glob("site/test/**/*_test.rb").any?
 
   step "Tests: Seeds", "env RAILS_ENV=test bin/rails db:seed:replant"
 end

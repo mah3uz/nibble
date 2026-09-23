@@ -9,9 +9,12 @@ class Nibble::EjectTest < ActiveSupport::TestCase
 
   teardown { FileUtils.rm_rf(@root) }
 
-  def commit(message) = git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", message)
-
-  def git(*args) = system("git", "-C", @root.to_s, *args, out: File::NULL, err: File::NULL)
+  # vendor/nibble as a release leaves it: these files, and a MANIFEST of what they were.
+  def release(files)
+    files.each { |relative, body| write(relative, body) }
+    manifest = files.keys.map { |relative| "#{Digest::SHA256.hexdigest(files[relative])}  #{relative.delete_prefix('vendor/nibble/')}\n" }
+    write("vendor/nibble/MANIFEST", manifest.sort.join)
+  end
 
   def write(relative, body)
     path = @root.join(relative)
@@ -62,22 +65,7 @@ class Nibble::EjectTest < ActiveSupport::TestCase
     assert_not @root.join("config/nibble.yml").exist?, "a refused eject records nothing"
   end
 
-  test "a copy is flagged once our original moves on, so nobody silently misses a fix" do
-    git("init", "-q")
-    git("add", "-A")
-    commit("first")
-    Nibble::Eject.run(@source, root: @root)
-    ejection = Nibble::Eject.manifest(root: @root).fetch(@source)
-
-    assert_empty Nibble::Eject.stale(root: @root), "nothing is stale the moment it is ejected"
-
-    @root.join(@source).write("<template>ours, fixed</template>")
-    git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-aqm", "fix")
-
-    assert_equal [ ejection.target ], Nibble::Eject.stale(root: @root).map(&:target)
-  end
-
-  test "a copy is flagged once an upgrade replaces our original, with no git involved" do
+  test "a copy is flagged once an upgrade replaces our original, so nobody silently misses a fix" do
     ejection = Nibble::Eject.run(@source, root: @root)
     assert_empty Nibble::Eject.stale(root: @root), "nothing is stale the moment it is ejected"
 
@@ -86,108 +74,42 @@ class Nibble::EjectTest < ActiveSupport::TestCase
     assert_equal [ ejection.target ], Nibble::Eject.stale(root: @root).map(&:target)
   end
 
-  test "a manifest with no commit recorded is never called stale, since there is nothing to compare" do
-    Nibble::Eject.run(@source, root: @root)
+  test "a record without the original's checksum is never called stale, since there is nothing to compare" do
+    Nibble::Metadata.write("ejected", { @source => { "target" => "site/cp/pages/admin/Dashboard.vue", "at" => "2026-01-01" } }, root: @root)
+    @root.join(@source).write("<template>changed</template>")
 
     assert_empty Nibble::Eject.stale(root: @root)
   end
 
-  test "an edit to one of our files without ejecting is reported, so mistakes surface" do
-    git("init", "-q")
-    write("vendor/nibble/lib/nibble/search.rb", "class Search; end")
-    git("add", "-A")
-    commit("first")
-    base = IO.popen([ "git", "-C", @root.to_s, "rev-parse", "HEAD" ], &:read).strip
-    Nibble::Release.record_install(version: "0.1.0", commit: base, root: @root)
-
+  test "an edit to one of our files without ejecting is reported, so it surfaces before an upgrade refuses" do
+    release(@source => "<template>ours</template>", "vendor/nibble/lib/nibble/search.rb" => "class Search; end")
     assert_empty Nibble::Eject.unmanaged(root: @root), "an untouched install has nothing to report"
 
     @root.join("vendor/nibble/lib/nibble/search.rb").write("class Search; def hacked = true; end")
-    git("add", "-A")
-    commit("site edit")
 
     assert_equal [ "vendor/nibble/lib/nibble/search.rb" ], Nibble::Eject.unmanaged(root: @root)
   end
 
-  test "a file the installer wrote is the site's to edit, so changing it is never reported" do
-    git("init", "-q")
-    write("config/application.rb", "module Site; end")
-    write("Gemfile", %(eval_gemfile "vendor/nibble/Gemfile"))
-    git("add", "-A")
-    commit("first")
-    base = IO.popen([ "git", "-C", @root.to_s, "rev-parse", "HEAD" ], &:read).strip
-    Nibble::Release.record_install(version: "0.1.0", commit: base, root: @root)
+  test "a file of ours the site deleted is reported, because the upgrade will stop on it" do
+    release(@source => "<template>ours</template>", "vendor/nibble/lib/nibble/search.rb" => "class Search; end")
+    @root.join("vendor/nibble/lib/nibble/search.rb").delete
 
-    @root.join("config/application.rb").write("module Site; config.time_zone = 'Sydney'; end")
-    @root.join("Gemfile").write(%(eval_gemfile "vendor/nibble/Gemfile"\ngem "money"))
-    git("add", "-A")
-    commit("site edits")
+    assert_equal [ "vendor/nibble/lib/nibble/search.rb" ], Nibble::Eject.unmanaged(root: @root)
+  end
+
+  test "files the site owns are never reported: what the installer wrote, what it added, and what it ejected" do
+    release(@source => "<template>ours</template>")
+    write("config/application.rb", "module Site; config.time_zone = 'Sydney'; end")
+    write("app/models/invoice.rb", "class Invoice; end")
+    Nibble::Eject.run(@source, root: @root)
+    @root.join("site/cp/pages/admin/Dashboard.vue").write("<template>theirs</template>")
 
     assert_empty Nibble::Eject.unmanaged(root: @root)
   end
 
-  test "an upgrade can show what changed upstream since a file was ejected" do
-    git("init", "-q")
-    git("add", "-A")
-    commit("first")
-    ejection = Nibble::Eject.run(@source, root: @root)
+  test "a checkout no release came from has nothing to compare, so nothing is reported" do
+    write("vendor/nibble/lib/nibble/search.rb", "class Search; def hacked = true; end")
 
-    assert_empty Nibble::Eject.diff_since(ejection, root: @root), "nothing has moved on yet"
-
-    write(@source, "<template>ours, improved</template>")
-    git("add", "-A")
-    commit("our improvement")
-
-    assert_includes Nibble::Eject.diff_since(ejection, root: @root), @source,
-                    "a site cannot decide whether to take an improvement it cannot see"
-  end
-
-  test "a site's own files are not reported as edits to ours" do
-    git("init", "-q")
-    write("vendor/nibble/lib/nibble/search.rb", "class Search; end")
-    git("add", "-A")
-    commit("first")
-    base = IO.popen([ "git", "-C", @root.to_s, "rev-parse", "HEAD" ], &:read).strip
-    Nibble::Release.record_install(version: "0.1.0", commit: base, root: @root)
-
-    write("vendor/nibble/lib/nibble/their_own.rb", "class TheirOwn; end")
-    write("app/models/invoice.rb", "class Invoice; end")
-    git("add", "-A")
-    commit("the site writes its own")
-
-    assert_empty Nibble::Eject.unmanaged(root: @root),
-                 "a file only they have cannot conflict with ours, and app/ is theirs now"
-  end
-
-  test "a file of ours the site deleted is reported, because the upgrade will stop on it" do
-    git("init", "-q")
-    write("vendor/nibble/lib/nibble/search.rb", "class Search; end")
-    git("add", "-A")
-    commit("first")
-    base = IO.popen([ "git", "-C", @root.to_s, "rev-parse", "HEAD" ], &:read).strip
-    Nibble::Release.record_install(version: "0.1.0", commit: base, root: @root)
-
-    @root.join("vendor/nibble/lib/nibble/search.rb").delete
-    git("add", "-A")
-    commit("the site removes one of ours")
-
-    assert_equal [ "vendor/nibble/lib/nibble/search.rb" ], Nibble::Eject.unmanaged(root: @root)
-  end
-
-  test "a properly ejected copy is not reported as an accident" do
-    git("init", "-q")
-    git("add", "-A")
-    commit("first")
-    base = IO.popen([ "git", "-C", @root.to_s, "rev-parse", "HEAD" ], &:read).strip
-    Nibble::Release.record_install(version: "0.1.0", commit: base, root: @root)
-    Nibble::Eject.run(@source, root: @root)
-    git("add", "-A")
-    commit("ejected")
-
-    assert_empty Nibble::Eject.unmanaged(root: @root), "site/ is theirs, so an override is never drift"
-  end
-
-  test "without a recorded install there is no baseline, so nothing is guessed" do
     assert_empty Nibble::Eject.unmanaged(root: @root)
   end
 

@@ -68,6 +68,7 @@ test = { "RAILS_ENV" => "test" }
 run!(test, "bin/rails", "db:prepare", chdir: site)
 run!(test, "bin/rails", "zeitwerk:check", chdir: site)
 run!(test, "bin/rails", "nibble:check", chdir: site)
+run!(test, "bin/rails", "test", chdir: site)
 run!(test, "bin/vite", "build", chdir: site)
 run!(test, "bin/vite", "build", "--ssr", chdir: site)
 run!(test, "bin/rails", "runner", <<~'RUBY', chdir: site)

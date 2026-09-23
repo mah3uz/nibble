@@ -68,6 +68,15 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   `secret_key_base: <the output of bin/rails secret>` with `bin/rails credentials:edit`.
 - **Installing with `--defaults` records the answers it used,** so later upgrades can offer the files rendered from
   them.
+- **A site's own Ruby and tests live where Rails puts them.** `site/initializers/` and `site/test/` are gone, and so is
+  `Gemfile.local`: a site's `config/initializers/`, `test/` and `Gemfile` are its own now, and a new site starts with
+  Rails' `test/test_helper.rb`. The notes that were in `site/schema/README.md` and `site/content/README.md` are in
+  `site/README.md`.
+  **Upgrade:** move `site/initializers/*.rb` into `config/initializers/`, `site/test/` into `test/`, and the gems in
+  `Gemfile.local` into `Gemfile`.
+- **Nibble's files changed in place are found by checksum.** `bin/rails nibble:check` compares `vendor/nibble` with
+  the release's `MANIFEST` and names any file changed there, which the next upgrade would refuse to replace. The
+  install record no longer holds a git commit, and nothing in Nibble needs git.
 - **Nibble's record of a site lives at the end of `config/nibble.yml`,** below a line that says so: the release it is
   on, the install's answers and what it ejected. Only that part is ever rewritten, so your settings and comments
   above it stay as you wrote them. `.nibble/` is gone.

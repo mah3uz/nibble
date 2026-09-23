@@ -206,7 +206,7 @@ module Nibble
         @warnings << Problem.new(source: ejection.target, message: "#{ejection.source} has changed since you took this copy on #{ejection.at}", level: :warning)
       end
       Eject.unmanaged.each do |path|
-        @warnings << Problem.new(source: path, message: "changed here rather than ejected, so the next upgrade will conflict on it", level: :warning)
+        @warnings << Problem.new(source: path, message: "changed here rather than ejected, so the next upgrade will refuse until it is put back", level: :warning)
       end
     end
 
