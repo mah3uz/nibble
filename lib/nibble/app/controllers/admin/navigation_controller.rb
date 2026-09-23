@@ -11,6 +11,8 @@ module Admin
 
     def edit
       item = load_item
+      return render_files_menu(item) if (folder = files_folder(item))
+
       tree = record(item)
       render inertia: "admin/navigation/Edit", props: {
         menu: { handle: item.handle, title: item["title"], max_depth: item["max_depth"] || 3, locale: tree.locale },
@@ -21,6 +23,10 @@ module Admin
 
     def update
       item = load_item
+      if (folder = files_folder(item))
+        return redirect_to edit_admin_navigation_path(item.handle), alert: "#{item['title']} is built from #{folder}. Change the files and deploy."
+      end
+
       result = Nibble::Lifecycle.call(record(item), :save, { "tree" => from_tree_items(params[:tree]) }, actor: Current.user)
       return redirect_back_or_to(edit_admin_navigation_path(item.handle), inertia: { errors: { tree: Array(result.errors.values.flatten).first } }) unless result.ok?
 
@@ -28,6 +34,25 @@ module Admin
     end
 
     private
+
+    # The public site builds this menu from the folders (PageProps#present_navigation), so a row saved here would be
+    # read by nothing.
+    def files_folder(item)
+      collection = Nibble::Files.collections.find { |one| one.handle == item.handle } or return nil
+      Nibble::Files.root_for(collection).relative_path_from(Rails.root).to_s
+    end
+
+    def render_files_menu(item)
+      render inertia: "admin/navigation/Edit", props: {
+        menu: { handle: item.handle, title: item["title"], max_depth: item["max_depth"] || 3, locale: Nibble.config.default_locale.code },
+        tree: [], records: [],
+        source: { folder: files_folder(item), links: flatten(Nibble::Files.index.tree(item.handle)) }
+      }
+    end
+
+    def flatten(links, depth = 0)
+      links.flat_map { |link| [ { title: link["title"], url: link["url"], depth: }, *flatten(link["children"], depth + 1) ] }
+    end
 
     def load_item
       item = Nibble.schema.find(:navigation, params[:handle]) or raise ActiveRecord::RecordNotFound

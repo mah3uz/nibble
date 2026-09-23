@@ -12,6 +12,7 @@ const props = defineProps<{
   menu: { handle: string; title: string; max_depth: number; locale: string }
   tree: NavTreeItem[]
   records: NavEntry[]
+  source?: { folder: string; links: { title: string; url: string; depth: number }[] } | null
 }>()
 
 const page = usePage<{ errors: Record<string, string> }>()
@@ -51,9 +52,30 @@ function save() {
       icon="navigation"
       :breadcrumbs="[{ label: 'Navigation', url: '/admin/navigation' }, { label: menu.title }]"
     >
-      <template #actions><Button :disabled="processing" @click="save">Save</Button></template>
+      <template v-if="!source" #actions><Button :disabled="processing" @click="save">Save</Button></template>
     </PageHeader>
-    <p v-if="error" class="mb-4 text-sm text-destructive">{{ error }}</p>
-    <NavTree v-model="items" :depth="0" :max-depth="menu.max_depth" :entries="records" />
+    <template v-if="source">
+      <p
+        class="mb-4 rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-850 dark:text-gray-400"
+      >
+        Built from the folders in <code class="font-mono text-[0.8125rem]">{{ source.folder }}</code
+        >. Change the files there and deploy.
+      </p>
+      <ul class="rounded-lg border border-gray-200 dark:border-gray-700">
+        <li
+          v-for="link in source.links"
+          :key="link.url"
+          class="flex items-center justify-between gap-4 border-b border-gray-200 py-2.5 pr-3.5 text-sm last:border-b-0 dark:border-gray-700"
+          :style="{ paddingLeft: `${0.875 + link.depth * 1.5}rem` }"
+        >
+          <span>{{ link.title }}</span>
+          <code class="font-mono text-xs text-gray-500">{{ link.url }}</code>
+        </li>
+      </ul>
+    </template>
+    <template v-else>
+      <p v-if="error" class="mb-4 text-sm text-destructive">{{ error }}</p>
+      <NavTree v-model="items" :depth="0" :max-depth="menu.max_depth" :entries="records" />
+    </template>
   </div>
 </template>

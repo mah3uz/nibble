@@ -72,4 +72,19 @@ class Admin::FilesCollectionsTest < ActionDispatch::IntegrationTest
     get "/admin/collections/docs/entries/nothing/edit"
     assert_response :not_found
   end
+
+  # The public site builds this menu from the folders, so a tree saved here would be ignored by every page.
+  test "a menu built from files shows the folders' tree and saves nothing" do
+    get "/admin/navigation/docs/edit"
+    assert_response :success
+
+    assert_equal [ [ "Installing", 0 ], [ "Guides", 0 ], [ "Testing", 1 ] ],
+      props["source"]["links"].map { |link| [ link["title"], link["depth"] ] }
+    assert_match %r{docs\z}, props["source"]["folder"]
+
+    assert_no_difference -> { Nibble::Records::NavigationTree.count } do
+      patch "/admin/navigation/docs", params: { tree: [ { title: "Sneaked in", link: { type: "url", url: "/x" }, children: [] } ] }
+    end
+    assert_redirected_to "/admin/navigation/docs/edit"
+  end
 end
