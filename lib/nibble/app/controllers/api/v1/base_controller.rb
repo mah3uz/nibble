@@ -41,7 +41,7 @@ module Api
         code
       end
 
-      def presenter(query_context = context) = Nibble::Presenter.new(context: query_context)
+      def presenter(query_context = context) = Nibble::Presenter.new(context: query_context, api: true)
 
       def spec_for(source)
         {

@@ -101,4 +101,14 @@ class Nibble::ConfigTest < ActiveSupport::TestCase
     error = Nibble::SchemaError.new(file: Rails.root.join("lib/nibble/core_schema/collections/posts.yml"), key: "route", reason: "is required")
     assert_equal "lib/nibble/core_schema/collections/posts.yml: route: is required", error.message
   end
+
+  test "load_defaults opts a site into the behaviour of the release it names, and no later one" do
+    config = ->(value) { Nibble::Config.new({ "load_defaults" => value }) }
+
+    assert config.("0.15.0").defaults_at_least?("0.15.0")
+    assert config.("0.16.2").defaults_at_least?("0.15.0")
+    assert_not config.("0.14.7").defaults_at_least?("0.15.0")
+    assert_not config.(nil).defaults_at_least?("0.15.0"), "a site that never set it keeps every behaviour off"
+    assert_not config.("latest").defaults_at_least?("0.15.0"), "a value that is not a version opts into nothing"
+  end
 end

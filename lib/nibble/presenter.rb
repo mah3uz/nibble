@@ -6,8 +6,12 @@ module Nibble
 
     def self.url(uri) = uri && "#{Nibble.config.url.to_s.chomp('/')}#{uri}"
 
-    def initialize(context:)
+    API_HIDES_FIELDS_SINCE = "0.15.0".freeze
+
+    # api: true is the Content API, which leaves out fields marked api: false; a page still receives them.
+    def initialize(context:, api: false)
       @context = context
+      @api = api
       @preload = Preload.new(context:)
     end
 
@@ -25,7 +29,8 @@ module Nibble
       Dependencies.add("global:#{global.handle}")
       @preload.load([ global ])
       Resolvers.with_overrides(@preload.resolvers) do
-        { "handle" => global.handle, "locale" => global.locale }.merge(global.blueprint_fields.add_values(global.values).augment.values)
+        values = global.blueprint_fields.add_values(global.values).augment.values
+        { "handle" => global.handle, "locale" => global.locale }.merge(values.except(*hidden(global.blueprint_fields)))
       end
     end
 
@@ -51,7 +56,13 @@ module Nibble
 
         augmented[handle] = expand(record, handle, depth:, seen:)
       end
-      data.merge(augmented.except(*data.keys))
+      data.merge(augmented.except(*data.keys, *hidden(field_set)))
+    end
+
+    def hidden(fields)
+      return [] unless @api && Nibble.config.defaults_at_least?(API_HIDES_FIELDS_SINCE)
+
+      fields.all.values.reject(&:api?).map(&:handle)
     end
 
     def expand(record, handle, depth:, seen:)

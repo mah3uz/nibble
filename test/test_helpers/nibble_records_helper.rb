@@ -74,12 +74,16 @@ module NibbleRecordsHelper
       FileUtils.mkdir_p(path.dirname)
       path.write(content.deep_stringify_keys.to_yaml)
     end
-    Nibble.config = Nibble::Config.new({ "theme" => "records", "locales" => [ { "code" => "en", "default" => true } ], "reserved_paths" => [ "/admin" ],
+    configure_nibble_records
+    Nibble.reset_schema!
+    Nibble.boot!
+  end
+
+  def configure_nibble_records(load_defaults: nil)
+    Nibble.config = Nibble::Config.new({ "theme" => "records", "load_defaults" => load_defaults, "locales" => [ { "code" => "en", "default" => true } ], "reserved_paths" => [ "/admin" ],
                                          "outbound" => { "secrets" => [ "crm_token" ] },
                                          "assets" => { "presets" => { "card" => { "w" => 32, "h" => 16, "fit" => "crop", "srcset" => [ 16, 32 ] } } } },
       themes_path: @nibble_themes, site_schema_path: @nibble_themes.join("site_schema"))
-    Nibble.reset_schema!
-    Nibble.boot!
   end
 
   def reset_nibble_records_schema

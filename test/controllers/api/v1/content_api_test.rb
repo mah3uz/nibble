@@ -109,4 +109,46 @@ class Api::V1::ContentApiTest < ActionDispatch::IntegrationTest
 
     assert_not_nil token.reload.last_used_at
   end
+
+  def mark_api_false(load_defaults:)
+    blueprint = @nibble_themes.join("records/schema/blueprints/collections/articles/article.yml")
+    data = YAML.safe_load(blueprint.read)
+    data["tabs"]["main"]["sections"][0]["fields"] << { "handle" => "internal_note", "field" => { "type" => "text", "api" => false } }
+    blueprint.write(data.to_yaml)
+    global = @nibble_themes.join("site_schema/globals/company.yml")
+    global.dirname.mkpath
+    global.write({ "schema" => 1, "title" => "Company", "blueprint" => { "title" => "Company", "tabs" => { "main" => { "sections" => [ { "fields" => [
+      { "handle" => "name", "field" => { "type" => "text" } },
+      { "handle" => "internal_note", "field" => { "type" => "text", "api" => false } } ] } ] } } } }.to_yaml)
+    configure_nibble_records(load_defaults:)
+    Nibble.reset_schema!
+  end
+
+  # The option exists to keep a value off the API; a check on the top level alone would miss a relation leaking it.
+  test "a field marked api: false stays out of every API response, nested ones and globals included" do
+    mark_api_false(load_defaults: "0.15.0")
+    other = published("Other")
+    lifecycle(other, :save, { "internal_note" => "margin is thin" })
+    lifecycle(other.reload, :publish)
+    entry = publish_entry(create_entry("articles", { "title" => "Main", "internal_note" => "secret", "related" => [ other.id.to_s ] })).reload
+    lifecycle(Nibble::Records::GlobalSet.new(handle: "company", locale: "en"), :save, { "name" => "Tidewater", "internal_note" => "secret" })
+
+    get "/api/v1/entries/#{entry.uuid}", params: { include: "related" }, headers: auth
+    assert_response :success
+    assert_not body["data"].key?("internal_note")
+    assert_not body["data"]["related"].first.key?("internal_note")
+
+    get "/api/v1/globals/company", headers: auth
+    assert_equal "Tidewater", body["data"]["name"]
+    assert_not body["data"].key?("internal_note")
+  end
+
+  # A behaviour a site would notice ships switched off until the site opts in.
+  test "a site that has not raised load_defaults still gets api: false fields" do
+    mark_api_false(load_defaults: "0.14.7")
+    entry = publish_entry(create_entry("articles", { "title" => "Main", "internal_note" => "secret" })).reload
+
+    get "/api/v1/entries/#{entry.uuid}", headers: auth
+    assert_equal "secret", body["data"]["internal_note"]
+  end
 end

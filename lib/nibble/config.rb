@@ -66,6 +66,11 @@ module Nibble
     def content_path = @content_path || Nibble.content_path
 
     # Owned outright: what is not published from the folder is deleted from it.
+    # Behaviour a site would notice ships switched off until the site raises load_defaults to the release that brought it.
+    def defaults_at_least?(version)
+      Gem::Version.correct?(load_defaults) && Gem::Version.new(load_defaults) >= Gem::Version.new(version)
+    end
+
     def published_path = @published_path || Rails.public_path.join(Files::PUBLISHED)
 
     def active_theme = theme_path && Theme.load(theme_path)
