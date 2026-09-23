@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.16.1 — 2026-09-24 04:53 +0600
+
 ### What's fixed
 
 - **Installing with `--defaults` sets up the database,** as installing with questions does; it still leaves the
