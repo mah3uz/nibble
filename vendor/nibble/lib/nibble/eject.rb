@@ -4,7 +4,7 @@ module Nibble
     # Everything else was rendered once at install and is the site's to change.
     RESERVED = %w[vendor/nibble].freeze
 
-    Ejection = Data.define(:source, :target, :commit, :at)
+    Ejection = Data.define(:source, :target, :commit, :at, :sha256)
 
     class Refused < Error; end
 
@@ -17,12 +17,13 @@ module Nibble
 
         root.join(target).dirname.mkpath
         FileUtils.cp(root.join(source), root.join(target))
-        record(Ejection.new(source:, target:, commit: commit(root:), at: Date.current.to_s), root:)
+        record(Ejection.new(source:, target:, commit: commit(root:), at: Date.current.to_s,
+                            sha256: Digest::SHA256.file(root.join(source)).hexdigest), root:)
       end
 
       def manifest(root: Rails.root)
         Metadata.read(root:)["ejected"].to_h.to_h do |source, entry|
-          [ source, Ejection.new(source:, target: entry["target"], commit: entry["commit"], at: entry["at"]) ]
+          [ source, Ejection.new(source:, target: entry["target"], commit: entry["commit"], at: entry["at"], sha256: entry["sha256"]) ]
         end
       end
 
@@ -39,7 +40,12 @@ module Nibble
                  err: File::NULL, &:read)
       end
 
+      # Ours as it was when copied, against ours as it is now: an upgrade replaces the original and leaves the copy.
       def changed_since?(ejection, root: Rails.root)
+        if ejection.sha256.present?
+          original = root.join(ejection.source)
+          return !original.file? || Digest::SHA256.file(original).hexdigest != ejection.sha256
+        end
         return false if ejection.commit.blank?
 
         return false unless git(root, "cat-file", "-e", "#{ejection.commit}^{commit}")

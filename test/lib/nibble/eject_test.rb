@@ -77,6 +77,15 @@ class Nibble::EjectTest < ActiveSupport::TestCase
     assert_equal [ ejection.target ], Nibble::Eject.stale(root: @root).map(&:target)
   end
 
+  test "a copy is flagged once an upgrade replaces our original, with no git involved" do
+    ejection = Nibble::Eject.run(@source, root: @root)
+    assert_empty Nibble::Eject.stale(root: @root), "nothing is stale the moment it is ejected"
+
+    @root.join(@source).write("<template>ours, from the next release</template>")
+
+    assert_equal [ ejection.target ], Nibble::Eject.stale(root: @root).map(&:target)
+  end
+
   test "a manifest with no commit recorded is never called stale, since there is nothing to compare" do
     Nibble::Eject.run(@source, root: @root)
 

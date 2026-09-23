@@ -1,0 +1,104 @@
+#!/usr/bin/env ruby
+# The incoming release's half of an upgrade, handed over to by bin/rails nibble:upgrade from the site's root: it checks,
+# snapshots and swaps, so a fix to it applies in the release it ships with. The site's gems are still the old release's
+# until the swap, so this uses Ruby alone.
+require "digest"
+require "fileutils"
+require "open3"
+require "pathname"
+require "yaml"
+
+INCOMING = Pathname(__dir__).parent.expand_path
+ROOT = Pathname.pwd
+LIVE = ROOT.join("vendor/nibble")
+MARKER = "# Written by Nibble".freeze
+FORCE = ARGV.include?("--force")
+OFFLINE = ENV["NIBBLE_OFFLINE"] == "1"
+$stdout.sync = true
+
+def refuse!(message) = abort("upgrade refused: #{message}")
+def step(title) = puts("\n#{title}")
+def at_least?(version, floor) = Gem::Version.new(version.to_s) >= Gem::Version.new(floor.to_s)
+
+refuse!("run it from the site's root, through bin/rails nibble:upgrade") unless ROOT.join("config/nibble.yml").file?
+
+incoming = YAML.safe_load(INCOMING.join("VERSION").read)
+record = YAML.safe_load(ROOT.join("config/nibble.yml").read.partition(MARKER).last.lines.drop(1).join).to_h
+installed = record.dig("install", "version") or refuse!("config/nibble.yml has no install record, so there is nothing to upgrade from")
+refuse!("this site is already on #{installed}") if incoming["version"] == installed
+step "#{installed} → #{incoming['version']}"
+
+step "checking Nibble's files are as released"
+manifest = LIVE.join("MANIFEST")
+refuse!("vendor/nibble has no MANIFEST, so it wasn't installed from a release") unless manifest.file?
+edited = manifest.readlines.filter_map do |line|
+  sha, path = line.chomp.split("  ", 2)
+  file = LIVE.join(path)
+  path unless file.file? && Digest::SHA256.file(file).hexdigest == sha
+end
+if edited.any?
+  edited.each { |path| warn "  ✗ vendor/nibble/#{path} was changed here" }
+  refuse!("these would be replaced; copy a screen you need to change with bin/rails nibble:eject, or pass --force to lose the changes") unless FORCE
+  puts "  --force: these edits will be replaced"
+else
+  puts "  unchanged"
+end
+
+step "checking #{incoming['version']} can be taken"
+blockers = []
+unless at_least?(installed, incoming["minimum_upgrade_from"])
+  blockers << "#{incoming['version']} upgrades from #{incoming['minimum_upgrade_from']} and up; go through that first"
+end
+blockers << "#{incoming['version']} needs Ruby #{incoming['ruby']} or newer; this is #{RUBY_VERSION}" unless at_least?(RUBY_VERSION, incoming["ruby"])
+node, = Open3.capture2e("node", "--version") rescue nil
+node = node.to_s.strip.delete_prefix("v")
+blockers << "#{incoming['version']} needs Node #{incoming['node']} or newer; this is #{node.empty? ? 'missing' : node}" unless !node.empty? && at_least?(node, incoming["node"])
+settings = ROOT.join("config/nibble.yml").read.partition(MARKER).first
+theme = ENV["NIBBLE_THEME"].to_s.strip.then { |named| named.empty? ? settings[/^\s*theme:\s*["']?([a-z0-9_-]+)/, 1] || "crumbs" : named }
+if (manifest_file = ROOT.join("site/themes", theme, "theme.yml")).file?
+  wanted = YAML.safe_load(manifest_file.read).to_h["nibble"].to_s[/\A[\^~]?(\d+)/, 1]
+  blockers << "the theme #{theme} is built for theme API #{wanted || 'unknown'}; #{incoming['version']} speaks #{incoming['theme_api']}" unless wanted.to_i == incoming["theme_api"].to_i
+elsif !INCOMING.join("themes", theme).directory?
+  blockers << "the theme #{theme} is neither the site's own nor one #{incoming['version']} ships"
+end
+blockers.each { |blocker| warn "  ✗ #{blocker}" }
+refuse!("#{incoming['version']} cannot be taken yet; nothing has changed") if blockers.any?
+puts "  it can"
+
+step "snapshotting the database"
+snapshot = "storage/upgrades/#{Time.now.strftime('%Y-%m-%d-%H%M%S')}-#{installed}.sqlite3"
+database, status = Open3.capture2("bin/rails", "runner", <<~RUBY, chdir: ROOT.to_s)
+  path = Rails.root.join(#{snapshot.inspect})
+  path.dirname.mkpath
+  ActiveRecord::Base.connection.execute("VACUUM INTO \#{ActiveRecord::Base.connection.quote(path.to_s)}")
+  print ActiveRecord::Base.connection_db_config.database
+RUBY
+refuse!("the database couldn't be snapshotted; nothing has changed") unless status.success?
+puts "  #{snapshot}"
+puts "  restore it with: cp #{snapshot} #{database}"
+
+previous = ROOT.join("tmp/nibble-#{installed}")
+way_back = "the previous release is at #{previous.relative_path_from(ROOT)}: rm -rf vendor/nibble && " \
+           "mv #{previous.relative_path_from(ROOT)} vendor/nibble, then cp #{snapshot} #{database}"
+run = lambda do |*command|
+  system(*command, chdir: ROOT.to_s) or abort("upgrade stopped: #{command.join(' ')} failed.\n#{way_back}")
+end
+
+step "replacing vendor/nibble"
+FileUtils.rm_rf(previous)
+FileUtils.mv(LIVE, previous)
+FileUtils.mv(INCOMING, LIVE)
+puts "  #{installed} kept at #{previous.relative_path_from(ROOT)}"
+
+step "installing dependencies"
+run.call("bundle", "install", *("--local" if OFFLINE))
+run.call("npm", "install", "--no-audit", "--no-fund", *("--prefer-offline" if OFFLINE))
+
+step "migrating"
+run.call("bin/rails", "nibble:prepare", *("--allow-data-loss" if ARGV.include?("--allow-data-loss")))
+
+run.call("bin/rails", "nibble:upgrade:finish", previous.to_s)
+
+step "on #{incoming['version']}"
+puts "  run bin/ci, look over the site, then commit and deploy"
+puts "  the snapshot stays at #{snapshot} and #{installed} at #{previous.relative_path_from(ROOT)} until you remove them"

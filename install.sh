@@ -69,8 +69,12 @@ main() {
     cp "$ARCHIVE" "$(dirname "$ARCHIVE")/SHA256SUMS" "$work/"
   else
     if [ -z "$VERSION" ]; then
-      VERSION="$(curl -fsSL "https://api.github.com/repos/$REPOSITORY/releases/latest" |
-        ruby -rjson -e 'print JSON.parse($stdin.read).fetch("tag_name").delete_prefix("v")')"
+      # The release page redirects to the latest tag; GitHub's API would do the same, but rate-limits shared addresses.
+      latest="$(curl -fsSL -o /dev/null -w '%{url_effective}' "https://github.com/$REPOSITORY/releases/latest")"
+      case "$latest" in
+        */releases/tag/v*) VERSION="${latest##*/v}" ;;
+        *) red "  $REPOSITORY has no release to install yet"; exit 1 ;;
+      esac
     fi
     dim "  Fetching Nibble $VERSION"
     base="https://github.com/$REPOSITORY/releases/download/v$VERSION"

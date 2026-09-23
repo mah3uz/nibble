@@ -87,10 +87,11 @@ module Nibble
     end
 
     # The answers recorded at install are what lets an upgrade re-render a template a site owns the output of.
-    def self.outdated(since:, answers:, version: Nibble::VERSION, root: Rails.root)
+    # previous is the templates folder of the release being replaced; only what moved on since then is offered.
+    def self.outdated(previous:, answers:, version: Nibble::VERSION, root: Rails.root)
       TEMPLATES.filter_map do |template, destination|
         next if answers.blank?
-        next unless changed?(template, since, root)
+        next unless changed?(template, Pathname(previous))
 
         current = root.join(destination)
         next unless current.file?
@@ -100,9 +101,9 @@ module Nibble
       end
     end
 
-    def self.changed?(template, since, root)
-      system("git", "-C", root.to_s, "diff", "--quiet", since, "HEAD", "--", "#{TEMPLATES_DIR}/#{template}",
-             out: File::NULL, err: File::NULL) == false
+    def self.changed?(template, previous)
+      before = previous.join(template)
+      !before.file? || before.binread != templates_path.join(template).binread
     end
 
     def render(template)

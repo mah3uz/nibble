@@ -1,0 +1,137 @@
+#!/usr/bin/env ruby
+# Packs this checkout as a release and installs it with install.sh into an empty directory, the way someone new would,
+# then upgrades that site to a second release packed from a changed copy: a release that can't make a working site,
+# or can't be taken by one, fails here instead.
+require "fileutils"
+require "open3"
+require "tmpdir"
+require "yaml"
+require_relative "../lib/release_archive"
+
+ROOT = File.expand_path("..", __dir__)
+work = Dir.mktmpdir("nibble-release-smoke")
+at_exit { FileUtils.rm_rf(work) unless ENV["KEEP"] }
+site = File.join(work, "site")
+SCREEN = "vendor/nibble/frontend/nibble-admin/pages/admin/Dashboard.vue".freeze
+
+# Nothing inherited from this checkout's own bundle.
+ENV.delete_if { |key, _| key.start_with?("BUNDLE_") || %w[RUBYOPT RUBYLIB].include?(key) }
+
+def run!(env, *command, chdir:)
+  puts "$ #{command.join(' ')}"
+  system(env, *command, chdir:, exception: true)
+end
+
+def check(truth, message) = truth || abort("release smoke failed: #{message}")
+
+def record(site) = YAML.safe_load(File.read(File.join(site, "config/nibble.yml")).partition("# Written by Nibble").last.lines.drop(1).join)
+
+def git(site, *args) = run!({}, "git", "-c", "user.email=smoke@example.test", "-c", "user.name=smoke", *args, chdir: site)
+
+# The next release: the same tree with a new version, a template and a screen that moved on, and a migration.
+def next_release(root, into)
+  listed = IO.popen([ "git", "-C", root, "ls-files", "-z", "--cached", "--others", "--exclude-standard" ], &:read).split("\0")
+  listed.each do |path|
+    source = File.join(root, path)
+    next unless File.file?(source)
+
+    FileUtils.mkdir_p(File.dirname(File.join(into, path)))
+    FileUtils.cp(source, File.join(into, path), preserve: true)
+  end
+  system("git", "init", "-q", into, exception: true)
+  nibble = File.join(into, "vendor/nibble/lib/nibble.rb")
+  version = File.read(nibble)[/VERSION = "(\d+\.\d+\.)(\d+)"/].then { "#{$1}#{$2.to_i + 1}" }
+  File.write(nibble, File.read(nibble).sub(/VERSION = "[^"]+"/, %(VERSION = "#{version}")))
+  File.write(File.join(into, "vendor/nibble/templates/config/nibble.yml.erb"), "# A template that moved on.\n", mode: "a")
+  File.write(File.join(into, SCREEN), "<!-- a screen that moved on -->\n", mode: "a")
+  File.write(File.join(into, "vendor/nibble/db/migrate/#{Time.now.utc.strftime('%Y%m%d%H%M%S')}_create_release_smoke_marks.rb"), <<~RUBY)
+    class CreateReleaseSmokeMarks < ActiveRecord::Migration[8.1]
+      def change = create_table(:release_smoke_marks)
+    end
+  RUBY
+  ReleaseArchive.new(root: into, out: File.join(into, "tmp/release")).build
+end
+
+first = ReleaseArchive.new(root: ROOT, out: File.join(work, "release")).build
+run!({ "NIBBLE_ARCHIVE" => first.archive.to_s, "NIBBLE_OFFLINE" => "1" }, File.join(ROOT, "install.sh"), "site", "--defaults",
+     chdir: work)
+
+check record(site).dig("install", "version") == first.version, "the install record names #{record(site).dig('install', 'version').inspect}"
+check Open3.capture2("bin/rails", "nibble:version", chdir: site).first.strip == first.version, "nibble:version doesn't name #{first.version}"
+check record(site).dig("install", "answers").keys.sort == %w[name theme url], "the install recorded #{record(site).dig('install', 'answers').inspect}"
+check !File.exist?(File.join(site, "Dockerfile")) && !File.exist?(File.join(site, "bin/docker-entrypoint")),
+      "deploy files were written for a site that didn't ask for Kamal"
+check File.exist?(File.join(site, "site/types.d.ts")), "the install didn't generate site/types.d.ts"
+run!({}, "sha256sum", "--quiet", "-c", "MANIFEST", chdir: File.join(site, "vendor/nibble"))
+
+test = { "RAILS_ENV" => "test" }
+run!(test, "bin/rails", "db:prepare", chdir: site)
+run!(test, "bin/rails", "zeitwerk:check", chdir: site)
+run!(test, "bin/rails", "nibble:check", chdir: site)
+run!(test, "bin/vite", "build", chdir: site)
+run!(test, "bin/vite", "build", "--ssr", chdir: site)
+run!(test, "bin/rails", "runner", <<~'RUBY', chdir: site)
+  abort "the generated credentials have no secret_key_base, so production would refuse to boot" if Rails.application.credentials.secret_key_base.blank?
+  { "/" => [ 200, 404 ], "/admin/session/new" => [ 200 ] }.each do |path, statuses|
+    status, _, body = Rails.application.call(Rack::MockRequest.env_for(path, "HTTP_HOST" => "www.example.com"))
+    html = +""
+    body.each { |chunk| html << chunk }
+    abort "#{path} answered #{status}" unless statuses.include?(status)
+    abort "#{path} rendered no Inertia page" unless html.include?("data-page") || html.include?("application/json")
+  end
+RUBY
+puts "a release installs, boots and serves"
+
+run!({}, "bin/rails", "db:prepare", chdir: site)
+run!({}, "bin/rails", "nibble:eject", SCREEN, chdir: site)
+git(site, "init", "-q")
+git(site, "add", "-A")
+git(site, "commit", "-qm", "installed")
+
+second = next_release(ROOT, File.join(work, "next"))
+upgrade = { "NIBBLE_ARCHIVE" => second.archive.to_s, "NIBBLE_OFFLINE" => "1" }
+
+tampered = File.join(work, "tampered")
+FileUtils.mkdir_p(tampered)
+FileUtils.cp([ second.archive.to_s, second.sums.to_s ], tampered)
+File.write(File.join(tampered, second.archive.basename), "!", mode: "a")
+refused, = Open3.capture2e(upgrade.merge("NIBBLE_ARCHIVE" => File.join(tampered, second.archive.basename)), "bin/rails", "nibble:upgrade", chdir: site)
+check refused.include?("doesn't match its published checksum"), "an archive that isn't the one published was taken:\n#{refused}"
+
+File.write(File.join(site, "vendor/nibble/lib/nibble/search.rb"), "# edited in place\n", mode: "a")
+git(site, "commit", "-qam", "an edit that should have been an eject")
+refused, = Open3.capture2e(upgrade, "bin/rails", "nibble:upgrade", chdir: site)
+check refused.include?("vendor/nibble/lib/nibble/search.rb was changed here"), "an upgrade replaced an edited file without a word:\n#{refused}"
+check record(site).dig("install", "version") == first.version, "a refused upgrade still moved the site on"
+git(site, "revert", "--no-edit", "HEAD")
+
+puts "$ bin/rails nibble:upgrade"
+output, status = Open3.capture2e(upgrade, "bin/rails", "nibble:upgrade", chdir: site)
+puts output
+check status.success?, "the upgrade failed"
+check File.read(File.join(site, "vendor/nibble/VERSION")).include?("version: #{second.version}"), "vendor/nibble isn't #{second.version}"
+check record(site).dig("install", "version") == second.version, "the install record wasn't moved on"
+check Open3.capture2("bin/rails", "nibble:version", chdir: site).first.strip == second.version, "nibble:version doesn't name #{second.version}"
+check record(site).dig("install", "answers").keys.sort == %w[name theme url], "the upgrade lost the install's answers"
+check Dir.exist?(File.join(site, "tmp/nibble-#{first.version}")), "the previous release wasn't kept"
+check Dir.glob(File.join(site, "storage/upgrades/*-#{first.version}.sqlite3")).any?, "the database wasn't snapshotted"
+check output.include?("config/nibble.yml — our template has moved on"), "the template that moved on wasn't offered"
+check output.include?("site/cp/pages/admin/Dashboard.vue — ours changed since you copied it"), "the stale ejection wasn't reported"
+run!({}, "sha256sum", "--quiet", "-c", "MANIFEST", chdir: File.join(site, "vendor/nibble"))
+run!({}, "bin/rails", "runner", <<~'RUBY', chdir: site)
+  abort "the new release's migration didn't run" unless ActiveRecord::Base.connection.table_exists?(:release_smoke_marks)
+RUBY
+run!({}, "bin/rails", "nibble:check", chdir: site)
+
+git(site, "add", "-A")
+git(site, "commit", "-qm", "upgraded")
+
+settings = File.join(site, "config/nibble.yml")
+File.write(settings, File.read(settings).sub("version: #{second.version}", "version: #{first.version}"))
+printed, warned, = Open3.capture3("bin/rails", "nibble:version", chdir: site)
+check printed.strip == second.version && warned.include?("didn't finish"), "an unfinished upgrade went unmentioned: #{printed} #{warned}"
+git(site, "checkout", "config/nibble.yml")
+again, = Open3.capture2e(upgrade, "bin/rails", "nibble:upgrade", chdir: site)
+check again.include?("already on #{second.version}"), "taking the same release twice wasn't refused:\n#{again}"
+
+puts "a release upgrades to the next one"

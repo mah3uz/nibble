@@ -12,6 +12,11 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's new
+
+- **`bin/rails nibble:version` prints the release a site runs,** and says so when the install record in
+  `config/nibble.yml` names another, as an upgrade that didn't finish leaves it. It answers without booting the site.
+
 ### Changed
 
 - **Nibble lives in `vendor/nibble/`.** What was under `lib/nibble/`, `lib/commands/` and `lib/middleware/` moved
@@ -46,6 +51,14 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   name and makes its folder from it, downloads the release's archive, checks it against the published checksum,
   unpacks it into `vendor/nibble` and writes every other file from its templates, starting from the gem and npm
   versions that release was tested with. It works from any shell, fish included, and no longer needs `git`.
+- **An upgrade replaces `vendor/nibble` with the next release.** `bin/rails nibble:upgrade` downloads the release
+  and checks it against its published checksum, then hands over to that release's own upgrader, so a fix to upgrading
+  applies in the release that ships it. It refuses if Nibble's files were changed in place (eject what you need to
+  change), checks the release's Ruby, Node and theme requirements, snapshots the database, swaps the folders (the
+  old one stays in `tmp/`), migrates, offers the site files whose templates moved on and reports ejected screens whose
+  originals changed. It no longer needs git, and no longer merges anything.
+  **Upgrade:** a site installed by cloning has no `vendor/nibble/MANIFEST`, so it can't take releases this way.
+  Install a fresh site from this release and move your `site/`, `app/`, `db/migrate` and settings into it.
 - **A new site's credentials include a `secret_key_base`.** Without one, production refused to boot.
   **Upgrade:** if `bin/rails runner 'p Rails.application.credentials.secret_key_base.present?'` prints `false`, add
   `secret_key_base: <the output of bin/rails secret>` with `bin/rails credentials:edit`.

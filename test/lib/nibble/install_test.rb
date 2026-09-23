@@ -23,7 +23,7 @@ class Nibble::InstallTest < ActiveSupport::TestCase
   end
   teardown do
     ENV["PATH"] = ENV["PATH"].sub("#{@bin_dir}:", "") if @bin_dir
-    FileUtils.rm_rf([ @root, @bin_dir ].compact)
+    FileUtils.rm_rf([ @root, @bin_dir, @previous ].compact)
   end
 
   def install(force: false, only: nil, kamal: false, **answers) = Nibble::Install.new(answers:, root: @root, force:, only:, kamal:)
@@ -145,11 +145,11 @@ class Nibble::InstallTest < ActiveSupport::TestCase
   end
 
   test "a template that has moved on since the install is offered against the site's own file" do
-    release = repo_with_templates
+    previous = previous_templates
     install(url: "https://notes.example", name: "notes").run
     @root.join("config/nibble.yml").write("production:\n  theme: stale\n")
 
-    offered = Nibble::Install.outdated(since: release, answers: { url: "https://notes.example", name: "notes" }, root: @root)
+    offered = Nibble::Install.outdated(previous:, answers: { url: "https://notes.example", name: "notes" }, root: @root)
 
     assert_equal [ "config/nibble.yml" ], offered.map(&:destination)
     assert_equal "production:\n  theme: stale\n", offered.sole.current
@@ -157,12 +157,11 @@ class Nibble::InstallTest < ActiveSupport::TestCase
   end
 
   test "re-rendering keeps the version a site is on, so an upgrade never switches new behaviour on" do
-    release = repo_with_templates
+    previous = previous_templates
     install(url: "https://notes.example").run
     @root.join("config/nibble.yml").write("production:\n  theme: stale\n")
 
-    offered = Nibble::Install.outdated(since: release, answers: { url: "https://notes.example" },
-                                       version: "0.0.9", root: @root)
+    offered = Nibble::Install.outdated(previous:, answers: { url: "https://notes.example" }, version: "0.0.9", root: @root)
 
     assert_includes offered.sole.rendered, %(load_defaults: "0.0.9")
     assert_not_includes offered.sole.rendered, Nibble::VERSION,
@@ -170,41 +169,37 @@ class Nibble::InstallTest < ActiveSupport::TestCase
   end
 
   test "a template nobody touched is left out, so an upgrade only asks about what changed" do
-    repo_with_templates(touch: false)
+    previous = previous_templates(moved_on: false)
     install(url: "https://notes.example").run
-    release = commit_all("release")
+    @root.join("config/nibble.yml").write("production:\n  theme: stale\n")
 
-    assert_empty Nibble::Install.outdated(since: release, answers: { url: "https://notes.example" }, root: @root)
+    assert_empty Nibble::Install.outdated(previous:, answers: { url: "https://notes.example" }, root: @root)
+  end
+
+  test "a template the previous release didn't have counts as moved on" do
+    previous = previous_templates(moved_on: false)
+    previous.join("config/nibble.yml.erb").delete
+    install(url: "https://notes.example").run
+    @root.join("config/nibble.yml").write("production:\n  theme: stale\n")
+
+    assert_equal [ "config/nibble.yml" ], Nibble::Install.outdated(previous:, answers: { url: "https://notes.example" }, root: @root).map(&:destination)
   end
 
   test "without recorded answers nothing is offered, rather than a file rendered from our defaults" do
-    release = repo_with_templates
+    previous = previous_templates
     install(url: "https://notes.example").run
 
-    assert_empty Nibble::Install.outdated(since: release, answers: {}, root: @root),
+    assert_empty Nibble::Install.outdated(previous:, answers: {}, root: @root),
                  "re-rendering with defaults would overwrite a site's hosts and URLs with ours"
   end
 
   private
 
-  def repo_with_templates(touch: true)
-    git("init", "-q")
-    templates = @root.join(Nibble::Install::TEMPLATES_DIR)
-    templates.mkpath
-    FileUtils.cp_r(Nibble::Install.templates_path.children, templates)
-    baseline = commit_all("the release this site installed from")
-    return baseline unless touch
-
-    templates.join("config/nibble.yml.erb").write("#{templates.join('config/nibble.yml.erb').read}\n# our template moved on\n")
-    commit_all("a later release, which changed it")
-    baseline
+  # The templates of the release a site is upgrading from: ours, with config/nibble.yml.erb as it was before.
+  def previous_templates(moved_on: true)
+    previous = @previous = Pathname(Dir.mktmpdir("nibble-previous"))
+    FileUtils.cp_r(Nibble::Install.templates_path.children, previous)
+    previous.join("config/nibble.yml.erb").write("# the template as it was\n") if moved_on
+    previous
   end
-
-  def commit_all(message)
-    git("add", "-A")
-    git("-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", message)
-    IO.popen([ "git", "-C", @root.to_s, "rev-parse", "HEAD" ], &:read).strip
-  end
-
-  def git(*args) = system("git", "-C", @root.to_s, *args, out: File::NULL, err: File::NULL)
 end

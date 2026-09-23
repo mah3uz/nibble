@@ -11,7 +11,7 @@ Rails 8 serves both the public site and the control panel through Inertia and Vu
 Collections, taxonomies, globals, navigation and forms are declared in YAML — Nibble's, then your theme's, then
 yours — and the content itself lives in SQLite. Uploads go to S3. Deployment is Kamal onto one machine.
 
-Upgrades arrive as releases you merge.
+Upgrades arrive as releases: each replaces `vendor/nibble` and nothing else.
 
 ## Install
 
@@ -27,6 +27,7 @@ written once, and is yours from then on. `… | bash -s my-site` names the folde
 ```sh
 bin/dev                  # the site on :3100, the control panel at /admin
 bin/rails nibble:check   # the schema, theme, roles and settings are sound
+bin/rails nibble:version # the release this site runs
 ```
 
 To work on Nibble itself, clone this repository and run `bin/setup`; `bin/ci` runs every check Nibble runs on itself.
@@ -58,8 +59,10 @@ reports anything of Nibble's you changed *without* ejecting — the files an upg
 bin/rails nibble:upgrade
 ```
 
-On your own machine, never on a server. It snapshots the database, checks the release's requirements, merges,
-and migrates — asking about the files it cannot decide for you. See [Upgrading][upgrading].
+On your own machine, never on a server. It downloads the release and checks it against its published checksum,
+refuses if Nibble's own files were changed in place, checks the release's requirements, snapshots the database,
+swaps in the new `vendor/nibble` (keeping the old one in `tmp/`) and migrates — asking about the files it cannot
+decide for you. See [Upgrading][upgrading].
 
 ## Licence
 

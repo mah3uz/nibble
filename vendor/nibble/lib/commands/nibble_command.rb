@@ -57,8 +57,25 @@ class NibbleCommand < Rails::Command::Base
     abort "prepare stopped: #{e.message}"
   end
 
-  desc "upgrade [VERSION]", "Take a Nibble release (the latest by default): snapshot, merge, re-render, migrate"
-  def upgrade(version = nil) = take_release(version)
+  desc "version", "Print the Nibble version this site runs"
+  # Read from Nibble's own files rather than a booted app, so it still answers when the site won't boot.
+  def version
+    root = defined?(APP_PATH) ? Pathname(APP_PATH).dirname.parent : Rails.root
+    running = File.read(File.expand_path("../nibble.rb", __dir__))[/VERSION = "([^"]+)"/, 1]
+    puts running
+
+    settings = root.join("config/nibble.yml")
+    record = settings.file? ? YAML.safe_load(settings.read.partition("# Written by Nibble").last.lines.drop(1).join).to_h : {}
+    recorded = record.dig("install", "version")
+    warn "config/nibble.yml records #{recorded}: an upgrade to #{running} didn't finish" if recorded && recorded != running
+  end
+
+  desc "upgrade [VERSION]", "Take a Nibble release (the latest by default): check it, snapshot, swap it in, migrate"
+  option :force, type: :boolean, desc: "Replace Nibble's files even where they were changed here"
+  option :allow_data_loss, type: :boolean, desc: "Carry on even when the schema no longer covers some stored data"
+  def upgrade(version = nil)
+    take_release(version, [ ("--force" if options[:force]), ("--allow-data-loss" if options[:allow_data_loss]) ].compact)
+  end
 
   desc "install", "Set up this site: settings, deploy files, database, first admin"
   option :defaults, type: :boolean, desc: "Take every default instead of asking"

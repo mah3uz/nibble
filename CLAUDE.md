@@ -89,7 +89,8 @@ with SSR, on SQLite. Content is schema-driven: YAML declares collections, taxono
 blueprints, globals, navigation and forms, read in three layers — Nibble's, the theme's, then the site's — and
 entries and terms are rows whose `data` is validated against a blueprint.
 
-Nibble is installed by cloning it and running `install.sh`; releases are tags a site merges. See `README.md` for
+Nibble is installed by `install.sh`, which unpacks a release archive into `vendor/nibble`, and
+`bin/rails nibble:upgrade` replaces that folder with the next release. See `README.md` for
 setup, commands, what a site owns, and upgrading.
 
 It is a product in its own right, not a copy of another site. Design features on their own merits.
@@ -109,7 +110,7 @@ evaluates `vendor/nibble/Gemfile`, which loads `Nibble::Engine`; `config/applica
 - `vendor/nibble/lib/nibble/` — the engine, autoloaded as `Nibble::`: `Schema`, `Field`/`Fields`/`Fieldtype`, `Records::*`,
   `Lifecycle`, `Query`, `Presenter`, `Routing`, `PageProps`, `PageCache`, `Search`, `Seo`, `Sitemaps`, `Assets`,
   `Forms`, `Outbound`, `Webhooks`, `Access`, `Packages`, `ContentMigrations`, `Release`, `Releases`, `Eject`,
-  `Install`, `Upgrade`, `Check`.
+  `Install`, `Prepare`, `Check`.
 - `vendor/nibble/app/` — laid out as Rails lays out `app/`, and added the same way, so names are unchanged:
   `controllers/` (`SiteController` catch-all, `Admin::*`, `Api::V1::*`, `FormsController`, `SitemapsController`,
   `AssetFilesController`), `models/` (only identity and access: users, roles, sessions, credentials, API tokens),
