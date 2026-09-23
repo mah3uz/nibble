@@ -8,7 +8,21 @@ module Nibble
     Page = Data.define(:hits, :total)
 
     class << self
-      def indexes(schema: Nibble.schema) = schema.search&.data.to_h.fetch("indexes", {})
+      # search.yml and each collection's own `search:` are read together: `search: <index>` joins that index, and
+      # `search: false` leaves every index.
+      def indexes(schema: Nibble.schema)
+        declared = schema.search&.data.to_h.fetch("indexes", {}).transform_values(&:to_h)
+        schema.collections.each do |item|
+          case item["search"]
+          when false
+            declared.transform_values! { |definition| definition.merge("collections" => Array(definition["collections"]) - [ item.handle ]) }
+          when String
+            definition = declared[item["search"]].to_h
+            declared[item["search"]] = definition.merge("collections" => Array(definition["collections"]) | [ item.handle ])
+          end
+        end
+        declared
+      end
 
       def index_record(record)
         remove(record)

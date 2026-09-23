@@ -82,4 +82,34 @@ class Nibble::SearchTest < ActiveSupport::TestCase
       assert_empty search("overdue").records, "a result pointing at a page that 404s is worse than none"
     end
   end
+
+  def with_site_schema(files)
+    site = Pathname(Dir.mktmpdir("nibble-site-schema"))
+    files.each { |path, data| site.join(path).dirname.mkpath; site.join(path).write(data.to_yaml) }
+    Nibble.config = Nibble::Config.new(Nibble.config_values.merge("theme" => "starter"),
+      themes_path: Rails.root.join("test/nibble_themes"), site_schema_path: site, content_path: Rails.root.join("test/nibble_content"))
+    Nibble.reset_schema!
+    Nibble::Search.rebuild
+    yield
+  end
+
+  # The key read one way and behaved another, which is how a collection said `search: site` and was never searched.
+  test "a collection that names an index is searched in it, even when search.yml leaves it out" do
+    posts = YAML.load_file(Rails.root.join("lib/nibble/core_schema/collections/posts.yml"))
+    assert_equal "site", posts["search"]
+    with_site_schema("collections/posts.yml" => posts,
+                     "search.yml" => { "schema" => 1, "indexes" => { "site" => { "collections" => [ "pages" ] } } }) do
+      assert_includes Nibble::Search.indexes["site"]["collections"], "posts"
+      assert_equal [ "Grids" ], search("grids").records.map(&:title)
+    end
+  end
+
+  test "a collection with search: false leaves every index, even one search.yml puts it in" do
+    posts = YAML.load_file(Rails.root.join("lib/nibble/core_schema/collections/posts.yml")).merge("search" => false)
+    with_site_schema("collections/posts.yml" => posts,
+                     "search.yml" => { "schema" => 1, "indexes" => { "site" => { "collections" => %w[pages posts] } } }) do
+      assert_not_includes Nibble::Search.indexes["site"]["collections"], "posts"
+      assert_empty search("grids").records
+    end
+  end
 end
