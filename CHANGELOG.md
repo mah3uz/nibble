@@ -12,6 +12,42 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **A menu built from files is read-only in the control panel.** It opened as an empty menu with Add link and
+  Save, and whatever was saved there was read by nothing — the site builds that menu from the folders. The screen
+  now lists the folders' tree and names the folder.
+- **Pages written as files are searchable without a manual rebuild.** They publish no events, so they reached search
+  only through `nibble:search:rebuild`. Every `nibble:upgrade` — so every deploy — now indexes them, and so does
+  each change in development.
+- **Development notices changes under `content/`.** An edited page or a replaced image was only picked up when Rails
+  happened to reload code; the folder is now checked on every request, as the schema is.
+- **A new view, block or control panel screen appears without restarting `bin/dev`.** The theme and `site/` sit
+  outside Vite's root, so files added there stayed invisible until a restart.
+- **The theme's types keep up by themselves.** `nibble:build` writes them before checking them, instead of refusing
+  the stale file it was about to regenerate, and in development they are rewritten when a blueprint or a view's
+  query changes.
+- **The dashboard counts a folder's pages**, rather than showing a collection written as files as empty.
+- **Missing pages is in the sidebar**, under Redirects. The screen existed, but nothing led to it.
+- **A page title wraps instead of being cut off** beside the editor's actions on a narrow screen.
+
+### Changed
+
+Three fixes change what a site would notice, so they wait for `load_defaults: "0.15.0"`:
+
+- **A field marked `api: false` stays out of the Content API**, in expanded relations and globals too. Until now the
+  option only reached the generated types.
+- **A collection's `search:` key decides its search index.** `search: <index>` joins that index and `search: false`
+  leaves every index, read together with `search.yml`. Until now the key was accepted and ignored.
+- **A changed route moves entries on the next deploy.** `nibble:upgrade` moves every entry and term whose address no
+  longer matches its route, children after their parents, with a 301 from each live one. Until now each one moved
+  only when it was next saved.
+
+**Upgrade:** raise `load_defaults` to `"0.15.0"` in `config/nibble.yml` when you are ready. Check first that
+`search.yml` and your collections' `search:` keys agree, since a collection that says `search: site` but is missing
+from `search.yml` becomes searchable. After a route change, the deploy that follows records a redirect for each live
+entry it moves.
+
 ## 0.14.7 — 2026-09-23 18:05 +0600
 
 ### What's fixed
