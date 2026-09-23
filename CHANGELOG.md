@@ -16,6 +16,10 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 - **`bin/rails nibble:version` prints the release a site runs,** and says so when the install record in
   `config/nibble.yml` names another, as an upgrade that didn't finish leaves it. It answers without booting the site.
+- **`bin/rails nibble` lists every Nibble command,** the grouped ones (`nibble:admin:*`, `nibble:schema:*` and the
+  rest) included, with their full descriptions, under a header naming the release, the site's install record, its
+  theme, the release whose behaviour it has switched on (`load_defaults`), the Ruby, Rails and Node it runs on, and the
+  theme, schema and content format versions.
 
 ### Changed
 

@@ -1,6 +1,7 @@
 require_relative "clean_failures"
 require_relative "admin_interview"
 require_relative "release_upgrade"
+require_relative "nibble_help"
 
 class NibbleCommand < Rails::Command::Base
   include AdminInterview
@@ -57,17 +58,15 @@ class NibbleCommand < Rails::Command::Base
     abort "prepare stopped: #{e.message}"
   end
 
+  # The release, what it runs on and every command, not Thor's list of this namespace alone.
+  def self.help(shell, subcommand = false) = NibbleHelp.print(shell)
+
   desc "version", "Print the Nibble version this site runs"
   # Read from Nibble's own files rather than a booted app, so it still answers when the site won't boot.
   def version
-    root = defined?(APP_PATH) ? Pathname(APP_PATH).dirname.parent : Rails.root
-    running = File.read(File.expand_path("../nibble.rb", __dir__))[/VERSION = "([^"]+)"/, 1]
-    puts running
-
-    settings = root.join("config/nibble.yml")
-    record = settings.file? ? YAML.safe_load(settings.read.partition("# Written by Nibble").last.lines.drop(1).join).to_h : {}
-    recorded = record.dig("install", "version")
-    warn "config/nibble.yml records #{recorded}: an upgrade to #{running} didn't finish" if recorded && recorded != running
+    puts NibbleHelp.running
+    recorded = NibbleHelp.recorded&.fetch("version", nil)
+    warn "config/nibble.yml records #{recorded}: an upgrade to #{NibbleHelp.running} didn't finish" if recorded && recorded != NibbleHelp.running
   end
 
   desc "upgrade [VERSION]", "Take a Nibble release (the latest by default): check it, snapshot, swap it in, migrate"
