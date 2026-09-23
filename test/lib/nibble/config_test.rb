@@ -98,8 +98,8 @@ class Nibble::ConfigTest < ActiveSupport::TestCase
   end
 
   test "schema errors point at the file and key so authors can find the problem" do
-    error = Nibble::SchemaError.new(file: Rails.root.join("lib/nibble/core_schema/collections/posts.yml"), key: "route", reason: "is required")
-    assert_equal "lib/nibble/core_schema/collections/posts.yml: route: is required", error.message
+    error = Nibble::SchemaError.new(file: Rails.root.join("vendor/nibble/core_schema/collections/posts.yml"), key: "route", reason: "is required")
+    assert_equal "vendor/nibble/core_schema/collections/posts.yml: route: is required", error.message
   end
 
   test "load_defaults opts a site into the behaviour of the release it names, and no later one" do

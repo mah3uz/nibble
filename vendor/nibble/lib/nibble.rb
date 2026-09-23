@@ -8,7 +8,7 @@ module Nibble
   CONTENT_FORMAT_VERSION = 1
   DEFAULT_THEME = "crumbs".freeze
   # A theme is layouts, views and schema; content is a site's own. This is the installer's to offer, not a theme's to carry.
-  STARTER_CONTENT = Pathname(__dir__).join("nibble/starter_content").freeze
+  STARTER_CONTENT = Pathname(__dir__).parent.join("starter_content").freeze
 
   class << self
     def config
@@ -81,7 +81,8 @@ module Nibble
       LinkTypes.register("term", title: "Term", resolver: terms)
     end
 
-    def core_schema_path = Rails.root.join("lib/nibble/core_schema")
+    def core_root = Engine.root
+    def core_schema_path = core_root.join("core_schema")
     def site_schema_path = Rails.root.join("schema")
     def content_path = Rails.root.join("content")
     def themes_path = Rails.root.join("themes")
@@ -96,3 +97,5 @@ module Nibble
     end
   end
 end
+
+require_relative "nibble/engine"

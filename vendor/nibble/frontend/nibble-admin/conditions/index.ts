@@ -1,4 +1,4 @@
-// Must stay identical to Nibble::Conditions (lib/nibble/conditions.rb): the server re-checks what the editor saw.
+// Must stay identical to Nibble::Conditions (vendor/nibble/lib/nibble/conditions.rb): the server re-checks what the editor saw.
 export const KEYS = [
   'if',
   'if_any',

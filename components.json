@@ -5,7 +5,7 @@
   "typescript": true,
   "tailwind": {
     "config": "",
-    "css": "lib/nibble/frontend/entrypoints/admin.css",
+    "css": "vendor/nibble/frontend/entrypoints/admin.css",
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""

@@ -70,7 +70,7 @@ class Nibble::ReleaseTest < ActiveSupport::TestCase
 
   test "a ref that declares no version is refused rather than taken for a release" do
     repo_with_releases
-    write("lib/nibble.rb", "module Nibble; end")
+    write("vendor/nibble/lib/nibble.rb", "module Nibble; end")
     tag("not-a-release")
 
     assert_raises(Nibble::Error) { Nibble::Release.declared("not-a-release", root: @root) }
@@ -91,16 +91,16 @@ class Nibble::ReleaseTest < ActiveSupport::TestCase
 
   def repo_with_releases
     @root = Pathname(Dir.mktmpdir("nibble-release"))
-    write("lib/nibble/release.rb", %(MINIMUM_UPGRADE_FROM = "0.1.0"))
+    write("vendor/nibble/lib/nibble/release.rb", %(MINIMUM_UPGRADE_FROM = "0.1.0"))
     write(".ruby-version", "3.4.1")
     release("0.1.0", node: "24.0.0")
     release("0.2.0", node: "99.0.0", minimum: "0.2.0")
   end
 
   def release(version, node:, minimum: nil)
-    write("lib/nibble.rb", %(VERSION = "#{version}"))
+    write("vendor/nibble/lib/nibble.rb", %(VERSION = "#{version}"))
     write("package.json", { engines: { node: ">=#{node}" } }.to_json)
-    write("lib/nibble/release.rb", %(MINIMUM_UPGRADE_FROM = "#{minimum}")) if minimum
+    write("vendor/nibble/lib/nibble/release.rb", %(MINIMUM_UPGRADE_FROM = "#{minimum}")) if minimum
     tag("v#{version}")
   end
 

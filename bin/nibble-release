@@ -3,7 +3,8 @@ require "optparse"
 require "pathname"
 
 ROOT = Pathname(__dir__).parent
-VERSION_FILE = ROOT.join("lib/nibble.rb")
+VERSION_FILE = ROOT.join("vendor/nibble/lib/nibble.rb")
+LOCKFILE = ROOT.join("Gemfile.lock")
 CHANGELOG = ROOT.join("CHANGELOG.md")
 def fail!(message) = abort("release refused: #{message}")
 
@@ -43,15 +44,16 @@ fail!("CHANGELOG.md has nothing under Unreleased") if notes.empty?
 
 date = Time.now.strftime("%Y-%m-%d %H:%M %z")
 # The tree was clean to begin with, so whatever this writes before giving up has to go back.
-undo = { VERSION_FILE => VERSION_FILE.read, CHANGELOG => CHANGELOG.read }
+undo = { VERSION_FILE => VERSION_FILE.read, CHANGELOG => CHANGELOG.read, LOCKFILE => LOCKFILE.read }
 at_exit { undo.each { |file, content| file.write(content) } }
 VERSION_FILE.write(VERSION_FILE.read.sub(/VERSION = "[^"]+"/, %(VERSION = "#{version}")))
 CHANGELOG.write(CHANGELOG.read.sub(/^## Unreleased\n/, "## Unreleased\n\n## #{version} — #{date}\n"))
+system("bundle", "lock", chdir: ROOT.to_s, out: File::NULL) or fail!("could not record #{version} in Gemfile.lock")
 
 puts "running bin/ci"
 system({ "CI" => "1" }, ROOT.join("bin/ci").to_s) or fail!("bin/ci failed — nothing was committed or tagged")
 
-system("git", "-C", ROOT.to_s, "add", VERSION_FILE.to_s, CHANGELOG.to_s) or fail!("could not stage the release")
+system("git", "-C", ROOT.to_s, "add", VERSION_FILE.to_s, CHANGELOG.to_s, LOCKFILE.to_s) or fail!("could not stage the release")
 system("git", "-C", ROOT.to_s, "commit", "-qm", "Release #{version}") or fail!("could not commit the release")
 undo.clear
 system("git", "-C", ROOT.to_s, "tag", "-a", "v#{version}", "--cleanup=verbatim", "-m", "Nibble #{version}\n\n#{notes}") or fail!("could not tag the release")

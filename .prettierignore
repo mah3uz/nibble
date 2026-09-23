@@ -1,10 +1,11 @@
 public/
 tmp/
-vendor/
+vendor/*
+!vendor/nibble/
 node_modules/
-lib/nibble/frontend/nibble-admin/styles/typography.js
-lib/nibble/frontend/nibble-admin/styles/*.css
+vendor/nibble/frontend/nibble-admin/styles/typography.js
+vendor/nibble/frontend/nibble-admin/styles/*.css
 *.md
-lib/nibble/frontend/nibble-admin/components/ui/
+vendor/nibble/frontend/nibble-admin/components/ui/
 themes/*/.nibble/
-lib/nibble/starter_content/
+vendor/nibble/starter_content/

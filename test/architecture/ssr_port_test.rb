@@ -4,7 +4,7 @@ class SsrPortTest < ActiveSupport::TestCase
   VARIABLE = "INERTIA_SSR_PORT".freeze
 
   test "both ends of server rendering take the port from one setting, so a second instance can run beside the first" do
-    assert_includes Rails.root.join("lib/nibble/frontend/ssr/ssr.ts").read, VARIABLE,
+    assert_includes Rails.root.join("vendor/nibble/frontend/ssr/ssr.ts").read, VARIABLE,
       "the SSR process must listen on the port #{VARIABLE} names"
     assert_includes Rails.root.join("config/initializers/inertia_rails.rb").read, VARIABLE,
       "Rails must look for the SSR process on the port #{VARIABLE} names"

@@ -10,10 +10,10 @@ class DatabasePortabilityTest < ActiveSupport::TestCase
     /\b(?:MATCH\s+['"?]|PRAGMA\s|VACUUM\b|AUTOINCREMENT\b|GLOB\s)/ # upper-case SQL keywords, not prose
   )
   ALLOWED = [
-    "lib/nibble/search.rb",
-    "lib/nibble/app/services/database_snapshot.rb",
-    "lib/nibble/db/migrate/20260920102900_create_search_index.rb",
-    "lib/nibble/db/migrate/20260920103000_create_search_index_trigram.rb"
+    "vendor/nibble/lib/nibble/search.rb",
+    "vendor/nibble/app/services/database_snapshot.rb",
+    "vendor/nibble/db/migrate/20260920102900_create_search_index.rb",
+    "vendor/nibble/db/migrate/20260920103000_create_search_index_trigram.rb"
   ].freeze
 
   test "SQLite-specific SQL appears only in the allowed files" do

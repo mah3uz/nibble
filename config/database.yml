@@ -8,10 +8,6 @@ default: &default
   adapter: sqlite3
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   timeout: 5000
-  # Nibble's migrations ship in lib; db/migrate is yours.
-  migrations_paths:
-    - db/migrate
-    - lib/nibble/db/migrate
 
 development:
   <<: *default

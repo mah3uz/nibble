@@ -30,18 +30,19 @@ control panel · themes as npm workspaces under `themes/*` · Kamal on a VPS · 
 
 ## Architecture
 
-**Where things live. Everything under `lib/nibble/` is ours; everything else is the site's.**
-- `lib/nibble/` — the engine, autoloaded as `Nibble::`: `Schema`, `Field`/`Fields`/`Fieldtype`, `Records::*`,
+**Where things live. Everything under `vendor/nibble/` is ours; everything else is the site's.** The site's `Gemfile`
+evaluates `vendor/nibble/Gemfile`, which loads `Nibble::Engine`; `config/application.rb` is plain Rails.
+- `vendor/nibble/lib/nibble/` — the engine, autoloaded as `Nibble::`: `Schema`, `Field`/`Fields`/`Fieldtype`, `Records::*`,
   `Lifecycle`, `Query`, `Presenter`, `Routing`, `PageProps`, `PageCache`, `Search`, `Seo`, `Sitemaps`, `Assets`,
   `Forms`, `Outbound`, `Webhooks`, `Access`, `Packages`, `ContentMigrations`, `Release`, `Releases`, `Eject`,
   `Install`, `Upgrade`, `Check`.
-- `lib/nibble/app/` — laid out as Rails lays out `app/`, and added the same way, so names are unchanged:
+- `vendor/nibble/app/` — laid out as Rails lays out `app/`, and added the same way, so names are unchanged:
   `controllers/` (`SiteController` catch-all, `Admin::*`, `Api::V1::*`, `FormsController`, `SitemapsController`,
   `AssetFilesController`), `models/` (only identity and access: users, roles, sessions, credentials, API tokens),
   `jobs/`, `mailers/`, `services/`, `helpers/`, `channels/`, `views/`.
-- `lib/nibble/frontend/` — `nibble-admin/` (the control panel, `@nibble-admin`, also `@` and `~`), `nibble/` (the
+- `vendor/nibble/frontend/` — `nibble-admin/` (the control panel, `@nibble-admin`, also `@` and `~`), `nibble/` (the
   theme runtime, `@nibble`), `entrypoints/`, `ssr/`. It is Vite's `sourceCodeDir`.
-- `lib/nibble/core_schema/` — the baseline schema YAML. Schema is read in three layers: this, then the theme's
+- `vendor/nibble/core_schema/` — the baseline schema YAML. Schema is read in three layers: this, then the theme's
   `themes/<theme>/schema/`, then the site's own `schema/`, and the last to define a handle wins.
 - `app/`, `schema/`, `site/`, `content/`, `config/nibble.yml`, `config/deploy*.yml`, `db/migrate`, `Gemfile.local` — **a
   site's, not ours.** Nibble ships templates and generates them at install; it never writes them again. A site's
@@ -77,7 +78,7 @@ the audit log, notifications, the page cache, the search index and webhooks.
   `Nibble::Assets::SvgSanitizer`. Tests must prove `script`, `on*` attributes and `javascript:` URLs are stripped.
 - **Redirects are single-hop:** chains are repointed on save.
 - **Content import:** package import and content migrations are idempotent and safely re-runnable.
-- **Versioned contracts:** `Nibble::SCHEMA_FORMAT`, `THEME_API_VERSION` and `CONTENT_FORMAT_VERSION` in `lib/nibble.rb`
+- **Versioned contracts:** `Nibble::SCHEMA_FORMAT`, `THEME_API_VERSION` and `CONTENT_FORMAT_VERSION` in `vendor/nibble/lib/nibble.rb`
   change only with a migration or upgrade path.
 
 ## Commands

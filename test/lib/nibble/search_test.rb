@@ -95,7 +95,7 @@ class Nibble::SearchTest < ActiveSupport::TestCase
 
   # The key read one way and behaved another, which is how a collection said `search: site` and was never searched.
   test "a collection that names an index is searched in it, even when search.yml leaves it out" do
-    posts = YAML.load_file(Rails.root.join("lib/nibble/core_schema/collections/posts.yml"))
+    posts = YAML.load_file(Rails.root.join("vendor/nibble/core_schema/collections/posts.yml"))
     assert_equal "site", posts["search"]
     with_site_schema({ "collections/posts.yml" => posts,
                        "search.yml" => { "schema" => 1, "indexes" => { "site" => { "collections" => [ "pages" ] } } } }) do
@@ -105,7 +105,7 @@ class Nibble::SearchTest < ActiveSupport::TestCase
   end
 
   test "a collection with search: false leaves every index, even one search.yml puts it in" do
-    posts = YAML.load_file(Rails.root.join("lib/nibble/core_schema/collections/posts.yml")).merge("search" => false)
+    posts = YAML.load_file(Rails.root.join("vendor/nibble/core_schema/collections/posts.yml")).merge("search" => false)
     with_site_schema({ "collections/posts.yml" => posts,
                        "search.yml" => { "schema" => 1, "indexes" => { "site" => { "collections" => %w[pages posts] } } } }) do
       assert_not_includes Nibble::Search.indexes["site"]["collections"], "posts"
@@ -115,7 +115,7 @@ class Nibble::SearchTest < ActiveSupport::TestCase
 
   # Search membership changing under a site is something it would notice, so it waits for load_defaults.
   test "a site that has not raised load_defaults keeps search.yml in charge" do
-    posts = YAML.load_file(Rails.root.join("lib/nibble/core_schema/collections/posts.yml"))
+    posts = YAML.load_file(Rails.root.join("vendor/nibble/core_schema/collections/posts.yml"))
     with_site_schema({ "collections/posts.yml" => posts,
                        "search.yml" => { "schema" => 1, "indexes" => { "site" => { "collections" => [ "pages" ] } } } }, load_defaults: "0.14.7") do
       assert_equal [ "pages" ], Nibble::Search.indexes["site"]["collections"]

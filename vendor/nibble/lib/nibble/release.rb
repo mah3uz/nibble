@@ -27,12 +27,12 @@ module Nibble
 
       # An upgrade is gated on the floors of the release being taken, which are only readable from its tag.
       def declared(ref, root: Rails.root)
-        version = show(ref, "lib/nibble.rb", root)[/VERSION = "([^"]+)"/, 1]
+        version = show(ref, "vendor/nibble/lib/nibble.rb", root)[/VERSION = "([^"]+)"/, 1]
         raise Error, "#{ref} doesn't declare a Nibble version, so it isn't a release" if version.blank?
 
         Declared.new(
           version:,
-          minimum_upgrade_from: show(ref, "lib/nibble/release.rb", root)[/MINIMUM_UPGRADE_FROM = "([^"]+)"/, 1].presence || version,
+          minimum_upgrade_from: show(ref, "vendor/nibble/lib/nibble/release.rb", root)[/MINIMUM_UPGRADE_FROM = "([^"]+)"/, 1].presence || version,
           ruby_floor: show(ref, ".ruby-version", root).strip.delete_prefix("ruby-"),
           node_floor: JSON.parse(show(ref, "package.json", root).presence || "{}").dig("engines", "node").to_s.delete_prefix(">=").presence || "0"
         )

@@ -8,5 +8,5 @@ export default {
   bracketSpacing: true,
   printWidth: 120,
   plugins: ['prettier-plugin-tailwindcss'],
-  tailwindStylesheet: './lib/nibble/frontend/entrypoints/admin.css',
+  tailwindStylesheet: './vendor/nibble/frontend/entrypoints/admin.css',
 }

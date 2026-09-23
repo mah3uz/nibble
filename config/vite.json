@@ -1,6 +1,6 @@
 {
   "all": {
-    "sourceCodeDir": "lib/nibble/frontend",
+    "sourceCodeDir": "vendor/nibble/frontend",
     "watchAdditionalPaths": [
       "themes/**/*"
     ],

@@ -1,34 +1,34 @@
 {
   "ignored_warnings": [
     {
-      "fingerprint": "c70d88d7cce30a6b4bdd774ed177feee3d00284699aad64a949013bdffc4c8d0",
+      "fingerprint": "81aca6dd933312c1fc1df2136016175a92d6bdcb454d5313a11ea1550d5b05f7",
       "check": "SQL",
       "message": "Possible SQL injection",
-      "file": "lib/nibble/app/services/database_snapshot.rb",
+      "file": "vendor/nibble/app/services/database_snapshot.rb",
       "line": 31,
       "note": "The path is built from the configured snapshot directory and today's date, never from a request."
     },
     {
-      "fingerprint": "b4eee3063f734e270336b074bba0620cf58accbb2691ab519496aacf62b65554",
+      "fingerprint": "2cb1bfaca4e4dd1bb2075d3d640ac91ee3be3192c112381604995dd37ce11afe",
       "check": "MassAssignment",
       "message": "Specify exact keys allowed for mass assignment instead of using `permit!` which allows any keys",
-      "file": "lib/nibble/app/controllers/admin/nibble_api/relationships_controller.rb",
+      "file": "vendor/nibble/app/controllers/admin/nibble_api/relationships_controller.rb",
       "line": 9,
       "note": "The scope is a filter for a relationship search: each resolver defines its own keys, values are arrayified, and they only ever reach a scoped query."
     },
     {
-      "fingerprint": "2a8cfcd2e8700edb0b06b1eea6f0437352f99dc1cc39faa0cd2c95d106d3badb",
+      "fingerprint": "11db57f1386e9a5eadc88a4acfd7fd35ebc57cdf859d6f6d6a0e4d51ddb20ec6",
       "check": "SQL",
       "message": "Possible SQL injection",
-      "file": "lib/nibble/app/controllers/admin/utilities_controller.rb",
+      "file": "vendor/nibble/app/controllers/admin/utilities_controller.rb",
       "line": 120,
       "note": "The table names come from Nibble::Search::TABLES, a constant, not from the request."
     },
     {
-      "fingerprint": "de485babdf68daccaad14ff1c58c4e7c2dc90cc678ceca467b14f74901bfc225",
+      "fingerprint": "dcf3c09f443017db0f9803daba71d6a0b67b11c4d305921a0e19c755f0033876",
       "check": "Redirect",
       "message": "Possible unprotected redirect",
-      "file": "lib/nibble/app/controllers/admin/form_files_controller.rb",
+      "file": "vendor/nibble/app/controllers/admin/form_files_controller.rb",
       "line": 12,
       "note": "The URL is a short-lived signed storage link Active Storage generated for a submission's own file, not a value from the request."
     }

@@ -8,7 +8,7 @@ module Nibble
     DEPLOY_FILE = "config/deploy.yml".freeze
     TEMPLATES = CORE.merge(KAMAL).freeze
 
-    TEMPLATES_DIR = "lib/nibble/install/templates".freeze
+    TEMPLATES_DIR = "vendor/nibble/lib/nibble/install/templates".freeze
 
     Regenerated = Data.define(:destination, :rendered, :current)
 

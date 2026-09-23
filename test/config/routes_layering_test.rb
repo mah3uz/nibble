@@ -1,11 +1,11 @@
 require "test_helper"
 
 class RoutesLayeringTest < ActiveSupport::TestCase
-  ROUTE_FILES = [ "lib/nibble/routes/core.rb", "config/routes.rb", "lib/nibble/routes/catch_all.rb" ].freeze
+  ROUTE_FILES = [ "vendor/nibble/config/routes/core.rb", "config/routes.rb", "vendor/nibble/config/routes/catch_all.rb" ].freeze
 
   test "a site's routes are drawn between Nibble's fixed routes and its catch-all" do
-    drawn = Rails.application.config.paths["config/routes.rb"].to_a
-      .map { |path| Pathname(path).relative_path_from(Rails.root).to_s }
+    drawn = Rails.application.routes_reloader.paths
+      .map { |path| Pathname(path).relative_path_from(Rails.root).to_s }.select { |path| ROUTE_FILES.include?(path) }
 
     assert_equal ROUTE_FILES, drawn
   end
@@ -19,7 +19,7 @@ class RoutesLayeringTest < ActiveSupport::TestCase
     NIBBLE_PATHS.each do |path|
       assert_includes drawn, path, "#{path} is one of Nibble's fixed routes and has to stay drawn"
       refute_includes site, path.delete_prefix("/"),
-        "#{path} is Nibble's, so it belongs in lib/nibble/routes — a site has to own config/routes.rb outright"
+        "#{path} is Nibble's, so it belongs in vendor/nibble/config/routes — a site has to own config/routes.rb outright"
     end
   end
 

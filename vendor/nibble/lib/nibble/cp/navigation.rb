@@ -1,7 +1,7 @@
 module Nibble
   module Cp
     module Navigation
-      ICONS_PATH = "lib/nibble/frontend/nibble-admin/assets/icons/admin".freeze
+      ICONS_PATH = "vendor/nibble/frontend/nibble-admin/assets/icons/admin".freeze
 
       class << self
         def icon?(name) = name.to_s.match?(/\A[a-z0-9-]+\z/) && Rails.root.join(ICONS_PATH, "#{name}.svg").exist?

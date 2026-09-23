@@ -12,6 +12,15 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### Changed
+
+- **Nibble lives in `vendor/nibble/`.** What was under `lib/nibble/`, `lib/commands/` and `lib/middleware/` moved
+  there, and loads as a Rails engine: the `Gemfile` evaluates `vendor/nibble/Gemfile`. `config/application.rb` is
+  plain Rails, `config/initializers/nibble.rb` is gone, and `lib/` is yours. Ejected screens are copied from
+  `vendor/nibble/frontend/`.
+  **Upgrade:** re-render `Dockerfile` when the upgrade offers it — the old one copies `vendor/` in a way that no
+  longer installs Nibble's gems.
+
 ## 0.15.0 — 2026-09-23 21:11 +0600
 
 ### What's fixed

@@ -12,7 +12,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": [
-        "./lib/nibble/frontend/nibble-admin/*"
+        "./vendor/nibble/frontend/nibble-admin/*"
       ]
     }
   }

@@ -3,7 +3,7 @@ require "test_helper"
 class Nibble::EjectTest < ActiveSupport::TestCase
   setup do
     @root = Pathname(Dir.mktmpdir("nibble-eject"))
-    @source = "lib/nibble/frontend/nibble-admin/pages/admin/Dashboard.vue"
+    @source = "vendor/nibble/frontend/nibble-admin/pages/admin/Dashboard.vue"
     write(@source, "<template>ours</template>")
   end
 
@@ -49,14 +49,14 @@ class Nibble::EjectTest < ActiveSupport::TestCase
   end
 
   test "only files with somewhere to go can be ejected, so nothing lands outside site/" do
-    write("lib/nibble/search.rb", "class Search; end")
+    write("vendor/nibble/lib/nibble/search.rb", "class Search; end")
 
-    error = assert_raises(Nibble::Eject::Refused) { Nibble::Eject.run("lib/nibble/search.rb", root: @root) }
+    error = assert_raises(Nibble::Eject::Refused) { Nibble::Eject.run("vendor/nibble/lib/nibble/search.rb", root: @root) }
     assert_match "isn't a file a site can eject", error.message
   end
 
   test "a path that doesn't exist is refused before anything is written" do
-    error = assert_raises(Nibble::Eject::Refused) { Nibble::Eject.run("lib/nibble/frontend/nibble-admin/pages/admin/Gone.vue", root: @root) }
+    error = assert_raises(Nibble::Eject::Refused) { Nibble::Eject.run("vendor/nibble/frontend/nibble-admin/pages/admin/Gone.vue", root: @root) }
 
     assert_match "doesn't exist", error.message
     assert_not @root.join(".nibble/ejected.yml").exist?
@@ -85,7 +85,7 @@ class Nibble::EjectTest < ActiveSupport::TestCase
 
   test "an edit to one of our files without ejecting is reported, so mistakes surface" do
     git("init", "-q")
-    write("lib/nibble/search.rb", "class Search; end")
+    write("vendor/nibble/lib/nibble/search.rb", "class Search; end")
     git("add", "-A")
     commit("first")
     base = IO.popen([ "git", "-C", @root.to_s, "rev-parse", "HEAD" ], &:read).strip
@@ -93,11 +93,11 @@ class Nibble::EjectTest < ActiveSupport::TestCase
 
     assert_empty Nibble::Eject.unmanaged(root: @root), "an untouched install has nothing to report"
 
-    @root.join("lib/nibble/search.rb").write("class Search; def hacked = true; end")
+    @root.join("vendor/nibble/lib/nibble/search.rb").write("class Search; def hacked = true; end")
     git("add", "-A")
     commit("site edit")
 
-    assert_equal [ "lib/nibble/search.rb" ], Nibble::Eject.unmanaged(root: @root)
+    assert_equal [ "vendor/nibble/lib/nibble/search.rb" ], Nibble::Eject.unmanaged(root: @root)
   end
 
   test "an upgrade can show what changed upstream since a file was ejected" do
@@ -118,13 +118,13 @@ class Nibble::EjectTest < ActiveSupport::TestCase
 
   test "a site's own files are not reported as edits to ours" do
     git("init", "-q")
-    write("lib/nibble/search.rb", "class Search; end")
+    write("vendor/nibble/lib/nibble/search.rb", "class Search; end")
     git("add", "-A")
     commit("first")
     base = IO.popen([ "git", "-C", @root.to_s, "rev-parse", "HEAD" ], &:read).strip
     Nibble::Release.record_install(version: "0.1.0", commit: base, root: @root)
 
-    write("lib/nibble/their_own.rb", "class TheirOwn; end")
+    write("vendor/nibble/lib/nibble/their_own.rb", "class TheirOwn; end")
     write("app/models/invoice.rb", "class Invoice; end")
     git("add", "-A")
     commit("the site writes its own")
@@ -135,17 +135,17 @@ class Nibble::EjectTest < ActiveSupport::TestCase
 
   test "a file of ours the site deleted is reported, because the upgrade will stop on it" do
     git("init", "-q")
-    write("lib/nibble/search.rb", "class Search; end")
+    write("vendor/nibble/lib/nibble/search.rb", "class Search; end")
     git("add", "-A")
     commit("first")
     base = IO.popen([ "git", "-C", @root.to_s, "rev-parse", "HEAD" ], &:read).strip
     Nibble::Release.record_install(version: "0.1.0", commit: base, root: @root)
 
-    @root.join("lib/nibble/search.rb").delete
+    @root.join("vendor/nibble/lib/nibble/search.rb").delete
     git("add", "-A")
     commit("the site removes one of ours")
 
-    assert_equal [ "lib/nibble/search.rb" ], Nibble::Eject.unmanaged(root: @root)
+    assert_equal [ "vendor/nibble/lib/nibble/search.rb" ], Nibble::Eject.unmanaged(root: @root)
   end
 
   test "a properly ejected copy is not reported as an accident" do
@@ -166,9 +166,9 @@ class Nibble::EjectTest < ActiveSupport::TestCase
   end
 
   test "ejecting a second file keeps the first in the manifest" do
-    write("lib/nibble/frontend/nibble-admin/pages/admin/Confirm.vue", "<template>confirm</template>")
+    write("vendor/nibble/frontend/nibble-admin/pages/admin/Confirm.vue", "<template>confirm</template>")
     Nibble::Eject.run(@source, root: @root)
-    Nibble::Eject.run("lib/nibble/frontend/nibble-admin/pages/admin/Confirm.vue", root: @root)
+    Nibble::Eject.run("vendor/nibble/frontend/nibble-admin/pages/admin/Confirm.vue", root: @root)
 
     assert_equal 2, Nibble::Eject.manifest(root: @root).size
   end

@@ -1,6 +1,22 @@
 # Omakase Ruby styling for Rails
 inherit_gem: { rubocop-rails-omakase: rubocop.yml }
 
+# RuboCop skips vendor/ by default, and vendor/nibble is the code this repository exists to check.
+AllCops:
+  inherit_mode:
+    override:
+      - Exclude
+  Exclude:
+    - "node_modules/**/*"
+    - "tmp/**/*"
+    - "vendor/bundle/**/*"
+    - ".git/**/*"
+    - "bin/*"
+    - "db/*schema.rb"
+    - "log/**/*"
+    - "public/**/*"
+    - "storage/**/*"
+
 # Overwrite or add rules to create your own house style
 #
 # # Use `[a, [b, c]]` not `[ a, [ b, c ] ]`

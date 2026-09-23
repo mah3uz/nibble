@@ -42,7 +42,7 @@ The documentation is its own site, written in Markdown and published from [nibbl
 
 ## What belongs to you
 
-**Everything under `lib/nibble/` is Nibble's. Everything else is yours** — including `app/`, so your own models,
+**Everything under `vendor/nibble/` is Nibble's. Everything else is yours** — including `app/`, so your own models,
 controllers and jobs sit where a Rails application puts them.
 
 To take one of Nibble's files on, `bin/rails nibble:eject <path>` copies it somewhere yours is found first and
