@@ -89,7 +89,7 @@ module Nibble
     def themes_path = site_root.join("themes")
 
     # A site's own theme first, then one that ships with Nibble.
-    def theme_path(name) = [ themes_path, core_root.join("themes") ].map { |dir| dir.join(name) }.find(&:directory?) || themes_path.join(name)
+    def theme_path(name, site: themes_path) = [ site, core_root.join("themes") ].map { |dir| dir.join(name) }.find(&:directory?) || site.join(name)
 
     private
 

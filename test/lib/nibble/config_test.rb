@@ -20,12 +20,12 @@ class Nibble::ConfigTest < ActiveSupport::TestCase
   end
 
   test "a site's theme is found before Nibble's of the same name, so a site can replace one outright" do
-    created = Rails.root.join("site/themes").exist? ? Rails.root.join("site/themes/crumbs") : Rails.root.join("site/themes")
-    Rails.root.join("site/themes/crumbs").mkpath
+    site = Pathname(Dir.mktmpdir("nibble-site-themes"))
+    site.join("crumbs").mkpath
 
-    assert_equal Rails.root.join("site/themes/crumbs"), config("theme" => "crumbs").theme_path
+    assert_equal site.join("crumbs"), Nibble.theme_path("crumbs", site:)
   ensure
-    FileUtils.rm_rf(created)
+    FileUtils.rm_rf(site)
   end
 
   test "a theme nobody has is looked for where the site would put it, so the error names that folder" do
