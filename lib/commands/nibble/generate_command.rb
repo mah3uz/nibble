@@ -56,9 +56,7 @@ class NibbleGenerateCommand < Rails::Command::Base
   # A new collection changes the theme's generated types, so leaving them stale would fail nibble:check.
   def refresh_types
     Nibble.reset_schema!
-    output = Nibble::TypeGenerator.theme_output or return
-    output.dirname.mkpath
-    output.write(Nibble::TypeGenerator.new.generate)
+    output = Nibble::TypeGenerator.write! or return
     puts "wrote #{output.relative_path_from(Rails.root)}"
   end
 end

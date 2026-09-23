@@ -15,4 +15,49 @@ class Nibble::TypeGeneratorTest < ActiveSupport::TestCase
     assert_match "more: Pick<(PostsPost), 'title' | 'uri' | 'id' | 'type' | 'url'>[]", generated
     assert_match "topics: Pick<(TopicsTopic),", generated
   end
+
+  def with_copied_theme
+    themes = Pathname(Dir.mktmpdir("nibble-types"))
+    FileUtils.cp_r(Rails.root.join("test/nibble_themes/starter"), themes.join("starter"))
+    Nibble.config = Nibble::Config.new({ "theme" => "starter", "url" => "https://example.test",
+      "locales" => [ { "code" => "en", "default" => true } ] },
+      themes_path: themes, site_schema_path: Rails.root.join("test/nibble_themes/no_site_schema"),
+      content_path: Rails.root.join("test/nibble_content"))
+    Nibble.reset_schema!
+    yield themes.join("starter/.nibble/types.d.ts"), themes.join("starter/schema/blueprints/collections/posts/post.yml")
+  ensure
+    FileUtils.rm_rf(themes)
+  end
+
+  test "types that are out of date are rewritten, so a build never stops on a file it generates" do
+    with_copied_theme do |types, _|
+      types.dirname.mkpath
+      types.write("stale")
+
+      assert_equal types, Nibble::TypeGenerator.write!
+      assert_equal generated, types.read
+    end
+  end
+
+  # Vite watches the theme, so rewriting an identical file would reload every open page for nothing.
+  test "types already up to date are left untouched" do
+    with_copied_theme do |types, _|
+      Nibble::TypeGenerator.write!
+      before = types.mtime
+      sleep 0.01
+
+      Nibble::TypeGenerator.write!
+      assert_equal before, types.mtime
+    end
+  end
+
+  test "a schema change seen in development rewrites the theme's types without a command" do
+    with_copied_theme do |types, blueprint|
+      Nibble::TypeGenerator.write!
+      blueprint.write(blueprint.read.sub("sections:\n", "sections:\n      - fields:\n          - handle: subtitle\n            field: { type: text }\n"))
+
+      Nibble.schema_changed!
+      assert_match "subtitle", types.read, "the field added to the blueprint reaches the types the views compile against"
+    end
+  end
 end

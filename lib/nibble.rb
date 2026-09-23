@@ -31,6 +31,14 @@ module Nibble
       Files.reset!
     end
 
+    # Only the development watcher calls this: the theme's types follow the schema without anyone running a command.
+    def schema_changed!
+      reset_schema!
+      TypeGenerator.write!
+    rescue Error
+      nil
+    end
+
     def build_theme = config.theme
 
     # A missing manifest entry still raises: the wrong CSS is worse than none.
@@ -83,7 +91,7 @@ module Nibble
     def schema_reloader
       @schema_reloader ||= begin
         dirs = [ core_schema_path, site_schema_path, themes_path ].to_h { |dir| [ dir.to_s, [ "yml" ] ] }
-        ActiveSupport::FileUpdateChecker.new([], dirs) { reset_schema! }
+        ActiveSupport::FileUpdateChecker.new([], dirs) { schema_changed! }
       end
     end
   end

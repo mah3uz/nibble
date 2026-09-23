@@ -27,6 +27,17 @@ module Nibble
 
     def self.theme_output(config = Nibble.config) = config.theme_path&.join(".nibble", "types.d.ts")
 
+    # An unchanged file is left alone: rewriting it would have Vite reload every open page for nothing.
+    def self.write!(schema = Nibble.schema, config: Nibble.config)
+      output = theme_output(config) or return nil
+      types = new(schema, config:).generate
+      return output if output.file? && output.read == types
+
+      output.dirname.mkpath
+      output.write(types)
+      output
+    end
+
     def initialize(schema = Nibble.schema, config: Nibble.config)
       @schema = schema
       @config = config

@@ -10,6 +10,7 @@ class NibbleCommand < Rails::Command::Base
   desc "build", "Check everything derived from files, and generate what a build needs"
   def build
     boot_application!
+    write_types
     check = Nibble::Check.run(static: true)
     check.warnings.each { |warning| warn "! #{warning}" }
     check.problems.each { |problem| warn "✗ #{problem}" }
@@ -20,7 +21,6 @@ class NibbleCommand < Rails::Command::Base
     abort "content has #{index.problems.size} problem(s)" if index.problems.any?
 
     puts "content: #{index.pages.size} page(s) in #{Nibble::Files.collections.size} collection(s)"
-    Rails::Command.invoke "nibble:schema:types"
   end
 
   desc "check", "Check the schema, theme, roles, pending content migrations and data the schema no longer covers"
@@ -122,6 +122,15 @@ class NibbleCommand < Rails::Command::Base
   end
 
   private
+
+  # Before the check, which would otherwise refuse types this command exists to bring up to date. A schema too broken
+  # to generate from is left for the check to report.
+  def write_types
+    output = Nibble::TypeGenerator.write! or return
+    puts "types: #{output.relative_path_from(Rails.root)}"
+  rescue Nibble::Error
+    nil
+  end
 
   def banner
     say ""
