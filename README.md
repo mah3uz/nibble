@@ -64,9 +64,9 @@ MIT — see `LICENSE`. Use it, change it, sell it, rebrand the control panel; ke
 copies. It comes with no warranty and no support promise.
 
 [site]: https://nibble.ink
-[users]: https://nibble.ink/docs/users
-[editors]: https://nibble.ink/docs/editors
-[themes]: https://nibble.ink/docs/themes
-[extensions]: https://nibble.ink/docs/extensions
-[developers]: https://nibble.ink/docs/developers
-[upgrading]: https://nibble.ink/docs/upgrading
+[users]: https://nibble.ink/docs/running
+[editors]: https://nibble.ink/docs/editing
+[themes]: https://nibble.ink/docs/theming
+[extensions]: https://nibble.ink/docs/extending
+[developers]: https://nibble.ink/docs/contributing
+[upgrading]: https://nibble.ink/docs/running/upgrading
