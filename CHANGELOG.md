@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.14.7 — 2026-09-23 18:05 +0600
+
 ### What's fixed
 
 - **A collection written as files shows its pages in the control panel.** The listing, the tree and the
