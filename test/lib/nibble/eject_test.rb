@@ -59,7 +59,7 @@ class Nibble::EjectTest < ActiveSupport::TestCase
     error = assert_raises(Nibble::Eject::Refused) { Nibble::Eject.run("vendor/nibble/frontend/nibble-admin/pages/admin/Gone.vue", root: @root) }
 
     assert_match "doesn't exist", error.message
-    assert_not @root.join(".nibble/ejected.yml").exist?
+    assert_not @root.join("config/nibble.yml").exist?, "a refused eject records nothing"
   end
 
   test "a copy is flagged once our original moves on, so nobody silently misses a fix" do

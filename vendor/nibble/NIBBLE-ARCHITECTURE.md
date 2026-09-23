@@ -50,7 +50,7 @@ evaluates `vendor/nibble/Gemfile`, which loads `Nibble::Engine`; `config/applica
   place a collection's `files` can name), `themes/<its own>/`, `cp/pages/<same path as ours>.vue` replacing a
   control panel screen, `cp/slots/*.vue` replacing chrome, `initializers/*.rb` run at boot, and `test/` for its own
   tests; `site/types.d.ts` is generated from the schema and imported as `@site/types`. `bin/rails nibble:eject
-  <path>` is how a site takes one of our files over, recorded in `.nibble/`.
+  <path>` is how a site takes one of our files over, recorded in `config/nibble.yml`.
 - Themes: `site/themes/<theme>/` is looked in first, then `vendor/nibble/themes/<theme>/`, where `crumbs` ships.
   Each has `layouts/`, `views/` (each `.vue` may have a `.yml` query sidecar), `views/sets/`,
   `components/`, `styles/`, `schema/`; **a theme never ships content**; `@theme` resolves to the active one,

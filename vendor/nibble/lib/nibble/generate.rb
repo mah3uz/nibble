@@ -131,9 +131,10 @@ module Nibble
         return "set NIBBLE_THEME=#{handle}, or theme: #{handle} in config/nibble.yml, to use it" unless settings.file?
 
         body = settings.read
-        return "add theme: #{handle} to config/nibble.yml to use it" unless body.match?(/^(\s*)theme:\s*\S+/)
+        above = Metadata.settings(body)
+        return "add theme: #{handle} to config/nibble.yml to use it" unless above.match?(/^(\s*)theme:\s*\S+/)
 
-        settings.write(body.sub(/^(\s*)theme:\s*\S+/) { "#{Regexp.last_match(1)}theme: #{handle}" })
+        settings.write(above.sub(/^(\s*)theme:\s*\S+/) { "#{Regexp.last_match(1)}theme: #{handle}" } + body.delete_prefix(above))
         "config/nibble.yml now names it as this site's theme"
       end
 

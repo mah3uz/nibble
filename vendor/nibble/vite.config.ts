@@ -11,7 +11,8 @@ const siteRoot = process.cwd()
 // The order Nibble.config uses: the site's settings first, then the environment.
 function activeTheme(): string {
   try {
-    const settings = readFileSync(resolve(siteRoot, 'config/nibble.yml'), 'utf8')
+    // Nibble's record of the site follows its settings in the same file, and names a theme of its own.
+    const settings = readFileSync(resolve(siteRoot, 'config/nibble.yml'), 'utf8').split(/^# Written by Nibble/m)[0]
     const named = settings.match(/^\s*theme:\s*["']?([a-z0-9_]+)["']?\s*$/m)
     if (named) return named[1]
   } catch {

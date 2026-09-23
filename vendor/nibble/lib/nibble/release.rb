@@ -1,8 +1,6 @@
 module Nibble
   module Release
     MINIMUM_UPGRADE_FROM = "0.1.0".freeze
-    RECORD = ".nibble/install.yml".freeze
-
     Blocker = Data.define(:reason)
     Installed = Data.define(:version, :commit, :at, :answers)
     Declared = Data.define(:version, :minimum_upgrade_from, :ruby_floor, :node_floor)
@@ -50,19 +48,15 @@ module Nibble
       # an upgrade moves that baseline; installing into a site again would move it to the site's own HEAD and
       # every file it had touched since would read as ours, changed in place.
       def record_install(version:, commit: nil, answers: nil, root: Rails.root)
-        file = root.join(RECORD)
-        file.dirname.mkpath
         kept = answers.presence || installed(root:)&.answers || {}
         commit ||= installed(root:)&.commit.presence || Eject.commit(root:)
-        file.write({ "version" => version, "commit" => commit, "at" => Date.current.to_s,
-                     "answers" => kept.deep_stringify_keys }.to_yaml)
+        Metadata.write("install", { "version" => version, "commit" => commit, "at" => Date.current.to_s,
+                                    "answers" => kept.deep_stringify_keys }, root:)
       end
 
       def installed(root: Rails.root)
-        file = root.join(RECORD)
-        return nil unless file.file?
+        data = Metadata.read(root:)["install"] or return nil
 
-        data = YAML.safe_load_file(file) || {}
         Installed.new(version: data["version"], commit: data["commit"], at: data["at"],
                       answers: (data["answers"] || {}).symbolize_keys)
       end

@@ -13,7 +13,7 @@ module ReleaseUpgrade
     boot_application!
     fail!("working tree isn't clean") unless git_out("status", "--porcelain").empty?
 
-    installed = Nibble::Release.installed or fail!("no install record in #{Nibble::Release::RECORD}; this checkout was not installed by nibble:install")
+    installed = Nibble::Release.installed or fail!("no install record in #{Nibble::Metadata::FILE}; this checkout was not installed by nibble:install")
 
     repository = ENV.fetch("NIBBLE_REPO", Nibble::REPOSITORY)
     step "fetching releases from #{repository}"

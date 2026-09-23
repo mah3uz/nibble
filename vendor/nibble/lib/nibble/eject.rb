@@ -3,7 +3,6 @@ module Nibble
     AREAS = { "vendor/nibble/frontend/nibble-admin/pages" => "site/cp/pages" }.freeze
     # Everything else was rendered once at install and is the site's to change.
     RESERVED = %w[vendor/nibble].freeze
-    MANIFEST = ".nibble/ejected.yml".freeze
 
     Ejection = Data.define(:source, :target, :commit, :at)
 
@@ -22,10 +21,7 @@ module Nibble
       end
 
       def manifest(root: Rails.root)
-        file = root.join(MANIFEST)
-        return {} unless file.file?
-
-        (YAML.safe_load_file(file) || {})["ejected"].to_h.to_h do |source, entry|
+        Metadata.read(root:)["ejected"].to_h.to_h do |source, entry|
           [ source, Ejection.new(source:, target: entry["target"], commit: entry["commit"], at: entry["at"]) ]
         end
       end
@@ -51,7 +47,7 @@ module Nibble
         git(root, "diff", "--quiet", ejection.commit, "HEAD", "--", ejection.source) == false
       end
 
-      # Only meaningful on an install, where .nibble/install.yml records the upstream commit it came from.
+      # Only meaningful on an install, whose record in config/nibble.yml names the upstream commit it came from.
       def unmanaged(root: Rails.root)
         installed = Release.installed(root:) or return []
         return [] if installed.commit.blank?
@@ -75,11 +71,8 @@ module Nibble
       def normalise(source) = source.to_s.delete_prefix("./").delete_prefix("/")
 
       def record(ejection, root:)
-        file = root.join(MANIFEST)
-        file.dirname.mkpath
         entries = manifest(root:).merge(ejection.source => ejection)
-        data = entries.sort.to_h { |source, entry| [ source, entry.to_h.stringify_keys.except("source") ] }
-        file.write({ "schema" => 1, "ejected" => data }.to_yaml)
+        Metadata.write("ejected", entries.sort.to_h { |source, entry| [ source, entry.to_h.stringify_keys.except("source") ] }, root:)
         ejection
       end
 

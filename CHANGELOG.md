@@ -42,6 +42,12 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   called `nibble:upgrade`, and is named after Rails' `db:prepare`, which it stands in for when a server starts.
   **Upgrade:** in `bin/docker-entrypoint`, or wherever your deploy runs it, change `nibble:upgrade` to
   `nibble:prepare`, and take releases from now on with `bin/rails nibble:upgrade`.
+- **Nibble's record of a site lives at the end of `config/nibble.yml`,** below a line that says so: the release it is
+  on, the install's answers and what it ejected. Only that part is ever rewritten, so your settings and comments
+  above it stay as you wrote them. `.nibble/` is gone.
+  **Upgrade:** add `# Written by Nibble from here to the end of the file. Your settings go above this line.` as the
+  last line of `config/nibble.yml`; under it, `install:` with the keys of `.nibble/install.yml` indented beneath, then
+  the `ejected:` section of `.nibble/ejected.yml` if you have one. Then delete `.nibble/`.
 
 ## 0.15.0 — 2026-09-23 21:11 +0600
 
