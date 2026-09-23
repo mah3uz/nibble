@@ -35,6 +35,8 @@ module Nibble
         counts = Records::Entry.kept.where(collection: collections.map(&:handle)).group(:collection, :status).count
         collections.map do |collection|
           mix = MIX.transform_values { |statuses| statuses.sum { |status| counts.fetch([ collection.handle, status ], 0) } }
+          # A folder's pages are live the moment they are deployed, and have no rows to count.
+          mix["published"] += Files.index.of(collection.handle).size if collection["files"].present?
           { "handle" => collection.handle, "title" => collection["title"] || collection.handle.humanize,
             "url" => "/admin/collections/#{collection.handle}", "counts" => mix, "total" => mix.values.sum }
         end

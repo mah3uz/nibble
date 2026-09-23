@@ -87,4 +87,12 @@ class Admin::FilesCollectionsTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to "/admin/navigation/docs/edit"
   end
+
+  # A folder's pages are live the moment they are deployed; counting only rows showed the collection as empty.
+  test "the dashboard counts a folder's pages as published" do
+    docs = Nibble::Cp::Widgets.data(users(:editor))["content_mix"]["collections"].find { |item| item["handle"] == "docs" }
+
+    assert_equal 4, docs["counts"]["published"]
+    assert_equal 4, docs["total"]
+  end
 end
