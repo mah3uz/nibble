@@ -49,6 +49,14 @@ export default defineConfig(({ command, isSsrBuild }) => ({
         },
       },
   plugins: [
+    {
+      // The theme and site/ sit outside Vite's root, so a view or block added to them would otherwise stay invisible to
+      // the page globs until the dev server restarts.
+      name: 'nibble-watch-site',
+      configureServer(server) {
+        server.watcher.add([resolve(import.meta.dirname, 'themes', theme), resolve(import.meta.dirname, 'site')])
+      },
+    },
     tailwindcss(),
     RubyPlugin(),
     inertia({ ssr: 'ssr/ssr.ts' }),
