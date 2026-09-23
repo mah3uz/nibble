@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.15.0 — 2026-09-23 21:11 +0600
+
 ### What's fixed
 
 - **A menu built from files is read-only in the control panel.** It opened as an empty menu with Add link and
