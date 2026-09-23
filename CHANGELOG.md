@@ -12,6 +12,12 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **Installing with `--defaults` sets up the database,** as installing with questions does; it still leaves the
+  administrator and the starter content to you. `bin/rails nibble:check`, the step the installer names next, crashed
+  on the empty database it left. It now says when a database isn't set up and what to run, instead of crashing.
+
 ## 0.16.0 — 2026-09-24 04:39 +0600
 
 ### What's new

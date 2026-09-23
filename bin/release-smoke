@@ -63,6 +63,8 @@ check !File.exist?(File.join(site, "Dockerfile")) && !File.exist?(File.join(site
       "deploy files were written for a site that didn't ask for Kamal"
 check File.exist?(File.join(site, "site/types.d.ts")), "the install didn't generate site/types.d.ts"
 run!({}, "sha256sum", "--quiet", "-c", "MANIFEST", chdir: File.join(site, "vendor/nibble"))
+# The step the installer names first, before anything else here prepares a database.
+run!({}, "bin/rails", "nibble:check", chdir: site)
 
 test = { "RAILS_ENV" => "test" }
 run!(test, "bin/rails", "db:prepare", chdir: site)

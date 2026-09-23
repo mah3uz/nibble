@@ -24,6 +24,15 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     assert_not_includes sources, "backups"
   end
 
+  test "a database that isn't set up is one problem naming the fix, not a crash on its missing tables" do
+    check = Nibble::Check.new(config: Nibble.config)
+    check.define_singleton_method(:database_behind?) { true }
+
+    check.run
+
+    assert_includes check.problems.map(&:to_s), "database: not set up, or has migrations to run: run bin/rails db:prepare"
+  end
+
   test "the shipped core baseline schema passes, so a fresh install boots on a valid schema" do
     result = check(theme: nil)
     assert result.ok?, result.problems.map(&:to_s).join("\n")

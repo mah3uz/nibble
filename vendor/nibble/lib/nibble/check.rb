@@ -53,11 +53,7 @@ module Nibble
         end
       end
       # A build has no database and no secrets, so what needs either is checked where the site runs.
-      unless @static
-        check_roles(schema)
-        capture("site/schema/migrations") { ContentMigrations.pending } if @config.equal?(Nibble.config)
-        check_drift(schema) if @config.equal?(Nibble.config)
-      end
+      check_database(schema) unless @static
       check_navigation(schema)
       check_icons(schema)
       check_search(schema)
@@ -92,6 +88,16 @@ module Nibble
         problem(source, "field handle '#{handle}' is reserved for the entry itself")
       end
     end
+
+    def check_database(schema)
+      return problem("database", "not set up, or has migrations to run: run bin/rails db:prepare") if database_behind?
+
+      check_roles(schema)
+      capture("site/schema/migrations") { ContentMigrations.pending } if @config.equal?(Nibble.config)
+      check_drift(schema) if @config.equal?(Nibble.config)
+    end
+
+    def database_behind? = ActiveRecord::Base.connection_pool.migration_context.needs_migration?
 
     def check_roles(schema)
       return unless @config.equal?(Nibble.config)

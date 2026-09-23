@@ -98,7 +98,14 @@ class NibbleCommand < Rails::Command::Base
     rendered = installer.answers.slice(*asked) unless options[:defaults] && Nibble::Release.installed
     Nibble::Release.record_install(version: Nibble::VERSION, answers: rendered)
     say_status :record, "#{Nibble::Metadata::FILE} — this install is #{Nibble::VERSION}", :green
-    options[:defaults] || options[:only] ? admin_reminder : set_up_database
+    if options[:only]
+      admin_reminder
+    elsif options[:defaults]
+      prepare_database
+      admin_reminder
+    else
+      set_up_database
+    end
     next_steps(kamal)
   end
 
@@ -202,12 +209,16 @@ class NibbleCommand < Rails::Command::Base
 
   def set_up_database
     section "Your account"
+    prepare_database
+    create_admin
+    import_starter_content
+  end
+
+  def prepare_database
     require "rake"
     Rails.application.load_tasks unless Rake::Task.task_defined?("db:prepare")
     Rake::Task["db:prepare"].invoke
     say_status :create, "the database", :green
-    create_admin
-    import_starter_content
   end
 
   def create_admin
