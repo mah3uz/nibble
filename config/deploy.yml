@@ -1,0 +1,76 @@
+# nibble.ink. Where it deploys comes from the environment of whoever runs kamal, so this file names no machine:
+#   NIBBLE_INK_SERVER, NIBBLE_INK_REGISTRY_USER and NIBBLE_INK_SSH_USER.
+# The service and volume keep their original names: renaming either would start a new, empty database.
+
+# Name of your application. Used to uniquely configure containers.
+service: nibble_site
+
+# Name of the container image.
+image: <%= ENV.fetch("NIBBLE_INK_REGISTRY_USER") %>/nibble_site
+
+# Deploy to these servers.
+servers:
+  web:
+    - <%= ENV.fetch("NIBBLE_INK_SERVER") %>
+
+# Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
+# Remove this section when using multiple web servers and ensure you terminate SSL at your load balancer.
+#
+# Note: If using Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
+proxy:
+  ssl: true
+  host: nibble.ink
+  # Proxy connects to your container on port 80 by default.
+  # app_port: 3000
+
+# Credentials for your image host.
+registry:
+  # server: localhost:5555
+  username: <%= ENV.fetch("NIBBLE_INK_REGISTRY_USER") %>
+
+  # Always use an access token rather than real password (pulled from .kamal/secrets).
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+# Configure builder setup.
+builder:
+  arch: amd64
+  # The image bundles the theme it will serve, and this repository's own settings name crumbs.
+  args:
+    NIBBLE_THEME: bite
+
+# Inject ENV variables into containers (secrets come from .kamal/secrets).
+env:
+  clear:
+    SITE_URL: https://nibble.ink
+    # This repository's own settings name crumbs; nibble.ink is bite, from its private site/.
+    NIBBLE_THEME: bite
+    SOLID_QUEUE_IN_PUMA: true
+    # SMTP Info.
+    SMTP_ADDRESS: smtp.postmarkapp.com
+    SMTP_PORT: 587
+  secret:
+    - RAILS_MASTER_KEY
+
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  create-user: app exec --interactive --reuse "bin/rails users:create"
+  shell: app exec --interactive --reuse "bash"
+  logs: app logs -f
+  dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
+
+# Use a different ssh user than root
+ssh:
+  user: <%= ENV.fetch("NIBBLE_INK_SSH_USER") %>
+
+# Use a persistent storage volume.
+volumes:
+  - "nibble_site_storage:/rails/storage"
+
+# Bridge fingerprinted assets, like JS and CSS, between versions to avoid
+# hitting 404 on in-flight requests. Combines all files from new and old
+# version inside the asset_path.
+#
+# Bridge fingerprinted assets between versions so a request in flight during a deploy still finds the file it
+# was served: Vite's bundles and the images published from content/ both live here.
+asset_path: /rails/public

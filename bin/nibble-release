@@ -20,13 +20,11 @@ def confirm?(question, assumed)
   $stdin.gets.to_s.strip.casecmp?("y")
 end
 
-feed = nil
 push = false
 pack_only = false
 parser = OptionParser.new do |opts|
-  opts.banner = "usage: bin/nibble-release <version> [--feed PATH] [--push] [--pack], e.g. bin/nibble-release 0.2.0"
+  opts.banner = "usage: bin/nibble-release <version> [--push] [--pack], e.g. bin/nibble-release 0.2.0"
   opts.on("--pack", "Only pack and publish a release already tagged here, e.g. after the upload failed") { pack_only = true }
-  opts.on("--feed PATH", "Write the release feed here once tagged, e.g. ../nibble_site/content/changelogs/releases.json") { |path| feed = Pathname(path).expand_path.to_s }
   opts.on("--push", "Push without asking") { push = true }
 end
 parser.parse!
@@ -102,31 +100,26 @@ else
   puts "not pushed. When ready: git push #{repository} main --follow-tags, then bin/nibble-release #{version} --pack"
 end
 
-unless feed
-  puts "the notes a site reads come from the feed: re-run with --feed <documentation site>/content/changelogs/releases.json"
+# nibble.ink serves the feed every control panel reads; its site/ is a private repository of its own here.
+feed = ROOT.join("site/content/changelogs/releases.json")
+unless ROOT.join("site/content").directory?
+  puts "no site/content here, so the feed wasn't written: a control panel sees #{version} once nibble.ink publishes it"
   exit
 end
 
-unless system(ROOT.join("bin/rails").to_s, "runner",
-              "Nibble::Releases.publish(Rails.root.join('CHANGELOG.md'), #{feed.inspect})")
+unless system(ROOT.join("bin/rails").to_s, "runner", "Nibble::Releases.publish(Rails.root.join('CHANGELOG.md'), #{feed.to_s.inspect})")
   abort "could not write the feed to #{feed}"
 end
-puts "wrote #{feed}"
+system(ROOT.join("bin/release-pages").to_s) or abort "bin/release-pages failed — the feed is written, its pages are not"
+puts "wrote #{feed.relative_path_from(ROOT)} and its pages"
 
-site = IO.popen([ "git", "-C", Pathname(feed).dirname.to_s, "rev-parse", "--show-toplevel" ], err: File::NULL, &:read).strip
-abort "#{feed} is not in a git repository" if site.empty?
-
-# A site may project the feed into pages of its own, and they belong in the same commit as the feed.
-pages = Pathname(site).join("bin/release-pages")
-if pages.executable?
-  system(pages.to_s) or abort "#{pages} failed — the feed is written, its pages are not"
-end
-
-# Its own repository, so only its content is committed and nothing else there is touched.
-if confirm?("commit and push #{site}'s content?", push)
-  system("git", "-C", site, "add", "-A", "--", "content") &&
-    system("git", "-C", site, "commit", "-qm", "Publish #{version}'s notes", "--", "content") &&
-    system("git", "-C", site, "push") or warn "could not publish the feed — commit it where it lives"
+site = ROOT.join("site").to_s
+if confirm?("commit #{version}'s notes in site/, and push them if it has a remote?", push)
+  committed = system("git", "-C", site, "add", "-A", "--", "content/changelogs") &&
+              system("git", "-C", site, "commit", "-qm", "Publish #{version}'s notes", "--", "content/changelogs")
+  warn "could not commit the notes — commit them in site/" unless committed
+  remote = IO.popen([ "git", "-C", site, "remote" ], err: File::NULL, &:read).strip
+  system("git", "-C", site, "push") or warn "could not push site/" if committed && !remote.empty?
 else
-  puts "not published. Commit #{site}'s content where it lives, and a control panel will see #{version}."
+  puts "not committed. Commit site/content/changelogs in site/, then deploy nibble.ink, and a control panel will see #{version}."
 end

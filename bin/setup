@@ -16,9 +16,31 @@ FileUtils.chdir APP_ROOT do
   system("bundle check") || system!("bundle install")
   system("npm ci") || system!("npm install")
 
+  puts "\n== Site folders =="
+  # site/ is the site's own and may not be in git, so a fresh clone gets the folders Nibble reads.
+  templates = File.join(APP_ROOT, "vendor/nibble/templates/site")
+  Dir.glob("**/*", File::FNM_DOTMATCH, base: templates).sort.each do |relative|
+    source = File.join(templates, relative)
+    target = File.join(APP_ROOT, "site", relative)
+    next unless File.file?(source) && !File.exist?(target)
+
+    FileUtils.mkdir_p(File.dirname(target))
+    FileUtils.cp(source, target)
+    puts "created site/#{relative}"
+  end
+
+  # This repository's site/ is private and not an npm workspace here, so its themes install beside themselves.
+  Dir.glob(File.join(APP_ROOT, "site/themes/*/package.json")).sort.each do |manifest|
+    # Peers such as vue come from the root, or the theme would render with a second copy of it.
+    system!("npm", "install", "--no-audit", "--no-fund", "--legacy-peer-deps", "--prefix", File.dirname(manifest))
+  end
+
   puts "\n== Preparing database =="
   system! "bin/rails db:prepare"
   system! "bin/rails db:reset" if ARGV.include?("--reset")
+
+  puts "\n== Generated types =="
+  system! "bin/rails nibble:build"
 
   puts "\n== Demo content =="
   system! "bin/rails", "runner", <<~'RUBY'

@@ -8,17 +8,20 @@ import RubyPlugin from 'vite-plugin-ruby'
 
 const siteRoot = process.cwd()
 
-// The order Nibble.config uses: the site's settings first, then the environment.
+// The order Nibble.config uses: the environment, then the site's settings. Tests follow the settings alone, as the
+// Rails test environment does, so a shell's NIBBLE_THEME can't build one theme for tests of another.
 function activeTheme(): string {
+  const named = process.env.RAILS_ENV === 'test' ? '' : process.env.NIBBLE_THEME
+  if (named) return named
   try {
     // Nibble's record of the site follows its settings in the same file, and names a theme of its own.
     const settings = readFileSync(resolve(siteRoot, 'config/nibble.yml'), 'utf8').split(/^# Written by Nibble/m)[0]
-    const named = settings.match(/^\s*theme:\s*["']?([a-z0-9_]+)["']?\s*$/m)
-    if (named) return named[1]
+    const setting = settings.match(/^\s*theme:\s*["']?([a-z0-9_]+)["']?\s*$/m)
+    if (setting) return setting[1]
   } catch {
     // Not installed yet.
   }
-  return process.env.NIBBLE_THEME || 'crumbs'
+  return 'crumbs'
 }
 
 const theme = activeTheme()

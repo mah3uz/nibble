@@ -59,6 +59,12 @@ COPY package.json package-lock.json ./
 RUN npm ci && \
     rm -rf ~/.npm
 
+# nibble.ink's theme lives in its private site/, which isn't an npm workspace here, so it installs beside itself;
+# its peers, vue among them, come from the root.
+COPY site/themes/bite/package.json site/themes/bite/package-lock.json ./site/themes/bite/
+RUN npm ci --prefix site/themes/bite --legacy-peer-deps && \
+    rm -rf ~/.npm
+
 # Copy application code
 COPY . .
 
@@ -75,7 +81,7 @@ ARG NIBBLE_THEME
 RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails nibble:build && \
     SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile && \
     test -f public/vite-ssr/ssr.js && \
-    rm -rf node_modules
+    rm -rf node_modules site/themes/bite/node_modules
 
 
 # Final stage for app image

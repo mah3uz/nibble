@@ -1,5 +1,8 @@
 # Every check Nibble runs on itself. Run it with bin/ci.
 
+# Nibble's checks run against this repository's own settings, whichever theme a shell exports for nibble.ink.
+ENV.delete("NIBBLE_THEME")
+
 CI.run do
   step "Setup", "bin/setup --skip-server"
 
@@ -21,6 +24,8 @@ CI.run do
   # Build test assets up front so no test triggers (and races) an on-demand Vite build.
   step "Build: test assets", "env RAILS_ENV=test bin/vite build"
   step "Tests: Rails", "bin/rails test"
+  # This repository's site/ is nibble.ink's own, in a private repository of its own; a clone has none.
+  step "Tests: nibble.ink", "bin/rails test site/test" if Dir.glob("site/test/**/*_test.rb").any?
 
   step "Tests: Seeds", "env RAILS_ENV=test bin/rails db:seed:replant"
 end

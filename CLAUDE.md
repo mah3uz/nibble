@@ -130,6 +130,10 @@ evaluates `vendor/nibble/Gemfile`, which loads `Nibble::Engine`; `config/applica
   Each has `layouts/`, `views/` (each `.vue` may have a `.yml` query sidecar), `views/sets/`,
   `components/`, `styles/`, `schema/`; **a theme never ships content**; `@theme` resolves to the active one,
   named in `config/nibble.yml`, then `NIBBLE_THEME`, defaulting to `crumbs`. `nibble:generate:theme` starts one.
+- This repository's root is also nibble.ink. Its `site/` is not tracked here: it is a private repository of its own
+  holding the `bite` theme (with `default_content/` to import on a fresh start), the schema, and the documentation in
+  `site/content/docs`. The tracked settings name `crumbs`, so a clone works without it; nibble.ink runs with
+  `NIBBLE_THEME=bite`. `bin/rails test site/test` checks its content, and `bin/ci` runs that when `site/` is present.
 
 **Public request flow:**
 1. `NibbleRedirectsMiddleware`, backed by the `redirects` table and cached.

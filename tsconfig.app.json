@@ -36,9 +36,7 @@
     "vendor/nibble/frontend/**/*.ts",
     "vendor/nibble/frontend/**/*.tsx",
     "vendor/nibble/frontend/**/*.vue",
-    "site/themes/*/**/*.ts",
     "vendor/nibble/themes/*/**/*.ts",
-    "site/themes/*/**/*.vue",
     "vendor/nibble/themes/*/**/*.vue",
     "site/types.d.ts"
   ]

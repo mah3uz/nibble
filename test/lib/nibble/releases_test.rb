@@ -210,4 +210,16 @@ class Nibble::ReleasesTest < ActiveSupport::TestCase
     assert_includes releases.first["body"], "- Something else.", "the whole entry travels, not the first section"
     assert_equal releases, JSON.parse(feed.read)
   end
+
+  test "every release is published, so the oldest keep their notes and their pages on the documentation site" do
+    changelog = Pathname(Dir.mktmpdir("nibble-feed")).join("CHANGELOG.md")
+    changelog.write((1..40).reverse_each.map { |minor| "## 0.#{minor}.0 — 2026-01-01\n\n- Release #{minor}.\n" }.join("\n"))
+
+    releases = Nibble::Releases.publish(changelog, changelog.dirname.join("releases.json"))
+
+    assert_equal 40, releases.size
+    assert_equal "0.1.0", releases.last["version"]
+  ensure
+    FileUtils.rm_rf(changelog.dirname) if changelog
+  end
 end

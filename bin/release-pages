@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+# Projects the release feed into pages, so a release has a URL, a search entry and a line in the sitemap.
+require "json"
+require "pathname"
+
+ROOT = Pathname(__dir__).parent
+FEED = ROOT.join("site/content/changelogs/releases.json")
+PAGES = ROOT.join("site/content/changelogs")
+
+abort "no feed at #{FEED.relative_path_from(ROOT)}" unless FEED.file?
+
+releases = JSON.parse(FEED.read)
+PAGES.mkpath
+written = releases.map do |release|
+  version = release.fetch("version")
+  # A slug takes no dots, so 0.7.0 is written 0-7-0 and the version stays the title.
+  file = PAGES.join("#{version.tr('.', '-')}.md")
+  front = {
+    # What links to this page hold, so it survives the file being regenerated.
+    "id" => version.tr(".", "-"),
+    "title" => version,
+    "description" => "What changed in Nibble #{version}.",
+    "published_at" => release.fetch("released_at"),
+    "security" => release.fetch("security", false),
+    "notes_url" => release["url"],
+  }
+  body = <<~MD
+    ---
+    #{front.map { |key, value| "#{key}: #{value.is_a?(String) ? value.inspect : value}" }.join("\n")}
+    ---
+
+    #{release.fetch('body').strip}
+  MD
+  file.write(body)
+  file
+end
+
+# index.md is the page the folder answers with, not a release, so the feed never lists it.
+(Pathname.glob(PAGES.join("*.md")) - written - [ PAGES.join("index.md") ]).each do |stale|
+  stale.delete
+  puts "removed #{stale.relative_path_from(ROOT)}"
+end
+
+puts "wrote #{written.size} release page(s) to #{PAGES.relative_path_from(ROOT)}"
+puts "the site reads them as files: they are live once deployed"

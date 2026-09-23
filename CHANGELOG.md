@@ -21,6 +21,17 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   theme, the release whose behaviour it has switched on (`load_defaults`), the Ruby, Rails and Node it runs on, and the
   theme, schema and content format versions.
 
+### What's fixed
+
+- **The release feed carries every release,** not the latest 25, so the oldest releases keep their notes and their
+  pages on the documentation site.
+- **The asset build bundles the theme `NIBBLE_THEME` names,** as the server renders it. The build read
+  `config/nibble.yml` first and the server read the environment first, so a site choosing its theme by environment
+  served one theme's pages with another's assets. An image build takes the theme as the `NIBBLE_THEME` build argument.
+  **Upgrade:** if your theme comes from `NIBBLE_THEME`, re-render `Dockerfile` when the upgrade offers it and pass the
+  theme under `builder: args:` in `config/deploy.yml`.
+- **Tests follow `config/nibble.yml`,** whatever `NIBBLE_THEME` a shell exports for running the site.
+
 ### Changed
 
 - **Nibble lives in `vendor/nibble/`.** What was under `lib/nibble/`, `lib/commands/` and `lib/middleware/` moved
