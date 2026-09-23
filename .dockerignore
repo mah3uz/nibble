@@ -57,3 +57,6 @@
 # nibble.ink's site/ is a private repository of its own, and its theme installs its own packages.
 /site/.git/
 /site/themes/*/node_modules/
+
+# Ignore Vite build files.
+/public/vite*
