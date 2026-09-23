@@ -83,10 +83,10 @@ class Nibble::SearchTest < ActiveSupport::TestCase
     end
   end
 
-  def with_site_schema(files)
+  def with_site_schema(files, load_defaults: "0.15.0")
     site = Pathname(Dir.mktmpdir("nibble-site-schema"))
     files.each { |path, data| site.join(path).dirname.mkpath; site.join(path).write(data.to_yaml) }
-    Nibble.config = Nibble::Config.new(Nibble.config_values.merge("theme" => "starter"),
+    Nibble.config = Nibble::Config.new(Nibble.config_values.merge("theme" => "starter", "load_defaults" => load_defaults),
       themes_path: Rails.root.join("test/nibble_themes"), site_schema_path: site, content_path: Rails.root.join("test/nibble_content"))
     Nibble.reset_schema!
     Nibble::Search.rebuild
@@ -97,8 +97,8 @@ class Nibble::SearchTest < ActiveSupport::TestCase
   test "a collection that names an index is searched in it, even when search.yml leaves it out" do
     posts = YAML.load_file(Rails.root.join("lib/nibble/core_schema/collections/posts.yml"))
     assert_equal "site", posts["search"]
-    with_site_schema("collections/posts.yml" => posts,
-                     "search.yml" => { "schema" => 1, "indexes" => { "site" => { "collections" => [ "pages" ] } } }) do
+    with_site_schema({ "collections/posts.yml" => posts,
+                       "search.yml" => { "schema" => 1, "indexes" => { "site" => { "collections" => [ "pages" ] } } } }) do
       assert_includes Nibble::Search.indexes["site"]["collections"], "posts"
       assert_equal [ "Grids" ], search("grids").records.map(&:title)
     end
@@ -106,10 +106,19 @@ class Nibble::SearchTest < ActiveSupport::TestCase
 
   test "a collection with search: false leaves every index, even one search.yml puts it in" do
     posts = YAML.load_file(Rails.root.join("lib/nibble/core_schema/collections/posts.yml")).merge("search" => false)
-    with_site_schema("collections/posts.yml" => posts,
-                     "search.yml" => { "schema" => 1, "indexes" => { "site" => { "collections" => %w[pages posts] } } }) do
+    with_site_schema({ "collections/posts.yml" => posts,
+                       "search.yml" => { "schema" => 1, "indexes" => { "site" => { "collections" => %w[pages posts] } } } }) do
       assert_not_includes Nibble::Search.indexes["site"]["collections"], "posts"
       assert_empty search("grids").records
+    end
+  end
+
+  # Search membership changing under a site is something it would notice, so it waits for load_defaults.
+  test "a site that has not raised load_defaults keeps search.yml in charge" do
+    posts = YAML.load_file(Rails.root.join("lib/nibble/core_schema/collections/posts.yml"))
+    with_site_schema({ "collections/posts.yml" => posts,
+                       "search.yml" => { "schema" => 1, "indexes" => { "site" => { "collections" => [ "pages" ] } } } }, load_defaults: "0.14.7") do
+      assert_equal [ "pages" ], Nibble::Search.indexes["site"]["collections"]
     end
   end
 end

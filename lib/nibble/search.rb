@@ -1,6 +1,7 @@
 module Nibble
   # The only place with SQLite-specific SQL (FTS5): another database means reimplementing this module, nothing else.
   module Search
+    COLLECTION_KEYS_SINCE = "0.15.0".freeze
     TABLES = { "porter" => "search_index", "trigram" => "search_index_trigram" }.freeze
     MARK_OPEN = "[[nibble-mark]]".freeze
     MARK_CLOSE = "[[/nibble-mark]]".freeze
@@ -12,6 +13,8 @@ module Nibble
       # `search: false` leaves every index.
       def indexes(schema: Nibble.schema)
         declared = schema.search&.data.to_h.fetch("indexes", {}).transform_values(&:to_h)
+        return declared unless Nibble.config.defaults_at_least?(COLLECTION_KEYS_SINCE)
+
         schema.collections.each do |item|
           case item["search"]
           when false
