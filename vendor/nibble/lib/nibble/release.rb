@@ -21,7 +21,12 @@ module Nibble
         Blocker.new(reason: "#{to} upgrades from #{minimum} and up; this install is #{from}, so go through #{minimum} first")
       end
 
-      def here(to = VERSION) = Declared.new(version: to, minimum_upgrade_from: MINIMUM_UPGRADE_FROM, ruby_floor:, node_floor:)
+      # A release carries its floors in VERSION; this checkout, which has none, reads them from where they are declared.
+      def here(to = VERSION, version_file: Nibble.core_root.join("VERSION"))
+        declared = version_file.file? ? YAML.safe_load_file(version_file).to_h : {}
+        Declared.new(version: to, minimum_upgrade_from: declared["minimum_upgrade_from"] || MINIMUM_UPGRADE_FROM,
+                     ruby_floor: declared["ruby"]&.to_s || ruby_floor, node_floor: declared["node"]&.to_s || node_floor)
+      end
 
       # An upgrade is gated on the floors of the release being taken, which are only readable from its tag.
       def declared(ref, root: Rails.root)

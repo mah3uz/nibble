@@ -1,11 +1,14 @@
 #!/usr/bin/env ruby
+require "fileutils"
 require "optparse"
 require "pathname"
+require_relative "../lib/release_archive"
 
 ROOT = Pathname(__dir__).parent
 VERSION_FILE = ROOT.join("vendor/nibble/lib/nibble.rb")
 LOCKFILE = ROOT.join("Gemfile.lock")
 CHANGELOG = ROOT.join("CHANGELOG.md")
+PACKED = ROOT.join("tmp/release")
 def fail!(message) = abort("release refused: #{message}")
 
 # A tag nobody can fetch is not a release, so the last step is offered rather than left as a note.
@@ -19,8 +22,10 @@ end
 
 feed = nil
 push = false
+pack_only = false
 parser = OptionParser.new do |opts|
-  opts.banner = "usage: bin/nibble-release <version> [--feed PATH] [--push], e.g. bin/nibble-release 0.2.0"
+  opts.banner = "usage: bin/nibble-release <version> [--feed PATH] [--push] [--pack], e.g. bin/nibble-release 0.2.0"
+  opts.on("--pack", "Only pack and publish a release already tagged here, e.g. after the upload failed") { pack_only = true }
   opts.on("--feed PATH", "Write the release feed here once tagged, e.g. ../nibble_site/content/changelogs/releases.json") { |path| feed = Pathname(path).expand_path.to_s }
   opts.on("--push", "Push without asking") { push = true }
 end
@@ -28,6 +33,33 @@ parser.parse!
 
 version = ARGV.first or fail!(parser.help)
 fail!("#{version} isn't a version like 1.2.3") unless version.match?(/\A\d+\.\d+\.\d+\z/)
+repository = VERSION_FILE.read[/REPOSITORY = "([^"]+)"/, 1]
+
+# The archive is what a site installs, so it is packed from the tagged tree and published beside the tag.
+def publish(version, notes, repository, assumed)
+  fail!("working tree isn't clean") unless `git -C #{ROOT} status --porcelain`.strip.empty?
+  fail!("HEAD isn't v#{version}") unless `git -C #{ROOT} tag --points-at HEAD`.split.include?("v#{version}")
+
+  FileUtils.rm_rf(PACKED)
+  built = ReleaseArchive.new(root: ROOT, out: PACKED).build
+  fail!("packed #{built.version}, not #{version}") unless built.version == version
+  puts "packed #{built.archive.relative_path_from(ROOT)} (sha256 #{built.sha256})"
+
+  slug = repository[%r{github\.com[/:](.+?)(?:\.git)?\z}, 1]
+  command = [ "gh", "release", "create", "v#{version}", built.archive.to_s, built.sums.to_s, "--repo", slug,
+              "--title", "Nibble #{version}", "--notes", notes, "--verify-tag" ]
+  if confirm?("publish v#{version} on GitHub with its archive?", assumed)
+    system(*command) or warn "could not publish the release — once v#{version} is pushed: bin/nibble-release #{version} --pack"
+  else
+    puts "not published. Once v#{version} is pushed: bin/nibble-release #{version} --pack"
+  end
+end
+
+if pack_only
+  notes = IO.popen([ "git", "-C", ROOT.to_s, "tag", "-l", "--format=%(contents:body)", "v#{version}" ], &:read).strip
+  publish(version, notes, repository, push)
+  exit
+end
 
 
 current = VERSION_FILE.read[/VERSION = "([^"]+)"/, 1]
@@ -58,13 +90,16 @@ system("git", "-C", ROOT.to_s, "commit", "-qm", "Release #{version}") or fail!("
 undo.clear
 system("git", "-C", ROOT.to_s, "tag", "-a", "v#{version}", "--cleanup=verbatim", "-m", "Nibble #{version}\n\n#{notes}") or fail!("could not tag the release")
 
-repository = VERSION_FILE.read[/REPOSITORY = "([^"]+)"/, 1]
 puts "tagged v#{version}"
 
 if confirm?("push main and v#{version} to #{repository}?", push)
-  system("git", "-C", ROOT.to_s, "push", repository, "main", "--follow-tags") or warn "could not push"
+  if system("git", "-C", ROOT.to_s, "push", repository, "main", "--follow-tags")
+    publish(version, notes, repository, push)
+  else
+    warn "could not push"
+  end
 else
-  puts "not pushed. When ready: git push #{repository} main --follow-tags"
+  puts "not pushed. When ready: git push #{repository} main --follow-tags, then bin/nibble-release #{version} --pack"
 end
 
 unless feed

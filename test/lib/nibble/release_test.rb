@@ -31,6 +31,18 @@ class Nibble::ReleaseTest < ActiveSupport::TestCase
     assert_empty Nibble::Release.blockers(from: Nibble::VERSION)
   end
 
+  test "a release's VERSION decides its floors, so a site's own .ruby-version can't move them" do
+    file = Pathname(Dir.mktmpdir("nibble-version")).join("VERSION")
+    file.write({ "version" => "9.0.0", "minimum_upgrade_from" => "8.0.0", "ruby" => "9.9.9", "node" => "99.0.0" }.to_yaml)
+
+    declared = Nibble::Release.here("9.0.0", version_file: file)
+
+    assert_equal [ "8.0.0", "9.9.9", "99.0.0" ], [ declared.minimum_upgrade_from, declared.ruby_floor, declared.node_floor ]
+    assert_equal "go through 8.0.0 first", Nibble::Release.blockers(from: "7.0.0", release: declared).first.reason[/go through .*/]
+  ensure
+    FileUtils.rm_rf(file.dirname) if file
+  end
+
   test "the floors are read from the files that already declare them" do
     assert_equal File.read(Rails.root.join(".ruby-version")).strip.delete_prefix("ruby-"), Nibble::Release.ruby_floor
     assert_equal JSON.parse(Rails.root.join("package.json").read).dig("engines", "node").delete_prefix(">="), Nibble::Release.node_floor
