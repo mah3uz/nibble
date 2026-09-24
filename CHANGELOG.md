@@ -33,6 +33,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **A view that asks for `parent` type-checks.** The generated types picked it from the record, which has no such
   key, so `site/types.d.ts` failed to compile; it is typed as `ParentSummary` now.
 - **A theme from `nibble:generate:theme` passes the format check,** starting with its `theme.yml`.
+- **`nibble:check` no longer reports a sidebar taxonomy or the search toggle as removed.** Both are kept on an entry
+  beside its blueprint, and the check only knew the blueprint's own fields.
 
 ### Changed
 

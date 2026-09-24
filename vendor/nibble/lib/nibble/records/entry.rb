@@ -32,21 +32,29 @@ module Nibble
       def blueprint_item = collection_item && Nibble.schema.blueprint(collection_item, blueprint)
       def blueprint_definition = Blueprint.for(blueprint_item)
 
+      # What an entry holds beside its blueprint: a taxonomy the sidebar adds, and the search toggle.
+      def self.beside_blueprint(collection_item, handles, schema: Nibble.schema)
+        fields = (Array(collection_item["taxonomies"]) - handles).map { |handle| { "handle" => handle, "field" => { "type" => "terms", "taxonomies" => [ handle ] } } }
+        fields << SEARCH_FIELD if search_toggle?(collection_item, handles, schema:)
+        fields
+      end
+
+      # A blueprint that names its own `search` field has decided what it means.
+      def self.search_toggle?(collection_item, handles, schema: Nibble.schema)
+        Search.indexes(schema:).values.any? { |definition| Array(definition["collections"]).include?(collection_item.handle) } &&
+          !handles.include?("search")
+      end
+
       def blueprint_fields
         fields = blueprint_definition.fields
-        missing = (Array(collection_item["taxonomies"]) - fields.handles).map { |handle| { "handle" => handle, "field" => { "type" => "terms", "taxonomies" => [ handle ] } } }
-        missing << SEARCH_FIELD if search_toggle?
+        missing = self.class.beside_blueprint(collection_item, fields.handles)
         return fields if missing.empty?
 
         extra = Fields.new(missing, schema: Nibble.schema, source: "#{collection} entry fields")
         Fields.new(nil, schema: Nibble.schema, source: fields.source, fields: fields.all.merge(extra.all))
       end
 
-      # A blueprint that names its own `search` field has decided what it means.
-      def search_toggle?
-        Search.indexes.values.any? { |definition| Array(definition["collections"]).include?(collection) } &&
-          !blueprint_definition.fields.handles.include?("search")
-      end
+      def search_toggle? = self.class.search_toggle?(collection_item, blueprint_definition.fields.handles)
 
       def workflow = collection_item["workflow"] || "simple"
       def dated? = collection_item["dated"] == true

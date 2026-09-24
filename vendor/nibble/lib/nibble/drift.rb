@@ -112,7 +112,7 @@ module Nibble
         { "collections" => [ Records::Entry, :collection ], "taxonomies" => [ Records::Term, :taxonomy ] }.each do |kind, (model, column)|
           # A folder is the collection's content, so rows left from before it became one are read by nothing.
           from_files, from_rows = @schema.all(kind).partition { |item| item["files"].present? }
-          known = from_rows.to_h { |item| [ item.handle, fields_by_blueprint(item) ] }
+          known = from_rows.to_h { |item| [ item.handle, fields_by_blueprint(item, kind) ] }
           count_orphans(kind, model.group(column).count.except(*from_files.map(&:handle)), known)
           scan_rows(kind, model.where(column => known.keys).in_batches, column, known)
         end
@@ -166,7 +166,7 @@ module Nibble
         counts.each { |handle, count| @orphaned_parents << [ kind, handle, count ] unless known.key?(handle) }
       end
 
-      def scopes(kind) = @schema.all(kind).map { |item| [ "#{kind}/#{item.handle}", fields_by_blueprint(item) ] }
+      def scopes(kind) = @schema.all(kind).map { |item| [ "#{kind}/#{item.handle}", fields_by_blueprint(item, kind) ] }
 
       def globals
         @schema.globals.map do |item|
@@ -175,8 +175,13 @@ module Nibble
         end
       end
 
-      def fields_by_blueprint(item)
-        @schema.blueprints_for(item).to_h { |blueprint| [ blueprint.handle, Blueprint.new(blueprint, schema: @schema).fields.all.transform_values(&:type) ] }
+      def fields_by_blueprint(item, kind)
+        @schema.blueprints_for(item).to_h do |blueprint|
+          fields = Blueprint.new(blueprint, schema: @schema).fields
+          beside = kind == "collections" ? Records::Entry.beside_blueprint(item, fields.handles, schema: @schema) : []
+          types = fields.all.transform_values(&:type)
+          [ blueprint.handle, types.merge(beside.to_h { |field| [ field["handle"], field.dig("field", "type") ] }) ]
+        end
       end
     end
   end

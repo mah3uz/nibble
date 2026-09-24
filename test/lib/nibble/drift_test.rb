@@ -37,6 +37,16 @@ class Nibble::DriftTest < ActiveSupport::TestCase
     assert_equal [ "collections/articles: intro was removed and 2 records still hold it; #{Nibble::Drift::HINT}" ], issues
   end
 
+  # An entry keeps a sidebar taxonomy and the search toggle outside its blueprint; they were never removed.
+  test "fields an entry gains beside its blueprint are not reported as removed" do
+    @nibble_themes.join("site_schema").mkpath
+    @nibble_themes.join("site_schema/search.yml").write({ "schema" => 1, "indexes" => { "site" => { "collections" => [ "docs" ] } } }.to_yaml)
+    Nibble.reset_schema!
+    strand(create_entry("docs", { "title" => "Guide", "body" => "Body" }), "tags" => [ create_term("Pricing").id.to_s ], "search" => false)
+
+    assert_empty issues
+  end
+
   test "a removed field nobody filled in is no loss, so it isn't reported" do
     strand(create_entry("articles", { "title" => "A" }), "intro" => nil)
 
