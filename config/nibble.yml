@@ -4,7 +4,7 @@ default: &default
   # The release whose behaviour this site uses. When a release changes something your site would notice, the change
   # arrives switched off; set this to that release's version to switch it on, after reading its changelog entry.
   # Upgrading never changes this line, so an upgrade alone never changes how the site behaves.
-  load_defaults: "0.16.1"
+  load_defaults: "0.17.0"
   theme: crumbs
   url: http://localhost:3100
   locales:

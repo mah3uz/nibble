@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.17.0 — 2026-09-25 03:24 +0600
+
 ### What's new
 
 - **Updates shows ten releases at a time,** with **Load more** for the next ten, which light up for a moment as they
