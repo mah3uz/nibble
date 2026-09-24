@@ -8,8 +8,8 @@
   "scripts": {
     "check": "vue-tsc -p tsconfig.app.json && tsc -p tsconfig.node.json",
     "lint": "eslint .",
-    "format": "prettier --write vendor/nibble/frontend vendor/nibble/themes",
-    "format:check": "prettier --check vendor/nibble/frontend vendor/nibble/themes",
+    "format": "prettier --write --no-error-on-unmatched-pattern vendor/nibble/frontend vendor/nibble/themes site/themes",
+    "format:check": "prettier --check --no-error-on-unmatched-pattern vendor/nibble/frontend vendor/nibble/themes site/themes",
     "test:js": "vitest run --root vendor/nibble/frontend"
   },
   "workspaces": [

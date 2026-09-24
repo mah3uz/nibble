@@ -16,6 +16,19 @@ class Nibble::TypeGeneratorTest < ActiveSupport::TestCase
     assert_match "topics: Pick<(TopicsTopic),", generated
   end
 
+  # Picking a key the record doesn't have fails to compile, so a view asking for the parent needs it added instead.
+  test "a query that asks for the parent gets it beside the picked fields, where it can type-check" do
+    with_copied_theme do |types, _|
+      types.dirname.join("starter/views/posts/show.yml").write(
+        { "more" => { "from" => "entries:posts", "fields" => %w[title parent] } }.to_yaml
+      )
+      Nibble.reset_schema!
+
+      assert_match "more: (Pick<(PostsPost), 'title' | 'id' | 'type' | 'uri' | 'url'> & { parent: ParentSummary | null })[]", generated
+      assert_match "parent?: ParentSummary | null", generated
+    end
+  end
+
   def with_copied_theme
     themes = Pathname(Dir.mktmpdir("nibble-types"))
     FileUtils.cp_r(Rails.root.join("test/nibble_themes/starter"), themes.join("starter"))

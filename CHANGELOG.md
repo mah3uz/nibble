@@ -21,12 +21,18 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   on a `search:` source searches part of an index, so one index serves a site-wide search and a docs-only one.
 - **A query can ask for a record's `parent`,** its title and address, so a search result can say which section it
   sits in. It is looked up only when `fields` names it.
+- **A new site lints and formats what it owns.** `npm run lint` runs ESLint over its themes and the screens it
+  ejected, including the rule that a theme imports only `@nibble`, `@theme`, relative paths and its own
+  dependencies; `npm run format` and `npm run format:check` run Prettier in Nibble's style.
 
 ### What's fixed
 
 - **Search snippets read as text,** not Markdown: `**`, links and image syntax no longer show around the match.
 - **A page written as a file is indexed once.** Its words were stored twice, which ranked it above an entry saying
   the same thing.
+- **A view that asks for `parent` type-checks.** The generated types picked it from the record, which has no such
+  key, so `site/types.d.ts` failed to compile; it is typed as `ParentSummary` now.
+- **A theme from `nibble:generate:theme` passes the format check,** starting with its `theme.yml`.
 
 ### Changed
 
@@ -36,9 +42,12 @@ One change waits for `load_defaults: "0.17.0"`:
   `search.yml` keeps each index's settings, such as `fields`; its `collections` and `taxonomies` lists are no longer
   read, and `bin/rails nibble:check` reports one that is still there. Taxonomies accept `search:` from this release.
 
-**Upgrade:** the search index gains a column, so this release recreates it, and `nibble:prepare` rebuilds it on the
-deploy that follows. Before raising `load_defaults` to `"0.17.0"`, give every collection and taxonomy listed in your
-`search.yml` a `search: <index>` key of its own, and remove the lists.
+**Upgrade:** to lint an existing site, copy `eslint.config.js` and `prettier.config.js` from
+`vendor/nibble/templates/` into the site's root, and the `lint`, `format` and `format:check` scripts from
+`vendor/nibble/templates/package.json.erb` into its `package.json`. The search index gains a column, so this release
+recreates it, and `nibble:prepare` rebuilds it on the deploy that follows. Before raising `load_defaults` to
+`"0.17.0"`, give every collection and taxonomy listed in your `search.yml` a `search: <index>` key of its own, and
+remove the lists.
 
 ## 0.16.1 — 2026-09-24 04:53 +0600
 

@@ -5,6 +5,11 @@
   "engines": {
     "node": ">=24.0.0"
   },
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write --no-error-on-unmatched-pattern site/themes site/cp",
+    "format:check": "prettier --check --no-error-on-unmatched-pattern site/themes site/cp"
+  },
   "workspaces": [
     "vendor/nibble",
     "vendor/nibble/themes/*",

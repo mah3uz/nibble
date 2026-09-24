@@ -80,7 +80,7 @@ module Nibble
 
         target.dirname.mkpath
         FileUtils.cp_r(source, target)
-        target.join("theme.yml").write(theme_manifest(handle).to_yaml)
+        target.join("theme.yml").write(theme_manifest(handle))
         rename_package(target.join("package.json"), handle)
 
         [ Written.new(path: "site/themes/#{handle}", note: activate(handle, root)) ]
@@ -112,9 +112,15 @@ module Nibble
         raise Refused, "'#{handle}' must be lowercase letters, numbers and underscores" unless handle.to_s.match?(HANDLE)
       end
 
+      # Written in the style a site's format check expects, which to_yaml's double quotes are not.
       def theme_manifest(handle)
-        { "name" => handle.humanize, "handle" => handle, "version" => "0.1.0", "nibble" => "^#{THEME_API_VERSION}",
-          "description" => "#{handle.humanize}, a theme for Nibble." }
+        <<~YAML
+          name: #{handle.humanize}
+          handle: #{handle}
+          version: 0.1.0
+          nibble: '^#{THEME_API_VERSION}'
+          description: #{handle.humanize}, a theme for Nibble.
+        YAML
       end
 
       def rename_package(path, handle)

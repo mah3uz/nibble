@@ -8,6 +8,7 @@ module Nibble
       export type AssetValue = { id: string; title: string; filename: string; kind: string; url: string; alt: string | null; width?: number | null; height?: number | null; srcset?: string | null; focal?: { x: number; y: number } | null }
       export type PaginationMeta = { current_page: number; per_page: number; total: number; last_page: number }
       export type Paginated<T> = { data: T[]; meta: PaginationMeta }
+      export type ParentSummary = { title: string | null; uri: string | null }
       export interface RecordBase {
         id: number
         uuid: string
@@ -22,6 +23,7 @@ module Nibble
         published_at: string | null
         updated_at: string | null
         search_snippet?: string
+        parent?: ParentSummary | null
       }
     TS
 
@@ -73,12 +75,18 @@ module Nibble
           next "    #{prop}: NibbleForm" if spec.source.form?
 
           record = record_type(spec)
-          record = "Pick<#{record}, #{(spec.fields | %w[id type title uri url]).map { |field| "'#{field}'" }.join(' | ')}>" if spec.fields && !spec.source.search?
+          record = picked(record, spec.fields) if spec.fields && !spec.source.search?
           "    #{prop}: #{spec.paginate ? "Paginated<#{record}>" : "#{record}[]"}"
         end
         "  '#{sidecar.view}': {\n#{props.join("\n")}\n  }"
       end
       "export interface ViewProps {\n#{views.join("\n")}\n}\n"
+    end
+
+    # A record has no parent key: the presenter adds one only when asked, so it can't be picked from the record.
+    def picked(record, fields)
+      picked = "Pick<#{record}, #{((fields - %w[parent]) | %w[id type title uri url]).map { |field| "'#{field}'" }.join(' | ')}>"
+      fields.include?("parent") ? "(#{picked} & { parent: ParentSummary | null })" : picked
     end
 
     def record_type(spec)

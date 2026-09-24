@@ -4,7 +4,7 @@ import skipFormatting from '@vue/eslint-config-prettier/skip-formatting'
 
 export default defineConfigWithVueTs(
   {
-    ignores: ['public/**', 'node_modules/**', 'test/e2e/**', 'tmp/**', 'site/**', 'vendor/*', '!vendor/nibble/', '**/node_modules/**', 'vendor/nibble/frontend/styles/typography.js'],
+    ignores: ['public/**', 'node_modules/**', 'test/e2e/**', 'tmp/**', 'site/types.d.ts', 'vendor/*', '!vendor/nibble/', '**/node_modules/**', 'vendor/nibble/frontend/styles/typography.js'],
   },
   pluginVue.configs['flat/recommended'],
   vueTsConfigs.recommended,

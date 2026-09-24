@@ -138,3 +138,9 @@ again, = Open3.capture2e(upgrade, "bin/rails", "nibble:upgrade", chdir: site)
 check again.include?("already on #{second.version}"), "taking the same release twice wasn't refused:\n#{again}"
 
 puts "a release upgrades to the next one"
+
+# A site lints what it owns: a theme it starts from ours, and a screen it took over with nibble:eject.
+run!({}, "bin/rails", "nibble:generate:theme", "smoke", chdir: site)
+run!({}, "npm", "run", "lint", chdir: site)
+run!({}, "npm", "run", "format:check", chdir: site)
+puts "a site's own theme and screens pass its lint and format checks"
