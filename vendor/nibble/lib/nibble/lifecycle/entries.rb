@@ -91,8 +91,7 @@ module Nibble
         allowed = PUBLISHABLE.fetch(record.workflow)
         invalid!(:base, "This entry needs approval before it can be published.") if allowed && !allowed.include?(workflow_state)
 
-        snapshot["published_at"] = Time.current.utc.iso8601 if snapshot["published_at"].blank? && !record.dated?
-        invalid!(:published_at, "is required to publish") if snapshot["published_at"].blank?
+        snapshot["published_at"] = Time.current.utc.iso8601 if snapshot["published_at"].blank?
         published_at = parse_time(snapshot["published_at"]) or invalid!(:published_at, "isn't a valid date")
         check_expiry!(snapshot, published_at)
         future = published_at > Time.current

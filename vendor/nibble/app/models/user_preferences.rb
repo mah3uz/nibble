@@ -9,6 +9,7 @@ module UserPreferences
     Definition.new(key: "layout_expanded", type: :boolean, default: false, options: nil),
     Definition.new(key: "start_page", type: :enum, default: "dashboard", options: nil),
     Definition.new(key: "after_save", type: :enum, default: "continue", options: %w[continue listing create_another]),
+    Definition.new(key: "publish_message", type: :enum, default: "ask", options: %w[ask skip]),
     Definition.new(key: "assets.view", type: :enum, default: "grid", options: %w[grid table]),
     Definition.new(key: "dashboard.widgets", type: :widget_list, default: Nibble::Cp::Widgets::DEFAULT, options: nil),
     Definition.new(key: "notifications.email", type: :boolean, default: true, options: nil)

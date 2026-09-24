@@ -14,6 +14,10 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ### What's new
 
+- **Publishing a dated entry with no publish date publishes it now.** The date is stamped at that moment, as it
+  already was for undated collections, instead of refusing until one is typed in.
+- **Publish changes can skip its message.** The arrow beside the button offers **Ask for a message** or **Publish
+  straight away**, remembered per person like the choice after saving.
 - **An entry can leave search.** Every entry of a searched collection has an **Include in search** toggle in its
   sidebar, on unless someone turns it off; a page written as a file says `search: false` in its front matter. A
   blueprint with its own `search` field keeps it, and gets no toggle.

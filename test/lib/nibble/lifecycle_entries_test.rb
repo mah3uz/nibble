@@ -104,6 +104,17 @@ class Nibble::LifecycleEntriesTest < ActiveSupport::TestCase
     assert_equal "v4", entry.revisions.last.data["title"]
   end
 
+  # Publishing is asking for the entry to be live now; refusing until a date is typed in only adds a step.
+  test "publishing a dated entry with no date publishes it now" do
+    entry = create_entry("articles")
+
+    freeze_time do
+      assert lifecycle(entry, :publish).ok?
+      assert_equal "published", entry.reload.status
+      assert_equal Time.current, entry.published_at
+    end
+  end
+
   test "a future publish date schedules the entry, and the scheduler publishes it when due" do
     entry = create_entry("articles")
     assert lifecycle(entry, :publish, "published_at" => 1.hour.from_now.utc.iso8601).ok?

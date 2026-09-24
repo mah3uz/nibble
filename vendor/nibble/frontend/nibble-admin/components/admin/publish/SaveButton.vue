@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Label } from '@/components/ui/label'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
 import { usePreference } from '@/lib/preferences'
 
@@ -44,6 +44,7 @@ const scheduling = computed(() => !!props.publishAt && new Date(props.publishAt)
 const publishLabel = computed(() => (scheduling.value ? 'Schedule' : 'Publish'))
 
 const afterSave = usePreference<'continue' | 'listing' | 'create_another'>('after_save', 'continue')
+const publishMessagePreference = usePreference<'ask' | 'skip'>('publish_message', 'ask')
 
 const primaryLabel = computed(() =>
   props.status === 'published' ? 'Save changes' : props.status === 'draft' ? 'Save draft' : 'Save',
@@ -52,6 +53,10 @@ const publishChangesEnabled = computed(() => props.hasWorkingCopy || props.dirty
 
 const publishPopoverOpen = ref(false)
 const publishMessage = ref('')
+function startPublish() {
+  if (publishMessagePreference.value === 'skip') emit('publish')
+  else publishPopoverOpen.value = true
+}
 function confirmPublish() {
   emit('publish', publishMessage.value.trim() || undefined)
   publishMessage.value = ''
@@ -117,18 +122,46 @@ function confirmPublish() {
     </template>
 
     <template v-else-if="status === 'published' && canPublish">
-      <Popover v-model:open="publishPopoverOpen">
-        <PopoverTrigger as-child>
-          <Button type="button" variant="secondary" :disabled="processing || !publishChangesEnabled"
-            >Publish changes</Button
-          >
-        </PopoverTrigger>
-        <PopoverContent align="end" class="space-y-2">
-          <Label for="publish-message">Message (optional)</Label>
-          <Textarea id="publish-message" v-model="publishMessage" placeholder="What changed?" rows="2" />
-          <Button type="button" size="sm" class="w-full" @click="confirmPublish">Publish</Button>
-        </PopoverContent>
-      </Popover>
+      <div class="inline-flex">
+        <Popover v-model:open="publishPopoverOpen">
+          <PopoverAnchor as-child>
+            <Button
+              type="button"
+              variant="secondary"
+              class="rounded-r-none"
+              :disabled="processing || !publishChangesEnabled"
+              @click="startPublish"
+              >Publish changes</Button
+            >
+          </PopoverAnchor>
+          <PopoverContent align="end" class="space-y-2">
+            <Label for="publish-message">Message (optional)</Label>
+            <Textarea id="publish-message" v-model="publishMessage" placeholder="What changed?" rows="2" />
+            <Button type="button" size="sm" class="w-full" @click="confirmPublish">Publish</Button>
+          </PopoverContent>
+        </Popover>
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              :disabled="processing"
+              class="rounded-l-none border-l border-gray-300 dark:border-gray-600"
+              aria-label="Publish options"
+            >
+              <ChevronDown />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>When publishing changes</DropdownMenuLabel>
+            <DropdownMenuRadioGroup v-model="publishMessagePreference">
+              <DropdownMenuRadioItem value="ask">Ask for a message</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="skip">Publish straight away</DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
           <Button type="button" variant="ghost" size="icon" :disabled="processing" aria-label="More actions"

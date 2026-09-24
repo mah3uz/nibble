@@ -13,6 +13,16 @@ class UserPreferencesTest < ActiveSupport::TestCase
     assert_raises(UserPreferences::InvalidValue) { UserPreferences.set!(user, "sidebar_collapsed", "yes") }
   end
 
+  # Skipping the message is remembered per person, so it has to be a choice the server knows, not free text.
+  test "publishing asks for a message until someone chooses to skip it" do
+    user = users(:editor)
+    assert_equal "ask", UserPreferences.get(user, "publish_message")
+
+    UserPreferences.set!(user, "publish_message", "skip")
+    assert_equal "skip", UserPreferences.get(user, "publish_message")
+    assert_raises(UserPreferences::InvalidValue) { UserPreferences.set!(user, "publish_message", "never") }
+  end
+
   test "setting a nested key leaves its siblings alone" do
     user = users(:editor)
     UserPreferences.set!(user, "assets.view", "table")
