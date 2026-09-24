@@ -34,7 +34,7 @@ module Nibble
           keys: {
             "title" => STRING, "route" => ROUTE, "index_route" => ROUTE, "template" => STRING, "index_template" => STRING,
             "layout" => STRING, "blueprints" => STRINGS, "sort" => SORT, "sitemap" => HASH, "api" => BOOLEAN,
-            "localizable" => BOOLEAN, "icon" => STRING
+            "localizable" => BOOLEAN, "icon" => STRING, "search" => ->(v) { v == false || STRING.(v) }
           }
         },
         "globals" => {

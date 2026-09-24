@@ -16,12 +16,14 @@ module Nibble
         @by_id = @pages.index_by(&:id)
         @by_collection = @pages.group_by(&:collection)
         @by_path = @pages.index_by { |page| page.path.to_s }
+        @by_key = @pages.index_by(&:key)
         @files = servable
         detect_duplicates
       end
 
       def page(uri) = @by_uri[uri]
       def find(id) = @by_id[id]
+      def at_key(key) = @by_key[key]
       def of(collection) = @by_collection.fetch(collection, [])
       def any? = @pages.any?
       def ok? = @problems.empty?

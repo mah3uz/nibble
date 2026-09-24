@@ -3,6 +3,7 @@ module Nibble
     Source = Data.define(:kind, :handle) do
       ENTRY_COLUMNS = %w[id uuid blueprint locale title slug uri status published_at unpublish_at parent_id position template author_id created_at updated_at].freeze
       TERM_COLUMNS = %w[id uuid blueprint locale title slug uri created_at updated_at].freeze
+      SEARCH_COLUMNS = %w[collection].freeze
 
       def self.parse(value, schema)
         kind, handle = value.to_s.split(":", 2)
@@ -29,7 +30,7 @@ module Nibble
       def model = entries? ? Records::Entry : Records::Term
       def record_type = entries? ? "entry" : "term"
       def scope_column = entries? ? :collection : :taxonomy
-      def columns = entries? ? ENTRY_COLUMNS : TERM_COLUMNS
+      def columns = search? ? SEARCH_COLUMNS : entries? ? ENTRY_COLUMNS : TERM_COLUMNS
       def tag = search? ? "search:#{handle}" : "#{entries? ? 'collection' : 'taxonomy'}:#{handle}"
       def schema_item(schema) = entries? ? schema.collection(handle) : schema.taxonomy(handle)
 

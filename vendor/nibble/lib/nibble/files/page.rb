@@ -49,6 +49,7 @@ module Nibble
       def root? = slugs == [ Reader::ROOT_SLUG ]
       def key = [ collection, *slugs ].join("/")
       def parent_key = parent_slugs.any? ? [ collection, *parent_slugs ].join("/") : nil
+      def parent = parent_key && Files.index.at_key(parent_key)
     end
   end
 end

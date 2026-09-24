@@ -7,6 +7,7 @@ module Nibble
       STATUSES = %w[draft in_review approved scheduled published unpublished].freeze
       COLUMNS = %w[slug published_at unpublish_at parent_id position template author_id].freeze
       SLUG = /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/
+      SEARCH_FIELD = { "handle" => "search", "field" => { "type" => "toggle", "display" => "Include in search", "default" => true } }.freeze
 
       def self.record_type = "entry"
 
@@ -33,12 +34,18 @@ module Nibble
 
       def blueprint_fields
         fields = blueprint_definition.fields
-        missing = Array(collection_item["taxonomies"]) - fields.handles
+        missing = (Array(collection_item["taxonomies"]) - fields.handles).map { |handle| { "handle" => handle, "field" => { "type" => "terms", "taxonomies" => [ handle ] } } }
+        missing << SEARCH_FIELD if search_toggle?
         return fields if missing.empty?
 
-        extra = Fields.new(missing.map { |handle| { "handle" => handle, "field" => { "type" => "terms", "taxonomies" => [ handle ] } } },
-                           schema: Nibble.schema, source: "#{collection} taxonomies")
+        extra = Fields.new(missing, schema: Nibble.schema, source: "#{collection} entry fields")
         Fields.new(nil, schema: Nibble.schema, source: fields.source, fields: fields.all.merge(extra.all))
+      end
+
+      # A blueprint that names its own `search` field has decided what it means.
+      def search_toggle?
+        Search.indexes.values.any? { |definition| Array(definition["collections"]).include?(collection) } &&
+          !blueprint_definition.fields.handles.include?("search")
       end
 
       def workflow = collection_item["workflow"] || "simple"

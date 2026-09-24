@@ -12,6 +12,34 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's new
+
+- **An entry can leave search.** Every entry of a searched collection has an **Include in search** toggle in its
+  sidebar, on unless someone turns it off; a page written as a file says `search: false` in its front matter. A
+  blueprint with its own `search` field keeps it, and gets no toggle.
+- **A search query can narrow by collection.** `where: { collection: docs }` (or `in:` a list, or `$params.section`)
+  on a `search:` source searches part of an index, so one index serves a site-wide search and a docs-only one.
+- **A query can ask for a record's `parent`,** its title and address, so a search result can say which section it
+  sits in. It is looked up only when `fields` names it.
+
+### What's fixed
+
+- **Search snippets read as text,** not Markdown: `**`, links and image syntax no longer show around the match.
+- **A page written as a file is indexed once.** Its words were stored twice, which ranked it above an entry saying
+  the same thing.
+
+### Changed
+
+One change waits for `load_defaults: "0.17.0"`:
+
+- **An index is made of the collections and taxonomies that name it,** with `search: <index>` in their own files.
+  `search.yml` keeps each index's settings, such as `fields`; its `collections` and `taxonomies` lists are no longer
+  read, and `bin/rails nibble:check` reports one that is still there. Taxonomies accept `search:` from this release.
+
+**Upgrade:** the search index gains a column, so this release recreates it, and `nibble:prepare` rebuilds it on the
+deploy that follows. Before raising `load_defaults` to `"0.17.0"`, give every collection and taxonomy listed in your
+`search.yml` a `search: <index>` key of its own, and remove the lists.
+
 ## 0.16.1 — 2026-09-24 04:53 +0600
 
 ### What's fixed

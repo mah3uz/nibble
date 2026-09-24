@@ -29,7 +29,8 @@ module Nibble
         @q = @raw["q"]
         raise Invalid.new("q", "is only for search sources") if @q && !source.search?
         raise Invalid.new("q", "is required for search sources") if source.search? && @q.blank?
-        %w[where not sort include].each { |key| raise Invalid.new(key, "isn't supported by search sources") if source.search? && @raw.key?(key) }
+        %w[not sort include].each { |key| raise Invalid.new(key, "isn't supported by search sources") if source.search? && @raw.key?(key) }
+        @conditions.each { |condition| raise Invalid.new("where.collection.#{condition.operator}", "isn't an operator (use eq, in)") unless %w[eq in].include?(condition.operator) } if source.search?
         @locale = @raw["locale"]
         @sorts = parse_sorts
         @paginate = parse_paginate
@@ -46,7 +47,7 @@ module Nibble
 
       private
 
-      def valid_field?(handle) = source.search? || source.columns.include?(handle) || @field_handles.include?(handle) || handle == "url"
+      def valid_field?(handle) = source.search? || source.columns.include?(handle) || @field_handles.include?(handle) || %w[url parent].include?(handle)
 
       def parse_conditions(raw, key)
         return [] if raw.nil?

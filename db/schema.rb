@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_21_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_24_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -473,6 +473,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_21_010000) do
 
   # Virtual tables defined in this database.
   # Note that virtual tables may not work with other database engines. Be careful if changing database.
-  create_virtual_table "search_index", "fts5", ["title", "body", "record_type UNINDEXED", "record_id UNINDEXED", "index_handle UNINDEXED", "locale UNINDEXED", "tokenize = 'porter unicode61 remove_diacritics 2'"]
-  create_virtual_table "search_index_trigram", "fts5", ["title", "body", "record_type UNINDEXED", "record_id UNINDEXED", "index_handle UNINDEXED", "locale UNINDEXED", "tokenize = 'trigram remove_diacritics 1'"]
+  create_virtual_table "search_index", "fts5", ["title", "body", "record_type UNINDEXED", "record_id UNINDEXED", "index_handle UNINDEXED", "locale UNINDEXED", "collection UNINDEXED", "tokenize = 'porter unicode61 remove_diacritics 2'"]
+  create_virtual_table "search_index_trigram", "fts5", ["title", "body", "record_type UNINDEXED", "record_id UNINDEXED", "index_handle UNINDEXED", "locale UNINDEXED", "collection UNINDEXED", "tokenize = 'trigram remove_diacritics 1'"]
 end

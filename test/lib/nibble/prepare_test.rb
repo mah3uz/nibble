@@ -128,4 +128,15 @@ class Nibble::PrepareTest < ActiveSupport::TestCase
     hits = Nibble::Search.search("site", "spreadsheet", locale: "en").hits
     assert_equal [ "import" ], hits.map(&:record_id)
   end
+
+  # A new release can recreate the index, and a deploy has no other moment to refill it before readers search.
+  test "preparing builds an empty index from what is published" do
+    post = create_post("Invoice reminders")
+    assert Nibble::Lifecycle.call(post, :publish, { "published_at" => 1.day.ago.utc.iso8601 }).ok?
+    Nibble::Events.dispatch_pending
+    Nibble::Search::TABLES.each_value { |table| ActiveRecord::Base.connection.execute("DELETE FROM #{table}") }
+
+    prepare
+    assert_equal [ post.id ], Nibble::Search.search("site", "reminders", locale: "en").hits.map(&:record_id)
+  end
 end

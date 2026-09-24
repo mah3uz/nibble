@@ -140,4 +140,16 @@ class Nibble::CheckTest < ActiveSupport::TestCase
 
     assert_match "query 'posts' where.excerpt: isn't filterable", check.problems.map(&:to_s).join("\n")
   end
+
+  # A list that is no longer read would otherwise drop collections from search without a word.
+  test "from 0.17.0 a search.yml that lists collections is reported, naming the key that replaces it" do
+    theme_file("search.yml", { schema: 1, indexes: { site: { collections: [ "pages" ] } } })
+    config = ->(defaults) { Nibble::Config.new({ "theme" => "check", "load_defaults" => defaults, "locales" => [ { "code" => "en", "default" => true } ] }, themes_path: @themes, site_schema_path: @themes.join("no_site_schema")) }
+
+    messages = Nibble::Check.run(config: config.("0.17.0"), static: true).problems.map(&:message)
+    assert_includes messages, "index 'site' lists collections, which are no longer read: give each one `search: site` in its own file"
+
+    messages = Nibble::Check.run(config: config.("0.16.1"), static: true).problems.map(&:message)
+    assert_not(messages.any? { |message| message.include?("no longer read") })
+  end
 end

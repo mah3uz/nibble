@@ -117,7 +117,8 @@ module Nibble
       page = spec.paginate ? [ Integer(context.params[spec.paginate["param"]].to_s, exception: false) || 1, 1 ].max : 1
       offset = spec.paginate ? (page - 1) * per_page : spec.offset.to_i
       locale = context.resolve(spec.locale || "$locale")
-      found = Nibble::Search.search(spec.source.handle, context.resolve(spec.q), locale:, limit: per_page, offset:)
+      collections = spec.conditions.flat_map { |condition| Array(context.resolve(condition.value)) }.compact_blank.presence
+      found = Nibble::Search.search(spec.source.handle, context.resolve(spec.q), locale:, limit: per_page, offset:, collections:)
       loaded = found.hits.group_by(&:record_type).flat_map do |type, hits|
         next hits.filter_map { |hit| Files.index.find(hit.record_id) } if type == Files::Page::RECORD_TYPE
 

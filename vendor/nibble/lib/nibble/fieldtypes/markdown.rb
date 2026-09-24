@@ -38,7 +38,7 @@ module Nibble
       def dependencies(value) = super + asset_ids(value).map { |id| "asset:#{id}" }
 
       def pre_process_index(value) = value.to_s.gsub(/[#*`_>\[\]]/, "").squish.truncate(100).presence
-      def search_text(value) = value.is_a?(String) ? value : nil
+      def search_text(value) = value.is_a?(String) ? Nibble::Markdown.text(value) : nil
       def ts_type = "string | null"
 
       private

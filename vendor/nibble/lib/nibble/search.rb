@@ -2,6 +2,7 @@ module Nibble
   # The only place with SQLite-specific SQL (FTS5): another database means reimplementing this module, nothing else.
   module Search
     COLLECTION_KEYS_SINCE = "0.15.0".freeze
+    KEYS_ONLY_SINCE = "0.17.0".freeze
     TABLES = { "porter" => "search_index", "trigram" => "search_index_trigram" }.freeze
     MARK_OPEN = "[[nibble-mark]]".freeze
     MARK_CLOSE = "[[/nibble-mark]]".freeze
@@ -9,19 +10,26 @@ module Nibble
     Page = Data.define(:hits, :total)
 
     class << self
-      # search.yml and each collection's own `search:` are read together: `search: <index>` joins that index, and
-      # `search: false` leaves every index.
-      def indexes(schema: Nibble.schema)
+      # A collection or taxonomy joins an index with its own `search: <index>`, and `search: false` leaves every index.
+      # search.yml names indexes and their settings; its own membership lists are read only on older defaults.
+      def indexes(schema: Nibble.schema, config: Nibble.config)
         declared = schema.search&.data.to_h.fetch("indexes", {}).transform_values(&:to_h)
-        return declared unless Nibble.config.defaults_at_least?(COLLECTION_KEYS_SINCE)
+        return declared unless config.defaults_at_least?(COLLECTION_KEYS_SINCE)
 
-        schema.collections.each do |item|
-          case item["search"]
-          when false
-            declared.transform_values! { |definition| definition.merge("collections" => Array(definition["collections"]) - [ item.handle ]) }
-          when String
-            definition = declared[item["search"]].to_h
-            declared[item["search"]] = definition.merge("collections" => Array(definition["collections"]) | [ item.handle ])
+        members = { "collections" => schema.collections }
+        if config.defaults_at_least?(KEYS_ONLY_SINCE)
+          declared.transform_values! { |definition| definition.except("collections", "taxonomies") }
+          members["taxonomies"] = schema.taxonomies
+        end
+        members.each do |key, items|
+          items.each do |item|
+            case item["search"]
+            when false
+              declared.transform_values! { |definition| definition.merge(key => Array(definition[key]) - [ item.handle ]) }
+            when String
+              definition = declared[item["search"]].to_h
+              declared[item["search"]] = definition.merge(key => Array(definition[key]) | [ item.handle ])
+            end
           end
         end
         declared
@@ -36,7 +44,7 @@ module Nibble
       def sync_files
         connection.transaction do
           TABLES.each_value { |table| run_sql("DELETE FROM #{table} WHERE record_type = ?", [ Files::Page::RECORD_TYPE ]) }
-          Files.index.pages.each { |page| insert_record(page) }
+          Files.index.pages.each { |page| insert_record(page) if searchable?(page) }
         end
       end
 
@@ -45,6 +53,8 @@ module Nibble
           run_sql("DELETE FROM #{table} WHERE record_type = ? AND record_id = ?", [ record.record_type, record.id ])
         end
       end
+
+      def empty? = TABLES.values.none? { |table| run_sql("SELECT 1 FROM #{table} LIMIT 1", []).any? }
 
       def rebuild
         TABLES.each_value { |table| run_sql("DELETE FROM #{table}", []) }
@@ -57,12 +67,16 @@ module Nibble
         end
       end
 
-      def search(index, query, locale:, limit: 20, offset: 0)
+      def search(index, query, locale:, limit: 20, offset: 0, collections: nil)
         tokenizer = Nibble.config.locale(locale)&.search_tokenizer || "porter"
         match = match_expression(query, tokenizer) or return Page.new(hits: [], total: 0)
         table = TABLES.fetch(tokenizer)
         where = "#{table} MATCH ? AND index_handle = ? AND locale = ?"
         binds = [ match, index.to_s, locale.to_s ]
+        if (collections = Array(collections).map(&:to_s).presence)
+          where += " AND collection IN (#{collections.map { '?' }.join(', ')})"
+          binds += collections
+        end
         connection.uncached do
           total = connection.select_value("SELECT COUNT(*) FROM #{table} WHERE #{where}", "Nibble search count", binds).to_i
           rows = connection.select_rows(
@@ -81,15 +95,20 @@ module Nibble
 
       def insert_record(record)
         memberships(record).each do |index|
-          insert(table_for(record.locale), [ record.title.to_s, body(record, indexes[index]), record.record_type, record.id, index, record.locale ])
+          insert(table_for(record.locale), [ record.title.to_s, body(record, indexes[index]), record.record_type, record.id, index, record.locale,
+                                             record.respond_to?(:collection) ? record.collection : nil ])
         end
       end
 
       def insert(table, values)
-        run_sql("INSERT INTO #{table} (title, body, record_type, record_id, index_handle, locale) VALUES (?, ?, ?, ?, ?, ?)", values)
+        run_sql("INSERT INTO #{table} (title, body, record_type, record_id, index_handle, locale, collection) VALUES (?, ?, ?, ?, ?, ?, ?)", values)
       end
 
-      def searchable?(record) = record.is_a?(Records::Term) ? !record.trashed? : record.live?
+      def searchable?(record)
+        return false if record.data.to_h["search"] == false
+
+        record.is_a?(Records::Term) ? !record.trashed? : record.live?
+      end
 
 
       def memberships(record)
@@ -107,7 +126,7 @@ module Nibble
           field.fieldtype.search_text(record.values[handle])
         end
         # A file's words are in the file, not in a field, so they are read rather than looked up.
-        text << record.body if record.is_a?(Files::Page)
+        text << Markdown.text(record.body) if record.is_a?(Files::Page) && !handles.include?(record.body_field)
         text.join("\n")
       end
 

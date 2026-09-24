@@ -131,6 +131,25 @@ class Admin::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ tag.id.to_s ], doc.reload.data["tags"], "a field that shows a choice and then drops it looks like it saved"
   end
 
+  # Leaving an entry out of search is an editor's call, so it is offered on, and stays off once turned off.
+  test "a searched collection's entries get a search toggle that starts on and keeps what's saved" do
+    @nibble_themes.join("site_schema").mkpath
+    @nibble_themes.join("site_schema/search.yml").write({ "schema" => 1, "indexes" => { "site" => { "collections" => [ "docs" ] } } }.to_yaml)
+    Nibble.reset_schema!
+    doc = create_entry("docs", { "title" => "Guide", "body" => "Body" })
+
+    get "/admin/collections/docs/entries/#{doc.id}/edit"
+    sidebar = props["blueprint"]["tabs"].last["sections"].flat_map { |section| section["fields"].map { |field| field["handle"] } }
+    assert_includes sidebar, "search"
+    assert_equal true, props["values"]["search"], "an entry saved before the toggle existed is searched"
+
+    patch "/admin/collections/docs/entries/#{doc.id}", params: { entry: { search: "0", lock_version: doc.lock_version } }
+    assert_equal false, doc.reload.data["search"]
+
+    get "/admin/collections/docs/entries/#{doc.id}/edit"
+    assert_equal false, props["values"]["search"], "a toggle that reopens on would put the entry back on the next save"
+  end
+
   test "a blueprint's own sidebar tab keeps its fields and gains the record's columns" do
     doc = create_entry("docs", { "title" => "Guide", "body" => "Body" })
 

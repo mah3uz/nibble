@@ -142,13 +142,25 @@ module Nibble
     def check_search(schema)
       search = schema.search or return
 
-      search["indexes"].each do |index, definition|
-        collections = Array(definition.to_h["collections"])
+      if @config.defaults_at_least?(Search::KEYS_ONLY_SINCE) && !search.path.to_s.start_with?(Nibble.core_root.to_s)
+        search["indexes"].each do |index, definition|
+          %w[collections taxonomies].each do |key|
+            next if definition.to_h[key].blank?
+
+            problem(search.path, "index '#{index}' lists #{key}, which are no longer read: give each one `search: #{index}` in its own file")
+          end
+        end
+      end
+
+      Search.indexes(schema:, config: @config).each do |index, definition|
+        collections = Array(definition["collections"])
+        next if collections.empty?
+
         collections.each { |handle| problem(search.path, "index '#{index}' uses missing collection '#{handle}'") unless schema.collection(handle) }
         available = collections.filter_map { |handle| schema.collection(handle) }
           .flat_map { |collection| schema.blueprints_for(collection) }
           .flat_map { |item| capture(item.path) { Blueprint.new(item, schema:).fields.handles } || [] }
-        (Array(definition.to_h["fields"]) - available).each do |handle|
+        (Array(definition["fields"]) - available).each do |handle|
           problem(search.path, "index '#{index}' searches field '#{handle}', which no blueprint of its collections defines")
         end
       end

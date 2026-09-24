@@ -22,6 +22,8 @@ module Nibble
       sanitize ? Sanitizer.sanitize(html) : html
     end
 
+    def text(markdown) = Nokogiri::HTML5.fragment(render(markdown)).text.squish.presence
+
     def front_matter(text)
       raw = text.to_s[/\A---\n(.*?)\n---\n/m, 1] or return {}
 

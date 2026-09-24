@@ -39,13 +39,4 @@ class SiteChangelogsTest < ActionDispatch::IntegrationTest
 
     assert_response :not_found
   end
-
-  # Two letters is the point at which a result is worth reading; below it the index matches almost everything,
-  # which reads as noise and costs a query per keystroke.
-  test "search says nothing until the query is worth running" do
-    get "/api/v1/search", params: { q: "a" }
-
-    assert_response :success
-    assert_empty JSON.parse(response.body)["results"]
-  end
 end

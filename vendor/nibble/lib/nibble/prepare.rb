@@ -24,8 +24,13 @@ module Nibble
       warnings |= verify!("after content migrations")
       moved = Uris.settle!
       @log.call("addresses: #{moved} moved to match their routes") if moved.positive?
-      @log.call("search: indexing pages written as files")
-      Search.sync_files
+      if Search.empty?
+        @log.call("search: building the index")
+        Search.rebuild
+      else
+        @log.call("search: indexing pages written as files")
+        Search.sync_files
+      end
       Result.new(migrations:, snapshot: Drift.record_snapshot!, warnings:)
     end
 

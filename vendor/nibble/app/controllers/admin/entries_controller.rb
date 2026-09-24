@@ -148,7 +148,7 @@ module Admin
     def editor_props(entry)
       blueprint = entry.blueprint_definition
       source = entry.draft&.data || entry.snapshot
-      fields = blueprint.fields.add_values(source)
+      fields = entry.blueprint_fields.add_values(source)
       {
         title: entry.title.presence || (entry.persisted? ? "Untitled" : "New #{@collection['title'].to_s.singularize.downcase}"),
         breadcrumbs: [ { label: @collection["title"], url: admin_collection_root_path(@collection.handle) } ],
@@ -191,6 +191,7 @@ module Admin
                                                         "options" => ::User.order(:name).pluck(:id, :name).map { |id, name| { "value" => id.to_s, "label" => name } } } }
       end
       items += taxonomy_items(entry)
+      items << Nibble::Records::Entry::SEARCH_FIELD if entry.search_toggle?
       items << { "handle" => "template", "field" => { "type" => "select", "display" => "Template",
                                                       "options" => Nibble::Views.templates, "clearable" => true,
                                                       "instructions" => "Leave empty to use the collection's template." } }

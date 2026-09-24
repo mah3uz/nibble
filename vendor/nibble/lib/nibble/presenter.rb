@@ -45,6 +45,7 @@ module Nibble
     def present_one(record, fields:, include:, depth:, seen:)
       Dependencies.add("#{record.record_type}:#{record.id}")
       data = base(record)
+      data["parent"] = parent(record) if fields&.include?("parent")
       return data if fields && (fields - data.keys).empty?
 
       field_set = record.blueprint_fields
@@ -87,6 +88,13 @@ module Nibble
         "updated_at" => record.updated_at&.utc&.iso8601,
         "author" => author(record)
       }
+    end
+
+    def parent(record)
+      parent = record.respond_to?(:parent) && record.parent or return nil
+
+      Dependencies.add("#{parent.record_type}:#{parent.id}")
+      { "title" => parent.title, "uri" => parent.uri }
     end
 
     def author(record)

@@ -8,7 +8,6 @@ Rails.application.routes.draw do
       get "changelogs", to: "changelogs#index"
       # An installation has its feed address compiled in, so this one answers until none of them hold it.
       get "releases", to: "changelogs#index"
-      get "search", to: "search#index"
     end
   end
 end
