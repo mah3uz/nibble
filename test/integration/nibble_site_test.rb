@@ -32,6 +32,22 @@ class NibbleSiteTest < ActionDispatch::IntegrationTest
     assert_equal({ "page" => "2" }, props["site"]["params"], "only declared params reach the view and the cache key")
   end
 
+  # InfiniteScroll finds the next page and where to append from these, so a view that asks to scroll gets them.
+  test "a query that scrolls tells Inertia the next page and to append to its data, and one that doesn't says neither" do
+    get "/blog"
+    first = page_props
+    assert_equal "page", first.dig("scrollProps", "posts", "pageName")
+    assert_equal 2, first.dig("scrollProps", "posts", "nextPage")
+    assert_includes first["mergeProps"], "posts.data"
+
+    get "/blog", params: { page: 2 }
+    assert_nil page_props.dig("scrollProps", "posts", "nextPage"), "the last page has nothing after it"
+
+    get "/topics/design"
+    assert_nil page_props["scrollProps"]
+    assert_nil page_props["mergeProps"]
+  end
+
   test "a post shows related posts through its topics, never itself, plus site globals and navigation" do
     get "/blog/type-scales"
     props = page_props["props"]

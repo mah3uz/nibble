@@ -2,6 +2,14 @@ module Nibble
   class PageProps
     Result = Data.define(:props, :seo, :view)
 
+    # inertia-rails records where to append before it runs the prop that would say so, so the path is set when built.
+    class ScrollingPage < InertiaRails::ScrollProp
+      def initialize(...)
+        super
+        append("data")
+      end
+    end
+
     def initialize(match, params: {}, request_path: nil, preview: false, form_result: nil)
       @match = match
       @form_result = form_result
@@ -53,8 +61,19 @@ module Nibble
         result = Query.build(spec, context).result
         data = presenter.present(result.records, fields: result.spec.fields, include: result.spec.include)
         data.each { |item| item["search_snippet"] = result.snippets["#{item['type']}:#{item['id']}"] } if result.snippets.any?
-        [ name, result.pagination ? { "data" => data, "meta" => result.pagination } : data ]
+        [ name, result.pagination ? paginated(result, data) : data ]
       end
+    end
+
+    # A scrolling query is one Inertia appends to, so a theme's InfiniteScroll adds each page's data to the last.
+    def paginated(result, data)
+      value = { "data" => data, "meta" => result.pagination }
+      return value unless result.spec.paginate["scroll"]
+
+      current, last = result.pagination.values_at("current_page", "last_page")
+      metadata = { page_name: result.spec.paginate["param"], current_page: current,
+                   previous_page: (current - 1 if current > 1), next_page: (current + 1 if current < last) }
+      ScrollingPage.new(metadata:) { value }
     end
 
     def run_set_sidecars(value, context, presenter)

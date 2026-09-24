@@ -1,5 +1,5 @@
 params: [page]
 posts:
   from: entries:posts
-  paginate: { per_page: 2, param: page }
+  paginate: { per_page: 2, param: page, scroll: true }
   include: [topics]

@@ -14,6 +14,10 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ### What's new
 
+- **Updates shows ten releases at a time,** with **Load more** for the next ten, which light up for a moment as they
+  arrive. The list of releases is read a page at a time, and only as far as the release a site runs.
+- **A paginated query can scroll.** `paginate: { scroll: true }` makes each page append to the last, for Inertia's
+  `InfiniteScroll`.
 - **Publishing a dated entry with no publish date publishes it now.** The date is stamped at that moment, as it
   already was for undated collections, instead of refusing until one is typed in.
 - **Publish changes can skip its message.** The arrow beside the button offers **Ask for a message** or **Publish

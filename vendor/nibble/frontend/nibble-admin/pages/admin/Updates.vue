@@ -19,15 +19,39 @@ type Release = {
   body: string
 }
 
-const props = defineProps<{ current: string; checking: boolean; releases: Release[] }>()
+const props = defineProps<{
+  current: string
+  checking: boolean
+  waiting: { count: number; security: boolean }
+  releases: Release[]
+  page: number
+  more: boolean
+}>()
 
 useBreadcrumbs([{ label: 'Updates' }])
 
 const asking = ref<Release | null>(null)
 const copied = ref(false)
 
-const waiting = computed(() => props.releases.filter((release) => release.status === 'newer'))
-const risky = computed(() => waiting.value.some((release) => release.security))
+const risky = computed(() => props.waiting.security)
+const loading = ref(false)
+const fresh = ref(new Set<string>())
+
+// Only what just arrived glows, so the eye finds where the list grew.
+function loadMore() {
+  const before = new Set(props.releases.map((release) => release.version))
+  router.reload({
+    only: ['releases', 'page', 'more'],
+    data: { page: props.page + 1 },
+    preserveUrl: true,
+    onStart: () => (loading.value = true),
+    onFinish: () => (loading.value = false),
+    onSuccess: () => {
+      fresh.value = new Set(props.releases.map((release) => release.version).filter((version) => !before.has(version)))
+      setTimeout(() => (fresh.value = new Set()), 1400)
+    },
+  })
+}
 
 const command = (release: Release) => `bin/rails nibble:upgrade ${release.version}`
 
@@ -56,7 +80,7 @@ function copy(release: Release) {
           >Security update available</span
         >
         <span
-          v-else-if="waiting.length"
+          v-else-if="waiting.count"
           class="rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-400"
           >Update available</span
         >
@@ -84,11 +108,17 @@ function copy(release: Release) {
       </AdminPanel>
 
       <template v-else>
-        <AdminPanel v-if="!waiting.length" title="Up to date" class="mb-4">
+        <AdminPanel v-if="!waiting.count" title="Up to date" class="mb-4">
           <p class="text-sm text-gray-600 dark:text-gray-400">{{ current }} is the newest release.</p>
         </AdminPanel>
 
-        <AdminPanel v-for="release in props.releases" :key="release.version" flush class="mb-4 last:mb-0">
+        <AdminPanel
+          v-for="release in props.releases"
+          :key="release.version"
+          flush
+          class="mb-4 transition-[background-color,box-shadow] duration-1000 last:mb-0"
+          :class="fresh.has(release.version) ? 'bg-blue-50 ring-2 ring-blue-400 duration-0 dark:bg-blue-500/10' : ''"
+        >
           <div class="flex items-center justify-between border-b border-gray-100 px-4.5 py-3 dark:border-gray-800">
             <div>
               <div class="flex items-center gap-2">
@@ -126,6 +156,12 @@ function copy(release: Release) {
             >
           </p>
         </AdminPanel>
+
+        <div v-if="props.more" class="mt-6 flex justify-center">
+          <Button variant="outline" :disabled="loading" @click="loadMore">
+            {{ loading ? 'Loading…' : 'Load more' }}
+          </Button>
+        </div>
       </template>
     </template>
 

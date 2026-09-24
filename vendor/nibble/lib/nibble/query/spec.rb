@@ -86,7 +86,10 @@ module Nibble
         raw = { "per_page" => raw } if raw.is_a?(Integer)
         raise Invalid.new("paginate", "must be a map with per_page") unless raw.is_a?(Hash)
 
-        { "per_page" => bounded("paginate.per_page", raw["per_page"] || 12), "param" => (raw["param"] || "page").to_s }
+        raise Invalid.new("paginate.scroll", "must be true or false") unless [ nil, true, false ].include?(raw["scroll"])
+
+        { "per_page" => bounded("paginate.per_page", raw["per_page"] || 12), "param" => (raw["param"] || "page").to_s,
+          "scroll" => raw["scroll"] == true }
       end
 
       def bounded(key, value)

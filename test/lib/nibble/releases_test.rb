@@ -131,6 +131,61 @@ class Nibble::ReleasesTest < ActiveSupport::TestCase
   private
 
   # The test environment caches nothing, and what the scheduled check leaves behind is the whole point here.
+  def releases(count) = count.times.map { |index| { "version" => "0.#{count - index}.0" } }
+
+  def paged(all, asked = [])
+    lambda do |url|
+      number = url[/page=(\d+)/, 1].to_i
+      asked << number
+      (all.slice((number - 1) * Nibble::Releases::PER_PAGE, Nibble::Releases::PER_PAGE) || []).to_json
+    end
+  end
+
+  # Counting only the first page would tell a site twenty releases behind that ten are waiting.
+  test "a site far behind reads pages until it reaches its own release, and counts every one it lacks" do
+    with_feed(prime: false) do
+      asked = []
+      Nibble::Releases.fetcher = paged(releases(25), asked)
+      Nibble::Releases.refresh!(current: "0.3.0")
+
+      assert_equal [ 1, 2, 3 ], asked, "it stops at the page holding the running release"
+      assert_equal 22, Nibble::Releases.summary.count
+    end
+  ensure
+    Nibble::Releases.fetcher = nil
+  end
+
+  test "a feed that ignores pages is taken whole, so an older nibble.ink still answers" do
+    with_feed(prime: false) do
+      Nibble::Releases.fetcher = ->(_) { releases(25).to_json }
+      Nibble::Releases.refresh!(current: "0.3.0")
+
+      assert_equal 22, Nibble::Releases.summary.count
+      assert_equal %w[0.15.0 0.14.0], Nibble::Releases.page(2, current: "0.3.0").first(2).map(&:version)
+      assert Nibble::Releases.last_page?(3)
+    end
+  ensure
+    Nibble::Releases.fetcher = nil
+  end
+
+  # The Updates page shows ten at a time; older ones are fetched only when someone asks for them.
+  test "a page refresh already read comes from the cache, and one beyond it is fetched" do
+    with_feed(prime: false) do
+      asked = []
+      Nibble::Releases.fetcher = paged(releases(35), asked)
+      Nibble::Releases.refresh!(current: "0.30.0")
+      asked.clear
+
+      assert_equal "0.35.0", Nibble::Releases.page(1, current: "0.30.0").first.version
+      assert_empty asked, "page one was read by refresh"
+      assert_equal %w[0.15.0 0.6.0], Nibble::Releases.page(3, current: "0.30.0").values_at(0, -1).map(&:version)
+      assert_equal [ 3 ], asked
+      assert_not Nibble::Releases.last_page?(3), "the end of the feed isn't known until it is read"
+    end
+  ensure
+    Nibble::Releases.fetcher = nil
+  end
+
   def with_feed(prime: true, checking: true)
     was_config = Nibble.config
     was_cache = Rails.cache

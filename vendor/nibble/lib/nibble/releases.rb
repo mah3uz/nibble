@@ -8,6 +8,8 @@ module Nibble
     SUMMARY_KEY = "nibble:releases:summary".freeze
     ASKED_KEY = "nibble:releases:asked".freeze
     KEEP_FOR = 7.days
+    PER_PAGE = 10
+    MAX_PAGES = 20
     ASK_AGAIN_AFTER = 1.hour
 
     Published = Data.define(:version, :url, :body, :date, :security, :status)
@@ -47,13 +49,31 @@ module Nibble
       def all(current: VERSION, feed: feed_url)
         return [] if feed.blank?
 
-        body = Rails.cache.read(CACHE_KEY)
-        return check_soon([]) if body.blank?
+        cached = Rails.cache.read(CACHE_KEY)
+        return check_soon([]) if cached.blank?
 
-        parse(body).map { |release| release.with(status: status_of(release.version, current)) }
+        with_status(parse(cached["releases"]), current)
       rescue StandardError => e
         Rails.logger.warn("release feed: #{e.message}")
         []
+      end
+
+      # Someone asking for older releases is waiting on the answer, so a page beyond what refresh kept is fetched.
+      def page(number, current: VERSION, feed: feed_url)
+        return [] if feed.blank?
+
+        cached = Rails.cache.read(CACHE_KEY) || { "releases" => [], "complete" => false }
+        rows = cached["releases"].slice((number - 1) * PER_PAGE, PER_PAGE) || []
+        rows = page_rows(feed, number) if rows.size < PER_PAGE && !cached["complete"]
+        with_status(parse(rows), current)
+      rescue StandardError => e
+        Rails.logger.warn("release feed: #{e.message}")
+        []
+      end
+
+      def last_page?(number)
+        cached = Rails.cache.read(CACHE_KEY)
+        cached.present? && cached["complete"] && cached["releases"].size <= number * PER_PAGE
       end
 
       def newer(current: VERSION, feed: feed_url) = all(current:, feed:).select { |release| release.status == "newer" }
@@ -75,19 +95,34 @@ module Nibble
         false
       end
 
-      def refresh!(feed: feed_url)
+      # Pages are read until one reaches the running release, so a site far behind still counts every release it lacks.
+      def refresh!(feed: feed_url, current: VERSION)
         return false if feed.blank?
 
-        body = (fetcher || method(:fetch)).call(feed)
-        waiting = parse(body).select { |release| status_of(release.version, VERSION) == "newer" }
-        Rails.cache.write(CACHE_KEY, body, expires_in: KEEP_FOR)
+        rows = []
+        complete = false
+        (1..MAX_PAGES).each do |number|
+          fetched = Array(JSON.parse(fetch_page(feed, number).to_s))
+          # A feed that doesn't know pages sends everything, whatever was asked.
+          if fetched.size > PER_PAGE
+            rows = fetched
+            complete = true
+            break
+          end
+          rows.concat(fetched)
+          complete = fetched.size < PER_PAGE
+          break if complete || parse(fetched).any? { |release| status_of(release.version, current) != "newer" }
+        end
+        waiting = parse(rows).select { |release| status_of(release.version, current) == "newer" }
+        Rails.cache.write(CACHE_KEY, { "releases" => rows, "complete" => complete }, expires_in: KEEP_FOR)
         Rails.cache.write(SUMMARY_KEY, { "count" => waiting.size, "security" => waiting.any?(&:security) },
                           expires_in: KEEP_FOR)
         true
       end
 
-      def parse(body)
-        Array(JSON.parse(body.to_s)).filter_map do |row|
+      def parse(rows)
+        rows = JSON.parse(rows.to_s) if rows.is_a?(String)
+        Array(rows).filter_map do |row|
           next unless Gem::Version.correct?(row["version"].to_s)
 
           Published.new(version: row["version"], url: row["url"], date: row["date"], status: nil,
@@ -95,7 +130,7 @@ module Nibble
         end
       end
 
-      # No headers, no query: nothing about this site leaves. Timeouts because a page waits on it.
+      # No headers, and a query naming only a page: nothing about this site leaves. Timeouts because a page waits on it.
       def fetch(feed)
         uri = URI.parse(feed)
         raise Error, "the release feed must be an https URL" unless uri.scheme == "https"
@@ -106,6 +141,15 @@ module Nibble
       end
 
       private
+
+      def fetch_page(feed, number) = (fetcher || method(:fetch)).call("#{feed}?page=#{number}&per_page=#{PER_PAGE}")
+
+      def page_rows(feed, number)
+        fetched = Array(JSON.parse(fetch_page(feed, number).to_s))
+        fetched.size > PER_PAGE ? fetched.slice((number - 1) * PER_PAGE, PER_PAGE) || [] : fetched
+      end
+
+      def with_status(releases, current) = releases.map { |release| release.with(status: status_of(release.version, current)) }
 
       def status_of(version, current)
         case Gem::Version.new(version) <=> Gem::Version.new(current)

@@ -4,11 +4,17 @@ module Admin
 
     # Someone opening this page wants today's answer, not yesterday's, so it is read again here and re-cached.
     def show
-      Nibble::Releases.refresh
+      Nibble::Releases.refresh unless request.inertia_partial?
+      number = [ params[:page].to_i, 1 ].max
+      releases = Nibble::Releases.page(number)
+      waiting = Nibble::Releases.summary
       render inertia: "admin/Updates", props: {
         current: Nibble::VERSION,
         checking: Nibble::Releases.checking?,
-        releases: Nibble::Releases.all.map { |release| release.to_h.merge(body: Nibble::Markdown.render(release.body)) }
+        waiting: { count: waiting.count, security: waiting.security },
+        releases: InertiaRails.merge { releases.map { |release| release.to_h.merge(body: Nibble::Markdown.render(release.body)) } },
+        page: number,
+        more: releases.size == Nibble::Releases::PER_PAGE && !Nibble::Releases.last_page?(number)
       }
     end
 
