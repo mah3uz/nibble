@@ -32,6 +32,10 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **A new site lints and formats what it owns.** `npm run lint` runs ESLint over its themes and the screens it
   ejected, including the rule that a theme imports only `@nibble`, `@theme`, relative paths and its own
   dependencies; `npm run format` and `npm run format:check` run Prettier in Nibble's style.
+- **Every email has a heading, and a button when there is something to do.** Invitations, password resets, form
+  submissions and notifications are rewritten for the person reading them, and drawn in one layout that styles plain
+  HTML. A site restyles them all with its own `app/views/layouts/mailer.html.erb`; the **Emails** guide lists what
+  each one uses. A form submission says to reply only when a reply reaches the visitor.
 
 ### What's fixed
 
@@ -43,6 +47,10 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **A theme from `nibble:generate:theme` passes the format check,** starting with its `theme.yml`.
 - **`nibble:check` no longer reports a sidebar taxonomy or the search toggle as removed.** Both are kept on an entry
   beside its blueprint, and the check only knew the blueprint's own fields.
+- **The generated types follow the theme a development server renders,** written as it starts, so an editor checks a
+  theme against its own schema rather than whichever theme wrote the types last.
+- **A site's `.gitignore` keeps out `vendor/nibble/Gemfile.lock`,** which some editors write beside Nibble's `Gemfile`.
+  **Upgrade:** accept the `.gitignore` the upgrade offers.
 
 ### Changed
 
