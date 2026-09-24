@@ -107,10 +107,11 @@ class Nibble::PrepareTest < ActiveSupport::TestCase
   # thing that makes a newly deployed article searchable.
   test "preparing indexes pages written as files, with no manual rebuild" do
     site = @themes.join("site_schema")
-    { "collections/help.yml" => { "schema" => 1, "title" => "Help", "route" => "/help/{slug}", "blueprints" => [ "article" ], "files" => "help" },
+    { "collections/help.yml" => { "schema" => 1, "title" => "Help", "route" => "/help/{slug}", "blueprints" => [ "article" ], "files" => "help",
+                                  "search" => "site" },
       "blueprints/collections/help/article.yml" => { "schema" => 1, "title" => "Article",
         "tabs" => { "main" => { "sections" => [ { "fields" => [ { "handle" => "body", "field" => { "type" => "markdown" } } ] } ] } } },
-      "search.yml" => { "schema" => 1, "indexes" => { "site" => { "collections" => %w[pages posts help] } } } }.each do |path, data|
+      "search.yml" => { "schema" => 1, "indexes" => { "site" => { "fields" => %w[title body] } } } }.each do |path, data|
       site.join(path).dirname.mkpath
       site.join(path).write(data.to_yaml)
     end
