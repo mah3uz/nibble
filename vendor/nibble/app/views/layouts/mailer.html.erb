@@ -1,13 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title><%= message.subject %></title>
     <style>
-      /* Email styles need to be inline */
+      body { margin: 0; padding: 0; background: #f4f4f5; }
+      .content h1 { margin: 0 0 16px; font-size: 22px; line-height: 1.3; font-weight: 700; color: #18181b; }
+      .content p { margin: 0 0 16px; }
+      .content a { color: #18181b; }
+      .content strong { color: #18181b; }
+      .content blockquote { margin: 0 0 16px; padding: 12px 16px; border-left: 3px solid #d4d4d8; background: #fafafa; color: #3f3f46; }
+      .content table { width: 100%; margin: 0 0 16px; border-collapse: collapse; }
+      .content th, .content td { padding: 10px 0; border-bottom: 1px solid #e4e4e7; text-align: left; vertical-align: top; }
+      .content th { width: 35%; padding-right: 16px; font-weight: 600; color: #18181b; }
+      .content td { white-space: pre-wrap; }
+      .content .button { display: inline-block; padding: 12px 22px; border-radius: 8px; background: #18181b; color: #ffffff; font-weight: 600; text-decoration: none; }
+      .content .note { margin-top: 24px; font-size: 13px; line-height: 1.6; color: #71717a; }
+      .content > :last-child { margin-bottom: 0; }
     </style>
   </head>
 
-  <body>
-    <%= yield %>
+  <body style="margin: 0; padding: 0; background: #f4f4f5;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #f4f4f5;">
+      <tr>
+        <td align="center" style="padding: 40px 16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 560px;">
+            <tr>
+              <td style="padding: 0 4px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; font-weight: 700; color: #18181b;">
+                <%= site_name %>
+              </td>
+            </tr>
+            <tr>
+              <td class="content" style="padding: 32px; background: #ffffff; border: 1px solid #e4e4e7; border-radius: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #3f3f46;">
+                <%= yield %>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 16px 4px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #a1a1aa;">
+                Sent from <%= site_name %>.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>

@@ -1,6 +1,10 @@
+<h1>Reset your password</h1>
 <p>
-  You can reset your password on
-  <%= link_to "this password reset page", edit_password_url(@user.password_reset_token) %>.
-
-  This link will expire in <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %>.
+  Someone asked to reset the password for <strong><%= @user.email_address %></strong> on <%= site_name %>.
+  If that was you, choose a new one.
+</p>
+<p><%= link_to "Choose a new password", edit_password_url(@user.password_reset_token), class: "button" %></p>
+<p class="note">
+  The link expires in <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %>.
+  If you didn't ask for this, ignore this email and your password stays as it is.
 </p>

@@ -1,9 +1,13 @@
-<p>A new <strong><%= @form.title || @form.handle %></strong> submission came in.</p>
-<table cellpadding="6" style="border-collapse: collapse;">
+<h1>New submission</h1>
+<p>Someone filled in <strong><%= @form.title || @form.handle %></strong> on <%= site_name %>. Here's what they sent.</p>
+<table role="presentation" cellpadding="0" cellspacing="0">
   <% @rows.each do |label, value| %>
     <tr>
-      <th align="left" valign="top" style="border-bottom: 1px solid #e5e7eb;"><%= label %></th>
-      <td style="border-bottom: 1px solid #e5e7eb; white-space: pre-wrap;"><%= value.presence || "—" %></td>
+      <th><%= label %></th>
+      <td><%= value.presence || "—" %></td>
     </tr>
   <% end %>
 </table>
+<% if @reply_to %>
+  <p class="note">Reply to this email to answer them at <%= @reply_to %>.</p>
+<% end %>

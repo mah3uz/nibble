@@ -1,8 +1,6 @@
-<p>
-  <%= NotificationsMailer::SUBJECTS.fetch(@notification.kind, "Something needs your attention") %>:
-  <strong><%= @title || "a record" %></strong>
-</p>
+<h1><%= NotificationsMailer::SUBJECTS.fetch(@notification.kind, "Something needs your attention") %></h1>
+<p><strong><%= @title || "A record" %></strong> on <%= site_name %>.</p>
 <% if @comment.present? %>
   <blockquote><%= @comment %></blockquote>
 <% end %>
-<p>Open the control panel to take a look.</p>
+<p><%= link_to "Open your notifications", admin_notifications_url, class: "button" %></p>

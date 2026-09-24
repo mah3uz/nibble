@@ -1,6 +1,12 @@
-A new <%= @form.title || @form.handle %> submission came in.
+New submission
+
+Someone filled in <%= @form.title || @form.handle %> on <%= site_name %>. Here's what they sent.
 <% @rows.each do |label, value| %>
 
 <%= label %>:
 <%= value.presence || "—" %>
+<% end %>
+<% if @reply_to %>
+
+Reply to this email to answer them at <%= @reply_to %>.
 <% end %>

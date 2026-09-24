@@ -1,7 +1,10 @@
-<%= NotificationsMailer::SUBJECTS.fetch(@notification.kind, "Something needs your attention") %>: <%= @title || "a record" %>
+<%= NotificationsMailer::SUBJECTS.fetch(@notification.kind, "Something needs your attention") %>
+
+<%= @title || "A record" %> on <%= site_name %>.
 <% if @comment.present? %>
 
 "<%= @comment %>"
 <% end %>
 
-Open the control panel to take a look.
+Open your notifications:
+<%= admin_notifications_url %>

@@ -24,6 +24,7 @@ class PasswordsMailerTest < ActionMailer::TestCase
     body = PasswordsMailer.reset(users(:editor)).parts.map { |part| part.body.to_s }.join
 
     assert_match "/admin/passwords/", body
-    assert_match "expire in 15 minutes", body
+    assert_match "expires in 15 minutes", body
+    assert_match users(:editor).email_address, body, "someone with more than one account needs to know which one this is"
   end
 end

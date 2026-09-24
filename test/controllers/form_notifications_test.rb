@@ -31,6 +31,7 @@ class FormNotificationsTest < ActionDispatch::IntegrationTest
     assert_equal [ [ "sales@example.test" ], [ "ada@example.test" ], "New submission: Enquiry" ], [ team.to, team.reply_to, team.subject ]
     assert_includes team.text_part.body.to_s, "Call me"
     assert_includes team.text_part.body.to_s, "sales, support"
+    assert_includes team.html_part.body.to_s, "Reply to this email to answer them at ada@example.test"
 
     assert_equal [ [ "a@example.test", "b@example.test" ], "Topics" ], [ topics.to, topics.subject ]
     assert_includes topics.text_part.body.to_s, "Topics"
@@ -53,7 +54,9 @@ class FormNotificationsTest < ActionDispatch::IntegrationTest
     perform_enqueued_jobs { submit VALUES.merge(email: "ada@example.test\r\nBcc: all@example.test") }
     assert_response :unprocessable_entity
     perform_enqueued_jobs { submit VALUES.merge(email: nil) }
-    assert_nil ActionMailer::Base.deliveries.find { |mail| mail.to == [ "sales@example.test" ] }.reply_to
+    team = ActionMailer::Base.deliveries.find { |mail| mail.to == [ "sales@example.test" ] }
+    assert_nil team.reply_to
+    assert_not_includes team.text_part.body.to_s, "Reply to this email", "a reply would reach nobody, so the email must not suggest one"
   end
 
   test "people who can see form submissions get an in-app notification, others don't" do
