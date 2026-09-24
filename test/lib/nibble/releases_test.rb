@@ -266,6 +266,33 @@ class Nibble::ReleasesTest < ActiveSupport::TestCase
     assert_equal releases, JSON.parse(feed.read)
   end
 
+  test "a release's opening quote is its headline, so a roadmap and a search result can say what it was for" do
+    changelog = Pathname(Dir.mktmpdir("nibble-feed")).join("CHANGELOG.md")
+    changelog.write(<<~MD)
+      ## 0.2.0 — 2026-01-02
+
+      > **Installed as one folder.** An installer unpacks a release,
+      > and one command swaps it for the next.
+
+      ### What's new
+
+      - Something.
+
+      ## 0.1.0 — 2026-01-01
+
+      - The first one.
+    MD
+
+    headlined, plain = Nibble::Releases.publish(changelog, changelog.dirname.join("releases.json"))
+
+    assert_equal "Installed as one folder", headlined["headline"]
+    assert_equal "An installer unpacks a release, and one command swaps it for the next.", headlined["summary"]
+    assert_includes headlined["body"], "> **Installed as one folder.**", "the notes still open with it"
+    assert_not plain.key?("headline"), "a release without a quote is not given a headline it never had"
+  ensure
+    FileUtils.rm_rf(changelog.dirname) if changelog
+  end
+
   test "every release is published, so the oldest keep their notes and their pages on the documentation site" do
     changelog = Pathname(Dir.mktmpdir("nibble-feed")).join("CHANGELOG.md")
     changelog.write((1..40).reverse_each.map { |minor| "## 0.#{minor}.0 — 2026-01-01\n\n- Release #{minor}.\n" }.join("\n"))

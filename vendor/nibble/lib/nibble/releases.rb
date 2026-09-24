@@ -35,11 +35,18 @@ module Nibble
       url = REPOSITORY.delete_suffix(".git")
       releases = Pathname(changelog).read.scan(SECTION).map do |version, released_at, body|
         { "version" => version, "date" => released_at[0, 10], "released_at" => released_at,
-          "url" => "#{url}/releases/tag/v#{version}",
+          "url" => "#{url}/releases/tag/v#{version}", **lead(body),
           "security" => body.match?(/^\#+\s+Security\b/i), "body" => body.strip }
       end
       Pathname(to).write("#{JSON.pretty_generate(releases)}\n")
       releases
+    end
+
+    # A quote opening a release's notes says what it was for: the bold words are its headline, the rest its summary.
+    def self.lead(body)
+      quote = body.lstrip[/\A(?:>.*(?:\n|\z))+/].to_s.gsub(/^>[ \t]?/, "").squish
+      match = quote.match(/\A\*\*(.+?)\*\*\s*(.*)\z/) or return {}
+      { "headline" => match[1].strip.delete_suffix("."), "summary" => match[2].presence }.compact
     end
 
     NOTHING = Summary.new(count: 0, security: false)

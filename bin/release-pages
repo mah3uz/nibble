@@ -19,11 +19,12 @@ written = releases.map do |release|
     # What links to this page hold, so it survives the file being regenerated.
     "id" => version.tr(".", "-"),
     "title" => version,
-    "description" => "What changed in Nibble #{version}.",
+    "headline" => release["headline"],
+    "description" => release["summary"] || release["headline"] || "What changed in Nibble #{version}.",
     "published_at" => release.fetch("released_at"),
     "security" => release.fetch("security", false),
-    "notes_url" => release["url"],
-  }
+    "notes_url" => release["url"]
+  }.compact
   body = <<~MD
     ---
     #{front.map { |key, value| "#{key}: #{value.is_a?(String) ? value.inspect : value}" }.join("\n")}

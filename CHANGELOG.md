@@ -69,6 +69,9 @@ remove the lists.
 
 ## 0.16.0 — 2026-09-24 04:39 +0600
 
+> **Installed and upgraded as one folder.** Nibble lives in `vendor/nibble` and loads as a Rails engine; an upgrade
+> replaces that folder and leaves the rest to the site.
+
 ### What's new
 
 - **`bin/rails nibble:version` prints the release a site runs,** and says so when the install record in
@@ -311,6 +314,9 @@ entry it moves.
 
 ## 0.13.0 — 2026-09-23 00:17 +0600
 
+> **Markdown served straight from its folder.** A collection written as files is read from the files themselves,
+> with no database copy to keep in step.
+
 ### What's new
 
 - **A folder of Markdown is served without a database copy of it.** Declare a collection with `files: docs`,
@@ -493,6 +499,8 @@ entry it moves.
 
 ## 0.9.0 — 2026-09-22 04:40 +0600
 
+> **A public home.** The code is on GitHub, and the project lives at nibble.ink.
+
 ### What's new
 
 - **A folder of Markdown decides its own addresses.** A collection written as files now answers where its files
@@ -536,6 +544,9 @@ entry it moves.
   quietly stops finding anything once that address goes. Upgrading is the fix; nothing else is affected.
 
 ## 0.8.0 — 2026-09-22 02:41 +0600
+
+> **Feeds and landing pages.** A collection can have a feed and a landing page of its own, and a visitor's light or
+> dark choice survives the first paint.
 
 ### What's new
 
@@ -591,6 +602,9 @@ entry it moves.
   creates a page for it where it previously created nothing at all for that collection.
 
 ## 0.7.0 — 2026-09-21 21:39 +0600
+
+> **A folder of Markdown is a collection.** Name a folder in a collection's schema, and the Markdown files in it are
+> its pages.
 
 ### What's new
 
@@ -752,6 +766,9 @@ entry it moves.
   re-render them.
 
 ## 0.1.0 — 2026-09-20 21:40 +0600
+
+> **Content shaped by files.** Collections, blueprints and fieldtypes declared in YAML, entries checked against
+> them, edited in a control panel and rendered on the server by a Vue theme.
 
 ### What's new
 
