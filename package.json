@@ -15,5 +15,8 @@
   "workspaces": [
     "vendor/nibble",
     "vendor/nibble/themes/*"
-  ]
+  ],
+  "devDependencies": {
+    "vite-plugin-vue-devtools": "^8.2.1"
+  }
 }
