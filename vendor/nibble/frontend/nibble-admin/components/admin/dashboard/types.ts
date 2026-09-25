@@ -58,7 +58,6 @@ export type OverviewTile = {
   label: string
   url: string
   total: number
-  previous: number
   series: number[]
 }
 export type OverviewData = { tiles: OverviewTile[] }

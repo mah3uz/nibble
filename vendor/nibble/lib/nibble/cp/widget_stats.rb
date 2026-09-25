@@ -43,19 +43,18 @@ module Nibble
       end
 
       def tile(key, label, times, url)
-        series = daily(times, 2 * DAYS)
-        { "key" => key, "label" => label, "url" => url, "total" => series.last(DAYS).sum,
-          "previous" => series.first(DAYS).sum, "series" => series.last(DAYS) }
+        series = daily(times)
+        { "key" => key, "label" => label, "url" => url, "total" => series.sum, "series" => series }
       end
 
-      def daily(times, days = DAYS)
+      def daily(times)
         counts = times.compact.map { |time| time.in_time_zone.to_date }.tally
         today = Time.zone.today
-        (days - 1).downto(0).map { |ago| counts.fetch(today - ago, 0) }
+        (DAYS - 1).downto(0).map { |ago| counts.fetch(today - ago, 0) }
       end
 
       def events(actions) = Records::AuditEntry.where(action: actions, created_at: since..)
-      def since = (Time.zone.today - (2 * DAYS - 1)).beginning_of_day
+      def since = start_date.beginning_of_day
       def start_date = Time.zone.today - (DAYS - 1)
 
       def listing_url(entries, status)

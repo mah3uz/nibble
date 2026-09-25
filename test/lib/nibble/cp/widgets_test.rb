@@ -14,14 +14,14 @@ class Nibble::Cp::WidgetsTest < ActiveSupport::TestCase
     assert_not_includes Nibble::Cp::Widgets.available(users(:author)).map { |widget| widget["type"] }, "site_health"
   end
 
-  test "the published tile compares the last 30 days with the 30 before and ignores anything older" do
+  test "the published tile counts the last 30 days and nothing older, so its number matches the period it names" do
     travel_to Time.zone.parse("2026-09-19 12:00") do
       { "Recent" => 2.days.ago, "Earlier" => 40.days.ago, "Ancient" => 90.days.ago }.each do |title, at|
         publish_entry(create_entry("articles", { "title" => title }), "published_at" => at.utc.iso8601)
       end
 
       tile = Nibble::Cp::Widgets.data(users(:editor))["overview"]["tiles"].find { |item| item["key"] == "published" }
-      assert_equal [ 1, 1 ], [ tile["total"], tile["previous"] ]
+      assert_equal 1, tile["total"], "only Recent falls in the last 30 days"
       assert_equal 30, tile["series"].size
       assert_equal 1, tile["series"][-3], "two days ago lands in the third-last daily bucket"
     end

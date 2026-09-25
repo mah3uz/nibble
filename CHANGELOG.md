@@ -12,6 +12,11 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **The dashboard's At a glance tiles show a count and its period,** "Last 30 days", without a comparison that read
+  as "0 the 30 before".
+
 ## 0.17.0 — 2026-09-25 03:24 +0600
 
 ### What's new
