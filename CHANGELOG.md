@@ -12,14 +12,25 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
-### Security
+### What's fixed
 
-- **An idle Control Plane session ends on the server.** After `session.idle_minutes` without activity (120 by default,
-  in `config/nibble.yml`) the session is gone, so reloading the page asks for sign-in; before, the lock lived only in
-  the browser. A minute before, a warning offers to extend it, and afterwards a dialog signs back in, with the
-  two-factor code when it's on, without leaving the page.
-
-  **Upgrade:** run `bin/rails db:migrate`.
+- **The focal point editor is readable on any image, in light and dark.** Crops of many shapes fill the screen, and
+  a column beside them holds the image, with a marker that shows on light and dark pictures alike (drag it, click, or
+  use the arrow keys), and a zoom slider that follows the pointer.
+- **Cropping starts with a selection in the middle of the image,** so it's clear at once what to drag. Everything
+  outside it is dimmed, and the rule-of-thirds guides and handles show on light images too.
+- **Reupload asks first.** It offers only files of the asset's kind, says which file takes its place, whether its
+  extension changes, and that the current file can't be brought back, then shows the upload's progress.
+- **Replace says what it did.** Its picker names the asset being replaced, choosing that same asset explains why
+  nothing happens, and afterwards it reports how many places changed, or that nothing used the asset. When some
+  can't be changed, it names them instead of "Request failed", and keeps the original.
+- **The asset editor has a Close button beside Save,** and a click on the backdrop no longer closes it, so a stray
+  click can't throw away an edit.
+- **Live Preview updates in place as you type,** keeping its scroll position, instead of reloading blank each time. A
+  theme's layout needs `PreviewBar` for this; without it the preview reloads as before.
+- **A preview is marked with a Preview ribbon** across the top corner, which pulses while a change applies.
+- **The dashboard's At a glance tiles show a count and its period,** "Last 30 days", without a comparison that read
+  as "0 the 30 before".
 
 ### Changed
 
@@ -54,25 +65,14 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   `bin/rails nibble:install --only=config/initializers/` and `bin/rails nibble:install --only=db/migrate/`. Move `time_zone` from `config/nibble.yml` to
   `config.time_zone` in `config/application.rb`.
 
-### What's fixed
+### Security
 
-- **The focal point editor is readable on any image, in light and dark.** Crops of many shapes fill the screen, and
-  a column beside them holds the image, with a marker that shows on light and dark pictures alike (drag it, click, or
-  use the arrow keys), and a zoom slider that follows the pointer.
-- **Cropping starts with a selection in the middle of the image,** so it's clear at once what to drag. Everything
-  outside it is dimmed, and the rule-of-thirds guides and handles show on light images too.
-- **Reupload asks first.** It offers only files of the asset's kind, says which file takes its place, whether its
-  extension changes, and that the current file can't be brought back, then shows the upload's progress.
-- **Replace says what it did.** Its picker names the asset being replaced, choosing that same asset explains why
-  nothing happens, and afterwards it reports how many places changed, or that nothing used the asset. When some
-  can't be changed, it names them instead of "Request failed", and keeps the original.
-- **The asset editor has a Close button beside Save,** and a click on the backdrop no longer closes it, so a stray
-  click can't throw away an edit.
-- **Live Preview updates in place as you type,** keeping its scroll position, instead of reloading blank each time. A
-  theme's layout needs `PreviewBar` for this; without it the preview reloads as before.
-- **A preview is marked with a Preview ribbon** across the top corner, which pulses while a change applies.
-- **The dashboard's At a glance tiles show a count and its period,** "Last 30 days", without a comparison that read
-  as "0 the 30 before".
+- **An idle Control Plane session ends on the server.** After `session.idle_minutes` without activity (120 by default,
+  in `config/nibble.yml`) the session is gone, so reloading the page asks for sign-in; before, the lock lived only in
+  the browser. A minute before, a warning offers to extend it, and afterwards a dialog signs back in, with the
+  two-factor code when it's on, without leaving the page.
+
+  **Upgrade:** run `bin/rails db:migrate`.
 
 ## 0.17.0 — 2026-09-25 03:24 +0600
 
