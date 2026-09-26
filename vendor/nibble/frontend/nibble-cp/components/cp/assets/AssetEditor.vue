@@ -309,6 +309,7 @@ function run(action: AssetMenuAction) {
                 @click="leave(() => emit('next'))"
                 ><CpIcon name="chevron-right"
               /></Button>
+              <Button variant="outline" @click="leave(() => emit('close'))">Close</Button>
               <Button v-if="detail?.can.edit" :disabled="saving" @click="save"><CpIcon name="save" /> Save</Button>
             </div>
           </div>

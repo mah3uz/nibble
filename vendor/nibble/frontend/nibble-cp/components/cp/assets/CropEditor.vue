@@ -19,6 +19,8 @@ const ASPECTS: [string, number | 'original' | null][] = [
   ['16:9', 16 / 9],
 ]
 const PREVIEW_MAX = 1600
+// A selection that starts smaller than the image shows at once what can be dragged and resized.
+const STARTING_SIZE = 0.8
 
 const ready = ref(false)
 const preview = ref<string | null>(null)
@@ -79,8 +81,8 @@ function place() {
       box.height * rect.height,
     )
   }
-  let width = rect.width
-  let height = rect.height
+  let width = rect.width * STARTING_SIZE
+  let height = rect.height * STARTING_SIZE
   if (wanted) {
     if (width / height > wanted) width = height * wanted
     else height = width / wanted
@@ -161,8 +163,6 @@ onMounted(async () => {
     elements.CropperShade,
     elements.CropperHandle,
     elements.CropperSelection,
-    elements.CropperGrid,
-    elements.CropperCrosshair,
   ])
     element.$define()
   source = new Image()
@@ -210,11 +210,10 @@ onMounted(async () => {
     <div class="min-h-0 flex-1 p-8">
       <cropper-canvas v-if="ready && preview" :key="renders" ref="canvas" background class="block size-full">
         <cropper-image ref="image" :src="preview" initial-center-size="contain" alt="" />
-        <cropper-shade hidden />
+        <cropper-shade theme-color="rgba(0, 0, 0, 0.6)" />
         <cropper-selection ref="selection" movable resizable outlined @change="onChange">
-          <cropper-grid role="grid" bordered covered />
-          <cropper-crosshair centered />
-          <cropper-handle action="move" theme-color="rgba(255, 255, 255, 0.35)" />
+          <div class="crop-guides" aria-hidden="true" />
+          <cropper-handle action="move" plain />
           <cropper-handle
             v-for="action in ['n', 'e', 's', 'w', 'ne', 'nw', 'se', 'sw']"
             :key="action"

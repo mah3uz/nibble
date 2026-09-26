@@ -56,6 +56,12 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ### What's fixed
 
+- **The focal point editor is readable on any image, in light and dark.** A panel of its own holds the image, with a
+  marker that shows on light and dark pictures alike; drag it, click, or use the arrow keys. Beside it, labelled
+  crops from a wide banner to a phone story show what each shape keeps in view.
+- **Cropping starts with a selection in the middle of the image,** so it's clear at once what to drag. Everything
+  outside it is dimmed, and the rule-of-thirds guides and handles show on light images too.
+- **The asset editor has a Close button beside Save.**
 - **The dashboard's At a glance tiles show a count and its period,** "Last 30 days", without a comparison that read
   as "0 the 30 before".
 
