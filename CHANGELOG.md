@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.18.0 — 2026-09-26 20:41 +0600
+
 ### What's fixed
 
 - **The focal point editor is readable on any image, in light and dark.** Crops of many shapes fill the screen, and
