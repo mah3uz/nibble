@@ -2,7 +2,7 @@ module Nibble
   module Cp
     class NotAuthorized < StandardError; end
 
-    class BaseController < ApplicationController
+    class BaseController < Nibble::ApplicationController
       inertia_config(layout: "nibble/cp")
       rescue_from NotAuthorized, with: :deny_access
       rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
@@ -16,7 +16,7 @@ module Nibble
           abilities: Nibble::Access.abilities(Nibble::Current.user),
           collections: Nibble.schema.collections.map { |item| collection_share(item) },
           nav: Nibble::Cp::Navigation.for(Nibble::Current.user),
-          preferences: UserPreferences.all(Nibble::Current.user),
+          preferences: Nibble::UserPreferences.all(Nibble::Current.user),
           locales: Nibble.config.locales.map { |locale| { code: locale.code, default: locale.default } },
           site_url: Nibble.config.url,
           elevated_until: elevated_until&.utc&.iso8601,

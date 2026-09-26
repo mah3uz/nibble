@@ -1,6 +1,6 @@
 module Nibble
   module Jobs
-    class DeliverWebhook < ::ApplicationJob
+    class DeliverWebhook < Nibble::ApplicationJob
       queue_as :deliveries
 
       def perform(delivery_id)

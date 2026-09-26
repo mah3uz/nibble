@@ -138,7 +138,7 @@ module Nibble
       end
 
       def audit_rows(entries)
-        actors = ::User.where(id: entries.filter_map(&:actor_id)).index_by(&:id)
+        actors = Nibble::User.where(id: entries.filter_map(&:actor_id)).index_by(&:id)
         entries.map do |entry|
           { id: entry.id, action: entry.action, at: entry.created_at.utc.iso8601, ip: entry.ip,
             actor: actors[entry.actor_id]&.name, subject: [ entry.subject_type, entry.subject_id ].compact.join(" "),

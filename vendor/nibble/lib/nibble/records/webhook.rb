@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class Webhook < ::ApplicationRecord
+    class Webhook < Nibble::ApplicationRecord
       self.table_name = "webhooks"
 
       has_many :deliveries, class_name: "Nibble::Records::WebhookDelivery", dependent: :destroy

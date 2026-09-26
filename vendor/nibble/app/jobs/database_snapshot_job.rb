@@ -1,5 +1,5 @@
 # Nightly complete database backup. Runs via config/recurring.yml.
-class DatabaseSnapshotJob < ApplicationJob
+class DatabaseSnapshotJob < Nibble::ApplicationJob
   queue_as :maintenance
 
   def perform

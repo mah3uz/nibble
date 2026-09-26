@@ -42,7 +42,7 @@ class AuthBruteForceTest < ActionDispatch::IntegrationTest
     assert_response :too_many_requests
 
     post "/cp/roles", params: { role: { title: "Still shut out" } }
-    assert_nil Role.find_by(handle: "still_shut_out")
+    assert_nil Nibble::Role.find_by(handle: "still_shut_out")
   end
 
   test "a passkey that didn't verify the person is refused" do

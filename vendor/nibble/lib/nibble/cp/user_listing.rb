@@ -40,10 +40,10 @@ module Nibble
       private
 
       def relation
-        scope = ::User.all
+        scope = Nibble::User.all
         scope = scope.joins(:roles).where(roles: { handle: params[:role] }) if params[:role].present?
         if params[:q].present?
-          term = "%#{::User.sanitize_sql_like(params[:q].to_s.downcase)}%"
+          term = "%#{Nibble::User.sanitize_sql_like(params[:q].to_s.downcase)}%"
           scope = scope.where("LOWER(email_address) LIKE :term OR LOWER(name) LIKE :term", term:)
         end
         scope.order(sort_column => sort_direction.to_sym, id: :asc)
@@ -51,7 +51,7 @@ module Nibble
 
       def filters
         [ { "handle" => "role", "label" => "Role", "type" => "select", "value" => params[:role],
-            "options" => ::Role.order(:title).map { |role| { "value" => role.handle, "label" => role.title } } } ]
+            "options" => Nibble::Role.order(:title).map { |role| { "value" => role.handle, "label" => role.title } } } ]
       end
 
       def row(record)
@@ -69,7 +69,7 @@ module Nibble
 
       def per_page
         requested = params[:per_page].to_i
-        Listing::PER_PAGE_OPTIONS.include?(requested) ? requested : (UserPreferences.get(user, "listings.users.per_page") || 25)
+        Listing::PER_PAGE_OPTIONS.include?(requested) ? requested : (Nibble::UserPreferences.get(user, "listings.users.per_page") || 25)
       end
     end
   end

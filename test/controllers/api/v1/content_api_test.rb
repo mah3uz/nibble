@@ -4,8 +4,8 @@ class Api::V1::ContentApiTest < ActionDispatch::IntegrationTest
   include NibbleRecordsHelper
 
   setup do
-    @token = ApiToken.issue(name: "Site", scopes: %w[read]).last
-    @preview_token = ApiToken.issue(name: "Preview", scopes: %w[preview]).last
+    @token = Nibble::ApiToken.issue(name: "Site", scopes: %w[read]).last
+    @preview_token = Nibble::ApiToken.issue(name: "Preview", scopes: %w[preview]).last
   end
 
   def auth(token = @token) = { "Authorization" => "Bearer #{token}" }
@@ -102,7 +102,7 @@ class Api::V1::ContentApiTest < ActionDispatch::IntegrationTest
   end
 
   test "using a token records when it was last used" do
-    token = ApiToken.find_by!(name: "Site")
+    token = Nibble::ApiToken.find_by!(name: "Site")
     assert_nil token.last_used_at
 
     get "/api/v1/schema", headers: auth

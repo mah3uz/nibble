@@ -16,7 +16,7 @@ class Api::V1::HealthTest < ActionDispatch::IntegrationTest
   end
 
   test "a monitor with a health token gets every check, uncached" do
-    token = ApiToken.issue(name: "Uptime", scopes: %w[health]).last
+    token = Nibble::ApiToken.issue(name: "Uptime", scopes: %w[health]).last
 
     get "/api/v1/health", headers: auth(token)
 
@@ -26,7 +26,7 @@ class Api::V1::HealthTest < ActionDispatch::IntegrationTest
   end
 
   test "a failing check answers 503, so a monitor that only reads status codes still notices" do
-    token = ApiToken.issue(name: "Uptime", scopes: %w[health]).last
+    token = Nibble::ApiToken.issue(name: "Uptime", scopes: %w[health]).last
     closed = TCPServer.new("127.0.0.1", 0).then { |server| server.addr[1].tap { server.close } }
 
     with_ssr("http://127.0.0.1:#{closed}") { get "/api/v1/health", headers: auth(token) }
@@ -36,8 +36,8 @@ class Api::V1::HealthTest < ActionDispatch::IntegrationTest
   end
 
   test "a content token can't read health, and a health token can't read content" do
-    read = ApiToken.issue(name: "Site", scopes: %w[read]).last
-    health = ApiToken.issue(name: "Uptime", scopes: %w[health]).last
+    read = Nibble::ApiToken.issue(name: "Site", scopes: %w[read]).last
+    health = Nibble::ApiToken.issue(name: "Uptime", scopes: %w[health]).last
 
     get "/api/v1/health", headers: auth(read)
     assert_response :forbidden

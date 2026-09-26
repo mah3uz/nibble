@@ -26,4 +26,19 @@ class RailsSettingsTest < ActiveSupport::TestCase
     refute_match %r{"up"}, Nibble.core_root.join("config/routes/core.rb").read
     assert_match %r{get "up"}, Nibble::Install.templates_path.join("config/routes.rb").read
   end
+
+  RAILS_NAMES = %w[ApplicationController ApplicationRecord ApplicationJob ApplicationMailer ApplicationHelper ApplicationCable
+                   User Session Current Authentication SessionsController PasswordsController PasswordsMailer].freeze
+
+  test "Nibble defines none of the names Rails generates, so a site can run Rails' own generators" do
+    nibbles = RAILS_NAMES.filter_map(&:safe_constantize).select do |constant|
+      Object.const_source_location(constant.name).first.to_s.start_with?(Nibble.core_root.to_s)
+    end
+
+    assert_empty nibbles.map(&:name), "a site's generator would overwrite or collide with these"
+  end
+
+  test "Nibble's identity tables are its own, so Rails' authentication generator can create users and sessions" do
+    assert_equal %w[nibble_users nibble_sessions], [ Nibble::User.table_name, Nibble::Session.table_name ]
+  end
 end

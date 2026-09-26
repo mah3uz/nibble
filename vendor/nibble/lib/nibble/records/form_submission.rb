@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class FormSubmission < ::ApplicationRecord
+    class FormSubmission < Nibble::ApplicationRecord
       self.table_name = "form_submissions"
 
       STATUSES = %w[received delivered rejected failed spam].freeze

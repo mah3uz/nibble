@@ -15,13 +15,13 @@ module Nibble
       end
 
       def create
-        user = User.new(invite_attributes)
-        user.password = User.generate_password
+        user = Nibble::User.new(invite_attributes)
+        user.password = Nibble::User.generate_password
         unless user.save
           return redirect_to "/cp/users", inertia: { errors: messages(user) }
         end
 
-        PasswordsMailer.invite(user).deliver_later
+        Nibble::PasswordsMailer.invite(user).deliver_later
         redirect_to "/cp/users", notice: "Invitation sent to #{user.email_address}."
       end
 
@@ -50,7 +50,7 @@ module Nibble
       end
 
       def send_reset
-        PasswordsMailer.reset(@user).deliver_later
+        Nibble::PasswordsMailer.reset(@user).deliver_later
         redirect_to "/cp/users/#{@user.id}/edit", notice: "Password reset sent to #{@user.email_address}."
       end
 
@@ -61,7 +61,7 @@ module Nibble
 
       private
 
-      def find_user = @user = User.find(params[:id])
+      def find_user = @user = Nibble::User.find(params[:id])
 
       def record_role_change(before)
         after = @user.reload.roles.map(&:handle).sort
@@ -79,7 +79,7 @@ module Nibble
       end
 
       def submitted_roles
-        roles = Role.where(id: Array(params[:user][:role_ids])).to_a
+        roles = Nibble::Role.where(id: Array(params[:user][:role_ids])).to_a
         raise NotAuthorized if roles.any?(&:superuser?) && !Nibble::Current.user.admin?
 
         roles
@@ -90,7 +90,7 @@ module Nibble
         raise NotAuthorized if @user.admin? && !Nibble::Current.user.admin?
       end
 
-      def role_options = Role.order(:title).map { |role| { id: role.id, title: role.title, superuser: role.superuser? } }
+      def role_options = Nibble::Role.order(:title).map { |role| { id: role.id, title: role.title, superuser: role.superuser? } }
 
       def user_props(user)
         { id: user.id, name: user.name, email_address: user.email_address, role_ids: user.roles.map(&:id),

@@ -4,9 +4,9 @@ class Nibble::Access::CatalogueTest < ActiveSupport::TestCase
   Catalogue = Nibble::Access::Catalogue
 
   test "every seeded role holds abilities the site actually checks, so a role can't grant fiction" do
-    Role.seed_defaults!
+    Nibble::Role.seed_defaults!
 
-    Role.where(superuser: false).find_each do |role|
+    Nibble::Role.where(superuser: false).find_each do |role|
       assert_empty Catalogue.unknown(role.abilities), "role '#{role.handle}'"
     end
   end
@@ -34,7 +34,7 @@ class Nibble::Access::CatalogueTest < ActiveSupport::TestCase
 
   test "form abilities are per form, so one form's submissions stay shut to another's viewer" do
     user = users(:author)
-    user.roles = [ Role.create!(handle: "contact_only", title: "Contact only", abilities: %w[forms.contact.view]) ]
+    user.roles = [ Nibble::Role.create!(handle: "contact_only", title: "Contact only", abilities: %w[forms.contact.view]) ]
 
     assert Nibble::Access.can?(user, "forms.contact.view")
     assert_not Nibble::Access.can?(user, "forms.careers.view")

@@ -151,3 +151,14 @@ run!({}, "bin/rails", "nibble:generate:theme", "smoke", chdir: site)
 run!({}, "npm", "run", "lint", chdir: site)
 run!({}, "npm", "run", "format:check", chdir: site)
 puts "a site's own theme and screens pass its lint and format checks"
+
+# Rails' own generators name nothing Nibble holds: a site can add accounts of its own beside the Control Plane's.
+run!({}, "bin/rails", "generate", "authentication", chdir: site)
+run!({}, "bin/rails", "db:migrate", chdir: site)
+run!({ "RAILS_ENV" => "test" }, "bin/rails", "zeitwerk:check", chdir: site)
+run!({}, "bin/rails", "runner", <<~'RUBY', chdir: site)
+  abort "the generator's User isn't the site's own" unless User.table_name == "users" && User.name == "User"
+  status, = Rails.application.call(Rack::MockRequest.env_for("/cp/session/new", "HTTP_HOST" => "www.example.com"))
+  abort "the Control Plane stopped answering beside Rails' authentication: #{status}" unless status == 200
+RUBY
+puts "a site can run Rails' authentication generator beside the Control Plane"

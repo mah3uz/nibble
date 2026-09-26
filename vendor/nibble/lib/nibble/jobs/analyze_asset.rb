@@ -1,6 +1,6 @@
 module Nibble
   module Jobs
-    class AnalyzeAsset < ::ApplicationJob
+    class AnalyzeAsset < Nibble::ApplicationJob
       queue_as :media
 
       def perform(asset)

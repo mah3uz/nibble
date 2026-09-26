@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class WebhookDelivery < ::ApplicationRecord
+    class WebhookDelivery < Nibble::ApplicationRecord
       self.table_name = "webhook_deliveries"
 
       STATUSES = %w[pending delivered failed].freeze

@@ -189,7 +189,7 @@ module Nibble
         # Reassigning a byline is editing someone else's entry, so it follows the same ability.
         if Nibble::Access.can?(Nibble::Current.user, ability("edit"), entry)
           items << { "handle" => "author_id", "field" => { "type" => "select", "display" => "Author", "clearable" => true,
-                                                          "options" => ::User.order(:name).pluck(:id, :name).map { |id, name| { "value" => id.to_s, "label" => name } } } }
+                                                          "options" => Nibble::User.order(:name).pluck(:id, :name).map { |id, name| { "value" => id.to_s, "label" => name } } } }
         end
         items += taxonomy_items(entry)
         items << Nibble::Records::Entry::SEARCH_FIELD if entry.search_toggle?
@@ -230,7 +230,7 @@ module Nibble
         {
           id: entry.id, status: entry.status, live: entry.live?, lock_version: entry.lock_version,
           permalink: entry.uri && "#{Nibble.config.url}#{entry.uri}",
-          updated_at: entry.updated_at&.utc&.iso8601, updated_by: entry.updated_by_id && ::User.find_by(id: entry.updated_by_id)&.name,
+          updated_at: entry.updated_at&.utc&.iso8601, updated_by: entry.updated_by_id && Nibble::User.find_by(id: entry.updated_by_id)&.name,
           workflow: entry.persisted? ? entry.workflow : "simple",
           workflow_status: entry.draft&.workflow_status
         }

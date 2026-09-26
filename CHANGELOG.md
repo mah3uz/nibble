@@ -27,13 +27,22 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   and a screen a site replaces lives at `site/cp/pages/cp/<same path>.vue`. `/admin` is no longer reserved.
 
   **Upgrade:** move any `site/cp/pages/admin/` screens to `site/cp/pages/cp/`, and update bookmarks.
+- **Nibble holds none of the names Rails generates.** Its base classes, users, roles, sessions, sign-in and mailers
+  are `Nibble::` (`Nibble::User`, `Nibble::ApplicationController`, `Nibble::PasswordsMailer`…), its identity tables
+  are `nibble_users`, `nibble_sessions` and the rest, and its sign-in cookie is `nibble_session_id`, so a site can
+  run `bin/rails generate authentication` for accounts of its own. A new site starts with Rails' own
+  `ApplicationController`, `ApplicationRecord`, layouts and PWA views. Email layouts and views a site replaces live at
+  `app/views/layouts/nibble/mailer.*` and `app/views/nibble/<mailer>/`.
+
+  **Upgrade:** run `bin/rails db:migrate`; everyone signs in again once. Move `app/views/layouts/mailer.*` and any
+  email views you replaced under `nibble/`, then run `bin/rails nibble:install --only=app/` to write the base classes
+  a site doesn't have yet.
 - **The Control Plane uploads through its own route,** and Rails' public direct-upload endpoint, which takes
   uploads from anyone, is closed.
 
   **Upgrade:** take the offered `config/environments/production.rb`, `config/recurring.yml`, `config/routes.rb` and
-  `config/initializers/content_security_policy.rb`. Copy the files a site doesn't have yet from
-  `vendor/nibble/templates/`: `config/initializers/inertia_rails.rb`, `config/initializers/webauthn.rb` and
-  `db/migrate/*_create_active_storage_tables.active_storage.rb`. Move `time_zone` from `config/nibble.yml` to
+  `config/initializers/content_security_policy.rb`. Write the files a site doesn't have yet with
+  `bin/rails nibble:install --only=config/initializers/` and `bin/rails nibble:install --only=db/migrate/`. Move `time_zone` from `config/nibble.yml` to
   `config.time_zone` in `config/application.rb`.
 
 ### What's fixed

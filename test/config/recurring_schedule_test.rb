@@ -20,7 +20,7 @@ class RecurringScheduleTest < ActiveSupport::TestCase
   end
 
   test "every job runs on one of the engine's named queues" do
-    jobs = [ DatabaseSnapshotJob, *Nibble::Jobs.constants.map { |name| Nibble::Jobs.const_get(name) }.select { |klass| klass < ApplicationJob } ]
+    jobs = [ DatabaseSnapshotJob, *Nibble::Jobs.constants.map { |name| Nibble::Jobs.const_get(name) }.select { |klass| klass < Nibble::ApplicationJob } ]
 
     jobs.each { |job| assert_includes QUEUES, job.queue_name, "#{job} is on '#{job.queue_name}'" }
     SCHEDULE.each_value { |task| assert_includes QUEUES, task["queue"], task.inspect if task["queue"] }

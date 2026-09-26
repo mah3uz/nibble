@@ -1,6 +1,6 @@
 module Nibble
   module Jobs
-    class DispatchEvents < ::ApplicationJob
+    class DispatchEvents < Nibble::ApplicationJob
       queue_as :events
 
       def perform = Events.dispatch_pending

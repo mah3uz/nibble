@@ -11,7 +11,7 @@ class NibbleDevCommand < Rails::Command::Base
     abort "nibble:dev:seed only runs in development" unless Rails.env.development?
 
     images = Nibble::Records::Asset.kept.where(kind: "image").select { |asset| asset.width.to_i > asset.height.to_i && asset.width.to_i >= 600 }
-    created = Nibble::DemoContent.new(images:, actor: User.administrators.first).seed(options[:posts])
+    created = Nibble::DemoContent.new(images:, actor: Nibble::User.administrators.first).seed(options[:posts])
     Nibble::Events.dispatch_pending
     Nibble::Search.rebuild
     puts "created #{created} posts · #{Nibble::Records::Entry.kept.where(collection: 'posts').group(:status).count.map { |status, count| "#{count} #{status}" }.join(', ')}"

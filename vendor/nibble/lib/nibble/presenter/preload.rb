@@ -108,7 +108,7 @@ module Nibble
         ids = sources.filter_map { |source| source.try(:author_id) }.uniq - @authors.keys
         return if ids.empty?
 
-        ::User.where(id: ids).each { |user| @authors[user.id] = user }
+        Nibble::User.where(id: ids).each { |user| @authors[user.id] = user }
       end
 
       def record(type, id)

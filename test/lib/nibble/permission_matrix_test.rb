@@ -32,10 +32,10 @@ class Nibble::PermissionMatrixTest < ActiveSupport::TestCase
     }
   }.freeze
 
-  setup { Role.seed_defaults! }
+  setup { Nibble::Role.seed_defaults! }
 
   def holder(handle)
-    users(:author).tap { |user| user.roles = [ Role.find_by!(handle:) ] }.reload
+    users(:author).tap { |user| user.roles = [ Nibble::Role.find_by!(handle:) ] }.reload
   end
 
   MATRIX.each do |handle, expectations|
@@ -83,15 +83,15 @@ class Nibble::PermissionMatrixTest < ActiveSupport::TestCase
   end
 
   test "API token scopes are separate from a person's abilities" do
-    _, read = ApiToken.issue(name: "Read", scopes: %w[read])
-    _, preview = ApiToken.issue(name: "Preview", scopes: %w[preview])
-    _, manager = ApiToken.issue(name: "Manager", scopes: %w[read manage:posts])
+    _, read = Nibble::ApiToken.issue(name: "Read", scopes: %w[read])
+    _, preview = Nibble::ApiToken.issue(name: "Preview", scopes: %w[preview])
+    _, manager = Nibble::ApiToken.issue(name: "Manager", scopes: %w[read manage:posts])
 
-    assert ApiToken.authenticate(read).allows?("read")
-    assert_not ApiToken.authenticate(read).allows?("preview")
-    assert ApiToken.authenticate(preview).allows?("read")
-    assert ApiToken.authenticate(manager).manages?("posts")
-    assert_not ApiToken.authenticate(manager).manages?("pages")
-    assert_not ApiToken.authenticate(read).manages?("posts")
+    assert Nibble::ApiToken.authenticate(read).allows?("read")
+    assert_not Nibble::ApiToken.authenticate(read).allows?("preview")
+    assert Nibble::ApiToken.authenticate(preview).allows?("read")
+    assert Nibble::ApiToken.authenticate(manager).manages?("posts")
+    assert_not Nibble::ApiToken.authenticate(manager).manages?("pages")
+    assert_not Nibble::ApiToken.authenticate(read).manages?("posts")
   end
 end

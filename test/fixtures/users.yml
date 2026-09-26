@@ -1,3 +1,6 @@
+_fixture:
+  model_class: Nibble::User
+
 <% password_digest = BCrypt::Password.create("password") %>
 
 admin:

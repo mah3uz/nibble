@@ -34,7 +34,7 @@ module Nibble
 
       def self.approvers(record)
         ability = "#{APPROVE_ABILITY}.#{record.try(:collection) || record.try(:taxonomy)}"
-        ::User.all.select { |user| Access.can?(user, ability) }
+        Nibble::User.all.select { |user| Access.can?(user, ability) }
       end
 
       def self.last_submitter(record)

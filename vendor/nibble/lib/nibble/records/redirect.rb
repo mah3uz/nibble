@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class Redirect < ::ApplicationRecord
+    class Redirect < Nibble::ApplicationRecord
       self.table_name = "redirects"
 
       STATUSES = [ 301, 302, 307, 308 ].freeze

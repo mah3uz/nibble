@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class OutboundRequest < ::ApplicationRecord
+    class OutboundRequest < Nibble::ApplicationRecord
       self.table_name = "outbound_requests"
       include TypedPolymorphism
 

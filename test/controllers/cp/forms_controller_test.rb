@@ -36,7 +36,7 @@ class Nibble::Cp::FormsControllerTest < ActionDispatch::IntegrationTest
 
   test "exporting a form's submissions needs its own ability, so viewers can't take the data" do
     user = users(:author)
-    user.roles = [ Role.create!(handle: "contact_only", title: "Contact only", abilities: %w[forms.contact.view]) ]
+    user.roles = [ Nibble::Role.create!(handle: "contact_only", title: "Contact only", abilities: %w[forms.contact.view]) ]
     sign_in_as user
 
     get "/cp/forms/contact"

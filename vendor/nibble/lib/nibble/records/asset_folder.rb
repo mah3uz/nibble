@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class AssetFolder < ::ApplicationRecord
+    class AssetFolder < Nibble::ApplicationRecord
       self.table_name = "asset_folders"
 
       PATH = %r{\A[a-z0-9_-]+(?:/[a-z0-9_-]+)*\z}

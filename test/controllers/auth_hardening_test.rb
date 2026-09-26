@@ -45,7 +45,7 @@ class AuthHardeningTest < ActionDispatch::IntegrationTest
     assert_response :success, "the listing is still readable"
 
     post "/cp/roles", params: { role: { title: "Sneaky" } }
-    assert_nil Role.find_by(handle: "sneaky"), "changing roles waits for the password"
+    assert_nil Nibble::Role.find_by(handle: "sneaky"), "changing roles waits for the password"
 
     patch "/cp/users/#{users(:editor).id}", params: { user: { name: "Renamed" } }
     assert_not_equal "Renamed", users(:editor).reload.name
@@ -62,7 +62,7 @@ class AuthHardeningTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     post "/cp/roles", params: { role: { title: "Allowed" } }
-    assert Role.exists?(handle: "allowed")
+    assert Nibble::Role.exists?(handle: "allowed")
     assert Entry.exists?(action: "auth.elevated", actor_id: users(:admin).id)
   end
 

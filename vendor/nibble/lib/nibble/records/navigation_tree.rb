@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class NavigationTree < ::ApplicationRecord
+    class NavigationTree < Nibble::ApplicationRecord
       self.table_name = "navigation_trees"
       include Content
 

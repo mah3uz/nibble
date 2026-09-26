@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class Relation < ::ApplicationRecord
+    class Relation < Nibble::ApplicationRecord
       self.table_name = "relations"
       include TypedPolymorphism
 

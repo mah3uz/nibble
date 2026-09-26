@@ -222,16 +222,16 @@ class NibbleCommand < Rails::Command::Base
   end
 
   def create_admin
-    return say_status(:keep, "an administrator already exists — signing in is how you get back", :yellow) if User.administrators.exists?
+    return say_status(:keep, "an administrator already exists — signing in is how you get back", :yellow) if Nibble::User.administrators.exists?
 
     say "  Nibble needs one administrator to sign in with. There is no way in without it.", :white
-    Role.seed_defaults!
+    Nibble::Role.seed_defaults!
     user = build_admin
     say_status :create, "administrator #{user.email_address}", :green
   end
 
   def admin_reminder
-    return if User.administrators.exists?
+    return if Nibble::User.administrators.exists?
 
     say_status :todo, "no administrator yet — run bin/rails nibble:admin:create", :yellow
   rescue ActiveRecord::StatementInvalid
@@ -319,11 +319,11 @@ class NibbleCommand < Rails::Command::Base
 
   # The posts listing with every column on, as someone browsing the Control Plane would see it.
   def measure_listing(requests)
-    user = User.administrators.first || User.create!(email_address: "bench@example.test", name: "Bench", password: SecureRandom.hex(16),
-      roles: [ Role.tap(&:seed_defaults!).find_by!(handle: "admin") ])
+    user = Nibble::User.administrators.first || Nibble::User.create!(email_address: "bench@example.test", name: "Bench", password: SecureRandom.hex(16),
+      roles: [ Nibble::Role.tap(&:seed_defaults!).find_by!(handle: "admin") ])
     collection = Nibble.schema.collection("posts")
     listing = -> { Nibble::Cp::Listing.new(collection, user:, params: ActionController::Parameters.new(per_page: "100")) }
-    UserPreferences.set!(user, "listings.collections_posts.columns", listing.call.props["columns"].map { |column| column["handle"] })
+    Nibble::UserPreferences.set!(user, "listings.collections_posts.columns", listing.call.props["columns"].map { |column| column["handle"] })
     listing.call.props
     timings = requests.times.map do
       started = Process.clock_gettime(Process::CLOCK_MONOTONIC)

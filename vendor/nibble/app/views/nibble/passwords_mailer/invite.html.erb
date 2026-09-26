@@ -1,0 +1,11 @@
+<h1>You're invited to <%= site_name %></h1>
+<p>
+  Hi <%= @user.name %>, you've been given <strong><%= @user.roles.map(&:title).to_sentence.presence || "limited" %></strong>
+  access to the Control Plane of <%= site_name %>. Choose a password to get started.
+</p>
+<p><%= link_to "Choose your password", edit_cp_password_url(@user.generate_token_for(:invitation)), class: "button" %></p>
+<p>Then sign in with <strong><%= @user.email_address %></strong>.</p>
+<p class="note">
+  The link works once and expires in <%= distance_of_time_in_words(0, Nibble::User::INVITATION_EXPIRES_IN) %>.
+  If you weren't expecting an invitation, you can ignore this email.
+</p>

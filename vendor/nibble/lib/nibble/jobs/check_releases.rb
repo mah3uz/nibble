@@ -1,6 +1,6 @@
 module Nibble
   module Jobs
-    class CheckReleases < ::ApplicationJob
+    class CheckReleases < Nibble::ApplicationJob
       queue_as :maintenance
 
       def perform = Releases.refresh!

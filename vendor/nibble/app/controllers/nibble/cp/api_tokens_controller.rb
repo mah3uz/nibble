@@ -9,7 +9,7 @@ module Nibble
 
       def index
         render inertia: "cp/api_tokens/Index", props: {
-          tokens: ApiToken.order(created_at: :desc).map { |token| row(token) },
+          tokens: Nibble::ApiToken.order(created_at: :desc).map { |token| row(token) },
           scopes: scope_options,
           issued: flash[:issued_token]
         }
@@ -17,7 +17,7 @@ module Nibble
 
       def create
         attrs = params.require(:api_token).permit(:name, :expires_in, scopes: [])
-        token, plaintext = ApiToken.issue(name: attrs[:name], scopes: Array(attrs[:scopes]),
+        token, plaintext = Nibble::ApiToken.issue(name: attrs[:name], scopes: Array(attrs[:scopes]),
           expires_at: EXPIRIES[attrs[:expires_in].to_s]&.from_now, created_by: Nibble::Current.user)
         flash[:issued_token] = { name: token.name, token: plaintext }
         redirect_to "/cp/api-tokens", notice: "Token created. It's shown only once."
@@ -26,7 +26,7 @@ module Nibble
       end
 
       def destroy
-        ApiToken.find(params[:id]).update!(revoked_at: Time.current)
+        Nibble::ApiToken.find(params[:id]).update!(revoked_at: Time.current)
         redirect_to "/cp/api-tokens", notice: "Token revoked."
       end
 

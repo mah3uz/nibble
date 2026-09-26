@@ -1,4 +1,4 @@
-class SiteController < ApplicationController
+class SiteController < Nibble::ApplicationController
   allow_unauthenticated_access
   inertia_config(layout: "nibble")
 
@@ -62,7 +62,7 @@ class SiteController < ApplicationController
   end
 
   def cacheable?
-    (request.get? || request.head?) && cookies[:session_id].blank? && flash.empty?
+    (request.get? || request.head?) && cookies[:nibble_session_id].blank? && flash.empty?
   end
 
   def count_queries(count)

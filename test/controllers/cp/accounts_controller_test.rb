@@ -36,8 +36,8 @@ class Nibble::Cp::AccountsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to edit_cp_account_path
 
     assert editor.reload.authenticate("Test-Password-1")
-    assert Session.exists?(this_session.id), "the session making the change must stay signed in"
-    assert_not Session.exists?(other_session.id), "a stolen session dies with a password change"
+    assert Nibble::Session.exists?(this_session.id), "the session making the change must stay signed in"
+    assert_not Nibble::Session.exists?(other_session.id), "a stolen session dies with a password change"
   end
 
   test "mismatched confirmation is refused" do
@@ -49,13 +49,13 @@ class Nibble::Cp::AccountsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "the start page is a collection that exists, and signing in lands there" do
-    UserPreferences.set!(users(:editor), "start_page", "posts")
+    Nibble::UserPreferences.set!(users(:editor), "start_page", "posts")
 
     post "/cp/session", params: { email_address: users(:editor).email_address, password: "password" }
     assert_redirected_to "http://www.example.com/cp/collections/posts"
 
-    assert_raises(UserPreferences::InvalidValue, "a listing that isn't in the schema can't be landed on") do
-      UserPreferences.set!(users(:editor), "start_page", "media")
+    assert_raises(Nibble::UserPreferences::InvalidValue, "a listing that isn't in the schema can't be landed on") do
+      Nibble::UserPreferences.set!(users(:editor), "start_page", "media")
     end
   end
 end

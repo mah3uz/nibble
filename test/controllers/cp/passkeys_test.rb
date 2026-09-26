@@ -25,7 +25,7 @@ class Nibble::Cp::PasskeysTest < ActionDispatch::IntegrationTest
   test "a lapsed elevation answers the passkey request in JSON so the dialog can say what to do" do
     sign_in_as users(:editor)
 
-    travel Authentication::ELEVATION_WINDOW + 1.minute do
+    travel Nibble::Authentication::ELEVATION_WINDOW + 1.minute do
       post "/cp/account/passkeys/options", headers: { "Accept" => "application/json" }
     end
 
@@ -96,6 +96,6 @@ class Nibble::Cp::PasskeysTest < ActionDispatch::IntegrationTest
     delete "/cp/account/passkeys/#{credential.id}"
 
     assert_response :not_found
-    assert UserCredential.exists?(credential.id)
+    assert Nibble::UserCredential.exists?(credential.id)
   end
 end

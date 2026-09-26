@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class Comment < ::ApplicationRecord
+    class Comment < Nibble::ApplicationRecord
       MENTION = /@([a-z0-9._%+-]+(?:@[a-z0-9.-]+\.[a-z]{2,})?)/i
 
       belongs_to :parent, class_name: "Nibble::Records::Comment", optional: true
@@ -9,13 +9,13 @@ module Nibble
 
       validates :body, presence: true, length: { maximum: 5_000 }
 
-      def author = ::User.find_by(id: author_id)
+      def author = Nibble::User.find_by(id: author_id)
 
       def self.mentioned_users(body)
         handles = body.to_s.scan(MENTION).flatten.map(&:downcase).uniq
-        return ::User.none if handles.empty?
+        return Nibble::User.none if handles.empty?
 
-        ::User.where("LOWER(email_address) IN (:handles) OR LOWER(REPLACE(name, ' ', '')) IN (:handles)", handles:)
+        Nibble::User.where("LOWER(email_address) IN (:handles) OR LOWER(REPLACE(name, ' ', '')) IN (:handles)", handles:)
       end
     end
   end

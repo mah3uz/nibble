@@ -85,7 +85,7 @@ module Nibble
       end
 
       def visible_columns
-        saved = UserPreferences.get(user, "listings.#{preference_key}.columns")
+        saved = Nibble::UserPreferences.get(user, "listings.#{preference_key}.columns")
         saved.presence
       end
 
@@ -171,7 +171,7 @@ module Nibble
       end
 
       def page = [ params[:page].to_i, 1 ].max
-      def per_page = PER_PAGE_OPTIONS.include?(params[:per_page].to_i) ? params[:per_page].to_i : (UserPreferences.get(user, "listings.#{preference_key}.per_page") || 25)
+      def per_page = PER_PAGE_OPTIONS.include?(params[:per_page].to_i) ? params[:per_page].to_i : (Nibble::UserPreferences.get(user, "listings.#{preference_key}.per_page") || 25)
 
       def sort_column
         requested = params[:sort].to_s
@@ -321,7 +321,7 @@ module Nibble
       end
 
       def presets
-        saved = Array(UserPreferences.get(user, "listings.#{preference_key}.presets"))
+        saved = Array(Nibble::UserPreferences.get(user, "listings.#{preference_key}.presets"))
         built_in = entries? && !files? ? [ { "handle" => "drafts", "label" => "Drafts", "query" => { "status" => "draft" }, "built_in" => true } ] : []
         built_in + saved.map { |preset| preset.merge("built_in" => false) }
       end

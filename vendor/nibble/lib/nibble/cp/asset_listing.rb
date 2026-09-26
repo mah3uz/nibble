@@ -112,7 +112,7 @@ module Nibble
         requested = params[:per_page].to_i
         return requested if PER_PAGE_OPTIONS.include?(requested)
 
-        saved = UserPreferences.get(user, "listings.assets.per_page")
+        saved = Nibble::UserPreferences.get(user, "listings.assets.per_page")
         PER_PAGE_OPTIONS.include?(saved) ? saved : PER_PAGE_OPTIONS.first
       end
 

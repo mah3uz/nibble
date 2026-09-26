@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class Notification < ::ApplicationRecord
+    class Notification < Nibble::ApplicationRecord
       scope :unread, -> { where(read_at: nil) }
 
       def self.notify(user_id, kind, subject: nil, **data)
@@ -13,10 +13,10 @@ module Nibble
       end
 
       def self.deliver(notification)
-        user = ::User.find_by(id: notification.user_id) or return
-        return unless UserPreferences.get(user, "notifications.email")
+        user = Nibble::User.find_by(id: notification.user_id) or return
+        return unless Nibble::UserPreferences.get(user, "notifications.email")
 
-        ::NotificationsMailer.notify(notification).deliver_later
+        Nibble::NotificationsMailer.notify(notification).deliver_later
       end
     end
   end

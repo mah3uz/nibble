@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class NotFound < ::ApplicationRecord
+    class NotFound < Nibble::ApplicationRecord
       self.table_name = "not_found_log"
 
       MAX_PATH = 2048

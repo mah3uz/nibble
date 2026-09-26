@@ -3,7 +3,7 @@ require "webauthn/fake_client"
 
 class PrivilegeEscalationTest < ActionDispatch::IntegrationTest
   def manager_of(ability)
-    role = Role.create!(handle: "manager_#{ability.tr('.', '_')}", title: "Manager", abilities: [ ability ])
+    role = Nibble::Role.create!(handle: "manager_#{ability.tr('.', '_')}", title: "Manager", abilities: [ ability ])
     users(:editor).tap { |user| user.roles = [ role ] }.reload
   end
 
@@ -12,7 +12,7 @@ class PrivilegeEscalationTest < ActionDispatch::IntegrationTest
 
     post "/cp/roles", params: { role: { title: "Backdoor", abilities: [ "*" ] } }
 
-    assert_nil Role.find_by(handle: "backdoor")
+    assert_nil Nibble::Role.find_by(handle: "backdoor")
   end
 
   test "an ability the editor never offered is refused, not quietly dropped" do
@@ -20,7 +20,7 @@ class PrivilegeEscalationTest < ActionDispatch::IntegrationTest
 
     post "/cp/roles", params: { role: { title: "Invented", abilities: %w[entries.posts.view made.up.ability] } }
 
-    assert_nil Role.find_by(handle: "invented")
+    assert_nil Nibble::Role.find_by(handle: "invented")
     assert_match "made.up.ability", session[:inertia_errors].to_h.with_indifferent_access[:abilities].to_s
   end
 

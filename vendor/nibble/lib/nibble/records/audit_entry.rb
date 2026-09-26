@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class AuditEntry < ::ApplicationRecord
+    class AuditEntry < Nibble::ApplicationRecord
       self.table_name = "audit_log"
 
       before_update { raise ActiveRecord::ReadOnlyRecord, "audit entries are append-only" }

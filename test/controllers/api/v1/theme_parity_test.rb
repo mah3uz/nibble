@@ -3,7 +3,7 @@ require "test_helper"
 class Api::V1::ThemeParityTest < ActionDispatch::IntegrationTest
   include NibbleRecordsHelper
 
-  setup { @token = ApiToken.issue(name: "Parity", scopes: %w[read]).last }
+  setup { @token = Nibble::ApiToken.issue(name: "Parity", scopes: %w[read]).last }
 
   def body = JSON.parse(response.body)
 

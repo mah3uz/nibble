@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class Draft < ::ApplicationRecord
+    class Draft < Nibble::ApplicationRecord
       self.table_name = "drafts"
       include TypedPolymorphism
 

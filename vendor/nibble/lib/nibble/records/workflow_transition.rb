@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class WorkflowTransition < ::ApplicationRecord
+    class WorkflowTransition < Nibble::ApplicationRecord
       self.table_name = "workflow_transitions"
       include TypedPolymorphism
 

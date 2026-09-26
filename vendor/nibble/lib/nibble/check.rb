@@ -102,7 +102,7 @@ module Nibble
     def check_roles(schema)
       return unless @config.equal?(Nibble.config)
 
-      Role.where(superuser: false).find_each do |role|
+      Nibble::Role.where(superuser: false).find_each do |role|
         Access::Catalogue.unknown(role.abilities, schema:).each do |ability|
           problem("role '#{role.handle}'", "ability '#{ability}' doesn't match anything in this site's schema")
         end

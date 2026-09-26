@@ -7,15 +7,15 @@ class RoleTest < ActiveSupport::TestCase
   end
 
   test "seeding the defaults twice leaves one of each, so db:seed stays safe to re-run" do
-    Role.seed_defaults!
-    Role.seed_defaults!
+    Nibble::Role.seed_defaults!
+    Nibble::Role.seed_defaults!
 
-    assert_equal Role::DEFAULTS.map { |role| role[:handle] }.sort, Role.pluck(:handle).sort
+    assert_equal Nibble::Role::DEFAULTS.map { |role| role[:handle] }.sort, Nibble::Role.pluck(:handle).sort
   end
 
   test "seeding never rewrites a role an administrator has edited" do
     roles(:editor).update!(abilities: %w[entries.*.view])
-    Role.seed_defaults!
+    Nibble::Role.seed_defaults!
 
     assert_equal %w[entries.*.view], roles(:editor).reload.abilities
   end

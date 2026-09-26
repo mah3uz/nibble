@@ -13,20 +13,20 @@ class Nibble::Cp::RolesControllerTest < ActionDispatch::IntegrationTest
 
     post "/cp/roles", params: { role: { title: "Sneak" } }
     assert_response :forbidden
-    assert_nil Role.find_by(handle: "sneak")
+    assert_nil Nibble::Role.find_by(handle: "sneak")
   end
 
   test "a role is created from the abilities that were checked, with a handle from its title" do
     post "/cp/roles", params: { role: { title: "News desk", abilities: %w[entries.posts.view entries.posts.edit] } }
 
-    role = Role.find_by!(handle: "news_desk")
+    role = Nibble::Role.find_by!(handle: "news_desk")
     assert_equal %w[entries.posts.view entries.posts.edit], role.abilities
     assert_not role.superuser?
     assert Nibble::Access.can?(users(:author).tap { |user| user.roles = [ role ] }, "entries.posts.edit")
   end
 
   test "saving a role keeps abilities for schema this site doesn't have, so a rename doesn't erase them" do
-    role = Role.create!(handle: "keeper", title: "Keeper", abilities: %w[entries.archive.view entries.posts.view])
+    role = Nibble::Role.create!(handle: "keeper", title: "Keeper", abilities: %w[entries.archive.view entries.posts.view])
 
     patch "/cp/roles/#{role.id}", params: { role: { title: "Keeper", abilities: %w[entries.posts.edit] } }
 
@@ -38,11 +38,11 @@ class Nibble::Cp::RolesControllerTest < ActionDispatch::IntegrationTest
     assert roles(:admin).reload.superuser?
 
     delete "/cp/roles/#{roles(:admin).id}"
-    assert Role.exists?(roles(:admin).id)
+    assert Nibble::Role.exists?(roles(:admin).id)
   end
 
   test "turning on full access drops the ability list, since it grants everything" do
-    role = Role.create!(handle: "second", title: "Second", abilities: %w[entries.posts.view])
+    role = Nibble::Role.create!(handle: "second", title: "Second", abilities: %w[entries.posts.view])
 
     patch "/cp/roles/#{role.id}", params: { role: { title: "Second", superuser: "1", abilities: %w[entries.posts.view] } }
 
@@ -51,14 +51,14 @@ class Nibble::Cp::RolesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "someone who manages roles but isn't a superuser can't mint one" do
-    manager = Role.create!(handle: "manager", title: "Manager", abilities: %w[roles.manage])
+    manager = Nibble::Role.create!(handle: "manager", title: "Manager", abilities: %w[roles.manage])
     sign_in_as users(:editor).tap { |user| user.roles = [ manager ] }
 
     get "/cp/roles/new"
     assert_not props["can_assign_superuser"]
 
     post "/cp/roles", params: { role: { title: "Backdoor", superuser: "1" } }
-    assert_not Role.find_by!(handle: "backdoor").superuser?
+    assert_not Nibble::Role.find_by!(handle: "backdoor").superuser?
   end
 
   test "the editor screen offers the site's own schema, so a new collection is grantable at once" do

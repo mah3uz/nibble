@@ -1,6 +1,6 @@
 module Nibble
   module Jobs
-    class HandleSubmission < ::ApplicationJob
+    class HandleSubmission < Nibble::ApplicationJob
       queue_as :deliveries
 
       def perform(form_handle, submission_id: nil, data: nil)

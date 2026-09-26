@@ -1,6 +1,6 @@
 module Nibble
   module Jobs
-    class RunSchedule < ::ApplicationJob
+    class RunSchedule < Nibble::ApplicationJob
       queue_as :maintenance
 
       def perform(now: Time.current)

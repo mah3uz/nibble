@@ -1,7 +1,7 @@
 # CMS password reset (Rails 8 authentication), rendered in the Control Plane.
 module Nibble
   module Cp
-    class PasswordsController < ApplicationController
+    class PasswordsController < Nibble::ApplicationController
       layout "nibble/cp"
       allow_unauthenticated_access
       before_action :set_user_by_token, only: %i[ edit update ]
@@ -12,8 +12,8 @@ module Nibble
       end
 
       def create
-        if (user = User.find_by(email_address: params[:email_address]))
-          PasswordsMailer.reset(user).deliver_later
+        if (user = Nibble::User.find_by(email_address: params[:email_address]))
+          Nibble::PasswordsMailer.reset(user).deliver_later
         end
 
         redirect_to new_cp_session_path, notice: "Password reset instructions sent (if user with that email address exists)."
@@ -35,7 +35,7 @@ module Nibble
       private
         def set_user_by_token
           # Also accepts invitation links (Nibble::Cp::UsersController), which last longer than a reset link.
-          @user = User.find_by_password_reset_token(params[:token]) || User.find_by_token_for(:invitation, params[:token])
+          @user = Nibble::User.find_by_password_reset_token(params[:token]) || Nibble::User.find_by_token_for(:invitation, params[:token])
           redirect_to new_cp_password_path, alert: "Password reset link is invalid or has expired." unless @user
         end
     end

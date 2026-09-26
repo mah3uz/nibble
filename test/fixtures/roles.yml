@@ -1,3 +1,6 @@
+_fixture:
+  model_class: Nibble::Role
+
 admin:
   handle: admin
   title: Administrator

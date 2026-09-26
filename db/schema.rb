@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_24_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_26_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -37,21 +37,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_120000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
-  end
-
-  create_table "api_tokens", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.integer "created_by_id"
-    t.datetime "expires_at"
-    t.datetime "last_used_at"
-    t.string "name", null: false
-    t.string "prefix", null: false
-    t.datetime "revoked_at"
-    t.json "scopes", default: [], null: false
-    t.string "token_digest", null: false
-    t.datetime "updated_at", null: false
-    t.index ["created_by_id"], name: "index_api_tokens_on_created_by_id"
-    t.index ["token_digest"], name: "index_api_tokens_on_token_digest", unique: true
   end
 
   create_table "asset_folders", force: :cascade do |t|
@@ -224,6 +209,89 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_120000) do
     t.index ["handle", "locale"], name: "index_navigation_trees_on_handle_and_locale", unique: true
   end
 
+  create_table "nibble_api_tokens", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "created_by_id"
+    t.datetime "expires_at"
+    t.datetime "last_used_at"
+    t.string "name", null: false
+    t.string "prefix", null: false
+    t.datetime "revoked_at"
+    t.json "scopes", default: [], null: false
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_nibble_api_tokens_on_created_by_id"
+    t.index ["token_digest"], name: "index_nibble_api_tokens_on_token_digest", unique: true
+  end
+
+  create_table "nibble_roles", force: :cascade do |t|
+    t.json "abilities", default: [], null: false
+    t.datetime "created_at", null: false
+    t.string "handle", null: false
+    t.boolean "require_2fa", default: false, null: false
+    t.boolean "superuser", default: false, null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["handle"], name: "index_nibble_roles_on_handle", unique: true
+  end
+
+  create_table "nibble_sessions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "elevated_at"
+    t.string "ip_address"
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.integer "user_id", null: false
+    t.index ["user_id"], name: "index_nibble_sessions_on_user_id"
+  end
+
+  create_table "nibble_sign_in_attempts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email_digest", null: false
+    t.string "ip"
+    t.string "kind", default: "password", null: false
+    t.index ["email_digest", "created_at"], name: "index_nibble_sign_in_attempts_on_email_digest_and_created_at"
+  end
+
+  create_table "nibble_user_credentials", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "external_id", null: false
+    t.datetime "last_used_at"
+    t.string "name", null: false
+    t.string "provider", default: "webauthn", null: false
+    t.text "public_key", null: false
+    t.integer "sign_count", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["external_id"], name: "index_nibble_user_credentials_on_external_id", unique: true
+    t.index ["user_id"], name: "index_nibble_user_credentials_on_user_id"
+  end
+
+  create_table "nibble_user_roles", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "role_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["role_id"], name: "index_nibble_user_roles_on_role_id"
+    t.index ["user_id", "role_id"], name: "index_nibble_user_roles_on_user_id_and_role_id", unique: true
+    t.index ["user_id"], name: "index_nibble_user_roles_on_user_id"
+  end
+
+  create_table "nibble_users", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email_address", null: false
+    t.datetime "last_login_at"
+    t.string "name", null: false
+    t.string "password_digest", null: false
+    t.json "preferences", default: {}, null: false
+    t.json "recovery_codes", default: [], null: false
+    t.datetime "totp_confirmed_at"
+    t.datetime "totp_last_used_at"
+    t.text "totp_secret_ciphertext"
+    t.datetime "updated_at", null: false
+    t.index ["email_address"], name: "index_nibble_users_on_email_address", unique: true
+  end
+
   create_table "not_found_log", force: :cascade do |t|
     t.datetime "first_seen_at", null: false
     t.integer "hits", default: 0, null: false
@@ -301,31 +369,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_120000) do
     t.index ["record_type", "record_id", "number"], name: "index_revisions_on_record_type_and_record_id_and_number", unique: true
   end
 
-  create_table "roles", force: :cascade do |t|
-    t.json "abilities", default: [], null: false
-    t.datetime "created_at", null: false
-    t.string "handle", null: false
-    t.boolean "require_2fa", default: false, null: false
-    t.boolean "superuser", default: false, null: false
-    t.string "title", null: false
-    t.datetime "updated_at", null: false
-    t.index ["handle"], name: "index_roles_on_handle", unique: true
-  end
-
   create_table "schema_snapshots", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "digest", null: false
     t.json "types", default: {}, null: false
-  end
-
-  create_table "sessions", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.datetime "elevated_at"
-    t.string "ip_address"
-    t.datetime "updated_at", null: false
-    t.string "user_agent"
-    t.integer "user_id", null: false
-    t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
   create_table "settings", force: :cascade do |t|
@@ -334,14 +381,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_120000) do
     t.datetime "updated_at", null: false
     t.json "value"
     t.index ["key"], name: "index_settings_on_key", unique: true
-  end
-
-  create_table "sign_in_attempts", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "email_digest", null: false
-    t.string "ip"
-    t.string "kind", default: "password", null: false
-    t.index ["email_digest", "created_at"], name: "index_sign_in_attempts_on_email_digest_and_created_at"
   end
 
   create_table "terms", force: :cascade do |t|
@@ -363,45 +402,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_120000) do
     t.index ["taxonomy", "locale", "slug"], name: "index_terms_on_taxonomy_and_locale_and_slug", unique: true, where: "deleted_at IS NULL"
     t.index ["uri"], name: "index_terms_on_uri"
     t.index ["uuid"], name: "index_terms_on_uuid", unique: true
-  end
-
-  create_table "user_credentials", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "external_id", null: false
-    t.datetime "last_used_at"
-    t.string "name", null: false
-    t.string "provider", default: "webauthn", null: false
-    t.text "public_key", null: false
-    t.integer "sign_count", default: 0, null: false
-    t.datetime "updated_at", null: false
-    t.integer "user_id", null: false
-    t.index ["external_id"], name: "index_user_credentials_on_external_id", unique: true
-    t.index ["user_id"], name: "index_user_credentials_on_user_id"
-  end
-
-  create_table "user_roles", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.integer "role_id", null: false
-    t.datetime "updated_at", null: false
-    t.integer "user_id", null: false
-    t.index ["role_id"], name: "index_user_roles_on_role_id"
-    t.index ["user_id", "role_id"], name: "index_user_roles_on_user_id_and_role_id", unique: true
-    t.index ["user_id"], name: "index_user_roles_on_user_id"
-  end
-
-  create_table "users", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "email_address", null: false
-    t.datetime "last_login_at"
-    t.string "name", null: false
-    t.string "password_digest", null: false
-    t.json "preferences", default: {}, null: false
-    t.json "recovery_codes", default: [], null: false
-    t.datetime "totp_confirmed_at"
-    t.datetime "totp_last_used_at"
-    t.text "totp_secret_ciphertext"
-    t.datetime "updated_at", null: false
-    t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
   create_table "webhook_deliveries", force: :cascade do |t|
@@ -452,24 +452,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_24_120000) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "api_tokens", "users", column: "created_by_id", on_delete: :nullify
   add_foreign_key "asset_folders", "asset_folders", column: "parent_id"
   add_foreign_key "assets", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "drafts", "users", column: "author_id"
+  add_foreign_key "drafts", "nibble_users", column: "author_id"
   add_foreign_key "entries", "entries", column: "origin_id"
   add_foreign_key "entries", "entries", column: "parent_id"
-  add_foreign_key "entries", "users", column: "author_id"
-  add_foreign_key "entries", "users", column: "created_by_id"
-  add_foreign_key "entries", "users", column: "updated_by_id"
+  add_foreign_key "entries", "nibble_users", column: "author_id"
+  add_foreign_key "entries", "nibble_users", column: "created_by_id"
+  add_foreign_key "entries", "nibble_users", column: "updated_by_id"
   add_foreign_key "global_sets", "global_sets", column: "origin_id"
-  add_foreign_key "revisions", "users", column: "actor_id"
-  add_foreign_key "sessions", "users"
+  add_foreign_key "nibble_api_tokens", "nibble_users", column: "created_by_id", on_delete: :nullify
+  add_foreign_key "nibble_sessions", "nibble_users", column: "user_id"
+  add_foreign_key "nibble_user_credentials", "nibble_users", column: "user_id", on_delete: :cascade
+  add_foreign_key "nibble_user_roles", "nibble_roles", column: "role_id", on_delete: :cascade
+  add_foreign_key "nibble_user_roles", "nibble_users", column: "user_id", on_delete: :cascade
+  add_foreign_key "revisions", "nibble_users", column: "actor_id"
   add_foreign_key "terms", "terms", column: "origin_id"
-  add_foreign_key "user_credentials", "users", on_delete: :cascade
-  add_foreign_key "user_roles", "roles", on_delete: :cascade
-  add_foreign_key "user_roles", "users", on_delete: :cascade
   add_foreign_key "webhook_deliveries", "webhooks", on_delete: :cascade
-  add_foreign_key "workflow_transitions", "users", column: "actor_id"
+  add_foreign_key "workflow_transitions", "nibble_users", column: "actor_id"
 
   # Virtual tables defined in this database.
   # Note that virtual tables may not work with other database engines. Be careful if changing database.

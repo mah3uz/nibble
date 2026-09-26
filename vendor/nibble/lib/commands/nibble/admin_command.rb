@@ -9,7 +9,7 @@ class NibbleAdminCommand < Rails::Command::Base
   desc "create", "Add a user, asking for their name, email address, password and role"
   def create
     boot_application!
-    Role.seed_defaults!
+    Nibble::Role.seed_defaults!
     role = ask_role
     user = build_admin(role:)
     say_status :create, "#{role.title.downcase} #{user.email_address}", :green

@@ -79,7 +79,7 @@ class Nibble::Cp::EntriesControllerTest < ActionDispatch::IntegrationTest
     patch "/cp/preferences", params: { key: "listings.#{key}.columns", value: [ "title" ] }
 
     assert_response :no_content, "customising columns saves nothing when the two sides disagree on the key"
-    assert_equal [ "title" ], UserPreferences.get(users(:editor).reload, "listings.#{key}.columns")
+    assert_equal [ "title" ], Nibble::UserPreferences.get(users(:editor).reload, "listings.#{key}.columns")
   end
 
   test "a listing exports the rows behind the current filters, not the whole collection" do

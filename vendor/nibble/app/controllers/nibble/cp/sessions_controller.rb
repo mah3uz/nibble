@@ -1,7 +1,7 @@
 # Nibble sign-in (Rails 8 authentication), rendered in the Control Plane.
 module Nibble
   module Cp
-    class SessionsController < ApplicationController
+    class SessionsController < Nibble::ApplicationController
       layout "nibble/cp"
       PENDING_WINDOW = 10.minutes
       CODE_ATTEMPTS = 5
@@ -18,7 +18,7 @@ module Nibble
         email = params[:email_address].to_s
         return refuse_locked if Nibble::Lockout.locked?(email)
 
-        user = User.authenticate_by(params.permit(:email_address, :password))
+        user = Nibble::User.authenticate_by(params.permit(:email_address, :password))
         return refuse_password(email) unless user
 
         # The count only clears once they're actually in: a right password is half the sign-in when 2FA is on.
@@ -61,7 +61,7 @@ module Nibble
 
       def passkey
         credential = WebAuthn::Credential.from_get(assertion_params)
-        stored = UserCredential.find_by(external_id: credential.id) or return head(:unauthorized)
+        stored = Nibble::UserCredential.find_by(external_id: credential.id) or return head(:unauthorized)
         credential.verify(session.delete(:webauthn_challenge), public_key: stored.public_key, sign_count: stored.sign_count,
           user_verification: true)
 
@@ -105,7 +105,7 @@ module Nibble
       def refuse_password(email)
         count = Nibble::Lockout.record_failure(email, ip: request.remote_ip)
         Nibble::AuthLog.record(count >= Nibble::Lockout::ATTEMPTS ? "locked_out" : "sign_in_failed",
-          user: User.find_by(email_address: email.strip.downcase), ip: request.remote_ip, attempts: count)
+          user: Nibble::User.find_by(email_address: email.strip.downcase), ip: request.remote_ip, attempts: count)
         redirect_to new_cp_session_path, alert: "Try another email address or password."
       end
 
@@ -119,7 +119,7 @@ module Nibble
       def pending_user
         return clear_challenge unless session[:pending_at].to_i > PENDING_WINDOW.ago.to_i
 
-        User.find_by(id: session[:pending_user_id])
+        Nibble::User.find_by(id: session[:pending_user_id])
       end
 
       def clear_challenge

@@ -37,7 +37,7 @@ class Nibble::Subscribers::NotificationsTest < ActiveSupport::TestCase
       Nibble::Records::Notification.notify(users(:author).id, "comment.mentioned", title: "Hello")
     end
 
-    UserPreferences.set!(users(:author), "notifications.email", false)
+    Nibble::UserPreferences.set!(users(:author), "notifications.email", false)
 
     assert_no_emails do
       Nibble::Records::Notification.notify(users(:author).id, "comment.mentioned", title: "Hello again")

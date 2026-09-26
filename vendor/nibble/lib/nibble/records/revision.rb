@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class Revision < ::ApplicationRecord
+    class Revision < Nibble::ApplicationRecord
       self.table_name = "revisions"
       include TypedPolymorphism
 

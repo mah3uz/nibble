@@ -1,7 +1,7 @@
 module Nibble
   module Cp
     class DirectUploadsController < ActiveStorage::DirectUploadsController
-      include Authentication
+      include Nibble::Authentication
 
       before_action { head(:forbidden) unless Nibble::Access.can?(Nibble::Current.user, "assets.upload") }
 

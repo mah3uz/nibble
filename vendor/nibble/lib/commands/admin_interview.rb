@@ -5,7 +5,7 @@ module AdminInterview
       name = ask_until("  Your name", :cyan) { |value| "a name is required" if value.blank? }
       email = ask_until("  Your email address", :cyan) { |value| "#{value.inspect} is not an email address" unless value.match?(/\A[^@\s]+@[^@\s]+\.[^@\s]+\z/) }
       password = ask_password
-      user = User.new(name:, email_address: email.strip.downcase, password:, roles: [ role ])
+      user = Nibble::User.new(name:, email_address: email.strip.downcase, password:, roles: [ role ])
       return user if user.save
 
       say "  #{user.errors.full_messages.to_sentence}", :red
@@ -13,10 +13,10 @@ module AdminInterview
   end
 
   # The install never asks: the first user has to be able to do everything.
-  def superuser_role = Role.find_by(superuser: true) || Role.find_by!(handle: "admin")
+  def superuser_role = Nibble::Role.find_by(superuser: true) || Nibble::Role.find_by!(handle: "admin")
 
   def ask_role
-    roles = Role.order(:id).to_a
+    roles = Nibble::Role.order(:id).to_a
     return superuser_role if roles.one?
 
     roles.each.with_index(1) { |role, number| say "  #{number}. #{role.title}#{' — full access' if role.superuser?}", :white }
@@ -27,10 +27,10 @@ module AdminInterview
   end
 
   def ask_password
-    say "  At least #{User::MINIMUM_PASSWORD_LENGTH} characters, with #{User::PASSWORD_RULES.keys.to_sentence}.", :white
+    say "  At least #{Nibble::User::MINIMUM_PASSWORD_LENGTH} characters, with #{Nibble::User::PASSWORD_RULES.keys.to_sentence}.", :white
     loop do
       password = ask_secret("  A password")
-      problems = User.password_problems(password)
+      problems = Nibble::User.password_problems(password)
       next problems.each { |problem| say "  That password #{problem}", :red } if problems.any?
       return password if !$stdin.tty? || ask_secret("  Type it again") == password
 

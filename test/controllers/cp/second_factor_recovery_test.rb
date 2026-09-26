@@ -17,9 +17,9 @@ class Nibble::Cp::SecondFactorRecoveryTest < ActionDispatch::IntegrationTest
   test "a passkey also earns recovery codes, so a lost device isn't a locked account" do
     register_passkey(users(:editor))
 
-    assert_equal TwoFactor::RECOVERY_CODE_COUNT, users(:editor).reload.recovery_codes.size
+    assert_equal Nibble::TwoFactor::RECOVERY_CODE_COUNT, users(:editor).reload.recovery_codes.size
     get "/cp/account/edit"
-    assert_equal TwoFactor::RECOVERY_CODE_COUNT, props["two_factor"]["recovery_codes"].size
+    assert_equal Nibble::TwoFactor::RECOVERY_CODE_COUNT, props["two_factor"]["recovery_codes"].size
   end
 
   test "recovery codes stay on screen until they're acknowledged, so a reload doesn't lose them" do

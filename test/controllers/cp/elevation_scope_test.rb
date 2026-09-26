@@ -27,6 +27,6 @@ class Nibble::Cp::ElevationScopeTest < ActionDispatch::IntegrationTest
     assert_not_equal "Renamed", roles(:editor).reload.title
 
     post "/cp/api-tokens", params: { api_token: { name: "Nope", scopes: %w[read] } }
-    assert_equal 0, ApiToken.count
+    assert_equal 0, Nibble::ApiToken.count
   end
 end

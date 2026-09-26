@@ -1,6 +1,6 @@
 module Nibble
   module Jobs
-    class PurgeTrash < ::ApplicationJob
+    class PurgeTrash < Nibble::ApplicationJob
       queue_as :maintenance
 
       def perform(now: Time.current)

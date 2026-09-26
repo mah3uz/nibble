@@ -7,17 +7,17 @@ module Nibble
       before_action :find_role, only: %i[edit update destroy]
 
       def index
-        render inertia: "cp/roles/Index", props: { roles: Role.order(:title).map { |role| row(role) } }
+        render inertia: "cp/roles/Index", props: { roles: Nibble::Role.order(:title).map { |role| row(role) } }
       end
 
       def new
-        render inertia: "cp/roles/Edit", props: form_props(Role.new)
+        render inertia: "cp/roles/Edit", props: form_props(Nibble::Role.new)
       end
 
       def create
         return refuse_ungrantable("/cp/roles/new") if ungrantable.any?
 
-        role = Role.new(role_attributes)
+        role = Nibble::Role.new(role_attributes)
         return redirect_to("/cp/roles", notice: "Role created.") if role.save
 
         redirect_to "/cp/roles/new", inertia: { errors: messages(role) }
@@ -42,7 +42,7 @@ module Nibble
 
       private
 
-      def find_role = @role = Role.find(params[:id])
+      def find_role = @role = Nibble::Role.find(params[:id])
 
       def form_props(role)
         { role: { id: role.id, title: role.title, handle: role.handle, superuser: role.superuser?,

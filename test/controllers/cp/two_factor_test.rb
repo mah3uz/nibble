@@ -90,7 +90,7 @@ class Nibble::Cp::TwoFactorTest < ActionDispatch::IntegrationTest
 
     post "/cp/account/two_factor/confirm", params: { code: code_for(users(:editor)) }
     assert users(:editor).reload.totp?
-    assert_equal TwoFactor::RECOVERY_CODE_COUNT, users(:editor).recovery_codes.size
+    assert_equal Nibble::TwoFactor::RECOVERY_CODE_COUNT, users(:editor).recovery_codes.size
   end
 
   test "turning two-factor off needs the password, and a role that requires it refuses" do

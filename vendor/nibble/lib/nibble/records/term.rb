@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class Term < ::ApplicationRecord
+    class Term < Nibble::ApplicationRecord
       self.table_name = "terms"
       include Content
 

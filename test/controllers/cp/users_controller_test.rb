@@ -24,10 +24,10 @@ class Nibble::Cp::UsersControllerTest < ActionDispatch::IntegrationTest
       post "/cp/users", params: { user: { name: "Ada", email_address: "Ada@Example.test", role_ids: [ roles(:author).id ] } }
     end
 
-    invited = User.find_by!(email_address: "ada@example.test")
+    invited = Nibble::User.find_by!(email_address: "ada@example.test")
     assert_equal [ "author" ], invited.roles.map(&:handle)
     assert_nil invited.last_login_at
-    assert User.find_by_token_for(:invitation, invited.generate_token_for(:invitation))
+    assert Nibble::User.find_by_token_for(:invitation, invited.generate_token_for(:invitation))
   end
 
   test "nobody edits their own roles, so an administrator can't quietly demote or promote themselves" do
@@ -65,13 +65,13 @@ class Nibble::Cp::UsersControllerTest < ActionDispatch::IntegrationTest
 
     delete "/cp/users/#{users(:editor).id}/sessions/#{session.id}"
 
-    assert_not Session.exists?(session.id)
+    assert_not Nibble::Session.exists?(session.id)
   end
 
   test "an administrator can't delete their own account" do
     delete "/cp/users/#{users(:admin).id}"
 
     assert_response :forbidden
-    assert User.exists?(users(:admin).id)
+    assert Nibble::User.exists?(users(:admin).id)
   end
 end

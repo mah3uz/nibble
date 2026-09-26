@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class GlobalSet < ::ApplicationRecord
+    class GlobalSet < Nibble::ApplicationRecord
       self.table_name = "global_sets"
       include Content
 

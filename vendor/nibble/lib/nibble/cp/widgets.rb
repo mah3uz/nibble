@@ -38,7 +38,7 @@ module Nibble
 
       class << self
         def layout(user)
-          (UserPreferences.get(user, "dashboard.widgets").presence || DEFAULT).select { |widget| allowed?(user, widget["type"]) }
+          (Nibble::UserPreferences.get(user, "dashboard.widgets").presence || DEFAULT).select { |widget| allowed?(user, widget["type"]) }
         end
 
         def available(user)
@@ -128,7 +128,7 @@ module Nibble
 
         def activity(user)
           entries = Records::AuditEntry.where(Records::AuditEntry.arel_table[:action].matches("record.%")).order(created_at: :desc).limit(LIMIT).to_a
-          authors = ::User.where(id: entries.filter_map(&:actor_id)).index_by(&:id)
+          authors = Nibble::User.where(id: entries.filter_map(&:actor_id)).index_by(&:id)
           entries.map do |entry|
             title, url = subject_of(entry)
             {
@@ -188,7 +188,7 @@ module Nibble
           scope = Records::Entry.kept.where(collection: approvable(user).map(&:handle), status: "in_review").order(:updated_at).limit(LIMIT).to_a
           since = Records::WorkflowTransition.where(record_type: "entry", record_id: scope.map(&:id), to: "in_review")
                                              .group(:record_id).maximum(:created_at)
-          authors = ::User.where(id: scope.filter_map(&:updated_by_id)).index_by(&:id)
+          authors = Nibble::User.where(id: scope.filter_map(&:updated_by_id)).index_by(&:id)
           scope.map do |entry|
             item(entry, "user" => authors[entry.updated_by_id]&.name, "since" => (since[entry.id] || entry.updated_at).utc.iso8601)
           end
@@ -241,7 +241,7 @@ module Nibble
           visible_ids = visible(user).select(:id)
           rows = Records::Comment.where(subject_type: Records::Entry.name, subject_id: visible_ids).order(created_at: :desc).limit(LIMIT).to_a
           entries = Records::Entry.where(id: rows.map(&:subject_id)).index_by(&:id)
-          authors = ::User.where(id: rows.map(&:author_id)).index_by(&:id)
+          authors = Nibble::User.where(id: rows.map(&:author_id)).index_by(&:id)
           rows.map do |comment|
             entry = entries[comment.subject_id]
             { "id" => comment.id, "author" => authors[comment.author_id]&.name, "body" => comment.body.truncate(140),

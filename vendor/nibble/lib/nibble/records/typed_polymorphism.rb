@@ -5,7 +5,7 @@ module Nibble
       extend ActiveSupport::Concern
 
       class_methods do
-        def polymorphic_class_for(name) = name == "user" ? ::User : Records.model(name)
+        def polymorphic_class_for(name) = name == "user" ? Nibble::User : Records.model(name)
       end
     end
   end

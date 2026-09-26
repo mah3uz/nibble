@@ -38,7 +38,7 @@ module Nibble
 
       def thread
         rows = comments.order(:created_at).to_a
-        authors = ::User.where(id: rows.map(&:author_id)).index_by(&:id)
+        authors = Nibble::User.where(id: rows.map(&:author_id)).index_by(&:id)
         roots, replies = rows.partition { |row| row.parent_id.nil? }
         roots.map { |root| serialize(root, authors).merge("replies" => replies.select { |reply| reply.parent_id == root.id }.map { |reply| serialize(reply, authors) }) }
       end

@@ -1,6 +1,6 @@
 module Nibble
   module Jobs
-    class PurgeWebhookDeliveries < ::ApplicationJob
+    class PurgeWebhookDeliveries < Nibble::ApplicationJob
       queue_as :maintenance
 
       def perform

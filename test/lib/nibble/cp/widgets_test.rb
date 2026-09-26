@@ -4,7 +4,7 @@ class Nibble::Cp::WidgetsTest < ActiveSupport::TestCase
   include NibbleRecordsHelper
 
   test "widgets someone isn't allowed to use stay off their dashboard even if their saved layout names them" do
-    UserPreferences.set!(users(:author), "dashboard.widgets", [
+    Nibble::UserPreferences.set!(users(:author), "dashboard.widgets", [
       { "type" => "missing_pages", "width" => 50 }, { "type" => "site_health", "width" => 50 },
       { "type" => "awaiting_review", "width" => 50 }, { "type" => "recent_entries", "width" => 50 }
     ])
@@ -28,8 +28,8 @@ class Nibble::Cp::WidgetsTest < ActiveSupport::TestCase
   end
 
   test "reviewers only see entries waiting in collections they can approve" do
-    reviewer = User.create!(email_address: "reviewer@example.com", password: "Test-Password-1", name: "Reviewer")
-    reviewer.roles << Role.create!(handle: "doc_reviewer", title: "Doc reviewer", abilities: %w[entries.*.view workflow.approve.docs])
+    reviewer = Nibble::User.create!(email_address: "reviewer@example.com", password: "Test-Password-1", name: "Reviewer")
+    reviewer.roles << Nibble::Role.create!(handle: "doc_reviewer", title: "Doc reviewer", abilities: %w[entries.*.view workflow.approve.docs])
     doc = create_entry("docs", { "title" => "Needs eyes" })
     assert lifecycle(doc, :submit).ok?
     create_entry("articles", { "title" => "Just a draft" })

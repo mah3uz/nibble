@@ -1,7 +1,7 @@
 require "test_helper"
 
 class Nibble::Cp::PasswordsControllerTest < ActionDispatch::IntegrationTest
-  setup { @user = User.take }
+  setup { @user = Nibble::User.take }
 
   test "new" do
     get new_cp_password_path
@@ -10,7 +10,7 @@ class Nibble::Cp::PasswordsControllerTest < ActionDispatch::IntegrationTest
 
   test "create" do
     post cp_passwords_path, params: { email_address: @user.email_address }
-    assert_enqueued_email_with PasswordsMailer, :reset, args: [ @user ]
+    assert_enqueued_email_with Nibble::PasswordsMailer, :reset, args: [ @user ]
     assert_redirected_to new_cp_session_path
 
     follow_redirect!

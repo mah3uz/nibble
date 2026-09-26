@@ -2,12 +2,12 @@ require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
   test "downcases and strips email_address" do
-    user = User.new(email_address: " DOWNCASED@EXAMPLE.COM ")
+    user = Nibble::User.new(email_address: " DOWNCASED@EXAMPLE.COM ")
     assert_equal("downcased@example.com", user.email_address)
   end
 
   test "a new user holds no role, so nobody gains rights by merely having an account" do
-    user = User.create!(email_address: "new@example.com", name: "New", password: "Test-Password-1")
+    user = Nibble::User.create!(email_address: "new@example.com", name: "New", password: "Test-Password-1")
     assert_empty user.abilities
     assert_not user.admin?
   end
@@ -18,12 +18,12 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "email addresses are unique regardless of case, so one person can't hold two accounts" do
-    duplicate = User.new(email_address: users(:admin).email_address.upcase, name: "Dup", password: "Test-Password-1")
+    duplicate = Nibble::User.new(email_address: users(:admin).email_address.upcase, name: "Dup", password: "Test-Password-1")
     assert_not duplicate.valid?
   end
 
   test "a password shorter than the minimum is refused wherever it is set" do
-    user = User.new(name: "Short", email_address: "short@example.com", password: "Aa1!" * 2)
+    user = Nibble::User.new(name: "Short", email_address: "short@example.com", password: "Aa1!" * 2)
 
     assert_not user.valid?
     assert_match(/too short/, user.errors[:password].to_sentence)
@@ -38,7 +38,7 @@ class UserTest < ActiveSupport::TestCase
     }
 
     problems.each do |password, expected|
-      user = User.new(name: "Weak", email_address: "weak@example.com", password:)
+      user = Nibble::User.new(name: "Weak", email_address: "weak@example.com", password:)
 
       assert_not user.valid?, "#{password} should be refused"
       assert_match expected, user.errors[:password].to_sentence
@@ -46,14 +46,14 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "a password meeting every rule is accepted" do
-    user = User.new(name: "Fine", email_address: "fine@example.com", password: "Test-Password-1")
+    user = Nibble::User.new(name: "Fine", email_address: "fine@example.com", password: "Test-Password-1")
 
-    assert_empty User.password_problems(user.password)
+    assert_empty Nibble::User.password_problems(user.password)
     assert user.valid?
   end
 
   test "the password Nibble generates for an invited user meets its own rules" do
-    10.times { assert_empty User.password_problems(User.generate_password) }
+    10.times { assert_empty Nibble::User.password_problems(Nibble::User.generate_password) }
   end
 
   test "an existing user can be edited without resupplying their password" do

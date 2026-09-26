@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    class Asset < ::ApplicationRecord
+    class Asset < Nibble::ApplicationRecord
       self.table_name = "assets"
       include Content
 

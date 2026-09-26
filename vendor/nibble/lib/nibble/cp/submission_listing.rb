@@ -63,7 +63,7 @@ module Nibble
           { "handle" => field.handle, "label" => field.display, "sortable" => false, "visible" => index < VISIBLE_FIELDS,
             "type" => field.type == "files" ? "list" : Listing::TYPES.fetch(field.type, "text") }
         end
-        saved = UserPreferences.get(user, "listings.#{preference_key}.columns").presence
+        saved = Nibble::UserPreferences.get(user, "listings.#{preference_key}.columns").presence
         ([ DATE_COLUMN ] + field_columns + [ STATUS_COLUMN ]).map do |column|
           column.merge("visible" => saved ? saved.include?(column["handle"]) : column["visible"])
         end
@@ -107,7 +107,7 @@ module Nibble
 
       def per_page
         requested = params[:per_page].to_i
-        Listing::PER_PAGE_OPTIONS.include?(requested) ? requested : (UserPreferences.get(user, "listings.#{preference_key}.per_page") || 25)
+        Listing::PER_PAGE_OPTIONS.include?(requested) ? requested : (Nibble::UserPreferences.get(user, "listings.#{preference_key}.per_page") || 25)
       end
 
       def sort_direction = params[:dir].to_s == "asc" ? "asc" : "desc"

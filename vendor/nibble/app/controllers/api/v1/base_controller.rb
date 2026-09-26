@@ -14,7 +14,7 @@ module Api
       private
 
       def authenticate_token
-        @token = ApiToken.authenticate(bearer)
+        @token = Nibble::ApiToken.authenticate(bearer)
         return error(:unauthorized, "A valid API token is required.") unless @token
 
         touch_token

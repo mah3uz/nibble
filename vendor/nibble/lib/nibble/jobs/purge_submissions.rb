@@ -1,6 +1,6 @@
 module Nibble
   module Jobs
-    class PurgeSubmissions < ::ApplicationJob
+    class PurgeSubmissions < Nibble::ApplicationJob
       queue_as :maintenance
 
       def perform

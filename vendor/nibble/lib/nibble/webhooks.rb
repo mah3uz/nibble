@@ -82,7 +82,7 @@ module Nibble
 
       webhook.update!(enabled: false, disabled_at: Time.current, disabled_reason: "#{DISABLE_AFTER} deliveries failed in a row")
       dropped_pending(webhook)
-      ::User.all.select { |user| Access.can?(user, MANAGE_ABILITY) }.each do |user|
+      Nibble::User.all.select { |user| Access.can?(user, MANAGE_ABILITY) }.each do |user|
         Records::Notification.notify(user.id, "webhook.disabled", subject: webhook, title: webhook.name, webhook: webhook.id)
       end
     end

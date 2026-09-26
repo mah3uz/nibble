@@ -3,14 +3,14 @@ module SessionTestHelper
     Nibble::Current.session = user.sessions.create!
 
     ActionDispatch::TestRequest.create.cookie_jar.tap do |cookie_jar|
-      cookie_jar.signed[:session_id] = Nibble::Current.session.id
-      cookies["session_id"] = cookie_jar[:session_id]
+      cookie_jar.signed[:nibble_session_id] = Nibble::Current.session.id
+      cookies["nibble_session_id"] = cookie_jar[:nibble_session_id]
     end
   end
 
   def sign_out
     Nibble::Current.session&.destroy!
-    cookies.delete("session_id")
+    cookies.delete("nibble_session_id")
   end
 end
 

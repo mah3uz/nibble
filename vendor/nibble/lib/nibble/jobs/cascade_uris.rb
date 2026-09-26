@@ -1,6 +1,6 @@
 module Nibble
   module Jobs
-    class CascadeUris < ::ApplicationJob
+    class CascadeUris < Nibble::ApplicationJob
       queue_as :events
 
       def perform(entry_id)
