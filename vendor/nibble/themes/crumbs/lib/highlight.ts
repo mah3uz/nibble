@@ -1,3 +1,27 @@
+import type { LanguageFn, Mode } from 'highlight.js'
+
+function section(tag: string, attribute: string, subLanguage: string): Mode {
+  return {
+    begin: new RegExp(`^\\s*<${tag}\\b[^>]*${attribute}[^>]*>`),
+    end: new RegExp(`^\\s*</${tag}>`),
+    subLanguage,
+    excludeBegin: true,
+    excludeEnd: true,
+  }
+}
+
+const vue: LanguageFn = (hljs) => ({
+  name: 'Vue',
+  subLanguage: 'xml',
+  contains: [
+    hljs.COMMENT('<!--', '-->', { relevance: 10 }),
+    section('script', `\\blang=["']ts["']`, 'typescript'),
+    section('script', '', 'javascript'),
+    section('style', `\\blang=["']s[ac]ss["']`, 'scss'),
+    section('style', '', 'css'),
+  ],
+})
+
 const GRAMMARS = {
   arduino: () => import('highlight.js/lib/languages/arduino'),
   bash: () => import('highlight.js/lib/languages/bash'),
@@ -6,6 +30,7 @@ const GRAMMARS = {
   csharp: () => import('highlight.js/lib/languages/csharp'),
   css: () => import('highlight.js/lib/languages/css'),
   diff: () => import('highlight.js/lib/languages/diff'),
+  erb: () => import('highlight.js/lib/languages/erb'),
   go: () => import('highlight.js/lib/languages/go'),
   graphql: () => import('highlight.js/lib/languages/graphql'),
   ini: () => import('highlight.js/lib/languages/ini'),
@@ -33,6 +58,7 @@ const GRAMMARS = {
   swift: () => import('highlight.js/lib/languages/swift'),
   typescript: () => import('highlight.js/lib/languages/typescript'),
   vbnet: () => import('highlight.js/lib/languages/vbnet'),
+  vue: async () => ({ default: vue }),
   wasm: () => import('highlight.js/lib/languages/wasm'),
   xml: () => import('highlight.js/lib/languages/xml'),
   yaml: () => import('highlight.js/lib/languages/yaml'),
@@ -115,6 +141,11 @@ const ALIASES: Record<string, Language> = {
 
 type Language = keyof typeof GRAMMARS
 
+const EMBEDS: Partial<Record<Language, Language[]>> = {
+  erb: ['xml', 'ruby'],
+  vue: ['xml', 'javascript', 'typescript', 'css', 'scss'],
+}
+
 const loaded = new Map<Language, Promise<void>>()
 let engine: Promise<typeof import('highlight.js/lib/core').default> | null = null
 
@@ -123,9 +154,10 @@ function core() {
   return engine
 }
 
-function register(name: Language) {
+function register(name: Language): Promise<void> {
   if (!loaded.has(name)) {
-    const ready = Promise.all([core(), GRAMMARS[name]()])
+    const embeds = (EMBEDS[name] ?? []).map(register)
+    const ready = Promise.all([core(), GRAMMARS[name](), ...embeds])
       .then(([hljs, grammar]) => hljs.registerLanguage(name, grammar.default))
       .catch((error) => {
         loaded.delete(name)

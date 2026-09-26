@@ -12,6 +12,11 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **Crumbs highlights Vue and ERB code blocks.** A `vue` block colours its template, its script (as TypeScript with
+  `lang="ts"`) and its styles, and an `erb` block its HTML and Ruby, where both showed as plain text.
+
 ## 0.18.1 — 2026-09-26 21:35 +0600
 
 ### Changed
