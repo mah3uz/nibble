@@ -81,6 +81,32 @@ class NibbleSiteTest < ActionDispatch::IntegrationTest
     assert_includes tags, "term:#{@design.id}"
   end
 
+  test "a cached page answers a client-side visit as Inertia, or the browser shows its error modal" do
+    2.times { get "/blog", headers: { "X-Inertia" => "true", "X-Inertia-Version" => ViteRuby.digest } }
+
+    assert_equal "hit", response.headers["X-Nibble-Cache"]
+    assert_equal "true", response.headers["X-Inertia"]
+    assert_includes response.headers["Vary"], "X-Inertia", "a shared cache must not hand the JSON to a full page load"
+    assert_equal "theme/posts/index", response.parsed_body["component"]
+  end
+
+  test "a partial reload is never cached as the page, or the next visit would lose every other prop" do
+    inertia = { "X-Inertia" => "true", "X-Inertia-Version" => ViteRuby.digest }
+    get "/blog", headers: inertia.merge("X-Inertia-Partial-Component" => "theme/posts/index", "X-Inertia-Partial-Data" => "posts")
+    assert_not response.parsed_body["props"].key?("site")
+
+    get "/blog", headers: inertia
+    assert response.parsed_body["props"].key?("site"), "a full visit needs the whole page"
+  end
+
+  test "a cached page answers a full load as HTML, never marked as Inertia" do
+    2.times { get "/blog" }
+
+    assert_equal "hit", response.headers["X-Nibble-Cache"]
+    assert_nil response.headers["X-Inertia"]
+    assert_includes response.headers["Vary"], "X-Inertia"
+  end
+
   test "a chosen register is rendered into the shell, so the first paint already matches it" do
     get "/blog"
     assert_no_match(/data-theme/, response.body, "a visitor who has chosen nothing gets their system preference")

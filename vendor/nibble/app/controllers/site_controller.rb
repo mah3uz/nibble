@@ -36,6 +36,8 @@ class SiteController < Nibble::ApplicationController
     page = Nibble::PageCache.read(key)
     response.headers["Surrogate-Key"] = page.tags.join(" ")
     response.headers["X-Nibble-Cache"] = "hit"
+    response.headers["Vary"] = "X-Inertia"
+    response.headers["X-Inertia"] = "true" if request.inertia?
     render body: page.body, content_type: page.content_type
   end
 
@@ -62,7 +64,8 @@ class SiteController < Nibble::ApplicationController
   end
 
   def cacheable?
-    (request.get? || request.head?) && cookies[:nibble_session_id].blank? && flash.empty?
+    (request.get? || request.head?) && cookies[:nibble_session_id].blank? && flash.empty? &&
+      request.headers["X-Inertia-Partial-Component"].blank?
   end
 
   def count_queries(count)

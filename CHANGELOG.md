@@ -12,6 +12,13 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **Following a link to a cached page no longer opens Inertia's error dialog.** A page served from the page cache
+  left out the `X-Inertia` header, so every click after the first showed its JSON in a modal instead of the page.
+- **A partial reload is no longer cached as the whole page.** An infinite-scroll fetch could be stored in place of
+  the page and served to the next visit with most of its props missing.
+
 ## 0.18.2 — 2026-09-27 03:56 +0600
 
 ### What's fixed
