@@ -1,6 +1,6 @@
 class NibbleCreateWebhookDeliveries < ActiveRecord::Migration[8.1]
   def change
-    create_table "webhook_deliveries", force: :cascade do |t|
+    create_table "webhook_deliveries" do |t|
       t.integer "attempts", default: 0, null: false
       t.datetime "created_at", null: false
       t.datetime "delivered_at"

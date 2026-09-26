@@ -1,6 +1,6 @@
 class NibbleCreateWebhooks < ActiveRecord::Migration[8.1]
   def change
-    create_table "webhooks", force: :cascade do |t|
+    create_table "webhooks" do |t|
       t.json "collections", default: [], null: false
       t.integer "consecutive_failures", default: 0, null: false
       t.datetime "created_at", null: false
@@ -13,5 +13,6 @@ class NibbleCreateWebhooks < ActiveRecord::Migration[8.1]
       t.datetime "updated_at", null: false
       t.string "url", null: false
     end
+    add_foreign_key "webhook_deliveries", "webhooks", on_delete: :cascade
   end
 end

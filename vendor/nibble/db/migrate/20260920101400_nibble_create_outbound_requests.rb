@@ -1,6 +1,6 @@
 class NibbleCreateOutboundRequests < ActiveRecord::Migration[8.1]
   def change
-    create_table "outbound_requests", force: :cascade do |t|
+    create_table "outbound_requests" do |t|
       t.datetime "created_at", null: false
       t.integer "duration_ms"
       t.string "error"

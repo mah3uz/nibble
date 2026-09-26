@@ -1,6 +1,6 @@
 class NibbleCreateDrafts < ActiveRecord::Migration[8.1]
   def change
-    create_table "drafts", force: :cascade do |t|
+    create_table "drafts" do |t|
       t.integer "author_id"
       t.datetime "created_at", null: false
       t.json "data", default: {}, null: false

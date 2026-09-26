@@ -1,6 +1,6 @@
 class NibbleCreateNotFoundLog < ActiveRecord::Migration[8.1]
   def change
-    create_table "not_found_log", force: :cascade do |t|
+    create_table "not_found_log" do |t|
       t.datetime "first_seen_at", null: false
       t.integer "hits", default: 0, null: false
       t.datetime "last_seen_at", null: false

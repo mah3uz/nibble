@@ -1,6 +1,6 @@
 class NibbleCreateAssets < ActiveRecord::Migration[8.1]
   def change
-    create_table "assets", force: :cascade do |t|
+    create_table "assets" do |t|
       t.string "alt"
       t.integer "blob_id", null: false
       t.text "caption"
@@ -31,5 +31,6 @@ class NibbleCreateAssets < ActiveRecord::Migration[8.1]
       t.index [ "kind", "deleted_at" ], name: "index_assets_on_kind_and_deleted_at"
       t.index [ "uuid" ], name: "index_assets_on_uuid", unique: true
     end
+    add_foreign_key "assets", "active_storage_blobs", column: "blob_id"
   end
 end

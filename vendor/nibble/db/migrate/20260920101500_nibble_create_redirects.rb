@@ -1,6 +1,6 @@
 class NibbleCreateRedirects < ActiveRecord::Migration[8.1]
   def change
-    create_table "redirects", force: :cascade do |t|
+    create_table "redirects" do |t|
       t.datetime "created_at", null: false
       t.string "from", null: false
       t.integer "hits", default: 0, null: false

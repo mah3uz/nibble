@@ -1,6 +1,6 @@
 class NibbleCreateEventsOutbox < ActiveRecord::Migration[8.1]
   def change
-    create_table "events_outbox", force: :cascade do |t|
+    create_table "events_outbox" do |t|
       t.datetime "created_at", null: false
       t.datetime "dispatched_at"
       t.string "name", null: false

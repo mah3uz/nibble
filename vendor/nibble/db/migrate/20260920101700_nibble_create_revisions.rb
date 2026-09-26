@@ -1,6 +1,6 @@
 class NibbleCreateRevisions < ActiveRecord::Migration[8.1]
   def change
-    create_table "revisions", force: :cascade do |t|
+    create_table "revisions" do |t|
       t.integer "actor_id"
       t.datetime "created_at", null: false
       t.json "data", default: {}, null: false

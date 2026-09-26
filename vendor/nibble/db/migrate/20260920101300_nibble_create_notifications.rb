@@ -1,6 +1,6 @@
 class NibbleCreateNotifications < ActiveRecord::Migration[8.1]
   def change
-    create_table "notifications", force: :cascade do |t|
+    create_table "notifications" do |t|
       t.datetime "created_at", null: false
       t.json "data", default: {}, null: false
       t.string "kind", null: false

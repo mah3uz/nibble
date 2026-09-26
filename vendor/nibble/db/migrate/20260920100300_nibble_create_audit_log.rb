@@ -1,6 +1,6 @@
 class NibbleCreateAuditLog < ActiveRecord::Migration[8.1]
   def change
-    create_table "audit_log", force: :cascade do |t|
+    create_table "audit_log" do |t|
       t.string "action", null: false
       t.integer "actor_id"
       t.string "actor_type"

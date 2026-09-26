@@ -1,6 +1,6 @@
 class NibbleCreateEntries < ActiveRecord::Migration[8.1]
   def change
-    create_table "entries", force: :cascade do |t|
+    create_table "entries" do |t|
       t.integer "author_id"
       t.string "blueprint", null: false
       t.string "collection", null: false
@@ -36,5 +36,7 @@ class NibbleCreateEntries < ActiveRecord::Migration[8.1]
       t.index [ "uri" ], name: "index_entries_on_uri", unique: true, where: "deleted_at IS NULL"
       t.index [ "uuid" ], name: "index_entries_on_uuid", unique: true
     end
+    add_foreign_key "entries", "entries", column: "origin_id"
+    add_foreign_key "entries", "entries", column: "parent_id"
   end
 end

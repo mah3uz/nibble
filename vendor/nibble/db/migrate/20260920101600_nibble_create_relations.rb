@@ -1,6 +1,6 @@
 class NibbleCreateRelations < ActiveRecord::Migration[8.1]
   def change
-    create_table "relations", force: :cascade do |t|
+    create_table "relations" do |t|
       t.string "field", null: false
       t.string "locale", null: false
       t.integer "position", default: 0, null: false

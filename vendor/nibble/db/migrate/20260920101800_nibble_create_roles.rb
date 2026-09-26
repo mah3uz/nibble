@@ -1,6 +1,6 @@
 class NibbleCreateRoles < ActiveRecord::Migration[8.1]
   def change
-    create_table "roles", force: :cascade do |t|
+    create_table "nibble_roles" do |t|
       t.json "abilities", default: [], null: false
       t.datetime "created_at", null: false
       t.string "handle", null: false
@@ -8,7 +8,7 @@ class NibbleCreateRoles < ActiveRecord::Migration[8.1]
       t.boolean "superuser", default: false, null: false
       t.string "title", null: false
       t.datetime "updated_at", null: false
-      t.index [ "handle" ], name: "index_roles_on_handle", unique: true
+      t.index [ "handle" ], name: "index_nibble_roles_on_handle", unique: true
     end
   end
 end

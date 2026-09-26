@@ -1,6 +1,6 @@
 class NibbleCreateContentMigrations < ActiveRecord::Migration[8.1]
   def change
-    create_table "content_migrations", force: :cascade do |t|
+    create_table "content_migrations" do |t|
       t.string "name", null: false
       t.datetime "ran_at", null: false
       t.json "results", default: [], null: false

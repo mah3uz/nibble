@@ -1,6 +1,6 @@
 class NibbleCreateNavigationTrees < ActiveRecord::Migration[8.1]
   def change
-    create_table "navigation_trees", force: :cascade do |t|
+    create_table "navigation_trees" do |t|
       t.datetime "created_at", null: false
       t.string "handle", null: false
       t.string "locale", null: false

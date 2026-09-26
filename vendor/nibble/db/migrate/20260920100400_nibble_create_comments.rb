@@ -1,6 +1,6 @@
 class NibbleCreateComments < ActiveRecord::Migration[8.1]
   def change
-    create_table "comments", force: :cascade do |t|
+    create_table "comments" do |t|
       t.integer "author_id", null: false
       t.text "body", null: false
       t.datetime "created_at", null: false

@@ -12,6 +12,14 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### Changed
+
+- **Nibble's database migrations are one per table,** each creating its table as it is now, with its indexes and
+  foreign keys. They keep the versions the tables were first created with, so a database already on 0.18.0 has
+  nothing to run.
+
+  **Upgrade:** a database from before 0.18.0 has to be created afresh, then its content imported.
+
 ## 0.18.0 — 2026-09-26 20:41 +0600
 
 ### What's fixed

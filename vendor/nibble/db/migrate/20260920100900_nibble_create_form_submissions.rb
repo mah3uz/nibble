@@ -1,6 +1,6 @@
 class NibbleCreateFormSubmissions < ActiveRecord::Migration[8.1]
   def change
-    create_table "form_submissions", force: :cascade do |t|
+    create_table "form_submissions" do |t|
       t.datetime "created_at", null: false
       t.json "data", default: {}, null: false
       t.json "deliveries", default: [], null: false

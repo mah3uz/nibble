@@ -1,6 +1,6 @@
 class NibbleCreateWorkflowTransitions < ActiveRecord::Migration[8.1]
   def change
-    create_table "workflow_transitions", force: :cascade do |t|
+    create_table "workflow_transitions" do |t|
       t.integer "actor_id"
       t.text "comment"
       t.datetime "created_at", null: false
@@ -11,5 +11,6 @@ class NibbleCreateWorkflowTransitions < ActiveRecord::Migration[8.1]
       t.index [ "actor_id" ], name: "index_workflow_transitions_on_actor_id"
       t.index [ "record_type", "record_id" ], name: "index_workflow_transitions_on_record"
     end
+    add_foreign_key "workflow_transitions", "nibble_users", column: "actor_id"
   end
 end

@@ -1,6 +1,6 @@
 class NibbleCreateTerms < ActiveRecord::Migration[8.1]
   def change
-    create_table "terms", force: :cascade do |t|
+    create_table "terms" do |t|
       t.string "blueprint", null: false
       t.datetime "created_at", null: false
       t.json "data", default: {}, null: false
@@ -20,5 +20,6 @@ class NibbleCreateTerms < ActiveRecord::Migration[8.1]
       t.index [ "uri" ], name: "index_terms_on_uri"
       t.index [ "uuid" ], name: "index_terms_on_uuid", unique: true
     end
+    add_foreign_key "terms", "terms", column: "origin_id"
   end
 end
