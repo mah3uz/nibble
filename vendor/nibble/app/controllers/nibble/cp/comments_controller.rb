@@ -11,7 +11,7 @@ module Nibble
         body = params.require(:comment).permit(:body, :parent_id)
         mentioned = Nibble::Records::Comment.mentioned_users(body[:body]).to_a
         comment = Nibble::Records::Comment.create!(
-          subject_type: @entry.class.name, subject_id: @entry.id, author_id: Nibble::Current.user.id,
+          subject_type: @entry.record_type, subject_id: @entry.id, author_id: Nibble::Current.user.id,
           body: body[:body], parent_id: body[:parent_id].presence, mentions: mentioned.map(&:id)
         )
         notify(mentioned, comment)
@@ -34,7 +34,7 @@ module Nibble
         @entry = Nibble::Records::Entry.kept.where(collection: collection.handle).find(params[:entry_id])
       end
 
-      def comments = Nibble::Records::Comment.where(subject_type: @entry.class.name, subject_id: @entry.id)
+      def comments = Nibble::Records::Comment.where(subject_type: @entry.record_type, subject_id: @entry.id)
 
       def thread
         rows = comments.order(:created_at).to_a

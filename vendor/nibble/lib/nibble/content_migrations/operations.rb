@@ -76,10 +76,10 @@ module Nibble
         # Not through Events: the subscribers build the record's blueprint, and that is exactly what has gone.
         entries.find_each do |entry|
           Search.remove(entry)
-          Records::Draft.where(record_type: Records::Entry.name, record_id: entry.id).delete_all
-          Records::Revision.where(record_type: Records::Entry.name, record_id: entry.id).delete_all
-          Records::Relation.where(source_type: Records::Entry.name, source_id: entry.id).delete_all
-          Records::Relation.where(target_type: Records::Entry.name, target_id: entry.id).delete_all
+          Records::Draft.where(record_type: entry.record_type, record_id: entry.id).delete_all
+          Records::Revision.where(record_type: entry.record_type, record_id: entry.id).delete_all
+          Records::Relation.where(source_type: entry.record_type, source_id: entry.id).delete_all
+          Records::Relation.where(target_type: entry.record_type, target_id: entry.id).delete_all
         end
         PageCache.purge("collection:#{handle}")
         Records::Entry.where(collection: handle).update_all(parent_id: nil)

@@ -132,6 +132,9 @@ class Nibble::ContentMigrationsTest < ActiveSupport::TestCase
     doc = create_entry("docs", { "title" => "Stranded" })
     kept = create_entry("articles", { "title" => "Still here" })
     Nibble::Revisions.write(doc, :import, snapshot: doc.snapshot, actor: nil, message: "before")
+    Nibble::Records::Draft.create!(record: doc, data: { "title" => "Unpublished" })
+    Nibble::Records::Relation.create!(source: doc, target_type: "asset", target_id: 1, field: "image", locale: "en")
+    Nibble::Records::Relation.create!(source: kept, target_type: "entry", target_id: doc.id, field: "related", locale: "en")
     @nibble_themes.join("records/schema/collections/docs.yml").delete
     FileUtils.rm_rf(@nibble_themes.join("records/schema/blueprints/collections/docs"))
     Nibble.reset_schema!
@@ -140,7 +143,11 @@ class Nibble::ContentMigrationsTest < ActiveSupport::TestCase
     run_migrations
 
     assert_empty Nibble::Records::Entry.where(collection: "docs")
-    assert_empty Nibble::Records::Revision.where(record_type: "Nibble::Records::Entry", record_id: doc.id)
+    assert_empty Nibble::Records::Revision.where(record_type: "entry", record_id: doc.id)
+    assert_empty Nibble::Records::Draft.where(record_type: "entry", record_id: doc.id)
+    assert_empty Nibble::Records::Relation.where(source_type: "entry", source_id: doc.id)
+    assert_empty Nibble::Records::Relation.where(target_type: "entry", target_id: doc.id),
+                 "a relation left pointing at a deleted entry would resurface under a reused id"
     assert_equal "Still here", kept.reload.title, "only the removed collection's records go"
   end
 

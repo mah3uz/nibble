@@ -14,6 +14,8 @@ module Nibble
 
       def self.generate_secret = "whsec_#{SecureRandom.hex(24)}"
 
+      def record_type = "webhook"
+
       def secret = Secrets.decrypt(secret_ciphertext)
       def secret=(plain)
         self.secret_ciphertext = Secrets.encrypt(plain)

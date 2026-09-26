@@ -36,7 +36,7 @@ class Nibble::Cp::CommentsTest < ActionDispatch::IntegrationTest
 
   test "only the author of a note can remove it" do
     entry = create_entry("articles", { "title" => "Whose note" })
-    comment = Nibble::Records::Comment.create!(subject_type: "Nibble::Records::Entry", subject_id: entry.id,
+    comment = Nibble::Records::Comment.create!(subject_type: "entry", subject_id: entry.id,
                                                author_id: users(:author).id, body: "Not yours")
 
     delete "/cp/collections/articles/entries/#{entry.id}/comments/#{comment.id}"

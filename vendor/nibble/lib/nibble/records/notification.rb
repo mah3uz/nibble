@@ -6,7 +6,7 @@ module Nibble
       def self.notify(user_id, kind, subject: nil, **data)
         return if user_id.nil?
 
-        notification = create!(user_id:, kind:, subject_type: subject&.class&.name, subject_id: subject&.id,
+        notification = create!(user_id:, kind:, subject_type: subject&.record_type, subject_id: subject&.id,
                                data: data.stringify_keys)
         deliver(notification)
         notification

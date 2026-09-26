@@ -1,6 +1,8 @@
 require "test_helper"
 
 class Nibble::Cp::NotificationsControllerTest < ActionDispatch::IntegrationTest
+  include NibbleRecordsHelper
+
   setup do
     sign_in_as users(:editor)
     @mine = Nibble::Records::Notification.create!(user_id: users(:editor).id, kind: "comment.mentioned", data: { "title" => "Mine" })
@@ -29,5 +31,15 @@ class Nibble::Cp::NotificationsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :not_found
     assert Nibble::Records::Notification.exists?(@theirs.id)
+  end
+
+  test "a notification about an entry links to that entry's editor" do
+    entry = create_entry("articles", { "title" => "Linked" })
+    Nibble::Records::Notification.notify(users(:editor).id, "comment.mentioned", subject: entry, title: "Linked")
+
+    get "/cp/notifications", as: :json
+
+    row = response.parsed_body["notifications"].find { |item| item["title"] == "Linked" }
+    assert_equal "/cp/collections/articles/entries/#{entry.id}/edit", row["url"], "a mention you can't click through to is a dead end"
   end
 end

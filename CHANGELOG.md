@@ -20,6 +20,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   preview colours them.
 - **An entry with unpublished changes opens in the editor again.** So did its revisions and the dashboard's drafts
   list, which all failed with an error.
+- **`delete_collection` removes the entries' drafts, revisions and relationships too**, as documented, where it
+  left them behind.
 
 ## 0.18.1 — 2026-09-26 21:35 +0600
 

@@ -239,7 +239,7 @@ module Nibble
 
         def comments(user)
           visible_ids = visible(user).select(:id)
-          rows = Records::Comment.where(subject_type: Records::Entry.name, subject_id: visible_ids).order(created_at: :desc).limit(LIMIT).to_a
+          rows = Records::Comment.where(subject_type: Records::Entry.record_type, subject_id: visible_ids).order(created_at: :desc).limit(LIMIT).to_a
           entries = Records::Entry.where(id: rows.map(&:subject_id)).index_by(&:id)
           authors = Nibble::User.where(id: rows.map(&:author_id)).index_by(&:id)
           rows.map do |comment|

@@ -29,7 +29,7 @@ module Nibble
       def url_for_subject(item)
         return "/cp/forms/#{item.data['form']}/submissions/#{item.subject_id}" if item.kind == "form.submitted" && item.subject_id
         return "/cp/webhooks/#{item.subject_id}/edit" if item.kind == "webhook.disabled"
-        return nil unless item.subject_type == "Nibble::Records::Entry"
+        return nil unless item.subject_type == Nibble::Records::Entry.record_type
 
         entry = Nibble::Records::Entry.find_by(id: item.subject_id) or return nil
         "/cp/collections/#{entry.collection}/entries/#{entry.id}/edit"
