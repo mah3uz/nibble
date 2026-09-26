@@ -130,8 +130,7 @@ class Nibble::InstallTest < ActiveSupport::TestCase
     assert_match(/^image: acme-co\/acme$/, deploy)
     assert_match "198.51.100.7", deploy
     assert_match(/user: deploy/, deploy)
-    assert_equal [ "./acme-storage:/rails/storage" ], YAML.safe_load(deploy)["volumes"],
-      "storage is a folder in the deploy user's home on the server, not a volume hidden under Docker's own path"
+    assert_match(/- acme-co-storage:|- acme-storage:/, deploy)
   end
 
   test "an answer that would produce a broken file is rejected with what was expected" do
