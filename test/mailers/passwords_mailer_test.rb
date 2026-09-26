@@ -27,4 +27,16 @@ class PasswordsMailerTest < ActionMailer::TestCase
     assert_match "expires in 15 minutes", body
     assert_match users(:editor).email_address, body, "someone with more than one account needs to know which one this is"
   end
+
+  test "links go to the site Nibble serves, whatever host the app gives its own mailers" do
+    original = ActionMailer::Base.default_url_options
+    ActionMailer::Base.default_url_options = { host: "app.internal" }
+
+    body = PasswordsMailer.reset(users(:editor)).parts.map { |part| part.body.to_s }.join
+
+    assert_match %r{https://example\.com/admin/passwords/}, body, "a reset link on the app's host would not reach this site"
+    assert_no_match "app.internal", body
+  ensure
+    ActionMailer::Base.default_url_options = original
+  end
 end

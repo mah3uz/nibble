@@ -85,6 +85,13 @@ run!(test, "bin/rails", "runner", <<~'RUBY', chdir: site)
 RUBY
 puts "a release installs, boots and serves"
 
+run!({ "RAILS_ENV" => "production", "SECRET_KEY_BASE_DUMMY" => "1", "SITE_URL" => "https://example.com" }, "bin/rails", "runner", <<~'RUBY', chdir: site)
+  abort "production doesn't send mail over SMTP" unless ActionMailer::Base.delivery_method == :smtp
+  abort "production doesn't run jobs on Solid Queue" unless ActiveJob::Base.queue_adapter_name == "solid_queue"
+  abort "production doesn't store files locally until a bucket is named" unless Rails.configuration.active_storage.service == :local
+RUBY
+puts "a site's production settings are its own files, and Nibble works with them"
+
 run!({}, "bin/rails", "db:prepare", chdir: site)
 run!({}, "bin/rails", "nibble:eject", SCREEN, chdir: site)
 git(site, "init", "-q")

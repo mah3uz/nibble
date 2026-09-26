@@ -1,4 +1,7 @@
 ENV["RAILS_ENV"] ||= "test"
+# Nibble's suite asserts against one site URL and the theme config/nibble.yml names, whatever a shell exports.
+ENV["SITE_URL"] = "https://example.com"
+ENV.delete("NIBBLE_THEME")
 require_relative "../config/environment"
 require "rails/test_help"
 require_relative "test_helpers/session_test_helper"

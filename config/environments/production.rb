@@ -21,7 +21,9 @@ Rails.application.configure do
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
 
-  # Nibble chooses the storage service: S3 once AWS_BUCKET_NAME is set, storage/ until then (see config/storage.yml).
+  # Store uploaded files on the local file system (see config/storage.yml for options).
+  # Nibble: S3 once AWS_BUCKET_NAME is set, so a site can run before it has object storage.
+  config.active_storage.service = ENV["AWS_BUCKET_NAME"].present? ? :amazon : :local
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   config.assume_ssl = true
@@ -45,13 +47,31 @@ Rails.application.configure do
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
 
-  # Nibble caches in Solid Cache and runs jobs on Solid Queue (config/cache.yml, config/queue.yml).
+  # Replace the default in-process memory cache store with a durable alternative.
+  config.cache_store = :solid_cache_store
+
+  # Replace the default in-process and non-durable queuing backend for Active Job.
+  config.active_job.queue_adapter = :solid_queue
+  config.solid_queue.connects_to = { database: { writing: :queue } }
 
   # Ignore bad email addresses and do not raise email delivery errors.
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false
 
-  # Nibble sets the mailer host from SITE_URL and delivers over SMTP (SMTP_ADDRESS, smtp credentials).
+  # Set host to be used by links generated in mailer templates.
+  config.action_mailer.default_url_options = { host: "example.com" }
+
+  # Specify outgoing SMTP server. Remember to add smtp/* credentials via bin/rails credentials:edit.
+  # Nibble: password resets, invitations and notifications are sent this way.
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = {
+    user_name: Rails.application.credentials.dig(:smtp, :username),
+    password: Rails.application.credentials.dig(:smtp, :password),
+    address: ENV.fetch("SMTP_ADDRESS", "smtp.postmarkapp.com"),
+    port: ENV.fetch("SMTP_PORT", 587).to_i,
+    authentication: :plain,
+    enable_starttls: true
+  }
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).

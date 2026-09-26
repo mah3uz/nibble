@@ -10,4 +10,32 @@
 #     schedule: at 5am every day
 
 production:
-<%= Nibble.core_root.join("config/recurring.yml").read.gsub(/^/, "  ") %>
+  clear_solid_queue_finished_jobs:
+    command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
+    schedule: every hour at minute 12
+
+  # Nibble: publishing on schedule, update checks, snapshots and clean-up. nibble:check names any that go missing.
+  run_publishing_schedule:
+    class: Nibble::Jobs::RunSchedule
+    queue: maintenance
+    schedule: every minute
+  daily_release_check:
+    class: Nibble::Jobs::CheckReleases
+    queue: maintenance
+    schedule: at 4am every day
+  nightly_database_snapshot:
+    class: DatabaseSnapshotJob
+    queue: maintenance
+    schedule: at 3am every day
+  nightly_trash_purge:
+    class: Nibble::Jobs::PurgeTrash
+    queue: maintenance
+    schedule: at 3:15am every day
+  nightly_submission_purge:
+    class: Nibble::Jobs::PurgeSubmissions
+    queue: maintenance
+    schedule: at 3:30am every day
+  nightly_webhook_delivery_purge:
+    class: Nibble::Jobs::PurgeWebhookDeliveries
+    queue: maintenance
+    schedule: at 3:45am every day

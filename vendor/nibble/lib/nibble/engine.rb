@@ -11,13 +11,6 @@ module Nibble
         root.join("lib/commands"), root.join("lib/middleware"))
     end
 
-    # A site's own, read from the file because this runs long before Nibble.config can be autoloaded.
-    config.before_initialize do |app|
-      settings = app.root.join("config/nibble.yml")
-      zone = settings.exist? && app.config_for(settings)[:time_zone]
-      app.config.time_zone = zone if zone.present?
-    end
-
     # The runtime migrator is set too, or the pending-migration check never sees Nibble's.
     initializer "nibble.migrations" do |app|
       app.config.paths["db/migrate"].concat(paths["db/migrate"].existent)

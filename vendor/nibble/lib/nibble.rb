@@ -51,6 +51,11 @@ module Nibble
 
     def site_url = ENV["SITE_URL"].presence || "http://localhost:#{ENV.fetch("PORT", 3100)}"
 
+    def url_options
+      uri = URI(config.url.to_s)
+      { protocol: uri.scheme, host: uri.host, port: (uri.port unless uri.port == uri.default_port) }.compact
+    end
+
     def config_file = Rails.root.join("config/nibble.yml")
 
     def config_values

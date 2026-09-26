@@ -80,5 +80,27 @@ class Nibble::EnvironmentTest < ActiveSupport::TestCase
     assert_empty out.string
   end
 
+  test "a schedule without one of Nibble's jobs is named, because nothing else would ever run it" do
+    Dir.mktmpdir do |dir|
+      root = Pathname(dir)
+      root.join("config").mkpath
+      schedule = YAML.safe_load(Rails.root.join("config/recurring.yml").read)
+      schedule["production"].delete("run_publishing_schedule")
+      schedule["production"]["nightly_trash_purge"]["schedule"] = "at 5am every day"
+      root.join("config/recurring.yml").write(YAML.dump(schedule))
+
+      found = Nibble::Environment.findings(config: Nibble::Config.new({ "url" => "https://example.com" }), env: "production",
+        credentials: Credentials.new({ secret_key_base: "x" }), root:).select { |finding| finding.source == "schedule" }
+
+      assert_equal [ :warning ], found.map(&:level), "a site may run its schedule another way, so this never stops it serving"
+      assert_match "Nibble::Jobs::RunSchedule", found.first.message
+      assert_no_match "PurgeTrash", found.first.message, "moving a job to another time is the site's to decide"
+    end
+  end
+
+  test "the schedule a site is installed with runs every job Nibble needs" do
+    assert_empty findings.select { |finding| finding.source == "schedule" }
+  end
+
   def finding(source, level) = Nibble::Environment::Finding.new(source:, message: "#{source} is not usable here", level:)
 end

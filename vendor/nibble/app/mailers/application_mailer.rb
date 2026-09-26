@@ -3,6 +3,9 @@ class ApplicationMailer < ActionMailer::Base
   layout "mailer"
   helper_method :site_name
 
+  # Links point at the site Nibble serves, whatever host the app's own mailers are given.
+  def default_url_options = Nibble.url_options
+
   private
 
   def site_name

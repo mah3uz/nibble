@@ -17,7 +17,7 @@ module Nibble
 
     def mail_from
       values = settings
-      address = values["mail_from_address"].presence || "noreply@#{ActionMailer::Base.default_url_options[:host] || 'localhost'}"
+      address = values["mail_from_address"].presence || "noreply@#{Nibble.url_options[:host] || 'localhost'}"
       name = values["mail_from_name"].presence
       name ? ActionMailer::Base.email_address_with_name(address, name) : address
     end

@@ -7,10 +7,11 @@ module Nibble
     class Unfit < Error; end
 
     class << self
-      def findings(config: Nibble.config, env: Rails.env, credentials: Rails.application.credentials)
+      def findings(config: Nibble.config, env: Rails.env, credentials: Rails.application.credentials, root: Rails.root)
         return [] unless DEPLOYED.include?(env.to_s)
 
-        [ *url(config), *secrets(credentials), *storage(credentials), *theme(config), *mail(credentials), *backups ]
+        [ *url(config), *secrets(credentials), *storage(credentials), *theme(config), *mail(credentials), *backups,
+          *schedule(root.join("config/recurring.yml"), env.to_s) ]
       end
 
       def deployed?(env = Rails.env) = DEPLOYED.include?(env.to_s)
@@ -87,6 +88,21 @@ module Nibble
         [ warning("mail", "no SMTP credentials, so password resets and notifications will not send") ]
       rescue StandardError
         []
+      end
+
+      # The site owns its schedule and may move or drop a job; only a job Nibble ships that is gone is worth saying.
+      def schedule(path, env)
+        missing = scheduled(Install.templates_path.join("config/recurring.yml"), "production") - scheduled(path, env)
+        return [] if missing.empty?
+
+        [ warning("schedule", "config/recurring.yml doesn't schedule #{missing.to_sentence}, so that work never runs") ]
+      end
+
+      def scheduled(path, env)
+        return [] unless path.file?
+
+        tasks = YAML.safe_load(ERB.new(path.read).result, aliases: true).to_h
+        tasks.fetch(env, tasks).values.filter_map { |task| task["class"] if task.is_a?(Hash) }
       end
 
       def backups
