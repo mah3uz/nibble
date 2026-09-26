@@ -184,6 +184,17 @@ class Nibble::Cp::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "Live", nil ], [ entry.reload.title, entry.draft ]
   end
 
+  test "the live preview answers an in-place update with the page's new props, so the preview never blanks" do
+    entry = publish_entry(create_entry("articles", { "title" => "Live" }))
+
+    post "#{entries_path}/#{entry.id}/preview", params: { entry_json: { title: "Typed again" }.to_json },
+      headers: { "X-Inertia" => "true" }, as: :json
+
+    assert_equal "true", response.headers["X-Inertia"], "a full HTML page here would reload the preview blank"
+    assert_equal "Typed again", response.parsed_body.dig("props", "page", "title")
+    assert_equal "Unpublished changes", response.parsed_body.dig("props", "preview", "label")
+  end
+
   test "validation errors come back keyed by field, and nothing is saved" do
     entry = create_entry("articles", { "title" => "Fine" })
 

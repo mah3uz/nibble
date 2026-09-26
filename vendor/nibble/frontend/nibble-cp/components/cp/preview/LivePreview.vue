@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ExternalLink, X } from '@lucide/vue'
 import { useDebounceFn } from '@vueuse/core'
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import DeviceToggle, { DEVICE_SIZES, type Device } from './DeviceToggle.vue'
@@ -26,15 +26,40 @@ watch(popup, (win) => {
   }, 500)
 })
 
+// The preview page says when it can take changes in place; until then, and after it navigates away, it is reloaded.
+const live = ref<MessageEventSource | null>(null)
+function onMessage(event: MessageEvent) {
+  if (event.origin !== window.location.origin) return
+  if (event.data?.type === 'nibble:preview-ready') live.value = event.source
+  if (event.data?.type === 'nibble:preview-left' && live.value === event.source) live.value = null
+}
+onMounted(() => window.addEventListener('message', onMessage))
+
+const token = () => document.querySelector<HTMLMetaElement>('meta[name=csrf-token]')?.content ?? ''
+
+function target() {
+  if (poppedOut.value) return popup.value
+  return document.querySelector<HTMLIFrameElement>(`iframe[name="${FRAME}"]`)?.contentWindow ?? null
+}
+
 function render() {
   if (!props.url || !props.open) return
+  const win = target()
+  if (win && live.value === win) {
+    win.postMessage(
+      { type: 'nibble:preview', url: props.url, entry_json: JSON.stringify(props.values), token: token() },
+      window.location.origin,
+    )
+    return
+  }
+  live.value = null
   const form = Object.assign(document.createElement('form'), {
     method: 'post',
     action: props.url,
     target: poppedOut.value ? POPUP : FRAME,
   })
   const fields = {
-    authenticity_token: document.querySelector<HTMLMetaElement>('meta[name=csrf-token]')?.content ?? '',
+    authenticity_token: token(),
     entry_json: JSON.stringify(props.values),
   }
   for (const [name, value] of Object.entries(fields))
@@ -60,6 +85,8 @@ function popOut() {
 function popIn() {
   popup.value?.close()
   popup.value = null
+  live.value = null
+  nextTick(render)
 }
 
 defineExpose({ popIn })
@@ -87,6 +114,7 @@ watch(
   },
 )
 onBeforeUnmount(() => {
+  window.removeEventListener('message', onMessage)
   window.removeEventListener('keydown', onKeydown)
   document.body.style.overflow = ''
   if (closeCheck) window.clearInterval(closeCheck)

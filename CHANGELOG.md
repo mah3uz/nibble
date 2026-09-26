@@ -62,6 +62,9 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **Cropping starts with a selection in the middle of the image,** so it's clear at once what to drag. Everything
   outside it is dimmed, and the rule-of-thirds guides and handles show on light images too.
 - **The asset editor has a Close button beside Save.**
+- **Live Preview updates in place as you type,** keeping its scroll position, instead of reloading blank each time. A
+  theme's layout needs `PreviewBar` for this; without it the preview reloads as before.
+- **A preview is marked with a Preview ribbon** across the top corner, which pulses while a change applies.
 - **The dashboard's At a glance tiles show a count and its period,** "Last 30 days", without a comparison that read
   as "0 the 30 before".
 
