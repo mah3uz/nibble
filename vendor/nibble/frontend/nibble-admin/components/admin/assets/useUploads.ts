@@ -13,7 +13,7 @@ export type UploadRow = {
 export async function directUpload(file: File, onProgress: (percent: number) => void): Promise<string> {
   const { DirectUpload } = await import('@rails/activestorage')
   return new Promise((resolve, reject) => {
-    const upload = new DirectUpload(file, '/rails/active_storage/direct_uploads', {
+    const upload = new DirectUpload(file, '/admin/direct_uploads', {
       directUploadWillStoreFileWithXHR: (xhr) =>
         xhr.upload.addEventListener('progress', (event) => onProgress(Math.round((event.loaded / event.total) * 100))),
     })

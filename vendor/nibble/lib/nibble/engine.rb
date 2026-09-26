@@ -23,6 +23,12 @@ module Nibble
       app.routes_reloader.paths.push(root.join("config/routes/catch_all.rb").to_s)
     end
 
+    initializer "nibble.active_storage" do
+      ActiveSupport.on_load(:active_storage_attachment) do
+        def self.polymorphic_class_for(name) = Nibble::Records::MODELS.key?(name) ? Nibble::Records.model(name) : super
+      end
+    end
+
     initializer "nibble.middleware" do |app|
       require_relative "../middleware/nibble_redirects_middleware"
       require_relative "../middleware/form_request_limit_middleware"

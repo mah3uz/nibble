@@ -1,5 +1,4 @@
-# frozen_string_literal: true
-
+# Nibble: the Control Plane and themes render through Inertia, server-side from the SSR bundle.
 InertiaRails.configure do |config|
   config.version = ViteRuby.digest
   config.encrypt_history = true

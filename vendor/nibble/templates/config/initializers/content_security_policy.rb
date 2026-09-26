@@ -27,3 +27,14 @@
 #   # Report violations without enforcing the policy.
 #   # config.content_security_policy_report_only = true
 # end
+
+# Nibble: a baseline that holds whatever third-party scripts a site loads: no plugins, no <base> hijacking, no
+# framing by other sites (the Control Plane's preview frame is same-origin), and forms post only to this site.
+Rails.application.configure do
+  config.content_security_policy do |policy|
+    policy.object_src :none
+    policy.base_uri :self
+    policy.frame_ancestors :self
+    policy.form_action :self
+  end
+end

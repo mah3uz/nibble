@@ -24,8 +24,8 @@ class Nibble::AssetsTest < ActiveSupport::TestCase
     field = Nibble::Records::Entry.new(collection: "articles", blueprint: "article").blueprint_fields.get("image")
 
     value = field.fieldtype.augment({ "asset" => asset.id.to_s, "alt" => nil })
-    assert_equal "/assets/#{asset.uuid}/card/photo.jpg?v=#{asset.version}", value["url"]
-    assert_equal "/assets/#{asset.uuid}/card/photo.jpg?v=#{asset.version}&w=16 16w, /assets/#{asset.uuid}/card/photo.jpg?v=#{asset.version}&w=32 32w", value["srcset"]
+    assert_equal "/media/#{asset.uuid}/card/photo.jpg?v=#{asset.version}", value["url"]
+    assert_equal "/media/#{asset.uuid}/card/photo.jpg?v=#{asset.version}&w=16 16w, /media/#{asset.uuid}/card/photo.jpg?v=#{asset.version}&w=32 32w", value["srcset"]
     assert_equal [ "Orange", { "x" => 0.2, "y" => 0.8 } ], value.values_at("alt", "focal")
     assert_equal "Per use", field.fieldtype.augment({ "asset" => asset.id.to_s, "alt" => "Per use" })["alt"]
   end

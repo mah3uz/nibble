@@ -88,7 +88,7 @@ module Nibble
       end
 
       def url(asset, preset = nil, width: nil)
-        path = [ "", "assets", asset.uuid, preset, asset.filename ].compact.join("/")
+        path = [ "", "media", asset.uuid, preset, asset.filename ].compact.join("/")
         query = { w: width, v: asset.version }.compact.to_query
         "#{path}?#{query}"
       end

@@ -60,7 +60,7 @@ evaluates `vendor/nibble/Gemfile`, which loads `Nibble::Engine`; `config/applica
 
 **Public request flow:**
 1. `NibbleRedirectsMiddleware`, backed by the `redirects` table and cached.
-2. Fixed routes: `/up`, `/assets/:uuid/…`, `POST /forms/:handle`, `/robots.txt`, `/sitemap.xml`, `/sitemap-:handle.xml`.
+2. Fixed routes: `/media/:uuid/…`, `POST /forms/:handle`, `/robots.txt`, `/sitemap.xml`, `/sitemap-:handle.xml`.
 3. The catch-all `SiteController#show` calls `Nibble::Routing.resolve`, which returns an entry, term, redirect or nothing.
 4. `Nibble::PageProps` runs the view's query sidecar through `Nibble::Query` and the `Nibble::Presenter`.
 5. Inertia SSR renders `theme/<view>` from the active theme.

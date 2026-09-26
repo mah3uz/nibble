@@ -7,7 +7,9 @@ This directory is yours, and an upgrade never touches what you put in it:
 - `themes/<name>/` — your own theme; one of Nibble's, such as `crumbs`, needs no copy here
 - `cp/` — your control panel overrides
 
-Your own Ruby lives where Rails puts it — `app/`, `config/initializers/`, `test/` — and is yours as well.
+Your own Ruby lives where Rails puts it — `app/`, `config/initializers/`, `test/` — and is yours as well. So is every
+Rails setting in `config/`: the lines Nibble needs there are marked `# Nibble:` with the reason, and
+in production, Nibble names any it relies on and no longer finds, at boot and in `bin/rails nibble:check`.
 
 ## Schema
 
@@ -45,8 +47,8 @@ prefer the supported extension points first and eject only when there is no othe
 
 ## Your own Ruby
 
-An initializer of your own in `config/initializers/` runs after Nibble's. Use it to subscribe to Nibble's load hooks
-rather than reopening its classes:
+In an initializer of your own in `config/initializers/`, subscribe to Nibble's load hooks rather than reopening its
+classes:
 
 ```ruby
 ActiveSupport.on_load(:nibble_entry) do

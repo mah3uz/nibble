@@ -6,11 +6,8 @@ Rails.application.routes.draw do
     end
   end
 
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
-  get "up" => "rails/health#show", as: :rails_health_check
-
-  post "rails/active_storage/direct_uploads", to: "admin/direct_uploads#create", as: :admin_direct_uploads
+  # Rails' own endpoint takes uploads from anyone, so it's closed; the Control Plane's checks who is uploading.
+  post "rails/active_storage/direct_uploads", to: ->(_env) { [ 404, { "content-type" => "text/plain" }, [ "Not Found" ] ] }
 
   scope path: "admin" do
     resource :session do
@@ -42,6 +39,7 @@ Rails.application.routes.draw do
 
   namespace :admin do
     root "dashboard#show"
+    post "direct_uploads", to: "direct_uploads#create", as: :direct_uploads
     patch "preferences", to: "preferences#update", as: :preferences
     scope "account", as: :account do
       post "two_factor", to: "two_factor#create", as: :two_factor
@@ -168,8 +166,8 @@ Rails.application.routes.draw do
   end
 
   post "forms/:handle", to: "forms#create", format: false, constraints: { handle: /[a-z0-9_-]+/ }, as: :form_submissions
-  get "assets/:uuid/:filename", to: "asset_files#show", format: false, constraints: { filename: /[^\/]+/ }, as: :asset_file
-  get "assets/:uuid/:preset/:filename", to: "asset_files#show", format: false, constraints: { filename: /[^\/]+/ }, as: :asset_transform
+  get "media/:uuid/:filename", to: "asset_files#show", format: false, constraints: { filename: /[^\/]+/ }, as: :asset_file
+  get "media/:uuid/:preset/:filename", to: "asset_files#show", format: false, constraints: { filename: /[^\/]+/ }, as: :asset_transform
   get "robots.txt", to: "sitemaps#robots", format: false
   get "sitemap.xml", to: "sitemaps#index", format: false
   get "sitemap-:handle.xml", to: "sitemaps#show", format: false, constraints: { handle: /[a-z0-9_-]+/ }

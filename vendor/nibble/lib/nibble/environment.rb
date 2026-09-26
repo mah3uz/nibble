@@ -10,7 +10,7 @@ module Nibble
       def findings(config: Nibble.config, env: Rails.env, credentials: Rails.application.credentials, root: Rails.root)
         return [] unless DEPLOYED.include?(env.to_s)
 
-        [ *url(config), *secrets(credentials), *storage(credentials), *theme(config), *mail(credentials), *backups,
+        [ *url(config), *secrets(credentials), *storage(credentials), *theme(config), *mail(credentials), *passkeys(config), *backups,
           *schedule(root.join("config/recurring.yml"), env.to_s) ]
       end
 
@@ -88,6 +88,12 @@ module Nibble
         [ warning("mail", "no SMTP credentials, so password resets and notifications will not send") ]
       rescue StandardError
         []
+      end
+
+      def passkeys(config)
+        return [] if Array(WebAuthn.configuration.allowed_origins).include?(config.url)
+
+        [ warning("passkeys", "config/initializers/webauthn.rb doesn't allow #{config.url}, so passkeys can't sign in to the Control Plane") ]
       end
 
       # The site owns its schedule and may move or drop a job; only a job Nibble ships that is gone is worth saying.

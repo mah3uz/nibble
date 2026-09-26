@@ -13,7 +13,7 @@ class AssetFilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal file_fixture("photo.jpg").binread, response.body
     assert_match "public", response.headers["Cache-Control"]
 
-    get "/assets/#{asset.uuid}/old-name.jpg?v=1"
+    get "/media/#{asset.uuid}/old-name.jpg?v=1"
     assert_redirected_to asset.url
   end
 

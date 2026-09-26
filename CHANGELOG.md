@@ -12,6 +12,25 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### Changed
+
+- **Rails' settings are all in a site's own files.** Nibble keeps none of its own: storage, mail delivery, the job
+  schedule, Inertia, passkeys and the content security policy are written into `config/` at install, each under a
+  `# Nibble:` comment that says why, and the time zone is Rails' `config.time_zone` in `config/application.rb`
+  rather than a key in `config/nibble.yml`. In production, Nibble names a job missing from `config/recurring.yml`,
+  or passkeys that don't allow the site's URL, at boot and in `nibble:check`.
+- **Uploaded files are served from `/media/:uuid/…`,** and Rails' asset pipeline has `/assets` back.
+- **`/up` is the site's route,** in `config/routes.rb` as Rails writes it, and the Active Storage migration is in
+  the site's `db/migrate/`.
+- **The Control Plane uploads through its own route,** and Rails' public direct-upload endpoint, which takes
+  uploads from anyone, is closed.
+
+  **Upgrade:** take the offered `config/environments/production.rb`, `config/recurring.yml`, `config/routes.rb` and
+  `config/initializers/content_security_policy.rb`. Copy the files a site doesn't have yet from
+  `vendor/nibble/templates/`: `config/initializers/inertia_rails.rb`, `config/initializers/webauthn.rb` and
+  `db/migrate/*_create_active_storage_tables.active_storage.rb`. Move `time_zone` from `config/nibble.yml` to
+  `config.time_zone` in `config/application.rb`.
+
 ### What's fixed
 
 - **The dashboard's At a glance tiles show a count and its period,** "Last 30 days", without a comparison that read

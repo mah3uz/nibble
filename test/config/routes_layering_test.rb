@@ -10,7 +10,7 @@ class RoutesLayeringTest < ActiveSupport::TestCase
     assert_equal ROUTE_FILES, drawn
   end
 
-  NIBBLE_PATHS = [ "/forms/:handle", "/assets/:uuid/:filename", "/robots.txt", "/sitemap.xml", "/*path" ].freeze
+  NIBBLE_PATHS = [ "/forms/:handle", "/media/:uuid/:filename", "/robots.txt", "/sitemap.xml", "/*path" ].freeze
 
   test "config/routes.rb belongs to the site, so Nibble draws none of its own routes there" do
     drawn = Rails.application.routes.routes.map { |route| route.path.spec.to_s }

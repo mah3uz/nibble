@@ -2,7 +2,7 @@ require "test_helper"
 
 class Admin::DirectUploadsTest < ActionDispatch::IntegrationTest
   def request_upload(filename, byte_size: 10)
-    post "/rails/active_storage/direct_uploads", as: :json,
+    post "/admin/direct_uploads", as: :json,
       params: { blob: { filename:, byte_size:, checksum: Digest::MD5.base64digest("x"), content_type: "application/octet-stream" } }
   end
 
@@ -14,6 +14,16 @@ class Admin::DirectUploadsTest < ActionDispatch::IntegrationTest
     request_upload("photo.jpg")
     assert_response :success
     assert response.parsed_body.dig("direct_upload", "url")
+  end
+
+  test "Rails' own upload endpoint is closed, because it would hand an upload URL to anyone" do
+    sign_in_as users(:author)
+
+    assert_no_difference -> { ActiveStorage::Blob.count } do
+      post "/rails/active_storage/direct_uploads", as: :json,
+        params: { blob: { filename: "photo.jpg", byte_size: 10, checksum: Digest::MD5.base64digest("x"), content_type: "image/jpeg" } }
+    end
+    assert_response :not_found
   end
 
   test "a file the library won't accept is refused before anything is uploaded" do

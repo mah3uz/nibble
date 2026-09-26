@@ -98,6 +98,11 @@ class Nibble::EnvironmentTest < ActiveSupport::TestCase
     end
   end
 
+  test "passkeys that don't allow the site's own address are named, because sign-in would fail with no reason given" do
+    assert_includes findings(url: "https://other.example").map(&:source), "passkeys"
+    assert_not_includes findings.map(&:source), "passkeys"
+  end
+
   test "the schedule a site is installed with runs every job Nibble needs" do
     assert_empty findings.select { |finding| finding.source == "schedule" }
   end
