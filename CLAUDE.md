@@ -131,7 +131,7 @@ evaluates `vendor/nibble/Gemfile`, which loads `Nibble::Engine`; `config/applica
   `components/`, `styles/`, `schema/`; **a theme never ships content**; `@theme` resolves to the active one,
   named in `config/nibble.yml`, then `NIBBLE_THEME`, defaulting to `crumbs`. `nibble:generate:theme` starts one.
 - This repository's root is also nibble.ink. Its `site/` isn't tracked here, so a clone has none; nibble.ink's holds
-  the `bite` theme (with `default_content/` to import on a fresh start), the schema, and the documentation in
+  the `bite` theme, `packages/default/` to import on a fresh start, the schema, and the documentation in
   `site/content/docs`. The tracked settings name `crumbs`, so a clone works without it; nibble.ink runs with
   `NIBBLE_THEME=bite`. `bin/rails test site/test` checks its content, and `bin/ci` runs that when `site/` is present.
 
