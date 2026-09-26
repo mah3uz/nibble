@@ -71,7 +71,8 @@ module Nibble
           "#{usage_title(source)}: #{result.errors.values.flatten.first}" unless result.ok?
         end
         Nibble::Lifecycle.call(@asset, :trash, { "force" => true }, actor: Nibble::Current.user) if failures.empty? && params[:delete_original].to_s == "true"
-        render json: { replaced: sources.size - failures.size, failures: }, status: failures.any? ? :unprocessable_entity : :ok
+        error = "Couldn't replace it in #{failures.to_sentence}, so #{@asset.filename} was kept there." if failures.any?
+        render json: { replaced: sources.size - failures.size, failures:, error: }.compact, status: failures.any? ? :unprocessable_entity : :ok
       end
 
       BULK_ABILITIES = { "move" => "assets.edit", "tag" => "assets.edit", "duplicate" => "assets.upload", "trash" => "assets.delete" }.freeze

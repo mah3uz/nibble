@@ -61,6 +61,11 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   use the arrow keys), and a zoom slider that follows the pointer.
 - **Cropping starts with a selection in the middle of the image,** so it's clear at once what to drag. Everything
   outside it is dimmed, and the rule-of-thirds guides and handles show on light images too.
+- **Reupload asks first.** It offers only files of the asset's kind, says which file takes its place, whether its
+  extension changes, and that the current file can't be brought back, then shows the upload's progress.
+- **Replace says what it did.** Its picker names the asset being replaced, choosing that same asset explains why
+  nothing happens, and afterwards it reports how many places changed, or that nothing used the asset. When some
+  can't be changed, it names them instead of "Request failed", and keeps the original.
 - **The asset editor has a Close button beside Save,** and a click on the backdrop no longer closes it, so a stray
   click can't throw away an edit.
 - **Live Preview updates in place as you type,** keeping its scroll position, instead of reloading blank each time. A

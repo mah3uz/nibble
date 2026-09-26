@@ -4,6 +4,7 @@ import type { AssetRow } from './api'
 import AssetSelector from './AssetSelector.vue'
 
 const open = ref(false)
+const title = ref('')
 let resolver: ((row: AssetRow | null) => void) | null = null
 
 function finish(row: AssetRow | null) {
@@ -11,8 +12,9 @@ function finish(row: AssetRow | null) {
   resolver = null
 }
 
-function pick(): Promise<AssetRow | null> {
+function pick(heading: string): Promise<AssetRow | null> {
   finish(null)
+  title.value = heading
   open.value = true
   return new Promise((resolve) => (resolver = resolve))
 }
@@ -23,5 +25,5 @@ defineExpose({ pick })
 </script>
 
 <template>
-  <AssetSelector v-model:open="open" :max-files="1" @select="([row]) => finish(row ?? null)" />
+  <AssetSelector v-model:open="open" :title="title" :max-files="1" @select="([row]) => finish(row ?? null)" />
 </template>

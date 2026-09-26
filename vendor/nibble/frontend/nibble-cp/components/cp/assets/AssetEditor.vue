@@ -136,7 +136,7 @@ const actions = useAssetActions({
   },
   edit: () => {},
   deleted: () => emit('close'),
-  pickReplacement: () => replacementPicker.value?.pick() ?? Promise.resolve(null),
+  pickReplacement: (title) => replacementPicker.value?.pick(title) ?? Promise.resolve(null),
 })
 function run(action: AssetMenuAction) {
   if (asset.value) actions.run(action, asset.value)

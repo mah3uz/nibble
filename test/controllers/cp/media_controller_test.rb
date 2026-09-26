@@ -84,6 +84,23 @@ class Nibble::Cp::MediaControllerTest < ActionDispatch::IntegrationTest
     assert old.reload.trashed?
   end
 
+  test "a replace that can't reach every use says where, and keeps the original, so nothing is left pointing at the trash" do
+    old = create_asset
+    fresh = create_asset({}, blob: upload_blob("pixel.png"))
+    create_entry("articles", { "title" => "Kept back", "image" => { "asset" => old.id.to_s } })
+    create_entry("articles", { "title" => "Changed", "image" => { "asset" => old.id.to_s } })
+    Nibble::Lifecycle.guard(:replace_asset) { |record| "it's being reviewed" if record.title == "Kept back" }
+
+    body = json(:post, "/cp/media/#{old.id}/replace", { with: fresh.id, delete_original: true })
+
+    assert_response :unprocessable_entity
+    assert_equal 1, body["replaced"]
+    assert_match "Kept back", body["error"], "the editor shows this message, so it has to name what failed"
+    assert_not old.reload.trashed?
+  ensure
+    Nibble::Lifecycle.reset_guards!
+  end
+
   test "bulk actions move, tag, duplicate and trash many assets at once" do
     one = create_asset
     two = create_asset({}, blob: upload_blob("pixel.png"))

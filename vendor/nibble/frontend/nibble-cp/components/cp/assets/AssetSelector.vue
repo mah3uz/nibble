@@ -12,8 +12,9 @@ const props = withDefaults(
     restrictFolder?: boolean
     allowedTypes?: string[]
     selected?: number[]
+    title?: string
   }>(),
-  { maxFiles: 0, folder: '', restrictFolder: false, allowedTypes: () => [], selected: () => [] },
+  { maxFiles: 0, folder: '', restrictFolder: false, allowedTypes: () => [], selected: () => [], title: '' },
 )
 const open = defineModel<boolean>('open', { required: true })
 const emit = defineEmits<{ select: [rows: AssetRow[]] }>()
@@ -65,7 +66,14 @@ function finish(rows: AssetRow[]) {
 <template>
   <Sheet v-model:open="open">
     <SheetContent :show-close-button="false" class="gap-0">
-      <SheetTitle class="sr-only">Browse Assets</SheetTitle>
+      <SheetTitle
+        :class="
+          title
+            ? 'border-b px-4 py-3 text-base font-medium text-gray-900 dark:border-gray-700 dark:text-white'
+            : 'sr-only'
+        "
+        >{{ title || 'Browse Assets' }}</SheetTitle
+      >
       <SheetDescription class="sr-only">Choose assets for this field</SheetDescription>
       <div class="flex-1 overflow-y-auto px-4 pt-2">
         <AssetBrowser

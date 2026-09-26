@@ -4,14 +4,19 @@ import { request, RequestError, type AssetRow, type AssetUsage } from './api'
 import type { AssetMenuAction } from './assetMenu'
 import { directUpload } from './useUploads'
 
-type Target = Pick<AssetRow, 'id' | 'filename' | 'url' | 'folder'>
+type Target = Pick<AssetRow, 'id' | 'filename' | 'url' | 'folder' | 'kind'>
+
+// A reupload has to stay the same kind of file, so the picker offers only those.
+const ACCEPT: Record<string, string> = { image: 'image/*', svg: 'image/*', video: 'video/*', audio: 'audio/*' }
+
+const extensionOf = (filename: string) => filename.split('.').pop()?.toLowerCase() ?? ''
 
 export function useAssetActions(options: {
   folderOptions: () => { value: string; label: string }[]
   changed: () => void
   edit: (id: number) => void
   deleted?: (id: number) => void
-  pickReplacement?: () => Promise<AssetRow | null>
+  pickReplacement?: (title: string) => Promise<AssetRow | null>
 }) {
   const confirm = useConfirm()
 
@@ -25,13 +30,76 @@ export function useAssetActions(options: {
     }
   }
 
-  function pickFile(): Promise<File | null> {
+  function pickFile(accept = ''): Promise<File | null> {
     return new Promise((resolve) => {
-      const input = document.createElement('input')
-      input.type = 'file'
+      const input = Object.assign(document.createElement('input'), { type: 'file', accept })
       input.addEventListener('change', () => resolve(input.files?.[0] ?? null))
+      input.addEventListener('cancel', () => resolve(null))
       input.click()
     })
+  }
+
+  async function reupload(asset: Target) {
+    const file = await pickFile(ACCEPT[asset.kind])
+    if (!file) return
+    const from = extensionOf(asset.filename)
+    const to = extensionOf(file.name)
+    const renamed = to && to !== from ? ` Its name will end in .${to} instead of .${from}.` : ''
+    const ok = await confirm({
+      title: `Reupload ${asset.filename}?`,
+      description: `${file.name} takes its place everywhere it's used.${renamed} The current file is deleted and can't be brought back.`,
+      confirmText: 'Reupload',
+      dangerous: true,
+    })
+    if (!ok) return
+    const progress = toast.loading(`Uploading ${file.name}…`)
+    try {
+      const signedId = await directUpload(file, (percent) =>
+        toast.loading(`Uploading ${file.name}… ${percent}%`, { id: progress }),
+      )
+      await request('POST', `/cp/media/${asset.id}/reupload`, { signed_id: signedId })
+      toast.success('File replaced', { id: progress })
+      options.changed()
+    } catch (error) {
+      toast.error((error as Error).message, { id: progress })
+    }
+  }
+
+  async function replace(asset: Target) {
+    const replacement = await options.pickReplacement?.(`Choose what replaces ${asset.filename}`)
+    if (!replacement) return
+    if (replacement.id === asset.id) return toast.error(`That's ${asset.filename} itself. Choose a different asset.`)
+    const result = await confirm({
+      title: `Replace ${asset.filename}`,
+      description: `Everything that uses ${asset.filename} will use ${replacement.filename} instead.`,
+      confirmText: 'Replace',
+      fields: [
+        {
+          handle: 'original',
+          label: 'Afterwards',
+          options: [
+            { value: 'keep', label: `Keep ${asset.filename}` },
+            { value: 'delete', label: `Move ${asset.filename} to the trash` },
+          ],
+        },
+      ],
+    })
+    if (!result) return
+    const deleteOriginal = result.original === 'delete'
+    try {
+      const { replaced } = await request<{ replaced: number }>('POST', `/cp/media/${asset.id}/replace`, {
+        with: replacement.id,
+        delete_original: deleteOriginal,
+      })
+      const done = replaced
+        ? `Replaced in ${replaced} ${replaced === 1 ? 'place' : 'places'}`
+        : `Nothing used ${asset.filename}, so nothing changed`
+      toast.success(deleteOriginal ? `${done}. ${asset.filename} is in the trash.` : `${done}.`)
+      if (deleteOriginal) options.deleted?.(asset.id)
+      options.changed()
+    } catch (error) {
+      toast.error((error as Error).message)
+    }
   }
 
   async function destroy(asset: Target) {
@@ -100,42 +168,10 @@ export function useAssetActions(options: {
           'Renamed',
         )
       }
-      case 'replace': {
-        const replacement = await options.pickReplacement?.()
-        if (!replacement || replacement.id === asset.id) return
-        const result = await confirm({
-          title: `Replace ${asset.filename}`,
-          description: `Everything that uses ${asset.filename} will use ${replacement.filename} instead.`,
-          confirmText: 'Replace',
-          fields: [
-            {
-              handle: 'original',
-              label: 'Then',
-              options: [
-                { value: 'keep', label: `Keep ${asset.filename}` },
-                { value: 'delete', label: `Move ${asset.filename} to the trash` },
-              ],
-            },
-          ],
-        })
-        if (!result) return
-        const deleteOriginal = result.original === 'delete'
-        return attempt(async () => {
-          await request('POST', `/cp/media/${asset.id}/replace`, {
-            with: replacement.id,
-            delete_original: deleteOriginal,
-          })
-          if (deleteOriginal) options.deleted?.(asset.id)
-        }, 'Replaced')
-      }
-      case 'reupload': {
-        const file = await pickFile()
-        if (!file) return
-        return attempt(async () => {
-          const signedId = await directUpload(file, () => {})
-          await request('POST', `/cp/media/${asset.id}/reupload`, { signed_id: signedId })
-        }, 'File replaced')
-      }
+      case 'replace':
+        return replace(asset)
+      case 'reupload':
+        return reupload(asset)
       case 'delete':
         return destroy(asset)
     }

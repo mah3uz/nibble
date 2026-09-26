@@ -102,7 +102,7 @@ const actions = useAssetActions({
   changed: () => emit('changed'),
   edit: (id) => openEditor(id),
   deleted: (id) => setSelection(selectedIds.value.filter((selected) => selected !== id)),
-  pickReplacement: () => replacementPicker.value?.pick() ?? Promise.resolve(null),
+  pickReplacement: (title) => replacementPicker.value?.pick(title) ?? Promise.resolve(null),
 })
 
 const {
