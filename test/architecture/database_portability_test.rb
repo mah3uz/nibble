@@ -12,8 +12,8 @@ class DatabasePortabilityTest < ActiveSupport::TestCase
   ALLOWED = [
     "vendor/nibble/lib/nibble/search.rb",
     "vendor/nibble/app/services/database_snapshot.rb",
-    "vendor/nibble/db/migrate/20260920102900_create_search_index.rb",
-    "vendor/nibble/db/migrate/20260920103000_create_search_index_trigram.rb"
+    "vendor/nibble/db/migrate/20260920102900_nibble_create_search_index.rb",
+    "vendor/nibble/db/migrate/20260920103000_nibble_create_search_index_trigram.rb"
   ].freeze
 
   test "SQLite-specific SQL appears only in the allowed files" do

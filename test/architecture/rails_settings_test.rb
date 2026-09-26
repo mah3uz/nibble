@@ -41,4 +41,10 @@ class RailsSettingsTest < ActiveSupport::TestCase
   test "Nibble's identity tables are its own, so Rails' authentication generator can create users and sessions" do
     assert_equal %w[nibble_users nibble_sessions], [ Nibble::User.table_name, Nibble::Session.table_name ]
   end
+
+  test "Nibble's migrations are named Nibble…, because a name must be unique across a site's migrations and Nibble's" do
+    names = Nibble.core_root.glob("db/migrate/*.rb").map { |path| path.basename(".rb").to_s.sub(/\A\d+_/, "") }
+
+    assert_empty names.reject { |name| name.start_with?("nibble_") }, "rails g authentication writes create_users and create_sessions"
+  end
 end

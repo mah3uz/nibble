@@ -29,7 +29,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   **Upgrade:** move any `site/cp/pages/admin/` screens to `site/cp/pages/cp/`, and update bookmarks.
 - **Nibble holds none of the names Rails generates.** Its base classes, users, roles, sessions, sign-in and mailers
   are `Nibble::` (`Nibble::User`, `Nibble::ApplicationController`, `Nibble::PasswordsMailer`…), its identity tables
-  are `nibble_users`, `nibble_sessions` and the rest, and its sign-in cookie is `nibble_session_id`, so a site can
+  are `nibble_users`, `nibble_sessions` and the rest, and its migrations are named `Nibble…`, and its sign-in cookie is `nibble_session_id`, so a site can
   run `bin/rails generate authentication` for accounts of its own. A new site starts with Rails' own
   `ApplicationController`, `ApplicationRecord`, layouts and PWA views. Email layouts and views a site replaces live at
   `app/views/layouts/nibble/mailer.*` and `app/views/nibble/<mailer>/`.

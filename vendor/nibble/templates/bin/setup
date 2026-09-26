@@ -41,7 +41,7 @@ FileUtils.chdir APP_ROOT do
 
   puts "\n== Signing in =="
   system! "bin/rails", "runner", <<~RUBY
-    puts User.administrators.exists? ? "an administrator exists" : "no administrator yet; create one with: bin/rails nibble:admin:create"
+    puts Nibble::User.administrators.exists? ? "an administrator exists" : "no administrator yet; create one with: bin/rails nibble:admin:create"
   RUBY
 
   unless ARGV.include?("--skip-server")
