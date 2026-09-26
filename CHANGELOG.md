@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.18.3 — 2026-09-27 04:51 +0600
+
 ### What's fixed
 
 - **Following a link to a cached page no longer opens Inertia's error dialog.** A page served from the page cache
