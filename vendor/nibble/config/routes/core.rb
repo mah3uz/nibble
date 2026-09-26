@@ -33,6 +33,8 @@ Rails.application.routes.draw do
         post "passkey/options", action: :passkey_options
         post "passkey", action: :passkey
         post :elevate
+        get :timeout
+        post :extend, action: :extend_session
       end
     end
     resources :passwords, param: :token

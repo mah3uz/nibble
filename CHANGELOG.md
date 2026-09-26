@@ -12,6 +12,15 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### Security
+
+- **An idle Control Plane session ends on the server.** After `session.idle_minutes` without activity (120 by default,
+  in `config/nibble.yml`) the session is gone, so reloading the page asks for sign-in; before, the lock lived only in
+  the browser. A minute before, a warning offers to extend it, and afterwards a dialog signs back in, with the
+  two-factor code when it's on, without leaving the page.
+
+  **Upgrade:** run `bin/rails db:migrate`.
+
 ### Changed
 
 - **Rails' settings are all in a site's own files.** Nibble keeps none of its own: storage, mail delivery, the job

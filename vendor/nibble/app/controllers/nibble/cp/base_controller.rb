@@ -19,7 +19,7 @@ module Nibble
           preferences: Nibble::UserPreferences.all(Nibble::Current.user),
           locales: Nibble.config.locales.map { |locale| { code: locale.code, default: locale.default } },
           site_url: Nibble.config.url,
-          elevated_until: elevated_until&.utc&.iso8601,
+          session: { lifetime: Nibble.config.session_idle.to_i, remaining: Nibble::Current.session&.remaining },
           flash: flash.to_hash.slice("notice", "alert")
         }
       }

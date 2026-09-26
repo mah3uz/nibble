@@ -11,6 +11,7 @@ module Nibble
       "disable" => [],
       "reserved_paths" => [],
       "trash" => { "retention_days" => 30 },
+      "session" => { "idle_minutes" => 120 },
       "assets" => {
         "max_upload_mb" => 50,
         "additional_extensions" => [],
@@ -24,7 +25,7 @@ module Nibble
       "outbound" => { "allowed_hosts" => [], "secrets" => [], "config" => {} }
     }.freeze
 
-    attr_reader :load_defaults, :theme, :url, :locales, :reserved_paths, :disable, :trash_retention_days, :asset_extensions, :asset_presets, :max_upload_bytes,
+    attr_reader :load_defaults, :theme, :url, :locales, :reserved_paths, :disable, :trash_retention_days, :session_idle, :asset_extensions, :asset_presets, :max_upload_bytes,
                 :outbound_allowed_hosts, :outbound_secrets, :outbound_config
 
     def initialize(values, themes_path: nil, site_schema_path: nil, content_path: nil, published_path: nil, types_path: nil)
@@ -41,6 +42,7 @@ module Nibble
       @reserved_paths = (RESERVED_PATHS | Array(values["reserved_paths"]).map(&:to_s)).freeze
       @disable = Array(values["disable"]).map(&:to_s).freeze
       @trash_retention_days = values.dig("trash", "retention_days") || 30
+      @session_idle = values.dig("session", "idle_minutes").to_i.clamp(1..).minutes
       assets = values["assets"].to_h
       @asset_extensions = Array(assets["additional_extensions"]).map { |ext| ext.to_s.downcase.delete_prefix(".") }.freeze
       @asset_presets = parse_presets(assets["presets"])

@@ -6,9 +6,9 @@ module Nibble
       PENDING_WINDOW = 10.minutes
       CODE_ATTEMPTS = 5
 
-      allow_unauthenticated_access only: %i[ new create challenge verify_challenge passkey_options passkey ]
+      allow_unauthenticated_access only: %i[ new create challenge verify_challenge passkey_options passkey timeout ]
       before_action :require_elevated_password, only: :elevate
-      rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_cp_session_path, alert: "Try again later." }
+      rate_limit to: 10, within: 3.minutes, only: :create, with: -> { refuse("Try again later.", status: :too_many_requests) }
 
       def new
         render inertia: "cp/auth/Login", props: { flash: flash.to_hash.slice("notice", "alert") }
@@ -26,7 +26,17 @@ module Nibble
 
         Nibble::Lockout.clear(email)
         start_new_session_for user
-        redirect_to after_authentication_url
+        signed_in
+      end
+
+      def timeout
+        return head(:unauthorized) unless authenticated?
+
+        render json: { remaining: Nibble::Current.session.remaining }
+      end
+
+      def extend_session
+        render json: { remaining: Nibble::Current.session.remaining }
       end
 
       def elevate
@@ -43,14 +53,14 @@ module Nibble
       end
 
       def verify_challenge
-        user = pending_user or return redirect_to(new_cp_session_path, alert: "Sign in again.")
+        user = pending_user or return refuse("Sign in again.")
         return refuse_locked if Nibble::Lockout.locked?(user.email_address)
         return refuse_code(user) unless accepted_code?(user)
 
         Nibble::Lockout.clear(user.email_address)
         clear_challenge
         start_new_session_for user
-        redirect_to after_authentication_url
+        signed_in
       end
 
       def passkey_options
@@ -81,6 +91,19 @@ module Nibble
 
       private
 
+      def session_poll? = action_name == "timeout"
+
+      # The session-expiry dialog signs back in with JSON, so the page it covers keeps its unsaved work.
+      def json_request? = request.format.json? && !request.inertia?
+
+      def signed_in
+        json_request? ? render(json: { ok: true }) : redirect_to(after_authentication_url)
+      end
+
+      def refuse(message, to: new_cp_session_path, status: :unprocessable_entity)
+        json_request? ? render(json: { error: message }, status:) : redirect_to(to, alert: message)
+      end
+
       def assertion_params
         params.require(:credential)
           .permit(:id, :rawId, :type, response: %i[clientDataJSON authenticatorData signature userHandle]).to_h
@@ -99,21 +122,21 @@ module Nibble
       end
 
       def refuse_locked
-        redirect_to new_cp_session_path, alert: "Too many attempts. Try again in #{Nibble::Lockout::WINDOW.inspect}."
+        refuse("Too many attempts. Try again in #{Nibble::Lockout::WINDOW.inspect}.", status: :too_many_requests)
       end
 
       def refuse_password(email)
         count = Nibble::Lockout.record_failure(email, ip: request.remote_ip)
         Nibble::AuthLog.record(count >= Nibble::Lockout::ATTEMPTS ? "locked_out" : "sign_in_failed",
           user: Nibble::User.find_by(email_address: email.strip.downcase), ip: request.remote_ip, attempts: count)
-        redirect_to new_cp_session_path, alert: "Try another email address or password."
+        refuse("Try another email address or password.")
       end
 
       def start_challenge(user)
         session[:pending_user_id] = user.id
         session[:pending_at] = Time.current.to_i
         session[:pending_attempts] = 0
-        redirect_to challenge_cp_session_path
+        json_request? ? render(json: { two_factor: true }) : redirect_to(challenge_cp_session_path)
       end
 
       def pending_user
@@ -145,10 +168,10 @@ module Nibble
         end
         if session[:pending_attempts] >= CODE_ATTEMPTS
           clear_challenge
-          return redirect_to new_cp_session_path, alert: "Too many codes. Sign in again."
+          return refuse("Too many codes. Sign in again.")
         end
 
-        redirect_to challenge_cp_session_path, alert: "That code isn't right."
+        refuse("That code isn't right.", to: challenge_cp_session_path)
       end
     end
   end

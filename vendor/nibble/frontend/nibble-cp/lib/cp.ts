@@ -36,7 +36,7 @@ type CpProps = {
     nav: NavSection[]
     preferences: CpPreferences
     site_url: string
-    elevated_until: string | null
+    session: { lifetime: number; remaining: number | null }
     flash: { notice?: string; alert?: string }
   }
 }

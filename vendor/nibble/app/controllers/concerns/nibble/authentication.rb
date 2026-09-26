@@ -25,14 +25,26 @@ module Nibble
       end
 
       def resume_session
-        Nibble::Current.session ||= find_session_by_cookie
+        Nibble::Current.session ||= find_session_by_cookie&.tap { |session| session.active! unless session_poll? }
       end
 
+      # An idle session ends on the server, so reloading the page can't bring it back.
       def find_session_by_cookie
-        Nibble::Session.find_by(id: cookies.signed[:nibble_session_id]) if cookies.signed[:nibble_session_id]
+        session = Nibble::Session.find_by(id: cookies.signed[:nibble_session_id]) if cookies.signed[:nibble_session_id]
+        return session unless session&.expired?
+
+        Nibble::AuthLog.record("session_expired", user: session.user, ip: request.remote_ip)
+        session.destroy
+        cookies.delete(:nibble_session_id)
+        nil
       end
+
+      # Asking how long is left isn't activity, or the countdown would keep itself alive.
+      def session_poll? = false
 
       def request_authentication
+        return head(:unauthorized) if request.format.json? && !request.inertia?
+
         session[:return_to_after_authenticating] = request.url
         redirect_to new_cp_session_path
       end
@@ -49,8 +61,6 @@ module Nibble
       def elevated? = Nibble::Current.session&.elevated_at.present? && Nibble::Current.session.elevated_at > ELEVATION_WINDOW.ago
 
       def elevate_session! = Nibble::Current.session&.update!(elevated_at: Time.current)
-
-      def elevated_until = Nibble::Current.session&.elevated_at&.+(ELEVATION_WINDOW)
 
       def require_elevated_session
         return if elevated?

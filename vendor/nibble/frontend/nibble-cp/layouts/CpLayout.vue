@@ -5,7 +5,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import CommandPalette from '@/components/cp/command-palette/CommandPalette.vue'
 import ConfirmDialog from '@/components/cp/page/ConfirmDialog.vue'
-import ElevationDialog from '@/components/cp/shell/ElevationDialog.vue'
+import SessionExpiry from '@/components/cp/shell/SessionExpiry.vue'
 import GlobalHeader from '@/components/cp/shell/GlobalHeader.vue'
 import NavSidebar from '@/components/cp/shell/NavSidebar.vue'
 import SiteSlot from '@/components/cp/SiteSlot.vue'
@@ -60,7 +60,7 @@ onBeforeUnmount(stopWatchingNavigation)
     </SidebarInset>
     <Toaster rich-colors />
     <ConfirmDialog />
-    <ElevationDialog />
+    <SessionExpiry />
     <ShortcutsDialog />
     <CommandPalette />
     <SiteSlot name="Scripts" />
