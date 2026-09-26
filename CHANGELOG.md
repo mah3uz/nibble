@@ -16,6 +16,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 - **Crumbs highlights Vue and ERB code blocks.** A `vue` block colours its template, its script (as TypeScript with
   `lang="ts"`) and its styles, and an `erb` block its HTML and Ruby, where both showed as plain text.
+- **The Control Plane knows Vue and ERB too.** A rich text code block can be set to either, and a Markdown field's
+  preview colours them.
 
 ## 0.18.1 — 2026-09-26 21:35 +0600
 

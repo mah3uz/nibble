@@ -30,6 +30,7 @@
     "clsx": "^2.1.1",
     "cropperjs": "^2.2.0",
     "diff": "^9.0.0",
+    "highlight.js": "^11.12.0",
     "lowlight": "^3.3.0",
     "reka-ui": "^2.10.4",
     "sortablejs": "^1.15.7",

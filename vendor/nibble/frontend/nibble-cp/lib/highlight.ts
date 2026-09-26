@@ -1,10 +1,34 @@
+import type { LanguageFn, Mode } from 'highlight.js'
+import erb from 'highlight.js/lib/languages/erb'
 import { common, createLowlight } from 'lowlight'
 
 type HastNode =
   | { type: 'text'; value: string }
   | { type: 'element'; tagName: string; properties?: { className?: string[] }; children: HastNode[] }
 
-export const lowlight = createLowlight(common)
+function section(tag: string, attribute: string, subLanguage: string): Mode {
+  return {
+    begin: new RegExp(`^\\s*<${tag}\\b[^>]*${attribute}[^>]*>`),
+    end: new RegExp(`^\\s*</${tag}>`),
+    subLanguage,
+    excludeBegin: true,
+    excludeEnd: true,
+  }
+}
+
+const vue: LanguageFn = (hljs) => ({
+  name: 'Vue',
+  subLanguage: 'xml',
+  contains: [
+    hljs.COMMENT('<!--', '-->', { relevance: 10 }),
+    section('script', `\\blang=["']ts["']`, 'typescript'),
+    section('script', '', 'javascript'),
+    section('style', `\\blang=["']s[ac]ss["']`, 'scss'),
+    section('style', '', 'css'),
+  ],
+})
+
+export const lowlight = createLowlight({ ...common, erb, vue })
 export const codeLanguages = lowlight.listLanguages().sort()
 
 function toDom(node: HastNode): Node {
