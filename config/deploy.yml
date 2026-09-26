@@ -56,7 +56,8 @@ env:
 
 aliases:
   console: app exec --interactive --reuse "bin/rails console"
-  create-user: app exec --interactive --reuse "bin/rails users:create"
+  create-user: app exec --interactive --reuse "bin/rails nibble:admin:create"
+  load-content: app exec --reuse "bin/rails runner site/themes/bite/default_content/load.rb"
   shell: app exec --interactive --reuse "bash"
   logs: app logs -f
   dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
