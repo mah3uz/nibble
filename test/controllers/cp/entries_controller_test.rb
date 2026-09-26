@@ -175,6 +175,15 @@ class Nibble::Cp::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_nil entry.draft
   end
 
+  test "reopening an entry with a pending draft names who wrote it" do
+    entry = publish_entry(create_entry("articles", { "title" => "Live" }))
+    patch "#{entries_path}/#{entry.id}", params: { entry: { title: "Edited", lock_version: entry.lock_version } }
+
+    get "#{entries_path}/#{entry.id}/edit"
+    assert_response :success
+    assert_equal users(:editor).name, props.dig("draft", "user"), "another editor needs to know whose unpublished changes these are"
+  end
+
   test "the live preview renders unsaved values posted as JSON, and saves nothing" do
     entry = publish_entry(create_entry("articles", { "title" => "Live" }))
 

@@ -18,6 +18,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   `lang="ts"`) and its styles, and an `erb` block its HTML and Ruby, where both showed as plain text.
 - **The Control Plane knows Vue and ERB too.** A rich text code block can be set to either, and a Markdown field's
   preview colours them.
+- **An entry with unpublished changes opens in the editor again.** So did its revisions and the dashboard's drafts
+  list, which all failed with an error.
 
 ## 0.18.1 — 2026-09-26 21:35 +0600
 

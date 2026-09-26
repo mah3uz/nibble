@@ -114,7 +114,7 @@ evaluates `vendor/nibble/Gemfile`, which loads `Nibble::Engine`; `config/applica
 - `vendor/nibble/app/` — laid out as Rails lays out `app/`, and added the same way, so names are unchanged:
   `controllers/` (`SiteController` catch-all, `Nibble::Cp::*`, `Api::V1::*`, `FormsController`, `SitemapsController`,
   `AssetFilesController`), `models/` (only identity and access: users, roles, sessions, credentials, API tokens),
-  `jobs/`, `mailers/`, `services/`, `helpers/`, `channels/`, `views/`.
+  `jobs/`, `mailers/`, `services/`, `helpers/`, `views/`.
 - `vendor/nibble/frontend/` — `nibble-cp/` (the Control Plane, `@nibble-cp`, also `@` and `~`), `nibble/` (the
   theme runtime, `@nibble`), `entrypoints/`, `ssr/`. It is Vite's `sourceCodeDir`.
 - `vendor/nibble/core_schema/` — the baseline schema YAML. Schema is read in three layers: this, then the theme's

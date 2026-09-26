@@ -14,7 +14,7 @@ module Nibble
       belongs_to :parent, class_name: name, optional: true
       has_many :children, class_name: name, foreign_key: :parent_id, inverse_of: :parent
       belongs_to :origin, class_name: name, optional: true
-      belongs_to :author, class_name: "::User", optional: true
+      belongs_to :author, class_name: "Nibble::User", optional: true
 
       scope :kept, -> { where(deleted_at: nil) }
       scope :live, -> { kept.where(status: "published") }

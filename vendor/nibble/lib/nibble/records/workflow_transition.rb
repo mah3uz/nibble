@@ -5,7 +5,7 @@ module Nibble
       include TypedPolymorphism
 
       belongs_to :record, polymorphic: true
-      belongs_to :actor, class_name: "::User", optional: true
+      belongs_to :actor, class_name: "Nibble::User", optional: true
     end
   end
 end
