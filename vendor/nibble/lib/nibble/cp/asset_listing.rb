@@ -55,7 +55,7 @@ module Nibble
           "extension" => asset.extension, "thumbnail" => asset.thumbnail_url, "url" => asset.url,
           "size" => asset.size, "updated_at" => asset.updated_at.utc.iso8601, "width" => asset.width, "height" => asset.height,
           "duration" => asset.duration, "alt" => asset.alt, "folder" => asset.folder, "usage_count" => usage_count,
-          "edit_url" => "/admin/media?#{{ folder: asset.folder.presence, asset: asset.id }.compact.to_query}",
+          "edit_url" => "/cp/media?#{{ folder: asset.folder.presence, asset: asset.id }.compact.to_query}",
           "actions" => []
         }
       end

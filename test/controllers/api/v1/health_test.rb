@@ -48,11 +48,11 @@ class Api::V1::HealthTest < ActionDispatch::IntegrationTest
 
   test "the health screen is for people who can see utilities" do
     sign_in_as users(:admin)
-    get "/admin/utilities/health"
+    get "/cp/utilities/health"
     assert_response :success
 
     sign_in_as users(:author)
-    get "/admin/utilities/health"
+    get "/cp/utilities/health"
     assert_response :forbidden
   end
 end

@@ -1,6 +1,6 @@
 module Nibble
   module Eject
-    AREAS = { "vendor/nibble/frontend/nibble-admin/pages" => "site/cp/pages" }.freeze
+    AREAS = { "vendor/nibble/frontend/nibble-cp/pages" => "site/cp/pages" }.freeze
     Ejection = Data.define(:source, :target, :at, :sha256)
 
     class Refused < Error; end

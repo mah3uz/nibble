@@ -12,7 +12,7 @@ module Nibble
         { key: "audit", title: "Audit log", icon: "history", description: "Recent changes, sign-ins and permission changes, with who made them." }
       ].freeze
 
-      def self.url(utility) = "/admin/utilities/#{utility[:key]}"
+      def self.url(utility) = "/cp/utilities/#{utility[:key]}"
     end
   end
 end

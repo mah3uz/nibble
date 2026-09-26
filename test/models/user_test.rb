@@ -12,7 +12,7 @@ class UserTest < ActiveSupport::TestCase
     assert_not user.admin?
   end
 
-  test "the only administrator can't be deleted, so the control panel can't be locked" do
+  test "the only administrator can't be deleted, so the Control Plane can't be locked" do
     assert_not users(:admin).destroy
     assert_includes users(:admin).errors[:base], "The only administrator can't be deleted"
   end

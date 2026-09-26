@@ -76,7 +76,7 @@ module Nibble
 
       def row(record)
         cells = columns.to_h { |column| [ column["handle"], cell(record, column["handle"]) ] }
-        cells.merge("id" => record.id, "actions" => row_actions, "edit_url" => "/admin/forms/#{form.handle}/submissions/#{record.id}",
+        cells.merge("id" => record.id, "actions" => row_actions, "edit_url" => "/cp/forms/#{form.handle}/submissions/#{record.id}",
                     "unread" => !record.read?)
       end
 

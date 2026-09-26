@@ -12,7 +12,7 @@
     "baseUrl": ".",
     "paths": {
       "@/*": [
-        "./vendor/nibble/frontend/nibble-admin/*"
+        "./vendor/nibble/frontend/nibble-cp/*"
       ],
       "@nibble": [
         "./vendor/nibble/frontend/nibble/index.ts"

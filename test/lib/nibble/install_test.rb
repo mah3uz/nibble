@@ -101,7 +101,7 @@ class Nibble::InstallTest < ActiveSupport::TestCase
     assert_equal "https://acme.test", config.url
     assert_equal "crumbs", config.theme
     assert_equal "en", config.default_locale.code
-    assert_includes config.reserved_paths, "/admin"
+    assert_includes config.reserved_paths, "/cp"
   end
 
   test "the generated settings pin behaviour to this release, so a later upgrade changes nothing on its own" do

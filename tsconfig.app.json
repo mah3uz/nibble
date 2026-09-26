@@ -22,9 +22,9 @@
 
     /* Aliases */
     "paths": {
-      "@/*": ["./vendor/nibble/frontend/nibble-admin/*"],
-      "~/*": ["./vendor/nibble/frontend/nibble-admin/*"],
-      "@nibble-admin/*": ["./vendor/nibble/frontend/nibble-admin/*"],
+      "@/*": ["./vendor/nibble/frontend/nibble-cp/*"],
+      "~/*": ["./vendor/nibble/frontend/nibble-cp/*"],
+      "@nibble-cp/*": ["./vendor/nibble/frontend/nibble-cp/*"],
       "@nibble": ["./vendor/nibble/frontend/nibble/index.ts"],
       "@nibble/*": ["./vendor/nibble/frontend/nibble/*"],
       "@theme/*": ["./vendor/nibble/themes/crumbs/*"],

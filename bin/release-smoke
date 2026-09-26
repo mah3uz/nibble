@@ -12,7 +12,7 @@ ROOT = File.expand_path("..", __dir__)
 work = Dir.mktmpdir("nibble-release-smoke")
 at_exit { FileUtils.rm_rf(work) unless ENV["KEEP"] }
 site = File.join(work, "site")
-SCREEN = "vendor/nibble/frontend/nibble-admin/pages/admin/Dashboard.vue".freeze
+SCREEN = "vendor/nibble/frontend/nibble-cp/pages/cp/Dashboard.vue".freeze
 
 # Nothing inherited from this checkout's own bundle.
 ENV.delete_if { |key, _| key.start_with?("BUNDLE_") || %w[RUBYOPT RUBYLIB].include?(key) }
@@ -75,7 +75,7 @@ run!(test, "bin/vite", "build", chdir: site)
 run!(test, "bin/vite", "build", "--ssr", chdir: site)
 run!(test, "bin/rails", "runner", <<~'RUBY', chdir: site)
   abort "the generated credentials have no secret_key_base, so production would refuse to boot" if Rails.application.credentials.secret_key_base.blank?
-  { "/" => [ 200, 404 ], "/admin/session/new" => [ 200 ] }.each do |path, statuses|
+  { "/" => [ 200, 404 ], "/cp/session/new" => [ 200 ] }.each do |path, statuses|
     status, _, body = Rails.application.call(Rack::MockRequest.env_for(path, "HTTP_HOST" => "www.example.com"))
     html = +""
     body.each { |chunk| html << chunk }
@@ -126,7 +126,7 @@ check record(site).dig("install", "answers").keys.sort == %w[name theme url], "t
 check Dir.exist?(File.join(site, "tmp/nibble-#{first.version}")), "the previous release wasn't kept"
 check Dir.glob(File.join(site, "storage/upgrades/*-#{first.version}.sqlite3")).any?, "the database wasn't snapshotted"
 check output.include?("config/nibble.yml — our template has moved on"), "the template that moved on wasn't offered"
-check output.include?("site/cp/pages/admin/Dashboard.vue — ours changed since you copied it"), "the stale ejection wasn't reported"
+check output.include?("site/cp/pages/cp/Dashboard.vue — ours changed since you copied it"), "the stale ejection wasn't reported"
 run!({}, "sha256sum", "--quiet", "-c", "MANIFEST", chdir: File.join(site, "vendor/nibble"))
 run!({}, "bin/rails", "runner", <<~'RUBY', chdir: site)
   abort "the new release's migration didn't run" unless ActiveRecord::Base.connection.table_exists?(:release_smoke_marks)

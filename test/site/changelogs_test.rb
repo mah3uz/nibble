@@ -15,7 +15,7 @@ class SiteChangelogsTest < ActionDispatch::IntegrationTest
     FileUtils.rm_rf(@content)
   end
 
-  # A control panel decides whether to offer an upgrade from this response, so it has to be the feed itself and
+  # A Control Plane decides whether to offer an upgrade from this response, so it has to be the feed itself and
   # not a re-rendering of it: a difference here is a difference between what two installations are told.
   test "the release feed is served exactly as it is written" do
     get "/api/v1/changelogs"
@@ -33,7 +33,7 @@ class SiteChangelogsTest < ActionDispatch::IntegrationTest
     assert_equal FEED, response.body
   end
 
-  test "no feed answers not found, rather than an empty list a control panel would take as no releases" do
+  test "no feed answers not found, rather than an empty list a Control Plane would take as no releases" do
     @content.join("changelogs/releases.json").delete
     get "/api/v1/changelogs"
 
@@ -45,7 +45,7 @@ class SiteChangelogsTest < ActionDispatch::IntegrationTest
     @content.join("changelogs/releases.json").write(JSON.generate(releases))
   end
 
-  # A control panel shows ten at a time, so it asks for a page rather than every release it would never scroll to.
+  # A Control Plane shows ten at a time, so it asks for a page rather than every release it would never scroll to.
   test "a page of the feed is that slice, newest first, with how many there are in all" do
     write_releases(23)
     get "/api/v1/releases", params: { page: 3, per_page: 10 }

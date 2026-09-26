@@ -51,16 +51,16 @@ async function audit(label) {
 }
 
 async function signIn() {
-  await visit('/admin')
+  await visit('/cp')
   await page.locator('#email').fill(email)
   await page.locator('#password').fill(password)
   await page.getByRole('button', { name: /sign in/i }).click()
-  await page.waitForURL(`${base}/admin`, { timeout: 15000 })
-  check('signs in', page.url() === `${base}/admin`)
+  await page.waitForURL(`${base}/cp`, { timeout: 15000 })
+  check('signs in', page.url() === `${base}/cp`)
 }
 
 async function createEntry() {
-  await visit('/admin/collections/pages/entries/new')
+  await visit('/cp/collections/pages/entries/new')
   await page.locator('#title').click()
   await page.keyboard.type(title, { delay: 15 })
   await page.waitForTimeout(400)
@@ -75,7 +75,7 @@ async function createEntry() {
 }
 
 async function recoverAndPublish(id) {
-  const editUrl = `${base}/admin/collections/pages/entries/${id}/edit`
+  const editUrl = `${base}/cp/collections/pages/entries/${id}/edit`
   await page.locator('#title').fill(renamed)
   await page.waitForTimeout(800)
 
@@ -104,7 +104,7 @@ async function recoverAndPublish(id) {
   await page.waitForTimeout(2500)
   const published = await page.getByText('Published', { exact: true }).count()
   check('publishing reports the entry as published', published > 0)
-  await visit(`/admin/collections/pages/entries/${id}/edit`)
+  await visit(`/cp/collections/pages/entries/${id}/edit`)
   check(
     'a saved page leaves nothing to restore',
     !(await page.getByRole('button', { name: 'Restore', exact: true }).isVisible()),
@@ -124,11 +124,11 @@ async function reviseAndRestore(id) {
   const revisions = await page.locator('[role=dialog] li, [role=dialog] button').count()
   check('history lists revisions', revisions > 0, `${revisions} rows`)
   await page.keyboard.press('Escape')
-  await visit(`/admin/collections/pages/entries/${id}/edit`)
+  await visit(`/cp/collections/pages/entries/${id}/edit`)
 }
 
 async function notesAndBell(id) {
-  await visit(`/admin/collections/pages/entries/${id}/edit`)
+  await visit(`/cp/collections/pages/entries/${id}/edit`)
   const note = page.locator('textarea[placeholder^="Leave a note"]')
   check('the editor offers editorial notes', (await note.count()) > 0)
   if (await note.count()) {
@@ -157,21 +157,21 @@ async function notesAndBell(id) {
 }
 
 async function treeView(current) {
-  await visit('/admin/collections/pages?view=tree')
+  await visit('/cp/collections/pages?view=tree')
   const rows = await page.locator('li, tr').filter({ hasText: current }).count()
   check('the tree lists the entry', rows > 0)
   await audit('the tree view')
 }
 
 async function trashAndRestore(id, current) {
-  await visit(`/admin/collections/pages/entries/${id}/edit`)
+  await visit(`/cp/collections/pages/entries/${id}/edit`)
   await page.getByRole('button', { name: /trash/i }).first().click()
   await page.waitForTimeout(600)
   const confirm = page.locator('[role=alertdialog] button', { hasText: /trash|delete/i }).last()
   if (await confirm.count()) await confirm.click()
   await page.waitForTimeout(2000)
 
-  await visit('/admin/trash')
+  await visit('/cp/trash')
   const inTrash = await page.locator('tbody tr').filter({ hasText: current }).count()
   check('a trashed entry appears in the trash', inTrash > 0)
   await audit('trash')
@@ -181,20 +181,20 @@ async function trashAndRestore(id, current) {
     await row.getByRole('button', { name: /restore/i }).click()
     await page.waitForTimeout(2000)
   }
-  await visit('/admin/collections/pages')
+  await visit('/cp/collections/pages')
   const restored = await page.locator('tbody tr').filter({ hasText: current }).count()
   check('a restored entry is back in the listing', restored > 0)
 }
 
 async function purge(id, current) {
-  await visit(`/admin/collections/pages/entries/${id}/edit`)
+  await visit(`/cp/collections/pages/entries/${id}/edit`)
   await page.getByRole('button', { name: /trash/i }).first().click()
   await page.waitForTimeout(500)
   const confirm = page.locator('[role=alertdialog] button', { hasText: /trash|delete/i }).last()
   if (await confirm.count()) await confirm.click()
   await page.waitForTimeout(1500)
 
-  await visit('/admin/trash')
+  await visit('/cp/trash')
   const row = page.locator('tbody tr').filter({ hasText: current }).first()
   if (await row.count()) {
     await row.getByRole('button', { name: /delete/i }).click()
@@ -203,12 +203,12 @@ async function purge(id, current) {
     if (await confirmDelete.count()) await confirmDelete.click()
     await page.waitForTimeout(1500)
   }
-  await visit('/admin/trash')
+  await visit('/cp/trash')
   check('the gate cleans up after itself', (await page.locator('tbody tr').filter({ hasText: current }).count()) === 0)
 }
 
 async function media() {
-  await visit('/admin/media')
+  await visit('/cp/media')
   await audit('the asset library')
   await page.getByLabel('Toggle grid').click()
   const name = `e2e-${Date.now()}.png`
@@ -231,11 +231,11 @@ async function media() {
   await alt.fill('A single pixel')
   await page.getByRole('dialog').getByRole('button', { name: 'Save' }).click()
   await page
-    .waitForResponse((r) => r.url().includes('/admin/media/') && r.request().method() === 'PATCH')
+    .waitForResponse((r) => r.url().includes('/cp/media/') && r.request().method() === 'PATCH')
     .catch(() => {})
   await page.getByRole('button', { name: 'Close Editor' }).click()
   await tile.dblclick()
-  await page.waitForResponse((r) => /\/admin\/media\/\d+$/.test(r.url())).catch(() => {})
+  await page.waitForResponse((r) => /\/cp\/media\/\d+$/.test(r.url())).catch(() => {})
   check('asset metadata saves from the editor', (await alt.inputValue()) === 'A single pixel')
   await page.getByRole('button', { name: 'Close Editor' }).click()
 
@@ -256,7 +256,7 @@ async function forms() {
   const form = page.locator('form[action="/forms/contact"]')
   await form.locator('#contact-name').fill(sender)
   await form.locator('#contact-email').fill('not-an-email')
-  await form.locator('#contact-message').fill('Sent by the control panel gate.')
+  await form.locator('#contact-message').fill('Sent by the Control Plane gate.')
   expectedStatus = 422
   await form.getByRole('button', { name: /send/i }).click()
   await page.waitForTimeout(1200)
@@ -270,9 +270,9 @@ async function forms() {
     .catch(() => {})
   check('a public form confirms a valid submission', await form.getByRole('status').isVisible())
 
-  await visit('/admin/forms')
+  await visit('/cp/forms')
   await audit('the forms index')
-  await visit(`/admin/forms/contact?q=${encodeURIComponent(sender)}`)
+  await visit(`/cp/forms/contact?q=${encodeURIComponent(sender)}`)
   await audit("a form's submissions")
   const row = page.locator('tbody tr').filter({ hasText: sender }).first()
   check('the submission is listed and searchable', (await row.count()) > 0)
@@ -283,7 +283,7 @@ async function forms() {
 
   await page.getByRole('button', { name: 'Delete' }).click()
   await page.getByRole('alertdialog').getByRole('button', { name: 'Delete' }).click()
-  await page.waitForURL(/\/admin\/forms\/contact$/, { timeout: 10000 }).catch(() => {})
+  await page.waitForURL(/\/cp\/forms\/contact$/, { timeout: 10000 }).catch(() => {})
   check(
     'a deleted submission leaves the listing',
     (await page.locator('tbody tr').filter({ hasText: sender }).count()) === 0,
@@ -292,13 +292,13 @@ async function forms() {
 
 async function webhooks() {
   const name = `E2E hook ${Date.now()}`
-  await visit('/admin/webhooks/new')
+  await visit('/cp/webhooks/new')
   await audit('the webhook form')
   await page.locator('#webhook-name').fill(name)
   await page.locator('#webhook-url').fill('https://hooks.e2e.invalid/in')
   await page.locator('label').filter({ hasText: 'record.published' }).getByRole('checkbox').click()
   await page.getByRole('button', { name: 'Create' }).click()
-  await page.waitForURL(/\/admin\/webhooks\/\d+\/edit$/, { timeout: 10000 }).catch(() => {})
+  await page.waitForURL(/\/cp\/webhooks\/\d+\/edit$/, { timeout: 10000 }).catch(() => {})
   check('a webhook saves with its own signing secret', await page.locator('#webhook-secret').isVisible())
 
   await page.getByRole('button', { name: 'Send test' }).click()
@@ -310,13 +310,13 @@ async function webhooks() {
 
   await page.getByRole('button', { name: 'Delete' }).click()
   await page.getByRole('alertdialog').getByRole('button', { name: 'Delete' }).click()
-  await page.waitForURL(`${base}/admin/webhooks`, { timeout: 10000 }).catch(() => {})
+  await page.waitForURL(`${base}/cp/webhooks`, { timeout: 10000 }).catch(() => {})
   check('a deleted webhook leaves the list', (await page.locator('tbody tr').filter({ hasText: name }).count()) === 0)
 }
 
 async function navigationSave() {
   const label = `E2E link ${Date.now()}`
-  await visit('/admin/navigation/footer/edit')
+  await visit('/cp/navigation/footer/edit')
   await page.getByRole('button', { name: 'Add link' }).last().click()
   await page.locator('#nav-item-title').fill(label)
   await page.locator('#nav-item-url').fill('/about')
@@ -324,7 +324,7 @@ async function navigationSave() {
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   await page.waitForTimeout(1500)
   check('saving a changed menu saves instead of asking to leave', !(await page.getByRole('alertdialog').isVisible()))
-  await visit('/admin/navigation/footer/edit')
+  await visit('/cp/navigation/footer/edit')
   const link = page
     .locator('.drag-handle')
     .locator('xpath=ancestor::div[contains(@class,"rounded-md")][1]')
@@ -339,16 +339,16 @@ async function navigationSave() {
   if (await confirmRemove.count()) await confirmRemove.click()
   await page.getByRole('button', { name: 'Save', exact: true }).click()
   await page.waitForTimeout(1500)
-  await visit('/admin/navigation/footer/edit')
+  await visit('/cp/navigation/footer/edit')
   check('the gate leaves the menu as it found it', (await page.getByText(label).count()) === 0)
 }
 
 async function roles() {
   const name = `E2E role ${Date.now()}`
-  await visit('/admin/roles')
+  await visit('/cp/roles')
   await audit('the roles listing')
   await page.getByRole('link', { name: 'Create role' }).click()
-  await page.waitForURL(`${base}/admin/roles/new`, { timeout: 10000 })
+  await page.waitForURL(`${base}/cp/roles/new`, { timeout: 10000 })
   await audit('the role editor')
 
   await page.locator('#role-title').fill(name)
@@ -361,20 +361,20 @@ async function roles() {
   check('checking a child checks what it depends on', await view.getByRole('checkbox').isChecked())
 
   await page.getByRole('button', { name: 'Create' }).click()
-  await page.waitForURL(`${base}/admin/roles`, { timeout: 10000 }).catch(() => {})
+  await page.waitForURL(`${base}/cp/roles`, { timeout: 10000 }).catch(() => {})
   const row = page.locator('tbody tr').filter({ hasText: name })
   check('a role saves with the permissions that were ticked', (await row.count()) === 1)
 
   await row.first().click()
-  await page.waitForURL(/\/admin\/roles\/\d+\/edit$/, { timeout: 10000 }).catch(() => {})
+  await page.waitForURL(/\/cp\/roles\/\d+\/edit$/, { timeout: 10000 }).catch(() => {})
   await page.getByRole('button', { name: 'Delete' }).click()
   await page.getByRole('alertdialog').getByRole('button', { name: 'Delete' }).click()
-  await page.waitForURL(`${base}/admin/roles`, { timeout: 10000 }).catch(() => {})
+  await page.waitForURL(`${base}/cp/roles`, { timeout: 10000 }).catch(() => {})
   check('a deleted role leaves the list', (await page.locator('tbody tr').filter({ hasText: name }).count()) === 0)
 }
 
 async function users() {
-  await visit('/admin/users')
+  await visit('/cp/users')
   await audit('the users listing')
   const invited = `e2e-${Date.now()}@nibble.test`
   await page.getByRole('button', { name: 'Invite user' }).click()
@@ -388,17 +388,17 @@ async function users() {
   check('an invited user appears with the role they were given', (await row.count()) === 1)
 
   await row.first().getByRole('link').first().click()
-  await page.waitForURL(/\/admin\/users\/\d+\/edit$/, { timeout: 10000 }).catch(() => {})
+  await page.waitForURL(/\/cp\/users\/\d+\/edit$/, { timeout: 10000 }).catch(() => {})
   await audit('the user editor')
   await page.getByRole('button', { name: 'Delete' }).click()
   await page.getByRole('alertdialog').getByRole('button', { name: 'Delete' }).click()
-  await page.waitForURL(`${base}/admin/users`, { timeout: 10000 }).catch(() => {})
+  await page.waitForURL(`${base}/cp/users`, { timeout: 10000 }).catch(() => {})
   check('a deleted user leaves the list', (await page.locator('tbody tr').filter({ hasText: invited }).count()) === 0)
 }
 
 async function apiTokens() {
   const name = `E2E token ${Date.now()}`
-  await visit('/admin/api-tokens')
+  await visit('/cp/api-tokens')
   await audit('the API tokens screen')
   await page
     .getByRole('button', { name: /Create( a)? token/ })
@@ -419,12 +419,12 @@ async function apiTokens() {
   check('pressing Escape keeps the token on screen', (await page.locator('code').count()) === 1)
   await page.getByRole('button', { name: 'Close' }).first().click()
   await page.waitForTimeout(300)
-  await visit('/admin/users')
+  await visit('/cp/users')
   await page.goBack()
   await page.waitForTimeout(1000)
   check('going back after closing the reveal does not bring the token back', (await page.locator('code').count()) === 0)
 
-  await visit('/admin/api-tokens')
+  await visit('/cp/api-tokens')
   check('the token is never shown again', (await page.locator('code').count()) === 0)
   const row = page.locator('tbody tr').filter({ hasText: name })
   await row.getByRole('button', { name: 'Revoke' }).click()
@@ -434,7 +434,7 @@ async function apiTokens() {
 }
 
 async function twoFactor() {
-  await visit('/admin/account/edit')
+  await visit('/cp/account/edit')
   await audit('the account screen')
   await page.getByRole('button', { name: 'Two-Factor Authentication' }).click()
   await page.getByRole('button', { name: 'Enable two-factor authentication' }).click()
@@ -454,29 +454,29 @@ async function twoFactor() {
 
 async function auditEveryScreen() {
   for (const [path, label] of [
-    ['/admin', 'the dashboard'],
-    ['/admin/collections/pages', 'a collection listing'],
-    ['/admin/collections/posts?view=calendar', 'the calendar'],
-    ['/admin/taxonomies/authors', 'a taxonomy listing'],
-    ['/admin/globals/site/edit', 'a globals editor'],
-    ['/admin/navigation/main/edit', 'the navigation builder'],
-    ['/admin/blueprints', 'blueprints'],
-    ['/admin/redirects', 'redirects'],
-    ['/admin/utilities', 'utilities'],
-    ['/admin/utilities/jobs', 'jobs'],
-    ['/admin/utilities/health', 'health'],
-    ['/admin/utilities/content', 'content export and import'],
-    ['/admin/utilities/cache', 'cache'],
-    ['/admin/utilities/search', 'search'],
-    ['/admin/utilities/schema', 'schema'],
-    ['/admin/utilities/backups', 'backups'],
-    ['/admin/utilities/audit', 'audit log'],
-    ['/admin/webhooks', 'webhooks'],
-    ['/admin/navigation', 'navigation'],
-    ['/admin/globals', 'globals'],
-    ['/admin/users', 'users'],
-    ['/admin/roles', 'roles'],
-    ['/admin/api-tokens', 'API tokens'],
+    ['/cp', 'the dashboard'],
+    ['/cp/collections/pages', 'a collection listing'],
+    ['/cp/collections/posts?view=calendar', 'the calendar'],
+    ['/cp/taxonomies/authors', 'a taxonomy listing'],
+    ['/cp/globals/site/edit', 'a globals editor'],
+    ['/cp/navigation/main/edit', 'the navigation builder'],
+    ['/cp/blueprints', 'blueprints'],
+    ['/cp/redirects', 'redirects'],
+    ['/cp/utilities', 'utilities'],
+    ['/cp/utilities/jobs', 'jobs'],
+    ['/cp/utilities/health', 'health'],
+    ['/cp/utilities/content', 'content export and import'],
+    ['/cp/utilities/cache', 'cache'],
+    ['/cp/utilities/search', 'search'],
+    ['/cp/utilities/schema', 'schema'],
+    ['/cp/utilities/backups', 'backups'],
+    ['/cp/utilities/audit', 'audit log'],
+    ['/cp/webhooks', 'webhooks'],
+    ['/cp/navigation', 'navigation'],
+    ['/cp/globals', 'globals'],
+    ['/cp/users', 'users'],
+    ['/cp/roles', 'roles'],
+    ['/cp/api-tokens', 'API tokens'],
   ]) {
     await visit(path)
     await audit(label)

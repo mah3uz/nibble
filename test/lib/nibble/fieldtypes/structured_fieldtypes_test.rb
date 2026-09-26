@@ -24,8 +24,8 @@ class Nibble::Fieldtypes::StructuredFieldtypesTest < ActiveSupport::TestCase
 
   setup do
     @entries = FakeResolver.new(
-      "1" => { "title" => "About", "url" => "/about", "collection" => "pages", "status" => "published", "edit_url" => "/admin/entries/1" },
-      "2" => { "title" => "Hello", "url" => "/blog/hello", "collection" => "posts", "status" => "draft", "edit_url" => "/admin/entries/2" }
+      "1" => { "title" => "About", "url" => "/about", "collection" => "pages", "status" => "published", "edit_url" => "/cp/entries/1" },
+      "2" => { "title" => "Hello", "url" => "/blog/hello", "collection" => "posts", "status" => "draft", "edit_url" => "/cp/entries/2" }
     )
     @assets = FakeResolver.new("a1" => { "title" => "Dog", "url" => "/media/a1/dog.jpg", "alt" => "A dog", "thumbnail" => "/t.jpg" })
     Nibble::Resolvers.register("entry", @entries)

@@ -23,12 +23,12 @@ class RoutesLayeringTest < ActiveSupport::TestCase
     end
   end
 
-  test "the catch-all matches last, so neither the control panel nor a site's routes are swallowed" do
+  test "the catch-all matches last, so neither the Control Plane nor a site's routes are swallowed" do
     specs = Rails.application.routes.routes.map { |route| route.path.spec.to_s }
     catch_all = specs.index { |spec| spec.start_with?("/*path") }
 
     assert catch_all, "the catch-all must be drawn"
-    assert_operator specs.index { |spec| spec.start_with?("/admin") }, :<, catch_all
+    assert_operator specs.index { |spec| spec.start_with?("/cp") }, :<, catch_all
     assert_operator specs.index { |spec| spec.start_with?("/api") }, :<, catch_all
   end
 end

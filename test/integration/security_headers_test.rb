@@ -6,8 +6,8 @@ require "test_helper"
 class SecurityHeadersTest < ActionDispatch::IntegrationTest
   def csp = response.headers["Content-Security-Policy"].to_s.split(";").map(&:strip)
 
-  test "public and admin pages send the baseline content security policy" do
-    [ "/nope", "/admin/session/new" ].each do |path|
+  test "public and Control Plane pages send the baseline content security policy" do
+    [ "/nope", "/cp/session/new" ].each do |path|
       get path
       assert_includes csp, "object-src 'none'", path
       assert_includes csp, "base-uri 'self'", path

@@ -3,7 +3,7 @@ require "test_helper"
 class Nibble::EjectTest < ActiveSupport::TestCase
   setup do
     @root = Pathname(Dir.mktmpdir("nibble-eject"))
-    @source = "vendor/nibble/frontend/nibble-admin/pages/admin/Dashboard.vue"
+    @source = "vendor/nibble/frontend/nibble-cp/pages/cp/Dashboard.vue"
     write(@source, "<template>ours</template>")
   end
 
@@ -25,7 +25,7 @@ class Nibble::EjectTest < ActiveSupport::TestCase
   test "ejecting copies our file where the site's copy is looked up first" do
     ejection = Nibble::Eject.run(@source, root: @root)
 
-    assert_equal "site/cp/pages/admin/Dashboard.vue", ejection.target
+    assert_equal "site/cp/pages/cp/Dashboard.vue", ejection.target
     assert_equal "<template>ours</template>", @root.join(ejection.target).read
     assert_equal "<template>ours</template>", @root.join(@source).read, "ours must stay where it was"
   end
@@ -34,21 +34,21 @@ class Nibble::EjectTest < ActiveSupport::TestCase
     Nibble::Eject.run(@source, root: @root)
     entry = Nibble::Eject.manifest(root: @root).fetch(@source)
 
-    assert_equal "site/cp/pages/admin/Dashboard.vue", entry.target
+    assert_equal "site/cp/pages/cp/Dashboard.vue", entry.target
     assert_equal Date.current.to_s, entry.at
     assert Nibble::Eject.ejected?(@source, root: @root)
   end
 
   test "a second eject refuses rather than discarding the site's edits" do
     Nibble::Eject.run(@source, root: @root)
-    @root.join("site/cp/pages/admin/Dashboard.vue").write("<template>theirs</template>")
+    @root.join("site/cp/pages/cp/Dashboard.vue").write("<template>theirs</template>")
 
     error = assert_raises(Nibble::Eject::Refused) { Nibble::Eject.run(@source, root: @root) }
     assert_match "already exists", error.message
-    assert_equal "<template>theirs</template>", @root.join("site/cp/pages/admin/Dashboard.vue").read
+    assert_equal "<template>theirs</template>", @root.join("site/cp/pages/cp/Dashboard.vue").read
 
     Nibble::Eject.run(@source, root: @root, force: true)
-    assert_equal "<template>ours</template>", @root.join("site/cp/pages/admin/Dashboard.vue").read
+    assert_equal "<template>ours</template>", @root.join("site/cp/pages/cp/Dashboard.vue").read
   end
 
   test "only files with somewhere to go can be ejected, so nothing lands outside site/" do
@@ -59,7 +59,7 @@ class Nibble::EjectTest < ActiveSupport::TestCase
   end
 
   test "a path that doesn't exist is refused before anything is written" do
-    error = assert_raises(Nibble::Eject::Refused) { Nibble::Eject.run("vendor/nibble/frontend/nibble-admin/pages/admin/Gone.vue", root: @root) }
+    error = assert_raises(Nibble::Eject::Refused) { Nibble::Eject.run("vendor/nibble/frontend/nibble-cp/pages/cp/Gone.vue", root: @root) }
 
     assert_match "doesn't exist", error.message
     assert_not @root.join("config/nibble.yml").exist?, "a refused eject records nothing"
@@ -75,7 +75,7 @@ class Nibble::EjectTest < ActiveSupport::TestCase
   end
 
   test "a record without the original's checksum is never called stale, since there is nothing to compare" do
-    Nibble::Metadata.write("ejected", { @source => { "target" => "site/cp/pages/admin/Dashboard.vue", "at" => "2026-01-01" } }, root: @root)
+    Nibble::Metadata.write("ejected", { @source => { "target" => "site/cp/pages/cp/Dashboard.vue", "at" => "2026-01-01" } }, root: @root)
     @root.join(@source).write("<template>changed</template>")
 
     assert_empty Nibble::Eject.stale(root: @root)
@@ -102,7 +102,7 @@ class Nibble::EjectTest < ActiveSupport::TestCase
     write("config/application.rb", "module Site; config.time_zone = 'Sydney'; end")
     write("app/models/invoice.rb", "class Invoice; end")
     Nibble::Eject.run(@source, root: @root)
-    @root.join("site/cp/pages/admin/Dashboard.vue").write("<template>theirs</template>")
+    @root.join("site/cp/pages/cp/Dashboard.vue").write("<template>theirs</template>")
 
     assert_empty Nibble::Eject.unmanaged(root: @root)
   end
@@ -114,9 +114,9 @@ class Nibble::EjectTest < ActiveSupport::TestCase
   end
 
   test "ejecting a second file keeps the first in the manifest" do
-    write("vendor/nibble/frontend/nibble-admin/pages/admin/Confirm.vue", "<template>confirm</template>")
+    write("vendor/nibble/frontend/nibble-cp/pages/cp/Confirm.vue", "<template>confirm</template>")
     Nibble::Eject.run(@source, root: @root)
-    Nibble::Eject.run("vendor/nibble/frontend/nibble-admin/pages/admin/Confirm.vue", root: @root)
+    Nibble::Eject.run("vendor/nibble/frontend/nibble-cp/pages/cp/Confirm.vue", root: @root)
 
     assert_equal 2, Nibble::Eject.manifest(root: @root).size
   end

@@ -3,9 +3,9 @@ tmp/
 vendor/*
 !vendor/nibble/
 node_modules/
-vendor/nibble/frontend/nibble-admin/styles/typography.js
-vendor/nibble/frontend/nibble-admin/styles/*.css
+vendor/nibble/frontend/nibble-cp/styles/typography.js
+vendor/nibble/frontend/nibble-cp/styles/*.css
 *.md
-vendor/nibble/frontend/nibble-admin/components/ui/
+vendor/nibble/frontend/nibble-cp/components/ui/
 site/types.d.ts
 vendor/nibble/starter_content/

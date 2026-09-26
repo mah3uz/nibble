@@ -11,7 +11,7 @@ your content, your server.
   <img src="nibble-banner.svg" alt="Nibble" width="100%">
 </p>
 
-Rails 8 serves both the public site and the control panel through Inertia and Vue 3, rendered on the server.
+Rails 8 serves both the public site and the Control Plane through Inertia and Vue 3, rendered on the server.
 Collections, taxonomies, globals, navigation and forms are declared in YAML — Nibble's, then your theme's, then
 yours — and the content itself lives in SQLite. Uploads go to S3. Deployment is Kamal onto one machine.
 
@@ -36,7 +36,7 @@ unpacks it into the site's `vendor/nibble` and asks a handful of questions. Ever
 written once, and is yours from then on. `… | bash -s my-site` names the folder without asking.
 
 ```sh
-bin/dev                  # the site on :3100, the control panel at /admin
+bin/dev                  # the site on :3100, the Control Plane at /cp
 bin/rails nibble:check   # the schema, theme, roles and settings are sound
 bin/rails nibble:version # the release this site runs
 ```
@@ -79,7 +79,7 @@ decide for you. See [Upgrading][upgrading].
 
 ## Licence
 
-MIT — see `LICENSE`. Use it, change it, sell it, rebrand the control panel; keep the copyright notice with
+MIT — see `LICENSE`. Use it, change it, sell it, rebrand the Control Plane; keep the copyright notice with
 copies. It comes with no warranty and no support promise.
 
 [site]: https://nibble.ink

@@ -9,7 +9,7 @@ likes — this name is taken so that one is not.
 
 ## Project status
 
-Nibble is a standalone CMS. A Rails 8 app serves a themed public site and a control panel, both Inertia + Vue 3
+Nibble is a standalone CMS. A Rails 8 app serves a themed public site and a Control Plane, both Inertia + Vue 3
 with SSR, on SQLite. Content is schema-driven: YAML declares collections, taxonomies,
 blueprints, globals, navigation and forms, read in three layers — Nibble's, the theme's, then the site's — and
 entries and terms are rows whose `data` is validated against a blueprint.
@@ -26,7 +26,7 @@ there is no parity baseline to match, and no deviations to log.
 Rails 8 · Inertia Rails + Vue 3 with SSR (Vite, Node SSR process on port 13714) · SQLite (WAL) for all data plus
 Solid Queue/Cache · Tiptap (`@tiptap/vue-3`, free extensions only) for rich text · schema-driven fieldtypes for
 everything else · Active Storage on S3 behind a CDN, served through `AssetFilesController` transforms · shadcn-vue
-control panel · themes as npm workspaces under `site/themes/*` and `vendor/nibble/themes/*` · Kamal on a VPS · nightly `VACUUM INTO` snapshots to S3
+Control Plane · themes as npm workspaces under `site/themes/*` and `vendor/nibble/themes/*` · Kamal on a VPS · nightly `VACUUM INTO` snapshots to S3
 (`DatabaseSnapshotJob`). Do not introduce React or Hotwire.
 
 ## Architecture
@@ -38,10 +38,10 @@ evaluates `vendor/nibble/Gemfile`, which loads `Nibble::Engine`; `config/applica
   `Forms`, `Outbound`, `Webhooks`, `Access`, `Packages`, `ContentMigrations`, `Release`, `Releases`, `Eject`,
   `Install`, `Prepare`, `Check`.
 - `vendor/nibble/app/` — laid out as Rails lays out `app/`, and added the same way, so names are unchanged:
-  `controllers/` (`SiteController` catch-all, `Admin::*`, `Api::V1::*`, `FormsController`, `SitemapsController`,
+  `controllers/` (`SiteController` catch-all, `Nibble::Cp::*`, `Api::V1::*`, `FormsController`, `SitemapsController`,
   `AssetFilesController`), `models/` (only identity and access: users, roles, sessions, credentials, API tokens),
   `jobs/`, `mailers/`, `services/`, `helpers/`, `channels/`, `views/`.
-- `vendor/nibble/frontend/` — `nibble-admin/` (the control panel, `@nibble-admin`, also `@` and `~`), `nibble/` (the
+- `vendor/nibble/frontend/` — `nibble-cp/` (the Control Plane, `@nibble-cp`, also `@` and `~`), `nibble/` (the
   theme runtime, `@nibble`), `entrypoints/`, `ssr/`. It is Vite's `sourceCodeDir`.
 - `vendor/nibble/core_schema/` — the baseline schema YAML. Schema is read in three layers: this, then the theme's
   `schema/`, then the site's own `site/schema/`, and the last to define a handle wins.
@@ -49,7 +49,7 @@ evaluates `vendor/nibble/Gemfile`, which loads `Nibble::Engine`; `config/applica
   not ours.** Nibble renders it from `vendor/nibble/templates/` at install and never writes it again; Rails' own
   `config/initializers/` and `test/` serve a site's Ruby and tests. A site's own `app/` loads beside ours and its views
   are looked in first. Under `site/`: `schema/`, `content/` (content kept as files — the only place a collection's
-  `files` can name), `themes/<its own>/`, `cp/pages/<same path as ours>.vue` replacing a control panel screen and
+  `files` can name), `themes/<its own>/`, `cp/pages/<same path as ours>.vue` replacing a Control Plane screen and
   `cp/slots/*.vue` replacing chrome; `site/types.d.ts` is generated from the schema and imported as `@site/types`.
   `bin/rails nibble:eject <path>` is how a site takes one of our files over, recorded in `config/nibble.yml`.
 - Themes: `site/themes/<theme>/` is looked in first, then `vendor/nibble/themes/<theme>/`, where `crumbs` ships.

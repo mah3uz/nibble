@@ -57,7 +57,7 @@ module Nibble
       def row(record)
         { "id" => record.id, "email_address" => record.email_address, "name" => record.name,
           "roles" => record.roles.map(&:title), "last_login_at" => record.last_login_at&.utc&.iso8601,
-          "actions" => [], "edit_url" => "/admin/users/#{record.id}/edit", "you" => record.id == user.id,
+          "actions" => [], "edit_url" => "/cp/users/#{record.id}/edit", "you" => record.id == user.id,
           "editable" => user.admin? || !record.admin? }
       end
 

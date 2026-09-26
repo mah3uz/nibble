@@ -4,7 +4,7 @@ What changed for a site running Nibble. Each release is a `##` heading, and insi
 fixed**, **Changed** and **Security** are `###`.
 Anything that needs you to act has an **Upgrade** note; releases without one are safe to take as they come. A
 release whose database migrations cannot be undone says so in its entry, so you know the snapshot is the only way
-back. The control panel shows these same notes, read from the feed the documentation site publishes, which is
+back. The Control Plane shows these same notes, read from the feed the documentation site publishes, which is
 generated from this file rather than written by hand.
 
 Versions are ordered but not promises: while Nibble is `0.x`, anything can change between releases. Themes pin the
@@ -22,6 +22,11 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **Uploaded files are served from `/media/:uuid/…`,** and Rails' asset pipeline has `/assets` back.
 - **`/up` is the site's route,** in `config/routes.rb` as Rails writes it, and the Active Storage migration is in
   the site's `db/migrate/`.
+- **The control panel is the Control Plane, at `/cp`.** Every screen, sign-in and password reset moved from
+  `/admin` to `/cp`; its controllers are `Nibble::Cp::`, its screens `vendor/nibble/frontend/nibble-cp/pages/cp/`,
+  and a screen a site replaces lives at `site/cp/pages/cp/<same path>.vue`. `/admin` is no longer reserved.
+
+  **Upgrade:** move any `site/cp/pages/admin/` screens to `site/cp/pages/cp/`, and update bookmarks.
 - **The Control Plane uploads through its own route,** and Rails' public direct-upload endpoint, which takes
   uploads from anyone, is closed.
 

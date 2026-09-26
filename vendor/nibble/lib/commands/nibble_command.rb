@@ -317,7 +317,7 @@ class NibbleCommand < Rails::Command::Base
     end
   end
 
-  # The posts listing with every column on, as someone browsing the control panel would see it.
+  # The posts listing with every column on, as someone browsing the Control Plane would see it.
   def measure_listing(requests)
     user = User.administrators.first || User.create!(email_address: "bench@example.test", name: "Bench", password: SecureRandom.hex(16),
       roles: [ Role.tap(&:seed_defaults!).find_by!(handle: "admin") ])

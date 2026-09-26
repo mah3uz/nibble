@@ -104,10 +104,10 @@ else
   puts "not pushed. When ready: git push #{repository} main --follow-tags, then bin/nibble-release #{version} --pack"
 end
 
-# nibble.ink serves the feed every control panel reads, from a site/ that isn't tracked here.
+# nibble.ink serves the feed every Control Plane reads, from a site/ that isn't tracked here.
 feed = ROOT.join("site/content/changelogs/releases.json")
 unless ROOT.join("site/content").directory?
-  puts "no site/content here, so the feed wasn't written: a control panel sees #{version} once nibble.ink publishes it"
+  puts "no site/content here, so the feed wasn't written: a Control Plane sees #{version} once nibble.ink publishes it"
   exit
 end
 
@@ -125,5 +125,5 @@ if confirm?("commit #{version}'s notes in site/, and push them if it has a remot
   remote = IO.popen([ "git", "-C", site, "remote" ], err: File::NULL, &:read).strip
   system("git", "-C", site, "push") or warn "could not push site/" if committed && !remote.empty?
 else
-  puts "not committed. Commit site/content/changelogs in site/, then deploy nibble.ink, and a control panel will see #{version}."
+  puts "not committed. Commit site/content/changelogs in site/, then deploy nibble.ink, and a Control Plane will see #{version}."
 end

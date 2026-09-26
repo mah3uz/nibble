@@ -1,6 +1,6 @@
 require "test_helper"
 
-# Shared with the CP evaluator's tests (vendor/nibble/frontend/nibble-admin/conditions) so server and editor agree on visibility.
+# Shared with the CP evaluator's tests (vendor/nibble/frontend/nibble-cp/conditions) so server and editor agree on visibility.
 class Nibble::ConditionsTest < ActiveSupport::TestCase
   CASES = JSON.parse(Rails.root.join("test/fixtures/files/nibble_conditions.json").read)
 

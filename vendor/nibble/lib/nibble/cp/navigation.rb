@@ -1,14 +1,14 @@
 module Nibble
   module Cp
     module Navigation
-      ICONS_PATH = "vendor/nibble/frontend/nibble-admin/assets/icons/admin".freeze
+      ICONS_PATH = "vendor/nibble/frontend/nibble-cp/assets/icons/cp".freeze
 
       class << self
         def icon?(name) = name.to_s.match?(/\A[a-z0-9-]+\z/) && Rails.root.join(ICONS_PATH, "#{name}.svg").exist?
 
         def for(user, schema: Nibble.schema)
           [
-            section("top", nil, [ item("Dashboard", "/admin", "dashboard") ]),
+            section("top", nil, [ item("Dashboard", "/cp", "dashboard") ]),
             section("content", "Content", content_items(user, schema)),
             section("structure", "Structure", structure_items(user, schema)),
             section("tools", "Tools", tools_items(user, schema)),
@@ -29,14 +29,14 @@ module Nibble
           collections = schema.collections.filter_map do |collection|
             next unless Access.can?(user, "entries.#{collection.handle}.view")
 
-            item(collection["title"], "/admin/collections/#{collection.handle}", collection["icon"] || "collection")
+            item(collection["title"], "/cp/collections/#{collection.handle}", collection["icon"] || "collection")
           end
           taxonomies = schema.taxonomies.filter_map do |taxonomy|
             next unless Access.can?(user, "terms.#{taxonomy.handle}.view")
 
-            item(taxonomy["title"], "/admin/taxonomies/#{taxonomy.handle}", taxonomy["icon"] || "taxonomy")
+            item(taxonomy["title"], "/cp/taxonomies/#{taxonomy.handle}", taxonomy["icon"] || "taxonomy")
           end
-          assets = Access.can?(user, "assets.view") ? [ item("Assets", "/admin/media", "media") ] : []
+          assets = Access.can?(user, "assets.view") ? [ item("Assets", "/cp/media", "media") ] : []
           collections + taxonomies + assets
         end
 
@@ -44,22 +44,22 @@ module Nibble
           items = []
           globals = schema.globals.select { |global| Access.can?(user, "globals.#{global.handle}.edit") }
           if globals.any?
-            children = globals.map { |global| item(global["title"], "/admin/globals/#{global.handle}/edit", "globals") }
-            items << item("Globals", "/admin/globals", "globals", children:)
+            children = globals.map { |global| item(global["title"], "/cp/globals/#{global.handle}/edit", "globals") }
+            items << item("Globals", "/cp/globals", "globals", children:)
           end
           menus = schema.navigations.select { |menu| Access.can?(user, "navigation.#{menu.handle}.edit") }
           if menus.any?
-            children = menus.map { |menu| item(menu["title"], "/admin/navigation/#{menu.handle}/edit", "navigation") }
-            items << item("Navigation", "/admin/navigation", "navigation", children:)
+            children = menus.map { |menu| item(menu["title"], "/cp/navigation/#{menu.handle}/edit", "navigation") }
+            items << item("Navigation", "/cp/navigation", "navigation", children:)
           end
           items
         end
 
         def users_items(user)
           items = []
-          items << item("Users", "/admin/users", "users") if Access.can?(user, "users.manage")
-          items << item("Roles", "/admin/roles", "permissions") if Access.can?(user, "roles.manage")
-          items << item("API tokens", "/admin/api-tokens", "key") if Access.can?(user, "api_tokens.manage")
+          items << item("Users", "/cp/users", "users") if Access.can?(user, "users.manage")
+          items << item("Roles", "/cp/roles", "permissions") if Access.can?(user, "roles.manage")
+          items << item("API tokens", "/cp/api-tokens", "key") if Access.can?(user, "api_tokens.manage")
           items
         end
 
@@ -69,21 +69,21 @@ module Nibble
 
         def tools_items(user, schema)
           items = []
-          items << item("Forms", "/admin/forms", "forms") if forms?(user, schema)
-          items << item("Blueprints", "/admin/blueprints", "blueprints") if Access.can?(user, "utilities.view")
-          items << item("Trash", "/admin/trash", "trash") if Access.can?(user, "trash.view")
+          items << item("Forms", "/cp/forms", "forms") if forms?(user, schema)
+          items << item("Blueprints", "/cp/blueprints", "blueprints") if Access.can?(user, "utilities.view")
+          items << item("Trash", "/cp/trash", "trash") if Access.can?(user, "trash.view")
           if Access.can?(user, "redirects.manage")
-            children = [ item("Missing pages", "/admin/404s", "magnifying-glass") ]
-            items << item("Redirects", "/admin/redirects", "redirects", children:)
+            children = [ item("Missing pages", "/cp/404s", "magnifying-glass") ]
+            items << item("Redirects", "/cp/redirects", "redirects", children:)
           end
-          items << item("Webhooks", "/admin/webhooks", "webhooks") if Access.can?(user, Webhooks::MANAGE_ABILITY)
+          items << item("Webhooks", "/cp/webhooks", "webhooks") if Access.can?(user, Webhooks::MANAGE_ABILITY)
           if Access.can?(user, "utilities.view")
             waiting = Releases.summary
-            items << item("Updates", "/admin/updates", "download",
+            items << item("Updates", "/cp/updates", "download",
                           badge: (waiting.count if waiting.count.positive?),
                           badge_tone: ("danger" if waiting.security))
             children = Utilities::LIST.map { |utility| item(utility[:title], Utilities.url(utility), utility[:icon]) }
-            items << item("Utilities", "/admin/utilities", "utilities", children:)
+            items << item("Utilities", "/cp/utilities", "utilities", children:)
           end
           items
         end

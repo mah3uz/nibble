@@ -1,6 +1,6 @@
 module Nibble
   module Records
-    # Settings a person changes in the control panel, as against config/nibble.yml, which a person edits by hand.
+    # Settings a person changes in the Control Plane, as against config/nibble.yml, which a person edits by hand.
     class Setting < ::ApplicationRecord
       def self.read(key, default = nil)
         where(key: key.to_s).pick(:value).then { |value| value.nil? ? default : value }

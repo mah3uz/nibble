@@ -39,7 +39,7 @@ class Nibble::EnvironmentTest < ActiveSupport::TestCase
     assert_includes errors(theme: "missing-theme"), "theme"
 
     levels = findings.select { |finding| finding.source == "theme" }.map(&:level)
-    assert_equal [ :warning ], levels, "a control-panel-only install is a choice, not a fault"
+    assert_equal [ :warning ], levels, "a Control Plane-only install is a choice, not a fault"
   end
 
   test "things that degrade the site rather than break it are warnings" do

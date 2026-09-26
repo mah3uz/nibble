@@ -5,7 +5,7 @@ This directory is yours, and an upgrade never touches what you put in it:
 - `schema/` — your collections, taxonomies, blueprints, globals, navigation and forms
 - `content/` — content kept as files
 - `themes/<name>/` — your own theme; one of Nibble's, such as `crumbs`, needs no copy here
-- `cp/` — your control panel overrides
+- `cp/` — your Control Plane overrides
 
 Your own Ruby lives where Rails puts it — `app/`, `config/initializers/`, `test/` — and is yours as well. So is every
 Rails setting in `config/`: the lines Nibble needs there are marked `# Nibble:` with the reason, and
@@ -26,15 +26,15 @@ remove one of Nibble's collections instead, list it under `disable:` in `config/
 
 A collection whose pages are written by hand names a folder in `site/content/` with `files: <folder>`. The folder is
 the collection: a file is a page, a folder's `index.md` is the page its files sit under, and frontmatter becomes
-fields. Every page needs an `id:` that never changes. Pages written this way are read-only in the control panel, and
+fields. Every page needs an `id:` that never changes. Pages written this way are read-only in the Control Plane, and
 nothing outside `site/content/` can be named by `files:`.
 
-## Control panel overrides
+## Control Plane overrides
 
-To change one of Nibble's control panel screens, copy it to the same path under `site/cp/` and edit the copy:
+To change one of Nibble's Control Plane screens, copy it to the same path under `site/cp/` and edit the copy:
 
 ```
-vendor/nibble/frontend/nibble-admin/pages/admin/entries/Edit.vue   ->   site/cp/pages/admin/entries/Edit.vue
+vendor/nibble/frontend/nibble-cp/pages/cp/entries/Edit.vue   ->   site/cp/pages/cp/entries/Edit.vue
 ```
 
 Yours is loaded instead of ours. Nothing else changes, and Nibble's file stays where it is.
@@ -60,13 +60,13 @@ Hooks are published for `:nibble_entry`, `:nibble_term` and `:nibble_asset`.
 
 ## Slots
 
-Some parts of the control panel take a replacement without ejecting anything. Drop a component at
+Some parts of the Control Plane take a replacement without ejecting anything. Drop a component at
 `site/cp/slots/<Name>.vue` and it is used instead of ours:
 
 | Slot | Replaces |
 |---|---|
-| `Logo.vue` | the mark in the control panel header |
+| `Logo.vue` | the mark in the Control Plane header |
 | `SidebarExtra.vue` | empty space at the bottom of the sidebar |
-| `Scripts.vue` | nothing — a place to add your own scripts or widgets to every control panel page |
+| `Scripts.vue` | nothing — a place to add your own scripts or widgets to every Control Plane page |
 
 Slots survive upgrades, so prefer one over ejecting the whole screen.

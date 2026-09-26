@@ -1,0 +1,35 @@
+<script setup lang="ts">
+import PublishForm from '@/components/cp/publish/PublishForm.vue'
+import type { Can, DraftMeta, EditMeta, EditUrls, PublishBlueprint } from '@/components/cp/publish/context'
+import type { Breadcrumb } from '@/lib/breadcrumbs'
+
+defineProps<{
+  title: string
+  breadcrumbs: Breadcrumb[]
+  resource_key: string
+  blueprint: PublishBlueprint
+  values: Record<string, unknown>
+  field_meta: Record<string, unknown>
+  meta: EditMeta
+  draft: DraftMeta
+  can: Can
+  urls: EditUrls
+  source?: { file: string | null } | null
+}>()
+</script>
+
+<template>
+  <PublishForm
+    :title="title"
+    :breadcrumbs="breadcrumbs"
+    :resource-key="resource_key"
+    :blueprint="blueprint"
+    :values="values"
+    :field-meta="field_meta"
+    :meta="meta"
+    :draft="draft"
+    :can="can"
+    :urls="urls"
+    :source="source"
+  />
+</template>

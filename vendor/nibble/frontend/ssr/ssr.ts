@@ -3,10 +3,10 @@ import { createInertiaApp } from '@inertiajs/vue3'
 import createServer from '@inertiajs/vue3/server'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from 'vue/server-renderer'
-import AdminLayout from '../nibble-admin/layouts/AdminLayout.vue'
-import AuthLayout from '../nibble-admin/layouts/AuthLayout.vue'
-import { inertiaDefaults, layoutFor } from '../nibble-admin/lib/inertia-shared'
-import { resolvePage } from '../nibble-admin/lib/resolve-page'
+import CpLayout from '../nibble-cp/layouts/CpLayout.vue'
+import AuthLayout from '../nibble-cp/layouts/AuthLayout.vue'
+import { inertiaDefaults, layoutFor } from '../nibble-cp/lib/inertia-shared'
+import { resolvePage } from '../nibble-cp/lib/resolve-page'
 
 // @inertiajs/vite would write this bootstrap for us, but only ever on its fixed port. We write it so the
 // port can move, which is what lets the smoke test run while a dev server holds the usual one.
@@ -16,7 +16,7 @@ type RenderPage = (page: Page, to: typeof renderToString) => Promise<{ head: str
 
 const render = (await createInertiaApp({
   resolve: resolvePage,
-  layout: layoutFor(AdminLayout, AuthLayout),
+  layout: layoutFor(CpLayout, AuthLayout),
   defaults: inertiaDefaults,
 
   // Vue drops only the subtree that threw, so say which view failed.

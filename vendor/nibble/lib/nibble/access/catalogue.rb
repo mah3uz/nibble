@@ -111,7 +111,7 @@ module Nibble
 
         def users_group
           card("users", "Users", [
-            node("users.manage", "Manage users", "Invite, edit and remove control panel users, and set their roles."),
+            node("users.manage", "Manage users", "Invite, edit and remove Control Plane users, and set their roles."),
             node("roles.manage", "Manage roles", "Create roles and change what they grant. Grant this one wisely."),
             node("api_tokens.manage", "Manage API tokens", "Create and revoke tokens for the content API.")
           ])

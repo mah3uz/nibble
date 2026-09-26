@@ -2,6 +2,6 @@ Reset your password
 
 Someone asked to reset the password for <%= @user.email_address %> on <%= site_name %>. If that was you, choose a new one:
 
-<%= edit_password_url(@user.password_reset_token) %>
+<%= edit_cp_password_url(@user.password_reset_token) %>
 
 The link expires in <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %>. If you didn't ask for this, ignore this email and your password stays as it is.

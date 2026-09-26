@@ -45,7 +45,7 @@ class Nibble::MetadataTest < ActiveSupport::TestCase
   end
 
   test "what was ejected is kept beside the install, and neither overwrites the other" do
-    source = "vendor/nibble/frontend/nibble-admin/pages/admin/Dashboard.vue"
+    source = "vendor/nibble/frontend/nibble-cp/pages/cp/Dashboard.vue"
     @root.join(source).dirname.mkpath
     @root.join(source).write("<template>ours</template>")
 

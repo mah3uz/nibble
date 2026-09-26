@@ -97,7 +97,7 @@ module Nibble
             "id" => entry.id, "type" => "entry", "title" => entry.title.to_s.presence || "Untitled", "path" => entry.uri,
             "status" => entry.status, "live" => entry.live?, "updated_at" => entry.updated_at.utc.iso8601,
             "published_at" => entry.published_at&.utc&.iso8601,
-            "edit_url" => "/admin/collections/#{entry.collection}/entries/#{entry.id}/edit"
+            "edit_url" => "/cp/collections/#{entry.collection}/entries/#{entry.id}/edit"
           }.merge(extra)
         end
 
@@ -115,7 +115,7 @@ module Nibble
           [
             { "label" => "Awaiting review", "count" => visible(user).where(status: %w[in_review approved]).count, "url" => listing_url(user, "in_review") },
             { "label" => "Drafts", "count" => visible(user).where(status: "draft").count, "url" => listing_url(user, "draft") },
-            { "label" => "In the trash", "count" => Records::Entry.where.not(deleted_at: nil).count, "url" => "/admin/trash" }
+            { "label" => "In the trash", "count" => Records::Entry.where.not(deleted_at: nil).count, "url" => "/cp/trash" }
           ]
         end
 
@@ -144,20 +144,20 @@ module Nibble
           case entry.subject_type
           when "entry"
             record = Records::Entry.find_by(id: entry.subject_id) or return [ "a deleted entry", nil ]
-            [ record.title, "/admin/collections/#{record.collection}/entries/#{record.id}/edit" ]
+            [ record.title, "/cp/collections/#{record.collection}/entries/#{record.id}/edit" ]
           when "term"
             record = Records::Term.find_by(id: entry.subject_id) or return [ "a deleted term", nil ]
-            [ record.title, "/admin/taxonomies/#{record.taxonomy}/terms/#{record.id}/edit" ]
+            [ record.title, "/cp/taxonomies/#{record.taxonomy}/terms/#{record.id}/edit" ]
           when "global"
             record = Records::GlobalSet.find_by(id: entry.subject_id) or return [ "a global set", nil ]
-            [ "the #{record.item&.[]('title') || record.handle.humanize} globals", "/admin/globals/#{record.handle}/edit" ]
+            [ "the #{record.item&.[]('title') || record.handle.humanize} globals", "/cp/globals/#{record.handle}/edit" ]
           when "navigation"
             record = Records::NavigationTree.find_by(id: entry.subject_id) or return [ "a menu", nil ]
             [ "the #{Nibble.schema.find(:navigation, record.handle)&.[]('title') || record.handle.humanize} menu",
-              "/admin/navigation/#{record.handle}/edit" ]
+              "/cp/navigation/#{record.handle}/edit" ]
           when "asset"
             record = Records::Asset.find_by(id: entry.subject_id) or return [ "an asset", nil ]
-            [ record.title.presence || record.filename, "/admin/media" ]
+            [ record.title.presence || record.filename, "/cp/media" ]
           else
             [ entry.subject_type.to_s.humanize(capitalize: false), nil ]
           end
@@ -168,15 +168,15 @@ module Nibble
             next unless Access.can?(user, "entries.#{collection.handle}.create")
 
             noun = collection["title"].to_s.singularize.downcase
-            { "label" => "New #{noun}", "url" => "/admin/collections/#{collection.handle}/entries/new",
+            { "label" => "New #{noun}", "url" => "/cp/collections/#{collection.handle}/entries/new",
               "icon" => collection["icon"] || "collections", "description" => "Start a #{noun} from its blueprint." }
           end
           if Access.can?(user, "assets.upload")
-            links << { "label" => "Upload assets", "url" => "/admin/media", "icon" => "assets",
+            links << { "label" => "Upload assets", "url" => "/cp/media", "icon" => "assets",
                        "description" => "Add images and files to the library." }
           end
           if Access.can?(user, "utilities.view")
-            links << { "label" => "Utilities", "url" => "/admin/utilities", "icon" => "utilities",
+            links << { "label" => "Utilities", "url" => "/cp/utilities", "icon" => "utilities",
                        "description" => "Cache, search, jobs, health and backups." }
           end
           links
@@ -202,7 +202,7 @@ module Nibble
           items = scope.order(created_at: :desc).limit(LIMIT).map do |submission|
             { "id" => submission.id, "form" => titles[submission.form], "unread" => !submission.read?,
               "summary" => submission.data.values.find { |value| value.is_a?(String) && value.present? }.to_s.truncate(80),
-              "created_at" => submission.created_at.utc.iso8601, "url" => "/admin/forms/#{submission.form}/submissions/#{submission.id}" }
+              "created_at" => submission.created_at.utc.iso8601, "url" => "/cp/forms/#{submission.form}/submissions/#{submission.id}" }
           end
           { "items" => items, "unread" => scope.unread.count }
         end
@@ -210,13 +210,13 @@ module Nibble
         def missing_pages
           Records::NotFound.order(hits: :desc, last_seen_at: :desc).limit(LIMIT).map do |row|
             { "path" => row.path, "hits" => row.hits, "last_seen_at" => row.last_seen_at.utc.iso8601,
-              "redirect_url" => "/admin/redirects?#{{ from: row.path }.to_query}" }
+              "redirect_url" => "/cp/redirects?#{{ from: row.path }.to_query}" }
           end
         end
 
         def site_health
           checks = Health.run
-          { "status" => Health.status(checks), "url" => "/admin/utilities/health",
+          { "status" => Health.status(checks), "url" => "/cp/utilities/health",
             "checks" => checks.map { |check| { "name" => check.name, "status" => check.status, "message" => check.message, "ms" => check.ms } } }
         end
 
@@ -225,13 +225,13 @@ module Nibble
           if Access.can?(user, "webhooks.manage")
             Records::WebhookDelivery.where(status: "failed").includes(:webhook).order(updated_at: :desc).limit(LIMIT).each do |delivery|
               items << { "title" => delivery.webhook&.name.to_s, "detail" => delivery.error.presence || "HTTP #{delivery.response_status}",
-                         "kind" => "Webhook", "at" => delivery.updated_at.utc.iso8601, "url" => "/admin/webhooks/#{delivery.webhook_id}/edit" }
+                         "kind" => "Webhook", "at" => delivery.updated_at.utc.iso8601, "url" => "/cp/webhooks/#{delivery.webhook_id}/edit" }
             end
           end
           if Access.can?(user, "utilities.view") && JobsDashboard.available?
             SolidQueue::FailedExecution.includes(:job).order(created_at: :desc).limit(LIMIT).each do |failure|
               items << { "title" => failure.job.class_name, "detail" => failure.message.to_s.lines.first.to_s.strip,
-                         "kind" => "Job", "at" => failure.created_at.utc.iso8601, "url" => "/admin/utilities/jobs" }
+                         "kind" => "Job", "at" => failure.created_at.utc.iso8601, "url" => "/cp/utilities/jobs" }
             end
           end
           items.sort_by { |row| row["at"] }.reverse.first(LIMIT)
@@ -246,7 +246,7 @@ module Nibble
             entry = entries[comment.subject_id]
             { "id" => comment.id, "author" => authors[comment.author_id]&.name, "body" => comment.body.truncate(140),
               "title" => entry.title.to_s.presence || "Untitled", "resolved" => comment.resolved_at.present?,
-              "created_at" => comment.created_at.utc.iso8601, "url" => "/admin/collections/#{entry.collection}/entries/#{entry.id}/edit" }
+              "created_at" => comment.created_at.utc.iso8601, "url" => "/cp/collections/#{entry.collection}/entries/#{entry.id}/edit" }
           end
         end
 
@@ -254,20 +254,20 @@ module Nibble
           Records::Asset.kept.order(created_at: :desc).limit(8).map do |asset|
             { "id" => asset.id, "title" => asset.display_title, "kind" => asset.kind, "extension" => asset.extension,
               "thumbnail" => asset.thumbnail_url, "created_at" => asset.created_at.utc.iso8601,
-              "url" => "/admin/media?#{{ folder: asset.folder.presence, asset: asset.id }.compact.to_query}" }
+              "url" => "/cp/media?#{{ folder: asset.folder.presence, asset: asset.id }.compact.to_query}" }
           end
         end
 
         def create_url(user)
           collection = collections(user).find { |item| Access.can?(user, "entries.#{item.handle}.create") } or return nil
 
-          "/admin/collections/#{collection.handle}/entries/new"
+          "/cp/collections/#{collection.handle}/entries/new"
         end
 
         def listing_url(user, status)
-          collection = collections(user).first or return "/admin"
+          collection = collections(user).first or return "/cp"
 
-          "/admin/collections/#{collection.handle}?status=#{status}"
+          "/cp/collections/#{collection.handle}?status=#{status}"
         end
       end
     end

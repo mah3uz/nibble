@@ -1,7 +1,7 @@
 require "rails"
 
 module Nibble
-  # Not isolated, so Admin::EntriesController keeps its name. A site's own app/ still loads, and its views are looked in first.
+  # Not isolated, so Nibble::Cp::EntriesController keeps its name. A site's own app/ still loads, and its views are looked in first.
   class Engine < Rails::Engine
     paths.add "lib", eager_load: true
     paths.add "app", eager_load: true, glob: "{*,*/concerns}", exclude: %w[views]

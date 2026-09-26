@@ -3,7 +3,7 @@
   Someone asked to reset the password for <strong><%= @user.email_address %></strong> on <%= site_name %>.
   If that was you, choose a new one.
 </p>
-<p><%= link_to "Choose a new password", edit_password_url(@user.password_reset_token), class: "button" %></p>
+<p><%= link_to "Choose a new password", edit_cp_password_url(@user.password_reset_token), class: "button" %></p>
 <p class="note">
   The link expires in <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %>.
   If you didn't ask for this, ignore this email and your password stays as it is.

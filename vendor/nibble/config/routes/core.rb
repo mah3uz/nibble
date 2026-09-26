@@ -9,19 +9,6 @@ Rails.application.routes.draw do
   # Rails' own endpoint takes uploads from anyone, so it's closed; the Control Plane's checks who is uploading.
   post "rails/active_storage/direct_uploads", to: ->(_env) { [ 404, { "content-type" => "text/plain" }, [ "Not Found" ] ] }
 
-  scope path: "admin" do
-    resource :session do
-      collection do
-        get :challenge
-        post :challenge, action: :verify_challenge
-        post "passkey/options", action: :passkey_options
-        post "passkey", action: :passkey
-        post :elevate
-      end
-    end
-    resources :passwords, param: :token
-  end
-
   namespace :api do
     namespace :v1 do
       get "collections/:collection_handle/entries", to: "entries#index"
@@ -37,8 +24,18 @@ Rails.application.routes.draw do
     end
   end
 
-  namespace :admin do
+  namespace :cp, module: "nibble/cp" do
     root "dashboard#show"
+    resource :session do
+      collection do
+        get :challenge
+        post :challenge, action: :verify_challenge
+        post "passkey/options", action: :passkey_options
+        post "passkey", action: :passkey
+        post :elevate
+      end
+    end
+    resources :passwords, param: :token
     post "direct_uploads", to: "direct_uploads#create", as: :direct_uploads
     patch "preferences", to: "preferences#update", as: :preferences
     scope "account", as: :account do
@@ -127,7 +124,7 @@ Rails.application.routes.draw do
         post :replace
       end
     end
-    get "updates", to: "updates#show", as: :admin_updates
+    get "updates", to: "updates#show", as: :updates
     patch "updates", to: "updates#update"
     resources :redirects, only: %i[index create update destroy]
     resources :not_found_paths, only: %i[index destroy], path: "404s"

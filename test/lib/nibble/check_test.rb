@@ -64,14 +64,14 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     ].each { |message| assert_includes problems, message }
   end
 
-  test "a collection or taxonomy icon must be one of the admin icons, so the sidebar never shows a blank" do
+  test "a collection or taxonomy icon must be one of the Control Plane icons, so the sidebar never shows a blank" do
     theme_file("taxonomies/people.yml", title: "People", blueprints: [ "person" ], icon: "user-avatar")
     theme_file("blueprints/taxonomies/people/person.yml", title: "Person", tabs: { main: { sections: [ { fields: [ { handle: "title", field: { type: "text" } } ] } ] } })
     theme_file("taxonomies/places.yml", title: "Places", blueprints: [ "place" ], icon: "../secrets")
     theme_file("blueprints/taxonomies/places/place.yml", title: "Place", tabs: { main: { sections: [ { fields: [ { handle: "title", field: { type: "text" } } ] } ] } })
 
     problems = check.problems.map(&:to_s).join("\n")
-    assert_includes problems, "icon '../secrets' isn't one of the admin icons"
+    assert_includes problems, "icon '../secrets' isn't one of the Control Plane icons"
     assert_not_includes problems, "icon 'user-avatar'"
 
     schema = Nibble::Schema.load(Nibble::Config.new({ "theme" => "check", "locales" => [ { "code" => "en", "default" => true } ] }, themes_path: @themes))

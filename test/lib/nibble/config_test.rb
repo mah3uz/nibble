@@ -58,7 +58,7 @@ class Nibble::ConfigTest < ActiveSupport::TestCase
 
   test "the shipped config loads for this environment" do
     assert Nibble.config.default_locale
-    assert_includes Nibble.config.reserved_paths, "/admin"
+    assert_includes Nibble.config.reserved_paths, "/cp"
   end
 
   test "an install with no config file still has every setting the app depends on" do
@@ -70,16 +70,16 @@ class Nibble::ConfigTest < ActiveSupport::TestCase
     assert_equal %w[card content hero og], bare.asset_presets.keys.sort
   end
 
-  test "reserved paths hold even when a site's config says nothing, so no entry can claim /admin" do
-    assert_includes Nibble::Config.new({}).reserved_paths, "/admin"
-    assert_includes config("reserved_paths" => []).reserved_paths, "/admin"
+  test "reserved paths hold even when a site's config says nothing, so no entry can claim /cp" do
+    assert_includes Nibble::Config.new({}).reserved_paths, "/cp"
+    assert_includes config("reserved_paths" => []).reserved_paths, "/cp"
   end
 
   test "a site adds reserved paths rather than replacing the ones protecting the app" do
     paths = config("reserved_paths" => [ "/shop" ]).reserved_paths
 
     assert_includes paths, "/shop"
-    assert_includes paths, "/admin"
+    assert_includes paths, "/cp"
   end
 
   test "a site's asset preset replaces one of ours by name without dropping the rest" do

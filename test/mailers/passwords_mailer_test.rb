@@ -23,7 +23,7 @@ class PasswordsMailerTest < ActionMailer::TestCase
   test "the reset email renders with a working link" do
     body = PasswordsMailer.reset(users(:editor)).parts.map { |part| part.body.to_s }.join
 
-    assert_match "/admin/passwords/", body
+    assert_match "/cp/passwords/", body
     assert_match "expires in 15 minutes", body
     assert_match users(:editor).email_address, body, "someone with more than one account needs to know which one this is"
   end
@@ -34,7 +34,7 @@ class PasswordsMailerTest < ActionMailer::TestCase
 
     body = PasswordsMailer.reset(users(:editor)).parts.map { |part| part.body.to_s }.join
 
-    assert_match %r{https://example\.com/admin/passwords/}, body, "a reset link on the app's host would not reach this site"
+    assert_match %r{https://example\.com/cp/passwords/}, body, "a reset link on the app's host would not reach this site"
     assert_no_match "app.internal", body
   ensure
     ActionMailer::Base.default_url_options = original

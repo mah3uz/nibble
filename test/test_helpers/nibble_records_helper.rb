@@ -80,7 +80,7 @@ module NibbleRecordsHelper
   end
 
   def configure_nibble_records(load_defaults: nil)
-    Nibble.config = Nibble::Config.new({ "theme" => "records", "url" => "https://example.com", "load_defaults" => load_defaults, "locales" => [ { "code" => "en", "default" => true } ], "reserved_paths" => [ "/admin" ],
+    Nibble.config = Nibble::Config.new({ "theme" => "records", "url" => "https://example.com", "load_defaults" => load_defaults, "locales" => [ { "code" => "en", "default" => true } ], "reserved_paths" => [ "/cp" ],
                                          "outbound" => { "secrets" => [ "crm_token" ] },
                                          "assets" => { "presets" => { "card" => { "w" => 32, "h" => 16, "fit" => "crop", "srcset" => [ 16, 32 ] } } } },
       themes_path: @nibble_themes, site_schema_path: @nibble_themes.join("site_schema"))

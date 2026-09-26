@@ -6,7 +6,7 @@ module NibbleStarterHelper
 
   def use_nibble_starter
     Nibble.config = Nibble::Config.new({ "theme" => "starter", "url" => "https://example.test",
-      "locales" => [ { "code" => "en", "default" => true } ], "reserved_paths" => [ "/admin" ],
+      "locales" => [ { "code" => "en", "default" => true } ], "reserved_paths" => [ "/cp" ],
       "assets" => { "presets" => { "og" => { "w" => 1200, "h" => 630, "fit" => "crop" } } } },
       themes_path: Rails.root.join("test/nibble_themes"),
       site_schema_path: Rails.root.join("test/nibble_themes/no_site_schema"),

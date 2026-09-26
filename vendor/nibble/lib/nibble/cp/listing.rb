@@ -245,7 +245,7 @@ module Nibble
       end
 
       def edit_url(record)
-        base = entries? ? "/admin/collections/#{item.handle}/entries" : "/admin/taxonomies/#{item.handle}/terms"
+        base = entries? ? "/cp/collections/#{item.handle}/entries" : "/cp/taxonomies/#{item.handle}/terms"
         "#{base}/#{record.id}/edit"
       end
 
@@ -330,7 +330,7 @@ module Nibble
         return nil if files? || !Access.can?(user, ability("create"))
 
         label = "New #{item['title'].to_s.singularize.downcase}"
-        url = entries? ? "/admin/collections/#{item.handle}/entries/new" : "/admin/taxonomies/#{item.handle}/terms/new"
+        url = entries? ? "/cp/collections/#{item.handle}/entries/new" : "/cp/taxonomies/#{item.handle}/terms/new"
         { "label" => label, "url" => url }
       end
     end

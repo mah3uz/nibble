@@ -10,7 +10,7 @@ class PrivilegeEscalationTest < ActionDispatch::IntegrationTest
   test "a role can't be given a bare wildcard, which would be full access by the back door" do
     sign_in_as manager_of("roles.manage")
 
-    post "/admin/roles", params: { role: { title: "Backdoor", abilities: [ "*" ] } }
+    post "/cp/roles", params: { role: { title: "Backdoor", abilities: [ "*" ] } }
 
     assert_nil Role.find_by(handle: "backdoor")
   end
@@ -18,7 +18,7 @@ class PrivilegeEscalationTest < ActionDispatch::IntegrationTest
   test "an ability the editor never offered is refused, not quietly dropped" do
     sign_in_as users(:admin)
 
-    post "/admin/roles", params: { role: { title: "Invented", abilities: %w[entries.posts.view made.up.ability] } }
+    post "/cp/roles", params: { role: { title: "Invented", abilities: %w[entries.posts.view made.up.ability] } }
 
     assert_nil Role.find_by(handle: "invented")
     assert_match "made.up.ability", session[:inertia_errors].to_h.with_indifferent_access[:abilities].to_s
@@ -27,7 +27,7 @@ class PrivilegeEscalationTest < ActionDispatch::IntegrationTest
   test "full access is only ever handed on by someone who already has it" do
     sign_in_as manager_of("users.manage")
 
-    patch "/admin/users/#{users(:author).id}", params: { user: { role_ids: [ roles(:admin).id ] } }
+    patch "/cp/users/#{users(:author).id}", params: { user: { role_ids: [ roles(:admin).id ] } }
 
     assert_response :forbidden
     assert_not users(:author).reload.admin?
@@ -36,11 +36,11 @@ class PrivilegeEscalationTest < ActionDispatch::IntegrationTest
   test "an administrator's account can't be edited or reset by someone below them" do
     sign_in_as manager_of("users.manage")
 
-    patch "/admin/users/#{users(:admin).id}", params: { user: { email_address: "attacker@example.test" } }
+    patch "/cp/users/#{users(:admin).id}", params: { user: { email_address: "attacker@example.test" } }
     assert_response :forbidden
     assert_not_equal "attacker@example.test", users(:admin).reload.email_address
 
-    post "/admin/users/#{users(:admin).id}/send_reset"
+    post "/cp/users/#{users(:admin).id}/send_reset"
     assert_response :forbidden
   end
 end

@@ -46,10 +46,10 @@ if ! grep -q 'data-server-rendered="true"' <<< "$body" || ! grep -q "$marker" <<
   echo "SSR smoke test FAILED. Response: ${html:0:500}"; cat tmp/ssr-smoke.log; exit 1
 fi
 
-# Every page component is imported by the one long-lived SSR process (admin editors included), so a
+# Every page component is imported by the one long-lived SSR process (the Control Plane's editors included), so a
 # module that touches browser globals on import would take down SSR for the whole public site.
 # Render each with only the shared site props (page props missing may fail the render; that's fine) and check the process survives.
-for file in $(cd vendor/nibble/frontend/nibble-admin/pages && find . -name '*.vue' | sed 's|^\./||; s|\.vue$||') $(cd $(bin/rails runner 'print Nibble.config.theme_path')/views && find . -name '*.vue' | sed 's|^\./|theme/|; s|\.vue$||'); do
+for file in $(cd vendor/nibble/frontend/nibble-cp/pages && find . -name '*.vue' | sed 's|^\./||; s|\.vue$||') $(cd $(bin/rails runner 'print Nibble.config.theme_path')/views && find . -name '*.vue' | sed 's|^\./|theme/|; s|\.vue$||'); do
   curl -s -o /dev/null -X POST "http://localhost:$PORT/render" -H 'Content-Type: application/json' \
     -d "{\"component\":\"$file\",\"props\":{\"site\":$site},\"url\":\"/\",\"version\":\"\"}" || true
 done

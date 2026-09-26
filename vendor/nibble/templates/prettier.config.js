@@ -6,5 +6,5 @@ export default {
   tabWidth: 2,
   printWidth: 120,
   plugins: ['prettier-plugin-tailwindcss'],
-  tailwindStylesheet: './vendor/nibble/frontend/entrypoints/admin.css',
+  tailwindStylesheet: './vendor/nibble/frontend/entrypoints/cp.css',
 }

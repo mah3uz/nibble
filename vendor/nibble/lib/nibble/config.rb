@@ -2,8 +2,8 @@ module Nibble
   class Config
     Locale = Data.define(:code, :default, :url_prefix, :search_tokenizer)
 
-    # A site can add reserved paths but never drop these: without /admin an entry can claim the control panel.
-    RESERVED_PATHS = %w[/admin /api /forms /media /assets /nibble-assets /up /sitemap.xml /robots.txt /.well-known].freeze
+    # A site can add reserved paths but never drop these: without /cp an entry can claim the Control Plane.
+    RESERVED_PATHS = %w[/cp /api /forms /media /assets /nibble-assets /up /sitemap.xml /robots.txt /.well-known].freeze
 
     DEFAULTS = {
       "load_defaults" => "0.0",

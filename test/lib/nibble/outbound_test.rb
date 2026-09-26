@@ -46,7 +46,7 @@ class Nibble::OutboundTest < ActiveSupport::TestCase
   end
 
   test "literal internal addresses and the cloud metadata endpoint are refused before any connection" do
-    %w[http://127.0.0.1/ http://[::1]/admin http://169.254.169.254/latest/meta-data http://10.0.0.1:8080/ http://[::ffff:7f00:1]/].each { |url| refused(url) }
+    %w[http://127.0.0.1/ http://[::1]/cp http://169.254.169.254/latest/meta-data http://10.0.0.1:8080/ http://[::ffff:7f00:1]/].each { |url| refused(url) }
     assert_not_requested :any, /.*/
   end
 

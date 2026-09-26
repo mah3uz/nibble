@@ -150,7 +150,7 @@ class Nibble::LifecycleEntriesTest < ActiveSupport::TestCase
     entry = publish_entry(create_entry("articles", { "title" => "Hello World" }), { "published_at" => "2025-03-04T10:00:00Z" })
     assert_equal "/articles/2025/hello-world", entry.uri
 
-    blocked = lifecycle(Entry.new(collection: "docs"), :create, "title" => "Admin", "body" => "x")
+    blocked = lifecycle(Entry.new(collection: "docs"), :create, "title" => "CP", "body" => "x")
     assert blocked.invalid?
     assert_match "reserved", blocked.errors["uri"].first
   end

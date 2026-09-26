@@ -9,27 +9,27 @@
       "note": "The path is built from the configured snapshot directory and today's date, never from a request."
     },
     {
-      "fingerprint": "2cb1bfaca4e4dd1bb2075d3d640ac91ee3be3192c112381604995dd37ce11afe",
+      "fingerprint": "41d5db798a35f15d578c7f9dd36214ab7327482ce7febf53e5261a1707bdad5b",
       "check": "MassAssignment",
       "message": "Specify exact keys allowed for mass assignment instead of using `permit!` which allows any keys",
-      "file": "vendor/nibble/app/controllers/admin/nibble_api/relationships_controller.rb",
-      "line": 9,
+      "file": "vendor/nibble/app/controllers/nibble/cp/nibble_api/relationships_controller.rb",
+      "line": 10,
       "note": "The scope is a filter for a relationship search: each resolver defines its own keys, values are arrayified, and they only ever reach a scoped query."
     },
     {
-      "fingerprint": "11db57f1386e9a5eadc88a4acfd7fd35ebc57cdf859d6f6d6a0e4d51ddb20ec6",
+      "fingerprint": "bd94e7a039fe03cc47fed7823cecdaeebb13c068da3ecf1268b201e806ce1e83",
       "check": "SQL",
       "message": "Possible SQL injection",
-      "file": "vendor/nibble/app/controllers/admin/utilities_controller.rb",
-      "line": 120,
+      "file": "vendor/nibble/app/controllers/nibble/cp/utilities_controller.rb",
+      "line": 121,
       "note": "The table names come from Nibble::Search::TABLES, a constant, not from the request."
     },
     {
-      "fingerprint": "dcf3c09f443017db0f9803daba71d6a0b67b11c4d305921a0e19c755f0033876",
+      "fingerprint": "c4a07fd407a71c82bb8fa4e5083a5b2939474237c1afb9b67da75317c830cb3f",
       "check": "Redirect",
       "message": "Possible unprotected redirect",
-      "file": "vendor/nibble/app/controllers/admin/form_files_controller.rb",
-      "line": 12,
+      "file": "vendor/nibble/app/controllers/nibble/cp/form_files_controller.rb",
+      "line": 13,
       "note": "The URL is a short-lived signed storage link Active Storage generated for a submission's own file, not a value from the request."
     }
   ],

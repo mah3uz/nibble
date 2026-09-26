@@ -12,10 +12,10 @@ module Nibble
         [
           tile("published", "Published", entries.where(status: "published").where(published_at: since..Time.current).pluck(:published_at),
                listing_url(entries, "published")),
-          tile("edits", "Edits", events(EDITS).pluck(:created_at), "/admin/utilities/audit"),
+          tile("edits", "Edits", events(EDITS).pluck(:created_at), "/cp/utilities/audit"),
           (tile("submissions", "Form submissions", Records::FormSubmission.kept.where(form: forms, created_at: since..).pluck(:created_at),
-                "/admin/forms") if forms.any?),
-          (tile("uploads", "Uploads", Records::Asset.kept.where(created_at: since..).pluck(:created_at), "/admin/media") if
+                "/cp/forms") if forms.any?),
+          (tile("uploads", "Uploads", Records::Asset.kept.where(created_at: since..).pluck(:created_at), "/cp/media") if
             Access.can?(user, "assets.view"))
         ].compact
       end
@@ -38,7 +38,7 @@ module Nibble
           # A folder's pages are live the moment they are deployed, and have no rows to count.
           mix["published"] += Files.index.of(collection.handle).size if collection["files"].present?
           { "handle" => collection.handle, "title" => collection["title"] || collection.handle.humanize,
-            "url" => "/admin/collections/#{collection.handle}", "counts" => mix, "total" => mix.values.sum }
+            "url" => "/cp/collections/#{collection.handle}", "counts" => mix, "total" => mix.values.sum }
         end
       end
 
@@ -58,9 +58,9 @@ module Nibble
       def start_date = Time.zone.today - (DAYS - 1)
 
       def listing_url(entries, status)
-        collection = entries.distinct.pick(:collection) or return "/admin"
+        collection = entries.distinct.pick(:collection) or return "/cp"
 
-        "/admin/collections/#{collection}?status=#{status}"
+        "/cp/collections/#{collection}?status=#{status}"
       end
     end
   end

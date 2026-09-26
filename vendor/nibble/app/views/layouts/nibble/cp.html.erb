@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full<%= " dark" if cp_theme == "dark" %>">
+  <head>
+    <title>Nibble</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <% if cp_theme == "system" %>
+      <script>
+        if (window.matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.classList.add("dark");
+      </script>
+    <% end %>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <link rel="icon" href="<%= vite_asset_path "nibble-cp/assets/nibble.svg" %>" type="image/svg+xml">
+    <%= vite_stylesheet_tag "cp" %>
+    <%= vite_client_tag %>
+    <%= vite_typescript_tag "inertia" %>
+    <%= inertia_ssr_head %>
+  </head>
+  <body class="h-full">
+    <%= yield %>
+  </body>
+</html>

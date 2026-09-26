@@ -135,7 +135,7 @@ module Nibble
       (schema.collections + schema.taxonomies).each do |item|
         next if item["icon"].nil? || Cp::Navigation.icon?(item["icon"])
 
-        problem(item.path, "icon '#{item['icon']}' isn't one of the admin icons in #{Cp::Navigation::ICONS_PATH}")
+        problem(item.path, "icon '#{item['icon']}' isn't one of the Control Plane icons in #{Cp::Navigation::ICONS_PATH}")
       end
     end
 

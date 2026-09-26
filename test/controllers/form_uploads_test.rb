@@ -82,10 +82,10 @@ class FormUploadsTest < ActionDispatch::IntegrationTest
 
   test "only people who can see submissions get a short-lived download link, which always downloads" do
     apply upload("cv.pdf", PDF)
-    path = "/admin/forms/application/submissions/#{submission.id}/files/#{submission.files.blobs.sole.id}"
+    path = "/cp/forms/application/submissions/#{submission.id}/files/#{submission.files.blobs.sole.id}"
 
     get path
-    assert_redirected_to "/admin/session/new"
+    assert_redirected_to "/cp/session/new"
     sign_in_as users(:author)
     get path
     assert_response :forbidden

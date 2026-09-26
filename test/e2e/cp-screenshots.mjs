@@ -13,22 +13,22 @@ const errors = []
 page.on('console', (message) => message.type() === 'error' && errors.push(`${page.url()}: ${message.text()}`))
 page.on('pageerror', (error) => errors.push(`${page.url()}: ${error.message}`))
 
-await page.goto(`${base}/admin`, { waitUntil: 'networkidle' })
+await page.goto(`${base}/cp`, { waitUntil: 'networkidle' })
 await page.waitForTimeout(1000)
 await page.locator('#email').fill(email)
 await page.locator('#password').fill(password)
 await page.getByRole('button', { name: 'Sign in' }).click()
-await page.waitForURL(`${base}/admin`)
+await page.waitForURL(`${base}/cp`)
 
 const shots = process.argv.includes('--paths')
   ? process.argv[process.argv.indexOf('--paths') + 1].split(',')
   : [
-      '/admin',
-      '/admin/collections/pages',
-      '/admin/collections/posts',
-      '/admin/globals',
-      '/admin/utilities',
-      '/admin/trash',
+      '/cp',
+      '/cp/collections/pages',
+      '/cp/collections/posts',
+      '/cp/globals',
+      '/cp/utilities',
+      '/cp/trash',
     ]
 
 for (const path of shots) {
@@ -38,7 +38,7 @@ for (const path of shots) {
   console.log(`${path} -> ${outDir}/${name}.png`)
 }
 
-await page.goto(`${base}/admin/collections/pages`, { waitUntil: 'networkidle' })
+await page.goto(`${base}/cp/collections/pages`, { waitUntil: 'networkidle' })
 const firstRow = page.locator('tbody tr a, tbody tr [role=link]').first()
 if (await firstRow.count()) {
   await firstRow.click()

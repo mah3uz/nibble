@@ -5,7 +5,7 @@ module Nibble
 
       def self.generate_id = SecureRandom.alphanumeric(8)
 
-      # A row id is bookkeeping the control panel follows a row by, not content, so a file carries none. Keep
+      # A row id is bookkeeping the Control Plane follows a row by, not content, so a file carries none. Keep
       # the ids already stored, by position, or every import would mint new ones and never look unchanged.
       def self.carry_ids(stored, incoming)
         stored = Array(stored)

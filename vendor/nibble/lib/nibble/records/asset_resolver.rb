@@ -27,7 +27,7 @@ module Nibble
           "url" => asset.url(preset), "srcset" => preset && srcset(asset, preset), "thumbnail" => asset.thumbnail_url,
           "alt" => asset.alt, "width" => width, "height" => height,
           "focal" => asset.focal, "mime" => asset.mime,
-          "size" => asset.size, "folder" => asset.folder, "edit_url" => "/admin/media?asset=#{asset.id}"
+          "size" => asset.size, "folder" => asset.folder, "edit_url" => "/cp/media?asset=#{asset.id}"
         }
       end
 

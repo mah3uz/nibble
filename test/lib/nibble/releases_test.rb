@@ -21,7 +21,7 @@ class Nibble::ReleasesTest < ActiveSupport::TestCase
     Nibble::Releases.fetcher = nil
   end
 
-  test "checking is a switch in the control panel, not a line in a file, and it is on to begin with" do
+  test "checking is a switch in the Control Plane, not a line in a file, and it is on to begin with" do
     assert Nibble::Releases.checking?, "a site that has never touched it still hears about releases"
 
     Nibble::Releases.checking = false
@@ -50,7 +50,7 @@ class Nibble::ReleasesTest < ActiveSupport::TestCase
     assert_raises(Nibble::Error) { Nibble::Releases.fetch("http://example.com/releases.json") }
   end
 
-  test "an unreachable feed leaves the control panel alone" do
+  test "an unreachable feed leaves the Control Plane alone" do
     with_feed(prime: false) do
       Nibble::Releases.fetcher = ->(_) { raise SocketError, "no route" }
 
@@ -65,7 +65,7 @@ class Nibble::ReleasesTest < ActiveSupport::TestCase
       release = Nibble::Releases.newer(current: "0.1.0").sole
 
       assert_equal "## What's new\n\n- A thing\n\n## What's fixed\n", release.body,
-                   "it is passed through untouched, so rendering it is a decision the control panel makes later"
+                   "it is passed through untouched, so rendering it is a decision the Control Plane makes later"
       assert_equal "2026-09-21", release.date
     end
   end
@@ -106,9 +106,9 @@ class Nibble::ReleasesTest < ActiveSupport::TestCase
     end
   end
 
-  test "the control panel never waits on the feed: it reads what the scheduled check left" do
+  test "the Control Plane never waits on the feed: it reads what the scheduled check left" do
     with_feed(prime: false) do
-      Nibble::Releases.fetcher = ->(_) { flunk "a slow feed must not hold up a control panel page" }
+      Nibble::Releases.fetcher = ->(_) { flunk "a slow feed must not hold up a Control Plane page" }
 
       assert_empty Nibble::Releases.newer(current: "0.1.0")
       assert_enqueued_with job: Nibble::Jobs::CheckReleases
