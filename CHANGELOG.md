@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.18.2 — 2026-09-27 03:56 +0600
+
 ### What's fixed
 
 - **Crumbs highlights Vue and ERB code blocks.** A `vue` block colours its template, its script (as TypeScript with
