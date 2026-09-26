@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.18.1 — 2026-09-26 21:35 +0600
+
 ### Changed
 
 - **Nibble's database migrations are one per table,** each creating its table as it is now, with its indexes and
