@@ -19,6 +19,11 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **The Control Plane knows Vue and ERB too.** A rich text code block can be set to either, and a Markdown field's
   preview colours them.
 
+### Changed
+
+- **A new site keeps its storage in `~/<name>-storage` on the server,** the deploy user's home, instead of a Docker
+  volume under `/var/lib/docker/volumes`. A site that already deploys keeps its own `config/deploy.yml`.
+
 ## 0.18.1 — 2026-09-26 21:35 +0600
 
 ### Changed

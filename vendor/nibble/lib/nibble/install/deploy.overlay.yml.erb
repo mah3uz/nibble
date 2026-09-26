@@ -34,7 +34,7 @@ ssh:
   user: <%= ssh_user %>
 
 volumes:
-  - <%= name %>-storage:/rails/storage
+  - ./<%= name %>-storage:/rails/storage
 
 asset_path: /rails/public
 
