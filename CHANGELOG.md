@@ -61,7 +61,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   use the arrow keys), and a zoom slider that follows the pointer.
 - **Cropping starts with a selection in the middle of the image,** so it's clear at once what to drag. Everything
   outside it is dimmed, and the rule-of-thirds guides and handles show on light images too.
-- **The asset editor has a Close button beside Save.**
+- **The asset editor has a Close button beside Save,** and a click on the backdrop no longer closes it, so a stray
+  click can't throw away an edit.
 - **Live Preview updates in place as you type,** keeping its scroll position, instead of reloading blank each time. A
   theme's layout needs `PreviewBar` for this; without it the preview reloads as before.
 - **A preview is marked with a Preview ribbon** across the top corner, which pulses while a change applies.

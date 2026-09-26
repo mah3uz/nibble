@@ -151,6 +151,7 @@ function run(action: AssetMenuAction) {
         class="fixed inset-2 flex flex-col overflow-hidden rounded-xl shadow-[0_5px_20px_rgba(0,0,0,.3)] outline-none"
         :style="{ zIndex: zIndex + 1 }"
         @escape-key-down="(event) => (focusing || cropping) && event.preventDefault()"
+        @interact-outside.prevent
       >
         <DialogTitle class="sr-only">{{ asset?.filename ?? 'Asset' }}</DialogTitle>
         <DialogDescription class="sr-only">Edit the asset's details</DialogDescription>
