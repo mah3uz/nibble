@@ -85,7 +85,8 @@ module Nibble
 
       if approval_id.present?
         approval = Approval.find_by(public_id: approval_id.to_s)
-        return approval.update!(status: "used") if approval&.usable_for?(grant, operation.name, input)
+        claimed = approval&.usable_for?(grant, operation.name, input) && Approval.where(id: approval.id, status: "approved").update_all(status: "used", updated_at: Time.current) == 1
+        return if claimed
 
         raise Failure.new("approval_not_valid", "that approval isn't approved, has expired, or was given for a different request", status: :conflict,
           hint: "An approval works once, for exactly the request it was given for. Send the request without approval to ask again.")
@@ -156,14 +157,22 @@ module Nibble
 
       digest = Digest::SHA256.hexdigest([ operation.name, input ].to_json)
       Records::IdempotencyKey.where(created_at: ..Records::IdempotencyKey::KEEP.ago).delete_all
-      if (earlier = Records::IdempotencyKey.find_by(grant_id: grant.id, key:))
+      begin
+        reserved = Records::IdempotencyKey.create!(grant_id: grant.id, key:, operation: operation.name, digest:, response: { "pending" => true },
+          created_at: Time.current)
+      rescue ActiveRecord::RecordNotUnique
+        earlier = Records::IdempotencyKey.find_by!(grant_id: grant.id, key:)
         raise Failure.new("idempotency_conflict", "this idempotency_key was used for a different request", status: :conflict) if earlier.digest != digest
+        raise Failure.new("in_progress", "the first request with this idempotency_key is still running", status: :conflict, hint: "Try again in a moment.") if earlier.response["pending"]
 
         return earlier.response.merge("replayed" => true)
       end
 
-      yield.tap do |response|
-        Records::IdempotencyKey.create!(grant_id: grant.id, key:, operation: operation.name, digest:, response:, created_at: Time.current)
+      begin
+        yield.tap { |response| reserved.update!(response:) }
+      rescue StandardError
+        reserved.destroy
+        raise
       end
     end
 
