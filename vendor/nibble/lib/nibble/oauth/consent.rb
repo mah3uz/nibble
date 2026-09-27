@@ -55,7 +55,13 @@ module Nibble
 
       def column_available?(area, column)
         known = AgentAccess.areas(schema: @schema).find { |item| item.key == area }
+        return false if column != "read" && files?(area)
+
         known&.columns&.include?(column) && AgentAccess.value(area, column) && AgentAccess.person_can?(@user, area, column, schema: @schema)
+      end
+
+      def files?(area)
+        area.start_with?("entries.") && @schema.collection(area.delete_prefix("entries."))&.[]("files").present?
       end
     end
   end

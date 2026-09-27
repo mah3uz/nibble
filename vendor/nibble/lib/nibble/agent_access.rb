@@ -39,7 +39,9 @@ module Nibble
 
     def areas(schema: Nibble.schema)
       [
-        *schema.collections.map { |item| Area.new("entries.#{item.handle}", title(item), "Collections", %w[read write publish delete]) },
+        *schema.collections.map do |item|
+          Area.new("entries.#{item.handle}", title(item), "Collections", item["files"].present? ? %w[read] : %w[read write publish delete])
+        end,
         *schema.taxonomies.map { |item| Area.new("terms.#{item.handle}", title(item), "Taxonomies", %w[read write delete]) },
         Area.new("globals", "Globals", "Site", %w[read write]),
         Area.new("navigation", "Navigation", "Site", %w[read write]),
