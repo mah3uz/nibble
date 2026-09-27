@@ -93,6 +93,16 @@ class Api::V1::ContentApiTest < ActionDispatch::IntegrationTest
     assert_equal entry.uuid, body["data"]["uuid"]
   end
 
+  test "a path in a collection the API doesn't serve resolves to nothing, naming none of it" do
+    doc = create_entry("docs", { "title" => "Internal", "body" => "Body" })
+    %i[submit approve publish].each { |action| assert lifecycle(doc.reload, action).ok? }
+
+    get "/api/v1/routes", params: { path: doc.reload.uri }, headers: auth
+
+    assert_response :not_found
+    assert_no_match "docs", response.body
+  end
+
   test "the schema endpoint describes exposed collections and their fields" do
     get "/api/v1/schema", headers: auth
 
