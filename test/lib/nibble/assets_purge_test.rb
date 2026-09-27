@@ -11,7 +11,7 @@ class Nibble::AssetsPurgeTest < ActiveSupport::TestCase
   def strays = Nibble::Assets.stray_blobs(before: 1.day.ago).to_a
 
   def command(*args)
-    capture_io { Rails::Command.invoke("nibble:assets:purge_unused", args) }.first
+    capture_io { Rails::Command.invoke("nibble:cleanup:assets", args) }.first
   end
 
   test "an asset an entry uses is kept, and one nothing uses is listed" do

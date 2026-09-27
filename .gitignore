@@ -60,3 +60,6 @@
 
 # A site's own folder.
 /site/
+
+# The command-line tool, kept in its own repository.
+/cli/

@@ -1,13 +1,13 @@
 require_relative "../clean_failures"
 
-class NibbleAssetsCommand < Rails::Command::Base
+class NibbleCleanupCommand < Rails::Command::Base
   extend CleanFailures
-  namespace "nibble:assets"
+  namespace "nibble:cleanup"
 
-  desc "purge_unused", "List assets nothing uses and uploaded files no asset owns; --confirm acts on the list"
+  desc "assets", "List assets nothing uses and uploaded files no asset owns; --confirm acts on the list"
   option :older_than_days, type: :numeric, default: 1, desc: "Only what was uploaded at least this many days ago"
   option :confirm, type: :boolean, desc: "Move the unused assets to the trash and delete the stray files"
-  def purge_unused
+  def assets
     boot_application!
     days = options[:older_than_days]
     cutoff = days.days.ago

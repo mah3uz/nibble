@@ -61,6 +61,13 @@ class NibbleCommand < Rails::Command::Base
   # The release, what it runs on and every command, not Thor's list of this namespace alone.
   def self.help(shell, subcommand = false) = NibbleHelp.print(shell)
 
+  desc "reindex", "Rebuild every search index from live content"
+  def reindex
+    boot_application!
+    Nibble::Search.rebuild
+    puts "nibble search indexes rebuilt"
+  end
+
   desc "version", "Print the Nibble version this site runs"
   # Read from Nibble's own files rather than a booted app, so it still answers when the site won't boot.
   def version
