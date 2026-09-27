@@ -1,10 +1,10 @@
 module Nibble
   module Revisions
     class << self
-      def write(record, kind, snapshot:, actor:, message: nil)
+      def write(record, kind, snapshot:, actor:, grant: nil, message: nil)
         last = record.revisions.reorder(number: :desc).first
-        revision = record.revisions.create!(kind: kind.to_s, data: snapshot, actor_id: actor&.id, message:, created_at: Time.current,
-          number: (last&.number || 0) + 1)
+        revision = record.revisions.create!(kind: kind.to_s, data: snapshot, actor_id: actor&.id, grant_id: grant&.id, message:,
+          created_at: Time.current, number: (last&.number || 0) + 1)
         prune(record)
         revision
       end

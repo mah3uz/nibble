@@ -26,13 +26,23 @@ module Nibble
       end
     end
 
+    PUBLIC = /\A(globals|navigation)\.[^.]+\.view\z/
+
     def denial(principal, record, action)
       return if principal.system?
 
       ability = ability(record, action) or return "Only Nibble itself can #{action.to_s.humanize(capitalize: false)} this."
       return "#{record.collection.humanize} is written in files. Change it there and deploy." if file_backed?(record)
 
-      "You don't have permission to do that." unless Access.can?(principal.user, ability, record)
+      "You don't have permission to do that." unless can?(principal, ability, record)
+    end
+
+    def can?(principal, ability, record = nil)
+      return true if principal.system?
+      return false unless ability.to_s.match?(PUBLIC) || Access.can?(principal.user, ability, record)
+
+      grant = principal.grant or return true
+      grant.active? && grant.covers?(ability) && AgentAccess.allows?(ability) && Access.can?(principal.user, "apps.connect")
     end
 
     def file_backed?(record)

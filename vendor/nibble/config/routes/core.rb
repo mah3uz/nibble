@@ -49,10 +49,16 @@ Rails.application.routes.draw do
       resources :passkeys, only: %i[create update destroy] do
         post :options, on: :collection
       end
+      get "apps", to: "connected_apps#index", as: :apps
+      post "apps", to: "connected_apps#create"
+      patch "apps/:id", to: "connected_apps#update", as: :app
+      delete "apps/:id", to: "connected_apps#destroy", as: :disconnect_app
     end
     post "actions", to: "actions#run", as: :actions
     resources :roles, except: %i[show]
     resources :api_tokens, only: %i[index create destroy], path: "api-tokens"
+    resource :agent_access, only: %i[show update], path: "agent-access", controller: "agent_access"
+    delete "agent-access/grants/:id", to: "agent_access#revoke", as: :agent_access_grant
     resources :users, except: %i[show new] do
       member do
         post :send_reset
@@ -163,6 +169,19 @@ Rails.application.routes.draw do
       end
     end
   end
+
+  get ".well-known/oauth-authorization-server", to: "nibble/oauth/metadata#authorization_server", format: false
+  get ".well-known/oauth-protected-resource(/*resource)", to: "nibble/oauth/metadata#protected_resource", format: false
+  scope "oauth", module: "nibble/oauth", as: :oauth do
+    get "authorize", to: "authorizations#new", as: :authorize
+    post "authorize", to: "authorizations#create"
+    post "token", to: "tokens#create", as: :token
+    post "revoke", to: "tokens#revoke", as: :revoke
+    post "register", to: "registrations#create", as: :register
+    post "device_authorization", to: "device_authorizations#create", as: :device_authorization
+  end
+  get "cp/device", to: "nibble/oauth/authorizations#device", as: :cp_device
+  post "cp/device", to: "nibble/oauth/authorizations#lookup"
 
   post "forms/:handle", to: "forms#create", format: false, constraints: { handle: /[a-z0-9_-]+/ }, as: :form_submissions
   get "media/:uuid/:filename", to: "asset_files#show", format: false, constraints: { filename: /[^\/]+/ }, as: :asset_file

@@ -31,7 +31,8 @@ module Nibble
       def invalid!(key, message) = raise(Invalid.new(key.to_s => [ message ]))
 
       def revision!(kind, snapshot = record.snapshot)
-        Revisions.write(record, mode.to_s.start_with?("import") ? :import : kind, snapshot:, actor:, message: attrs["message"])
+        Revisions.write(record, mode.to_s.start_with?("import") ? :import : kind, snapshot:, actor:, grant: principal.grant,
+          message: attrs["message"])
       end
 
       def emit(name, extra = {})

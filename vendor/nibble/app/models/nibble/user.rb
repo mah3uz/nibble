@@ -9,6 +9,7 @@ module Nibble
     has_many :user_roles, dependent: :destroy
     has_many :user_credentials, dependent: :delete_all
     has_many :roles, through: :user_roles
+    has_many :grants, class_name: "Nibble::Grant", dependent: :destroy
 
     scope :administrators, -> { joins(:roles).where(roles: { superuser: true }).distinct }
 

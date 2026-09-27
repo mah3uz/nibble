@@ -13,6 +13,6 @@ module Nibble
 
     def system? = user.nil?
 
-    def event_actor = system? ? nil : { "type" => "user", "id" => user.id }
+    def event_actor = system? ? nil : { "type" => "user", "id" => user.id, "grant_id" => grant&.id }.compact
   end
 end

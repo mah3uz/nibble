@@ -60,6 +60,7 @@ module Nibble
           items << item("Users", "/cp/users", "users") if Access.can?(user, "users.manage")
           items << item("Roles", "/cp/roles", "permissions") if Access.can?(user, "roles.manage")
           items << item("API tokens", "/cp/api-tokens", "key") if Access.can?(user, "api_tokens.manage")
+          items << item("Agent access", "/cp/agent-access", "arrow-roadmap-path-flow") if Access.can?(user, "agents.manage")
           items
         end
 

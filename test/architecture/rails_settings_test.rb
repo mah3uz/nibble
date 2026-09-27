@@ -1,7 +1,7 @@
 require "test_helper"
 
 class RailsSettingsTest < ActiveSupport::TestCase
-  APP_WIDE = /\.configure\b|Inflector\.inflections|content_security_policy|assets\.prefix|config\.(time_zone|active_storage|action_mailer|active_job|cache_store)\b/
+  APP_WIDE = /\.configure\b|Inflector\.inflections|assets\.prefix|config\.(time_zone|active_storage|action_mailer|active_job|cache_store|content_security_policy)\b/
 
   test "Nibble keeps no Rails settings of its own, so a site changes every one where any Rails app would" do
     assert_equal %w[routes], Nibble.core_root.join("config").children.map { |path| path.basename.to_s }

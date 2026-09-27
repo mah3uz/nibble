@@ -11,6 +11,7 @@ export type Version = {
   label: string
   created_at: string
   author: string | null
+  via?: string | null
   restorable: boolean
   message: string | null
   changes: Record<string, [unknown, unknown]>
@@ -43,7 +44,10 @@ const expanded = ref(false)
         />
         <Badge variant="secondary">{{ version.label }}</Badge>
         <span class="font-medium">{{ when(version.created_at) }}</span>
-        <span class="truncate text-muted-foreground">by {{ version.author ?? 'import or system' }}</span>
+        <span class="truncate text-muted-foreground"
+          >by {{ version.author ?? 'import or system'
+          }}<template v-if="version.via"> via {{ version.via }}</template></span
+        >
       </button>
       <div class="flex shrink-0 items-center gap-1">
         <Button as-child type="button" variant="ghost" size="icon-sm" title="Preview this version">

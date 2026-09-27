@@ -5,7 +5,7 @@ import { isThemePage, themeLayout } from './resolve-page'
 // One app started twice: only the lazily loaded layouts differ.
 export function layoutFor(cpLayout: Component, authLayout: Component) {
   return (name: string, page: Page) =>
-    isThemePage(name) ? themeLayout(page) : name.startsWith('cp/auth/') ? authLayout : cpLayout
+    isThemePage(name) ? themeLayout(page) : /^cp\/(auth|oauth)\//.test(name) ? authLayout : cpLayout
 }
 
 export const inertiaDefaults = {

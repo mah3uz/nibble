@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_27_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_28_000700) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -86,6 +86,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_000000) do
     t.string "actor_type"
     t.json "changeset", default: {}, null: false
     t.datetime "created_at", null: false
+    t.integer "grant_id"
     t.string "ip"
     t.integer "subject_id"
     t.string "subject_type"
@@ -222,6 +223,78 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_000000) do
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_nibble_api_tokens_on_created_by_id"
     t.index ["token_digest"], name: "index_nibble_api_tokens_on_token_digest", unique: true
+  end
+
+  create_table "nibble_device_codes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "device_code_digest", null: false
+    t.datetime "expires_at", null: false
+    t.integer "grant_id"
+    t.datetime "last_polled_at"
+    t.integer "oauth_client_id", null: false
+    t.string "requested_ip"
+    t.string "resource", null: false
+    t.string "status", default: "pending", null: false
+    t.string "user_code", null: false
+    t.index ["device_code_digest"], name: "index_nibble_device_codes_on_device_code_digest", unique: true
+    t.index ["user_code"], name: "index_nibble_device_codes_on_user_code", unique: true
+  end
+
+  create_table "nibble_grants", force: :cascade do |t|
+    t.json "abilities", default: [], null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "kind", null: false
+    t.datetime "last_used_at"
+    t.string "last_used_ip"
+    t.string "name", null: false
+    t.integer "oauth_client_id"
+    t.string "preset", null: false
+    t.datetime "revoked_at"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.string "via"
+    t.index ["oauth_client_id"], name: "index_nibble_grants_on_oauth_client_id"
+    t.index ["user_id"], name: "index_nibble_grants_on_user_id"
+  end
+
+  create_table "nibble_oauth_clients", force: :cascade do |t|
+    t.string "client_id", null: false
+    t.string "client_uri"
+    t.datetime "created_at", null: false
+    t.datetime "fetched_at"
+    t.string "kind", null: false
+    t.string "name", null: false
+    t.json "redirect_uris", default: [], null: false
+    t.string "registered_ip"
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_nibble_oauth_clients_on_client_id", unique: true
+  end
+
+  create_table "nibble_oauth_codes", force: :cascade do |t|
+    t.string "code_challenge", null: false
+    t.string "code_digest", null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.integer "grant_id", null: false
+    t.string "redirect_uri", null: false
+    t.string "resource", null: false
+    t.datetime "used_at"
+    t.index ["code_digest"], name: "index_nibble_oauth_codes_on_code_digest", unique: true
+    t.index ["grant_id"], name: "index_nibble_oauth_codes_on_grant_id"
+  end
+
+  create_table "nibble_oauth_tokens", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.integer "grant_id", null: false
+    t.string "kind", null: false
+    t.string "resource", null: false
+    t.datetime "revoked_at"
+    t.string "token_digest", null: false
+    t.datetime "used_at"
+    t.index ["grant_id"], name: "index_nibble_oauth_tokens_on_grant_id"
+    t.index ["token_digest"], name: "index_nibble_oauth_tokens_on_token_digest", unique: true
   end
 
   create_table "nibble_roles", force: :cascade do |t|
@@ -361,6 +434,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_000000) do
     t.integer "actor_id"
     t.datetime "created_at", null: false
     t.json "data", default: {}, null: false
+    t.integer "grant_id"
     t.string "kind", null: false
     t.string "message"
     t.integer "number", null: false
@@ -450,6 +524,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_000000) do
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "asset_folders", "asset_folders", column: "parent_id"
   add_foreign_key "assets", "active_storage_blobs", column: "blob_id"

@@ -113,7 +113,9 @@ module Nibble
           card("users", "Users", [
             node("users.manage", "Manage users", "Invite, edit and remove Control Plane users, and set their roles."),
             node("roles.manage", "Manage roles", "Create roles and change what they grant. Grant this one wisely."),
-            node("api_tokens.manage", "Manage API tokens", "Create and revoke tokens for the content API.")
+            node("api_tokens.manage", "Manage API tokens", "Create and revoke tokens for the content API."),
+            node("apps.connect", "Connect apps", "Let AI apps and the nibble CLI work on content as them, within what they can do."),
+            node("agents.manage", "Manage agent access", "Turn agent access on or off, choose what apps may do, and revoke anyone's apps.")
           ])
         end
 

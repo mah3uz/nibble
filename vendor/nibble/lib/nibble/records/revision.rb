@@ -8,6 +8,7 @@ module Nibble
 
       belongs_to :record, polymorphic: true
       belongs_to :actor, class_name: "Nibble::User", optional: true
+      belongs_to :grant, class_name: "Nibble::Grant", optional: true
 
       validates :kind, inclusion: { in: KINDS }
     end

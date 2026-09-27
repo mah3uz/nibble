@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, router } from '@inertiajs/vue3'
-import { Keyboard, LogOut, Monitor, Moon, Sun, UserCircle } from '@lucide/vue'
+import { Keyboard, LogOut, Monitor, Moon, Plug, Sun, UserCircle } from '@lucide/vue'
 import { computed } from 'vue'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
@@ -75,6 +75,12 @@ const signOut = () => router.delete('/cp/session')
           ><Link href="/cp/account/edit"
             ><span class="flex size-5 items-center justify-center p-1"><UserCircle class="size-4" /></span
             ><span class="px-2 text-gray-900 dark:text-gray-300">Manage profile</span></Link
+          ></DropdownMenuItem
+        >
+        <DropdownMenuItem as-child class="px-1"
+          ><Link href="/cp/account/apps"
+            ><span class="flex size-5 items-center justify-center p-1"><Plug class="size-4" /></span
+            ><span class="px-2 text-gray-900 dark:text-gray-300">Connected apps</span></Link
           ></DropdownMenuItem
         >
         <DropdownMenuItem class="px-1" @click="shortcutsDialogOpen = true"
