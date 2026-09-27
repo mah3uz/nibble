@@ -99,8 +99,10 @@ The operations come from the site, so they always match what it offers and what 
 its arguments. Objects take JSON, `@file.json`, or `-` for standard input. `--dry-run` shows the change without
 making it. A change to an entry is a draft until it's published; every change says which site and account made it.
 
-On a terminal, lists print as tables. Piped, or with `--json`, every command prints `{"ok": true, "data": …}` or
-`{"ok": false, "error": {"code", "message", "hint"}}`. `--pick entries.0.title` prints one value.
+On a terminal, lists print as tables and records as aligned fields, in colour; `NO_COLOR=1` turns colour off. Piped,
+or with `--json`, every command prints `{"ok": true, "data": …}` or `{"ok": false, "error": {"code", "message",
+"hint"}}`, never colour. `--pick entries.0.title` prints just that value, so a script can capture it:
+`id=$(nibble remote create-entry … --pick id)`.
 
 ## 6. AI apps
 
