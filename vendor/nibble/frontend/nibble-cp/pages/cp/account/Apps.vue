@@ -124,7 +124,7 @@ useBreadcrumbs([{ label: 'Connected apps' }])
         </div>
         <p class="text-gray-600 dark:text-gray-400">
           The app sends you here to sign in and choose what it may do. From a terminal, run
-          <code class="font-mono">nibble auth login {{ endpoints.mcp.replace(/\/mcp$/, '') }}</code
+          <code class="font-mono">nibble auth login {{ endpoints.mcp.replace(/\/api\/v1\/mcp$/, '') }}</code
           >.
         </p>
       </div>

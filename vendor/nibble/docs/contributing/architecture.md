@@ -85,7 +85,7 @@ queries and sitemaps ask. There are no rows, no sync and no step on the boot pat
 `Install`, `Upgrade`, `Prepare`, `Metadata`, `Check`, `Principal`, `Policy`, `AgentAccess`, `Oauth`, `Operations`,
 `RichTextMarkdown`, `SafeUrl`, `AgentGuide`, `Dev`.
 
-`Operations` is the one list of what an app can do; `/api/v2` and `/mcp` are both generated from it, and a snapshot
+`Operations` is the one list of what an app can do; `/api/v1/operations` and `/api/v1/mcp` are both generated from it, and a snapshot
 test makes any change to it deliberate.
 
 Each is one idea. Looking for where something happens, the name is usually the answer.

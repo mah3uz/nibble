@@ -7,27 +7,27 @@ class Nibble::McpTest < ActionDispatch::IntegrationTest
     Nibble::AgentAccess.update!(enabled: true)
     roles(:editor).update!(abilities: roles(:editor).abilities + %w[apps.connect])
     @grant = grant("draft")
-    @token = Nibble::OauthToken.issue(@grant, "access", resource: "https://example.com/mcp")
+    @token = Nibble::OauthToken.issue(@grant, "access", resource: "https://example.com/api/v1/mcp")
   end
 
   def grant(preset) = Nibble::Grant.create!(user: users(:editor), oauth_client: Nibble::OauthClient.cli, kind: "app", name: "Claude Code",
     preset:, abilities: Nibble::AgentAccess.preset(preset))
 
   def rpc(method, params = {}, token: @token, headers: {})
-    post "/mcp", params: { jsonrpc: "2.0", id: 1, method:, params: }.to_json,
+    post "/api/v1/mcp", params: { jsonrpc: "2.0", id: 1, method:, params: }.to_json,
       headers: { "Authorization" => "Bearer #{token}", "Content-Type" => "application/json", "Accept" => "application/json, text/event-stream" }.merge(headers)
     JSON.parse(response.body) if response.body.present?
   end
 
   test "an app without a token is pointed at the site's sign-in" do
-    post "/mcp", params: { jsonrpc: "2.0", id: 1, method: "tools/list" }.to_json, headers: { "Content-Type" => "application/json" }
+    post "/api/v1/mcp", params: { jsonrpc: "2.0", id: 1, method: "tools/list" }.to_json, headers: { "Content-Type" => "application/json" }
 
     assert_response :unauthorized
-    assert_match 'resource_metadata="https://example.com/.well-known/oauth-protected-resource/mcp"', response.headers["WWW-Authenticate"]
+    assert_match 'resource_metadata="https://example.com/.well-known/oauth-protected-resource/api/v1/mcp"', response.headers["WWW-Authenticate"]
   end
 
   test "a token issued for the management API doesn't open the MCP endpoint" do
-    rpc("tools/list", token: Nibble::OauthToken.issue(@grant, "access", resource: "https://example.com/api/v2"))
+    rpc("tools/list", token: Nibble::OauthToken.issue(@grant, "access", resource: "https://example.com/api/v1"))
 
     assert_response :unauthorized
   end
@@ -38,7 +38,7 @@ class Nibble::McpTest < ActionDispatch::IntegrationTest
     assert_match "lock_version", handshake["instructions"]
 
     assert_includes rpc("server/discover")["result"]["supportedVersions"], "2026-07-28"
-    post "/mcp", params: { jsonrpc: "2.0", method: "notifications/initialized" }.to_json,
+    post "/api/v1/mcp", params: { jsonrpc: "2.0", method: "notifications/initialized" }.to_json,
       headers: { "Authorization" => "Bearer #{@token}", "Content-Type" => "application/json" }
     assert_response :accepted
   end
@@ -89,7 +89,7 @@ class Nibble::McpTest < ActionDispatch::IntegrationTest
   end
 
   test "there is no stream to open and nothing to delete" do
-    get "/mcp", headers: { "Authorization" => "Bearer #{@token}" }
+    get "/api/v1/mcp", headers: { "Authorization" => "Bearer #{@token}" }
     assert_response :method_not_allowed
   end
 end

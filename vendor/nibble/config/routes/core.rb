@@ -21,10 +21,8 @@ Rails.application.routes.draw do
       get "routes", to: "routes#show"
       get "schema", to: "schema#show"
       get "health", to: "health#show"
-    end
-    namespace :v2 do
       get "operations", to: "operations#index"
-      match ":operation", to: "operations#create", via: %i[get post], constraints: { operation: /[a-z_]+/ }, as: :operation
+      match "operations/:operation", to: "operations#create", via: %i[get post], constraints: { operation: /[a-z_]+/ }, as: :operation
     end
   end
 
@@ -175,8 +173,8 @@ Rails.application.routes.draw do
     end
   end
 
-  post "mcp", to: "nibble/mcp#create", as: :mcp
-  match "mcp", to: "nibble/mcp#elsewhere", via: %i[get delete]
+  post "api/v1/mcp", to: "nibble/mcp#create", as: :mcp
+  match "api/v1/mcp", to: "nibble/mcp#elsewhere", via: %i[get delete]
   get ".well-known/oauth-authorization-server", to: "nibble/oauth/metadata#authorization_server", format: false
   get ".well-known/oauth-protected-resource(/*resource)", to: "nibble/oauth/metadata#protected_resource", format: false
   scope "oauth", module: "nibble/oauth", as: :oauth do

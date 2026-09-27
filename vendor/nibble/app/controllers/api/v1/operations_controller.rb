@@ -1,5 +1,5 @@
 module Api
-  module V2
+  module V1
     # The management API: every operation in Nibble::Operations, as the person a token acts for.
     class OperationsController < ActionController::API
       include Nibble::BearerAuthentication
@@ -52,7 +52,7 @@ module Api
         @grant = bearer_grant(:api)
         return if @grant
 
-        challenge("api/v2")
+        challenge("api/v1")
         problem(:unauthorized, "unauthorized", "A valid access token is required.", hint: "Sign in with `nibble auth login #{issuer}`.")
       end
 

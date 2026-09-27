@@ -22,7 +22,7 @@ module Nibble
 
     def issuer(request) = Nibble.config.url.presence&.to_s&.chomp("/") || request.base_url
 
-    def resources(request) = { mcp: "#{issuer(request)}/mcp", api: "#{issuer(request)}/api/v2" }
+    def resources(request) = { mcp: "#{issuer(request)}/api/v1/mcp", api: "#{issuer(request)}/api/v1" }
 
     def resource!(request, requested)
       return resources(request)[:mcp] if requested.blank?

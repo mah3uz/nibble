@@ -25,25 +25,25 @@ Agent access must be [turned on](../running/agent-access.md); until then these e
 
 | Endpoint | For |
 |---|---|
-| `POST /mcp` | MCP clients — Claude, ChatGPT, Codex, Cursor. Stateless JSON-RPC over HTTP; each operation is a tool |
-| `GET /api/v2/operations` | the operations this token may use, with their arguments as JSON Schema |
-| `GET /api/v2/<operation>` | an operation that only reads; arguments in the query string |
-| `POST /api/v2/<operation>` | any operation; arguments as a JSON body |
+| `POST /api/v1/mcp` | MCP clients — Claude, ChatGPT, Codex, Cursor. Stateless JSON-RPC over HTTP; each operation is a tool |
+| `GET /api/v1/operations` | the operations this token may use, with their arguments as JSON Schema |
+| `GET /api/v1/operations/<operation>` | an operation that only reads; arguments in the query string |
+| `POST /api/v1/operations/<operation>` | any operation; arguments as a JSON body |
 
-Both are built from one list of operations, so they never disagree. Answers are never cached. Every `/api/v2` answer
+Both are built from one list of operations, so they never disagree. Answers are never cached. Every `/api/v1/operations` answer
 carries `Nibble-Api-Version`.
 
 ## 2. Signing in
 
 The site is its own OAuth authorization server, for public clients only:
 
-- **Discovery:** `/.well-known/oauth-protected-resource/mcp` (or `/api/v2`) names the site as the authorization
+- **Discovery:** `/.well-known/oauth-protected-resource/api/v1/mcp` (or `/api/v1`) names the site as the authorization
   server; `/.well-known/oauth-authorization-server` describes it.
 - **Authorization code with PKCE (S256)**, the only flow a browser takes. Loopback redirects may use any port.
 - **Clients** identify themselves with a client metadata document (an `https` URL as `client_id`), register
   dynamically, or — the `nibble` command — are built in.
 - **Tokens:** an access token lasts an hour; a refresh token rotates on every use, and reusing an old one disconnects
-  the app. Tokens are bound to the endpoint they were issued for: an `/mcp` token doesn't open `/api/v2`.
+  the app. Tokens are bound to the endpoint they were issued for: an MCP token doesn't open the operations endpoints.
 - **Device code**, only if the site allows it.
 
 Send the token in the `Authorization` header. A token in a URL is refused.

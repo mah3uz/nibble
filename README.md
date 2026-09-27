@@ -47,7 +47,7 @@ The documentation is in `vendor/nibble/docs`, and ships with every release.
 ## AI apps and agents
 
 Once an administrator turns on Agent access, people can connect Claude, ChatGPT, Codex or Cursor to the site at
-`/mcp`, and the `nibble` command-line tool to the management API at `/api/v2`. An app works as the person who
+`/api/v1/mcp`, and the `nibble` command-line tool to the management API at `/api/v1/operations`. An app works as the person who
 connected it and can never do more than they can; publishing and changes that go live at once wait for that person's
 approval. In development, `bin/rails nibble:dev:mcp` gives an agent building the site tools to render pages, check,
 test and read logs. See [Agent access][agents] and [Building with an agent][dev-agents].

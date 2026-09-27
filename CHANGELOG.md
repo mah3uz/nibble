@@ -16,7 +16,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 - **AI apps can work on a site as the people who connect them.** An administrator turns on **Agent access** under
   Users, and chooses what apps may touch area by area — reading content and writing entry drafts to begin with.
-  People then connect Claude, ChatGPT, Codex, Cursor or anything that speaks MCP at `/mcp`, sign in on the site, and
+  People then connect Claude, ChatGPT, Codex, Cursor or anything that speaks MCP at `/api/v1/mcp`, sign in on the site, and
   choose what the app may do: read, write drafts, everything their role allows, or area by area. An app can never do
   more than its person, and whatever this page, the person's roles or the connection allow — the smallest of the
   three — is checked on every request.
@@ -24,7 +24,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   what would change, with a warning if it links to another site, and approves it once.
 - **Connected apps** in the account menu lists each app, when it was last used, and pending approvals, and makes
   tokens for scripts. Revisions and the audit log say which app a change came through.
-- **The management API** at `/api/v2`: every operation an app can take, with its arguments as JSON Schema, a dry run,
+- **The management API** at `/api/v1/operations`: every operation an app can take, with its arguments as JSON Schema, a dry run,
   retries that don't repeat a change, `lock_version` so nobody's edit is overwritten, rich text as Markdown, and
   errors that say what to do next.
 - **The `nibble` command-line tool:** start a site, run its tasks as `nibble check`, and sign in to any number of
