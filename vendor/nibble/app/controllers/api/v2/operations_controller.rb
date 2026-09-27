@@ -2,6 +2,8 @@ module Api
   module V2
     # The management API: every operation in Nibble::Operations, as the person a token acts for.
     class OperationsController < ActionController::API
+      include Nibble::BearerAuthentication
+
       before_action { response.headers["Cache-Control"] = "no-store" }
       before_action { response.headers["Nibble-Api-Version"] = Nibble::Operations::VERSION }
       before_action :refuse_query_tokens
@@ -14,7 +16,7 @@ module Api
       end
 
       def index
-        render json: { "data" => Nibble::Operations.available(principal).map(&:catalogue), "meta" => meta }
+        render json: { "data" => Nibble::Operations.available(grant_principal(@grant)).map(&:catalogue), "meta" => meta }
       end
 
       def create
@@ -23,7 +25,7 @@ module Api
           return problem(:method_not_allowed, "method_not_allowed", "#{operation.name} changes content, so send it as a POST")
         end
 
-        data = Nibble::Operations.call(params[:operation], input, caller: Nibble::Operations::Caller.new(principal:, site: issuer, ip: request.remote_ip))
+        data = Nibble::Operations.call(params[:operation], input, caller: operations_caller(@grant))
         render json: { "data" => data, "meta" => meta.merge("operation" => params[:operation]) }
       end
 
@@ -33,8 +35,6 @@ module Api
         source = request.post? ? request.request_parameters : request.query_parameters
         source.to_h.except("operation", "format")
       end
-
-      def principal = Nibble::Principal.new(user: @grant.user, grant: @grant)
 
       def issuer = Nibble::Oauth.issuer(request)
 
@@ -49,11 +49,10 @@ module Api
       def authenticate
         return head(:not_found) unless Nibble::AgentAccess.enabled?
 
-        token = request.authorization.to_s[/\ABearer (\S+)\z/, 1]
-        @grant = Nibble::Oauth.authenticate(token, resources: [ Nibble::Oauth.resources(request)[:api] ])
-        return @grant.used!(request.remote_ip) if @grant
+        @grant = bearer_grant(:api)
+        return if @grant
 
-        response.headers["WWW-Authenticate"] = %(Bearer resource_metadata="#{issuer}/.well-known/oauth-protected-resource/api/v2")
+        challenge("api/v2")
         problem(:unauthorized, "unauthorized", "A valid access token is required.", hint: "Sign in with `nibble auth login #{issuer}`.")
       end
 

@@ -2,7 +2,7 @@ module Nibble
   module Operations
     # Records as an app reads and writes them: stored values, rich text as Markdown, secrets never shown.
     module Editable
-      ENTRY_COLUMNS = %w[title slug published_at unpublish_at parent_id template author_id].freeze
+      ENTRY_COLUMNS = %w[title slug published_at unpublish_at parent_id template].freeze
       TERM_COLUMNS = %w[title slug].freeze
 
       module_function

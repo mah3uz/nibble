@@ -107,6 +107,16 @@
       "openWorldHint": false
     }
   },
+  "get_guide": {
+    "arguments": [],
+    "required": [],
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
   "get_navigation": {
     "arguments": [
       "handle",

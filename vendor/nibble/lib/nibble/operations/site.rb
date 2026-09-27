@@ -13,6 +13,9 @@ module Nibble
           Operation.new(name: "describe_site", title: "Describe the site", read_only: true, destructive: false, needs: nil,
             handler: method(:describe_site), input: Operations.schema({}),
             description: "The site's content model: its collections, taxonomies, global sets, navigation menus and locales, with handles to pass to other operations."),
+          Operation.new(name: "get_guide", title: "Read the site guide", read_only: true, destructive: false, needs: nil,
+            handler: method(:guide), input: Operations.schema({}),
+            description: "How to work on this site: its rules for agents, its content model and its own editorial notes, as Markdown. Its fingerprint changes when the schema or notes change."),
           Operation.new(name: "describe_schema", title: "Describe fields", read_only: true, destructive: false, needs: nil,
             handler: method(:describe_schema),
             description: "The fields of a collection, taxonomy, global set or navigation menu, with the JSON Schema each value is written against. Read it before creating or changing content.",
@@ -28,10 +31,15 @@ module Nibble
           "person" => { "name" => principal.user.name, "email" => principal.user.email_address },
           "connection" => grant && { "name" => grant.name, "access" => grant.preset, "expires_at" => grant.expires_at.utc.iso8601 },
           "can" => AgentAccess.areas.to_h do |area|
-            [ area.key, area.columns.select { |column| AgentAccess.concrete_abilities(area.key, column).any? { |ability| Policy.can?(principal, ability) } } ]
+            columns = area.columns.select { |column| AgentAccess.concrete_abilities(area.key, column).any? { |ability| Policy.can?(principal, ability) } }
+            [ area.key, files?(area.key) ? [] : columns ]
           end.reject { |_, columns| columns.empty? }
         }
       end
+
+      def guide(_input, caller) = AgentGuide.document(site: Nibble::Oauth.site_name, url: caller.site)
+
+      def files?(area) = area.start_with?("entries.") && Nibble.schema.collection(area.delete_prefix("entries."))&.[]("files").present?
 
       def describe_site(_input, caller)
         schema = Nibble.schema

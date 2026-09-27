@@ -174,6 +174,8 @@ Rails.application.routes.draw do
     end
   end
 
+  post "mcp", to: "nibble/mcp#create", as: :mcp
+  match "mcp", to: "nibble/mcp#elsewhere", via: %i[get delete]
   get ".well-known/oauth-authorization-server", to: "nibble/oauth/metadata#authorization_server", format: false
   get ".well-known/oauth-protected-resource(/*resource)", to: "nibble/oauth/metadata#protected_resource", format: false
   scope "oauth", module: "nibble/oauth", as: :oauth do

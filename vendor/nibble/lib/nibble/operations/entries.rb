@@ -59,6 +59,7 @@ module Nibble
       def list(input, caller)
         collection = collection!(input["collection"])
         Operations.require!(caller.principal, "entries.#{collection.handle}.view")
+        files!(collection)
         per_page = input["per_page"] || 20
         spec = { "from" => "entries:#{collection.handle}", "locale" => Operations.locale!(input["locale"]),
                  "where" => filter(input), "sort" => sorts(input["sort"]), "paginate" => { "per_page" => per_page, "param" => "page" } }
@@ -134,8 +135,8 @@ module Nibble
       def files!(collection)
         return if collection["files"].blank?
 
-        raise Failure.new("written_in_files", "#{AgentAccess.title(collection)} is written in files", status: :conflict,
-          hint: "Change the files in the site's repository and deploy instead.")
+        raise Failure.new("written_in_files", "#{AgentAccess.title(collection)} is written in files, not stored here", status: :conflict,
+          hint: "Its entries live in the site's repository under site/content/#{collection['files']}; read and change them there, then deploy.")
       end
 
       def filter(input)

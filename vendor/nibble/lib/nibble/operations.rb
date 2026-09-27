@@ -108,7 +108,8 @@ module Nibble
         outcome = yield
         raise ActiveRecord::Rollback
       end
-      outcome.merge("dry_run" => true, "saved" => false)
+      outcome = outcome.except("id", "uuid", "cp_url", "url") if outcome["result"] == "created"
+      outcome.merge("result" => "would be #{outcome['result']}", "dry_run" => true, "saved" => false)
     ensure
       Thread.current[:nibble_dispatch_scheduled] = scheduled
     end
