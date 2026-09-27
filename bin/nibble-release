@@ -10,6 +10,7 @@ LOCKFILE = ROOT.join("Gemfile.lock")
 CHANGELOG = ROOT.join("CHANGELOG.md")
 SETTINGS = ROOT.join("config/nibble.yml")
 PACKED = ROOT.join("tmp/release")
+CLI_CHECKS = ROOT.join("cli/script/ci")
 def fail!(message) = abort("release refused: #{message}")
 
 # A tag nobody can fetch is not a release, so the last step is offered rather than left as a note.
@@ -69,6 +70,8 @@ elsif Gem::Version.new(version) < Gem::Version.new(current)
   fail!("#{version} is behind #{current}, which has no tag yet")
 end
 fail!("working tree isn't clean") unless `git -C #{ROOT} status --porcelain`.strip.empty?
+# The CLI ships on its own schedule, so a release has to prove it still agrees with the CLI before it is tagged.
+fail!("cli/ is missing: clone git@github.com:mah3uz/nibble-cli.git into cli/ so its checks run against this release") unless CLI_CHECKS.executable?
 
 notes = CHANGELOG.read[/^## Unreleased\n(.*?)(?=^## \d+\.\d+\.\d+ |\z)/m, 1].to_s.strip
 fail!("CHANGELOG.md has nothing under Unreleased") if notes.empty?
@@ -86,6 +89,8 @@ system("bundle", "lock", chdir: ROOT.to_s, out: File::NULL) or fail!("could not 
 
 puts "running bin/ci"
 system({ "CI" => "1" }, ROOT.join("bin/ci").to_s) or fail!("bin/ci failed — nothing was committed or tagged")
+puts "running cli/script/ci against this release"
+system(CLI_CHECKS.to_s, ROOT.to_s) or fail!("cli/script/ci failed — nothing was committed or tagged")
 
 system("git", "-C", ROOT.to_s, "add", VERSION_FILE.to_s, CHANGELOG.to_s, LOCKFILE.to_s, SETTINGS.to_s) or fail!("could not stage the release")
 system("git", "-C", ROOT.to_s, "commit", "-qm", "Release #{version}") or fail!("could not commit the release")

@@ -23,9 +23,19 @@ After reading this guide, you will know:
 bin/nibble-release 0.15.0
 ```
 
-It refuses a malformed or backwards version, a dirty tree, and an empty `Unreleased` section. Then it bumps
-`Nibble::VERSION`, dates the changelog section, runs `bin/ci`, and only then commits and tags. If `bin/ci` fails,
-nothing is committed or tagged.
+It refuses a malformed or backwards version, a dirty tree, a checkout without `cli/`, and an empty `Unreleased`
+section. Then it bumps `Nibble::VERSION`, dates the changelog section, runs `bin/ci`, then the CLI's own checks
+(`cli/script/ci`) against this release, and only then commits and tags. If either fails, nothing is committed or
+tagged.
+
+The `nibble` CLI is released on its own, from `mah3uz/nibble-cli`, and sites run whichever version their people
+installed. Its checks include a contract test that signs in to this checkout and works on content through the
+management API, so a release that would break the CLI people already have is caught before it is tagged. Clone it
+into `cli/` once:
+
+```sh
+git clone git@github.com:mah3uz/nibble-cli.git cli
+```
 
 It then offers to push `main` and the tag. `--push` pushes without asking; answering no prints the command to push
 later:

@@ -13,12 +13,35 @@ run the site's tasks without typing `bin/rails`, and to fix a post on the live s
 
 After reading this guide, you will know:
 
+- How to install it.
 - How to start a site with it.
 - How it runs a site's tasks.
 - How to sign in to one or more sites, and work on their content.
 - How to connect AI apps and install the site's guide for them.
 
-## 1. Starting a site
+## 1. Installing it
+
+It is released on its own, from [mah3uz/nibble-cli](https://github.com/mah3uz/nibble-cli), for Linux on Intel and
+ARM, and for Windows:
+
+```sh
+curl -LsSf https://github.com/mah3uz/nibble-cli/releases/latest/download/nibble-cli-installer.sh | sh
+```
+
+On Windows, in PowerShell:
+
+```powershell
+irm https://github.com/mah3uz/nibble-cli/releases/latest/download/nibble-cli-installer.ps1 | iex
+```
+
+Each installer downloads the build for this computer and puts `nibble` in `~/.local/bin`; every release also
+publishes a `sha256.sum` for checking a download by hand. To build it yourself, clone the repository and run
+`just install`.
+
+Any version works with any site on the same management API. When they differ, `nibble` says whether it or the site
+needs upgrading.
+
+## 2. Starting a site
 
 ```sh
 nibble new tidewater
@@ -27,14 +50,14 @@ nibble new tidewater
 It checks this computer has what Nibble needs, downloads the latest release, checks it against its published
 checksum, and runs the installer. `--version 0.19.0` picks a release; anything after `--` goes to the installer.
 
-## 2. A site's tasks
+## 3. A site's tasks
 
 Inside a site's folder, a word that isn't one of the command's own runs a task: `nibble check` is
 `bin/rails nibble:check`, and `nibble schema show collections/posts` is `bin/rails nibble:schema:show collections/posts`.
 The command's own words are `new`, `auth`, `remote`, `mcp`, `skill`, `doctor`, `help` and `completion`; no task
 uses them.
 
-## 3. Signing in
+## 4. Signing in
 
 ```sh
 nibble auth login tidewater.example
@@ -62,7 +85,7 @@ You can be signed in to many sites, and to one site as several people; `--site` 
 `nibble auth allow` there once. A `.nibble.toml` you haven't allowed is refused, so a repository you clone can't point
 your commands at a site you didn't choose.
 
-## 4. Working on content
+## 5. Working on content
 
 ```sh
 nibble remote                                        # what you can do on this site
@@ -79,7 +102,7 @@ making it. A change to an entry is a draft until it's published; every change sa
 On a terminal, lists print as tables. Piped, or with `--json`, every command prints `{"ok": true, "data": …}` or
 `{"ok": false, "error": {"code", "message", "hint"}}`. `--pick entries.0.title` prints one value.
 
-## 5. AI apps
+## 6. AI apps
 
 ```sh
 nibble mcp install --client claude-code     # or codex, cursor; claude and chatgpt show where to paste the address
@@ -90,7 +113,7 @@ nibble skill sync                           # refresh installed guides after the
 The guide is written from the site's schema and its own notes in `site/agents/*.md` — put your editorial style
 there — so each site's is different.
 
-## 6. When something is wrong
+## 7. When something is wrong
 
 ```sh
 nibble doctor
