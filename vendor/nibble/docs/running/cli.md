@@ -18,6 +18,7 @@ After reading this guide, you will know:
 - How it runs a site's tasks.
 - How to sign in to one or more sites, and work on their content.
 - How to connect AI apps and install the site's guide for them.
+- How to set up completion in your shell.
 
 ## 1. Installing it
 
@@ -115,7 +116,26 @@ nibble skill sync                           # refresh installed guides after the
 The guide is written from the site's schema and its own notes in `site/agents/*.md` — put your editorial style
 there — so each site's is different.
 
-## 7. When something is wrong
+## 7. Completion
+
+Add the line for your shell to its startup file, then open a new terminal:
+
+```sh
+eval "$(nibble completion bash)"                                   # ~/.bashrc
+eval "$(nibble completion zsh)"                                    # ~/.zshrc, after compinit
+nibble completion fish > ~/.config/fish/completions/nibble.fish    # fish, once
+nibble completion powershell | Out-String | Invoke-Expression      # PowerShell's $PROFILE
+```
+
+Tab completes the command's own words and options, a site's tasks inside its folder, your sites and accounts, and on
+`nibble remote` the operations this connection can run, their arguments, and values such as the collections you may
+use or the blueprints of the collection you named.
+
+Completion never contacts the site: it reads what `nibble remote` last learned, which sign-in saves first. After you
+change the schema, `nibble remote describe-site` brings it up to date at once. A site's tasks are learned the first
+time you run one there, or `nibble doctor`.
+
+## 8. When something is wrong
 
 ```sh
 nibble doctor
