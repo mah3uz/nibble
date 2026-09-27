@@ -5,7 +5,6 @@ module Nibble
 
     CURRENT = "2026-07-28".freeze
     HANDSHAKE = %w[2025-11-25 2025-06-18 2025-03-26].freeze
-    GUIDE = "nibble://guide".freeze
     LIST_TTL = 60_000
 
     class RpcError < StandardError
@@ -47,12 +46,16 @@ module Nibble
       when "ping", "logging/setLevel" then {}
       when "tools/list" then listing("tools" => tools)
       when "tools/call" then call_tool(params)
-      when "resources/list" then listing("resources" => [ { "uri" => GUIDE, "name" => "guide", "title" => "Site guide", "mimeType" => "text/markdown" } ])
+      when "resources/list" then listing("resources" => skills.map { |skill| Nibble::Skills.resource(skill) })
       when "resources/templates/list" then listing("resourceTemplates" => [])
-      when "resources/read" then read_resource(params)
+      when "resources/read" then listing("contents" => [ Nibble::Skills.read(skills, params["uri"].to_s) ])
+      when "skills/list" then listing("skills" => skills.map { |skill| Nibble::Skills.entry(skill) })
+      when "skills/get" then listing("skill" => Nibble::Skills.get(skills, params["uri"].to_s))
       when "prompts/list" then listing("prompts" => [])
       else raise RpcError.new(-32601, "#{method} isn't supported")
       end
+    rescue Nibble::Skills::Unknown => error
+      raise RpcError.new(-32602, error.message)
     end
 
     def handshake(params)
@@ -66,7 +69,7 @@ module Nibble
         "instructions" => instructions, "resultType" => "complete" }
     end
 
-    def capabilities = { "tools" => { "listChanged" => false }, "resources" => { "listChanged" => false } }
+    def capabilities = { "tools" => { "listChanged" => false }, "resources" => { "listChanged" => false }, "extensions" => { Nibble::Skills::EXTENSION => {} } }
 
     def server_info = { "name" => "nibble", "title" => Nibble::Oauth.site_name, "version" => Nibble::VERSION }
 
@@ -92,11 +95,11 @@ module Nibble
       { "content" => [ { "type" => "text", "text" => text } ], "structuredContent" => failure.to_h, "isError" => true, "resultType" => "complete" }
     end
 
-    def read_resource(params)
-      raise RpcError.new(-32602, "there is no resource at #{params['uri']}") unless params["uri"] == GUIDE
-
-      guide = Nibble::AgentGuide.document(site: Nibble::Oauth.site_name, url: Nibble::Oauth.issuer(request))
-      listing("contents" => [ { "uri" => GUIDE, "mimeType" => "text/markdown", "text" => guide["markdown"] } ])
+    def skills
+      @skills ||= begin
+        site, url = Nibble::Oauth.site_name, Nibble::Oauth.issuer(request)
+        [ Nibble::Skills::Skill.new(Nibble::AgentGuide.name(site), { "SKILL.md" => Nibble::AgentGuide.skill(site:, url:) }) ]
+      end
     end
 
     def reply(id, result: nil, error: nil, status: :ok)

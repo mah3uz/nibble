@@ -15,7 +15,10 @@ module Nibble
         - run_tests returns failures only. logs and last_error show what happened while the site ran in development:
           requests, Rails errors, server-rendering failures, failed jobs, Vite build errors and errors in the browser.
         - search_docs and read_doc read the documentation for the Nibble version installed here.
+        - The skills nibble-theming, nibble-schema and nibble-extending say how to do each kind of work here.
       TEXT
+      CAPABILITIES = { "tools" => { "listChanged" => false }, "resources" => { "listChanged" => false },
+                       "extensions" => { Skills::EXTENSION => {} } }.freeze
 
       def initialize(input = $stdin, output = $stdout, guarded: true)
         @input = input
@@ -50,19 +53,24 @@ module Nibble
         case method
         when "initialize"
           requested = params["protocolVersion"].to_s
-          { "protocolVersion" => VERSIONS.include?(requested) ? requested : VERSIONS[1], "capabilities" => { "tools" => { "listChanged" => false } },
+          { "protocolVersion" => VERSIONS.include?(requested) ? requested : VERSIONS[1], "capabilities" => CAPABILITIES,
             "serverInfo" => info, "instructions" => INSTRUCTIONS }
         when "server/discover"
-          { "supportedVersions" => VERSIONS, "capabilities" => { "tools" => { "listChanged" => false } }, "serverInfo" => info,
+          { "supportedVersions" => VERSIONS, "capabilities" => CAPABILITIES, "serverInfo" => info,
             "instructions" => INSTRUCTIONS, "resultType" => "complete" }
         when "ping" then {}
-        when "tools/list" then { "tools" => Dev.tools.values.map(&:listing), "ttlMs" => 60_000, "cacheScope" => "private", "resultType" => "complete" }
+        when "tools/list" then cached("tools" => Dev.tools.values.map(&:listing))
         when "tools/call" then call(params)
-        when "resources/list" then { "resources" => [] }
+        when "resources/list" then { "resources" => Skills.bundled.map { |skill| Skills.resource(skill) } }
+        when "resources/read" then cached("contents" => [ Skills.read(Skills.bundled, params["uri"].to_s) ])
+        when "skills/list" then cached("skills" => Skills.bundled.map { |skill| Skills.entry(skill) })
+        when "skills/get" then cached("skill" => Skills.get(Skills.bundled, params["uri"].to_s))
         when "prompts/list" then { "prompts" => [] }
         else raise ArgumentError, "#{method} isn't supported"
         end
       end
+
+      def cached(body) = body.merge("ttlMs" => 60_000, "cacheScope" => "private", "resultType" => "complete")
 
       def info = { "name" => "nibble-dev", "title" => "Nibble developer tools", "version" => Nibble::VERSION }
 

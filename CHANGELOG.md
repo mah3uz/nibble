@@ -29,11 +29,13 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   errors that say what to do next.
 - **The `nibble` command-line tool:** start a site, run its tasks as `nibble check`, and sign in to any number of
   sites and accounts to work on their content from a terminal or an agent.
-- **A guide for agents,** written from the schema and the site's own notes in `site/agents/*.md`, served over MCP and
-  installable as a skill.
+- **A guide for agents,** written from the schema and the site's own notes in `site/agents/*.md`, served over MCP as a
+  skill through its Skills extension, and installable as one.
 - **Developer tools for agents building a site:** `bin/rails nibble:dev:mcp` renders a path and shows what answered it
   and its props, checks, runs tests with failures as data, lints, reads the development log and searches the docs;
   `bin/rails nibble:dev:setup` connects Claude Code, Cursor and Codex and keeps them out of `vendor/nibble/`.
+- **Skills for building a site:** `nibble-theming`, `nibble-schema` and `nibble-extending` ship in
+  `vendor/nibble/skills/`, served by the developer tools and linked into `.claude/skills/` by `nibble:dev:setup`.
 - **The documentation ships with each release,** in `vendor/nibble/docs`.
 - **New sites get an `AGENTS.md`,** which their `CLAUDE.md` imports.
 

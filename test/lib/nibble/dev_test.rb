@@ -104,6 +104,39 @@ class Nibble::DevSetupTest < ActiveSupport::TestCase
       assert_equal %w[nibble:dev:mcp], JSON.parse(root.join(".mcp.json").read).dig("mcpServers", "nibble-dev", "args")
     end
   end
+
+  test "setup links Nibble's skills so upgrades update them, and leaves a skill the site wrote itself" do
+    Dir.mktmpdir do |dir|
+      root = Pathname(dir)
+      root.join(".claude/skills/nibble-schema").mkpath
+      root.join(".claude/skills/nibble-schema/SKILL.md").write("ours")
+
+      Nibble::Dev::Setup.run(root:)
+      Nibble::Dev::Setup.run(root:)
+
+      assert_equal "../../vendor/nibble/skills/nibble-theming", root.join(".claude/skills/nibble-theming").readlink.to_s
+      assert_equal "ours", root.join(".claude/skills/nibble-schema/SKILL.md").read
+    end
+  end
+end
+
+class Nibble::DevSkillsTest < ActiveSupport::TestCase
+  def rpc(method, params = {}) = Nibble::Dev::McpServer.new.respond({ jsonrpc: "2.0", id: 1, method:, params: }.to_json).as_json
+
+  test "the developer tools serve Nibble's skills, each named for its folder, with a manifest that matches every file served" do
+    skills = rpc("skills/list")["result"]["skills"]
+
+    assert_equal %w[nibble-extending nibble-schema nibble-theming], skills.map { |skill| skill["frontmatter"]["name"] }.sort
+    skills.each do |skill|
+      assert_equal skill["uri"].split("/")[2], skill["frontmatter"]["name"]
+      assert skill["frontmatter"]["description"].present?, "an agent picks a skill by its description"
+      skill["resources"].each do |file|
+        text = rpc("resources/read", { uri: file["uri"] })["result"]["contents"].sole["text"]
+        assert_equal [ "sha256:#{Digest::SHA256.hexdigest(text)}", text.bytesize ], file.values_at("digest", "size")
+      end
+    end
+    assert_equal(-32602, rpc("skills/get", { uri: "skill://nibble-theming/../../../config/master.key" })["error"]["code"])
+  end
 end
 
 class Nibble::DevLogEventsTest < ActiveSupport::TestCase

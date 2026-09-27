@@ -16,6 +16,7 @@ After reading this guide, you will know:
 
 - How to connect an agent to the developer tools.
 - What each tool does.
+- Which skills come with Nibble.
 - How Nibble keeps an agent out of its own files.
 
 ## 1. Connecting
@@ -24,8 +25,8 @@ After reading this guide, you will know:
 bin/rails nibble:dev:setup
 ```
 
-names the tools in `.mcp.json` for Claude Code and `.cursor/mcp.json` for Cursor, and stops Claude Code editing
-`vendor/nibble/`. For Codex, run `codex mcp add nibble-dev -- bin/rails nibble:dev:mcp`.
+names the tools in `.mcp.json` for Claude Code and `.cursor/mcp.json` for Cursor, links Nibble's skills into
+`.claude/skills/`, and stops Claude Code editing `vendor/nibble/`. For Codex, run `codex mcp add nibble-dev -- bin/rails nibble:dev:mcp`.
 
 The tools run only in development, with code reloading on, over standard input and output — nothing listens on the
 network — and they pick up each change the agent makes. `bin/rails nibble:dev:tool <name> '<json>'` runs any of them
@@ -50,7 +51,21 @@ from a terminal.
 > [!TIP]
 > The loop that works: change a view, `render` a path that uses it, read the props and any error, then `run_tests`.
 
-## 3. Keeping out of Nibble's files
+## 3. Skills
+
+Three skills come with Nibble, in `vendor/nibble/skills/`, so each upgrade brings the ones written for it:
+
+| Skill | For |
+|---|---|
+| `nibble-theming` | views, layouts, query sidecars and components, and checking them with `render` |
+| `nibble-schema` | collections, blueprints and fields, and changing them without stranding content |
+| `nibble-extending` | the site's own Ruby, Control Plane changes and events, without touching Nibble's files |
+
+An agent loads one when the work calls for it. Claude Code finds them through the links `nibble:dev:setup` makes;
+any agent that supports MCP's Skills extension gets them from the developer tools. A skill of your own in
+`.claude/skills/` with the same name is left alone.
+
+## 4. Keeping out of Nibble's files
 
 An agent that edits `vendor/nibble/` makes the site impossible to upgrade. Three things stop it:
 
@@ -61,7 +76,7 @@ An agent that edits `vendor/nibble/` makes the site impossible to upgrade. Three
 `where_is` gives the right route for each case: edit the site's own file, define the same schema handle in
 `site/schema/`, start a theme of your own, or eject a Control Plane screen.
 
-## 4. Your conventions
+## 5. Your conventions
 
 A new site's `AGENTS.md` is yours: write down how you name things and what you want tested, and every agent reads
 it. Claude Code reads it through `CLAUDE.md`.

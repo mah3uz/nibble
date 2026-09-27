@@ -111,7 +111,7 @@ evaluates `vendor/nibble/Gemfile`, which loads `Nibble::Engine`; `config/applica
   `Lifecycle`, `Query`, `Presenter`, `Routing`, `PageProps`, `PageCache`, `Search`, `Seo`, `Sitemaps`, `Assets`,
   `Forms`, `Outbound`, `Webhooks`, `Access`, `Packages`, `ContentMigrations`, `Release`, `Releases`, `Eject`,
   `Install`, `Prepare`, `Check`, and for agents `Principal`, `Policy`, `AgentAccess`, `Oauth`, `Operations`,
-  `AgentGuide`, `Dev`.
+  `AgentGuide`, `Skills`, `Dev`.
 - `vendor/nibble/app/` — laid out as Rails lays out `app/`, and added the same way, so names are unchanged:
   `controllers/` (`SiteController` catch-all, `Nibble::Cp::*`, `Api::V1::*` (read-only content API),
   `Api::V1::OperationsController` (management API), `Nibble::McpController`, `Nibble::Oauth::*`, `FormsController`,

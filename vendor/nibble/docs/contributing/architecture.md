@@ -83,7 +83,7 @@ queries and sitemaps ask. There are no rows, no sync and no step on the boot pat
 `PageCache`, `Dependencies`, `Files`, `Search`, `Seo`, `Sitemaps`, `Feeds`, `Assets`, `Forms`, `Outbound`,
 `Webhooks`, `Events`, `Uris`, `Access`, `Packages`, `ContentMigrations`, `Drift`, `Release`, `Releases`, `Eject`,
 `Install`, `Upgrade`, `Prepare`, `Metadata`, `Check`, `Principal`, `Policy`, `AgentAccess`, `Oauth`, `Operations`,
-`RichTextMarkdown`, `SafeUrl`, `AgentGuide`, `Dev`.
+`RichTextMarkdown`, `SafeUrl`, `AgentGuide`, `Skills`, `Dev`.
 
 `Operations` is the one list of what an app can do; `/api/v1/operations` and `/mcp` are both generated from it, and a snapshot
 test makes any change to it deliberate.

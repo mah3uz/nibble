@@ -91,7 +91,7 @@ carry the same fields:
 
 ## 6. Telling agents about the site
 
-Agents get a guide to the site — how to work, its content model — as the MCP server's instructions, as the
-`nibble://guide` resource, and from `get_guide`. It's written from the schema and from the site's own notes in
+Agents get a guide to the site — how to work, its content model — as the MCP server's instructions, as a skill
+through MCP's Skills extension, and from `get_guide`. It's written from the schema and from the site's own notes in
 `site/agents/*.md`, and never from content, so nothing a visitor writes can become an instruction. Put the editorial
 rules you'd tell a new writer in `site/agents/voice.md`.

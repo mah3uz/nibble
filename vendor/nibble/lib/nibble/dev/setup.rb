@@ -16,7 +16,18 @@ module Nibble
           permissions = config["permissions"].to_h
           config.merge("permissions" => permissions.merge("deny" => Array(permissions["deny"]) | [ DENY ]))
         end
-        written
+        written + Nibble::Skills.bundled.filter_map { |skill| link(root, skill.name) }
+      end
+
+      # A link, so each upgrade of vendor/nibble updates the skills; a skill folder the site made itself is left alone.
+      def link(root, name)
+        path = root.join(".claude/skills", name)
+        return nil if path.exist? && !path.symlink?
+
+        path.dirname.mkpath
+        path.delete if path.symlink?
+        path.make_symlink(Pathname("../../vendor/nibble/skills").join(name))
+        ".claude/skills/#{name}"
       end
 
       def with_server(config) = config.merge("mcpServers" => config["mcpServers"].to_h.merge("nibble-dev" => SERVER))
