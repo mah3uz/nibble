@@ -63,6 +63,7 @@ Rails.application.routes.draw do
     resources :api_tokens, only: %i[index create destroy], path: "api-tokens"
     resource :agent_access, only: %i[show update], path: "agent-access", controller: "agent_access"
     delete "agent-access/grants/:id", to: "agent_access#revoke", as: :agent_access_grant
+    resources :approvals, only: %i[show update]
     resources :users, except: %i[show new] do
       member do
         post :send_reset

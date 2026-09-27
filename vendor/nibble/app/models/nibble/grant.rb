@@ -12,6 +12,7 @@ module Nibble
     belongs_to :oauth_client, class_name: "Nibble::OauthClient", optional: true
     has_many :tokens, class_name: "Nibble::OauthToken", dependent: :delete_all
     has_many :codes, class_name: "Nibble::OauthCode", dependent: :delete_all
+    has_many :approvals, class_name: "Nibble::Approval", dependent: :delete_all
 
     validates :kind, inclusion: { in: KINDS }
     validates :preset, inclusion: { in: PRESETS }

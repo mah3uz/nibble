@@ -1,6 +1,7 @@
 {
   "create_entry": {
     "arguments": [
+      "approval",
       "blueprint",
       "collection",
       "data",
@@ -21,6 +22,7 @@
   },
   "create_term": {
     "arguments": [
+      "approval",
       "data",
       "dry_run",
       "idempotency_key",
@@ -231,6 +233,7 @@
   "transition_asset": {
     "arguments": [
       "action",
+      "approval",
       "dry_run",
       "id",
       "idempotency_key"
@@ -249,6 +252,7 @@
   "transition_entry": {
     "arguments": [
       "action",
+      "approval",
       "comment",
       "dry_run",
       "id",
@@ -271,6 +275,7 @@
   "transition_term": {
     "arguments": [
       "action",
+      "approval",
       "dry_run",
       "id",
       "idempotency_key",
@@ -290,6 +295,7 @@
   },
   "update_asset": {
     "arguments": [
+      "approval",
       "data",
       "dry_run",
       "id",
@@ -310,6 +316,7 @@
   },
   "update_entry": {
     "arguments": [
+      "approval",
       "data",
       "dry_run",
       "id",
@@ -330,6 +337,7 @@
   },
   "update_global": {
     "arguments": [
+      "approval",
       "data",
       "dry_run",
       "handle",
@@ -351,6 +359,7 @@
   },
   "update_navigation": {
     "arguments": [
+      "approval",
       "dry_run",
       "handle",
       "idempotency_key",
@@ -372,6 +381,7 @@
   },
   "update_term": {
     "arguments": [
+      "approval",
       "data",
       "dry_run",
       "id",
@@ -393,6 +403,7 @@
   "upload_asset": {
     "arguments": [
       "alt",
+      "approval",
       "content_base64",
       "dry_run",
       "filename",

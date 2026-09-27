@@ -4,7 +4,11 @@ module Nibble
   module Operations
     VERSION = "2026-09-27"
 
-    Operation = Data.define(:name, :title, :description, :input, :read_only, :destructive, :needs, :handler) do
+    Operation = Data.define(:name, :title, :description, :input, :read_only, :destructive, :needs, :handler, :consequential) do
+      def initialize(consequential: false, **rest) = super(consequential:, **rest)
+
+      def consequential?(input) = consequential.respond_to?(:call) ? consequential.call(input) : consequential
+
       def annotations = { "readOnlyHint" => read_only, "destructiveHint" => destructive, "idempotentHint" => read_only, "openWorldHint" => false }
 
       def catalogue = { "name" => name, "title" => title, "description" => description, "input" => input, "annotations" => annotations }
@@ -29,7 +33,8 @@ module Nibble
     WRITE_INPUT = {
       "dry_run" => { "type" => "boolean", "description" => "Check and preview the change without saving anything." },
       "idempotency_key" => { "type" => "string", "maxLength" => 100,
-                             "description" => "Any unique string. Sending the same one again returns the first result instead of repeating the change." }
+                             "description" => "Any unique string. Sending the same one again returns the first result instead of repeating the change." },
+      "approval" => { "type" => "string", "description" => "The approval id from an approval_required answer, once the person has approved it." }
     }.freeze
     GROUPS = %w[Site Entries Terms Sets Assets Forms].freeze
 
@@ -65,7 +70,38 @@ module Nibble
 
       key = input.delete("idempotency_key")
       dry = input.delete("dry_run") == true
-      remembered(caller, key, operation, input) { dry ? rehearse { operation.handler.call(input, caller) } : operation.handler.call(input, caller) }
+      approval = input.delete("approval")
+      remembered(caller, key, operation, input) do
+        next rehearse { operation.handler.call(input, caller) } if dry
+
+        approved!(operation, input, caller, approval) { rehearse { operation.handler.call(input, caller) } }
+        operation.handler.call(input, caller)
+      end
+    end
+
+    def approved!(operation, input, caller, approval_id)
+      grant = caller.principal.grant
+      return unless grant&.kind == "app" && operation.consequential?(input)
+
+      if approval_id.present?
+        approval = Approval.find_by(public_id: approval_id.to_s)
+        return approval.update!(status: "used") if approval&.usable_for?(grant, operation.name, input)
+
+        raise Failure.new("approval_not_valid", "that approval isn't approved, has expired, or was given for a different request", status: :conflict,
+          hint: "An approval works once, for exactly the request it was given for. Send the request without approval to ask again.")
+      end
+
+      digest = Approval.digest(operation.name, input)
+      approval = grant.approvals.where(status: "pending", digest:).where("expires_at > ?", Time.current).first
+      unless approval
+        approval = grant.approvals.create!(operation: operation.name, input:, digest:, preview: yield)
+        Records::Notification.notify(grant.user_id, "apps.approval_requested", title: "#{grant.name}: #{operation.title}",
+          approval: approval.public_id)
+      end
+      url = "#{caller.site}/cp/approvals/#{approval.public_id}"
+      raise Failure.new("approval_required", "#{grant.user.name} has to approve this before it happens", status: :conflict,
+        details: { "approval" => approval.public_id, "approval_url" => url, "expires_at" => approval.expires_at.utc.iso8601 },
+        hint: "Ask the person to open #{url} and approve it, then send the same request again with approval: \"#{approval.public_id}\".")
     end
 
     def check(operation, input)

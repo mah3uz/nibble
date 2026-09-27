@@ -5,7 +5,7 @@ module Nibble
       PRESETS = {
         "read" => [ "Read", "See the content you can see. Change nothing." ],
         "draft" => [ "Draft", "Create entries and edit drafts, and send them for review. Nothing goes live." ],
-        "everything" => [ "Everything I can do", "Anything your role allows within the site's agent settings, publishing included." ],
+        "everything" => [ "Everything I can do", "Anything your role allows within the site's agent settings. Publishing, trashing and live changes each wait for your approval." ],
         "custom" => [ "Custom", "Choose area by area." ]
       }.freeze
 

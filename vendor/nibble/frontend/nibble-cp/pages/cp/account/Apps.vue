@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { router, useForm } from '@inertiajs/vue3'
+import { Link, router, useForm } from '@inertiajs/vue3'
 import { ref, watch } from 'vue'
 import AccessChooser, { type Area, type Preset } from '@/components/cp/agents/AccessChooser.vue'
 import CpPanel from '@/components/cp/page/CpPanel.vue'
@@ -36,7 +36,10 @@ type App = {
   expires_at: string
 }
 
+type PendingApproval = { id: string; app: string; operation: string | null; title: string | null; created_at: string }
+
 const props = defineProps<{
+  approvals: PendingApproval[]
   enabled: boolean
   can_connect: boolean
   elevated: boolean
@@ -125,6 +128,24 @@ useBreadcrumbs([{ label: 'Connected apps' }])
           >.
         </p>
       </div>
+    </CpPanel>
+
+    <CpPanel v-if="approvals.length" title="Waiting for your approval">
+      <ul class="divide-y divide-gray-100 rounded-xl bg-white shadow-ui-sm dark:divide-gray-800 dark:bg-gray-900">
+        <li v-for="approval in approvals" :key="approval.id">
+          <Link
+            :href="`/cp/approvals/${approval.id}`"
+            class="flex items-center justify-between gap-4 p-4 text-sm hover:bg-gray-50 dark:hover:bg-gray-850"
+          >
+            <span>
+              <span class="font-medium">{{ approval.app }}</span> asks to
+              {{ (approval.operation ?? 'make a change').toLowerCase()
+              }}<template v-if="approval.title">: {{ approval.title }}</template>
+            </span>
+            <span class="text-gray-500">{{ date(approval.created_at) }}</span>
+          </Link>
+        </li>
+      </ul>
     </CpPanel>
 
     <DataTablePanel v-if="apps.length">

@@ -7,7 +7,8 @@ module Nibble
       "comment.mentioned" => "You were mentioned",
       "form.submitted" => "New form submission",
       "webhook.disabled" => "A webhook was turned off after repeated failures",
-      "apps.connected" => "A new app was connected to your account"
+      "apps.connected" => "A new app was connected to your account",
+      "apps.approval_requested" => "An app is waiting for your approval"
     }.freeze
 
     def notify(notification)

@@ -12,6 +12,8 @@ module Nibble
           can_connect: Nibble::Access.can?(Nibble::Current.user, "apps.connect"),
           elevated: elevated?,
           apps: grants.select(&:active?).map { |grant| row(grant) },
+          approvals: Nibble::Approval.where(grant: grants.select(&:active?), status: "pending").where("expires_at > ?", Time.current)
+            .order(created_at: :desc).includes(:grant).map { |approval| approval_row(approval) },
           presets: Nibble::Oauth::Consent.new(Nibble::Current.user, device: true).presets,
           areas: Nibble::Oauth::Consent.new(Nibble::Current.user).areas,
           endpoints: { mcp: Nibble::Oauth.resources(request)[:mcp], api: Nibble::Oauth.resources(request)[:api] },
@@ -47,6 +49,11 @@ module Nibble
       private
 
       def grant = Nibble::Current.user.grants.find(params[:id])
+
+      def approval_row(approval)
+        { id: approval.public_id, app: approval.grant.name, operation: Nibble::Operations.find(approval.operation)&.title,
+          title: approval.preview["title"] || approval.preview["handle"], created_at: approval.created_at.utc.iso8601 }
+      end
 
       def row(grant)
         client = grant.oauth_client

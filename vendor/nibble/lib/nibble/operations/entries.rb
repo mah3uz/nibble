@@ -2,6 +2,7 @@ module Nibble
   module Operations
     module Entries
       WRITABLE = %w[title slug published_at unpublish_at parent_id template].freeze
+      LIVE = %w[publish unpublish trash approve reject].freeze
       TRANSITIONS = {
         "publish" => "Make it live now, or at published_at. A draft is published over the live entry.",
         "unpublish" => "Take it off the site.",
@@ -44,7 +45,7 @@ module Nibble
             input: Operations.schema({ "id" => { "type" => "integer" }, "lock_version" => { "type" => "integer", "description" => "From get_entry" },
                                        "data" => { "type" => "object" } }, %w[id lock_version data], write: true)),
           Operation.new(name: "transition_entry", title: "Publish, review or trash an entry", read_only: false, destructive: true,
-            needs: %w[entries write], handler: method(:transition),
+            needs: %w[entries write], handler: method(:transition), consequential: ->(input) { LIVE.include?(input["action"]) },
             description: "Move an entry through its life: #{TRANSITIONS.map { |action, text| "#{action}: #{text}" }.join(' ')}",
             input: Operations.schema({ "id" => { "type" => "integer" }, "action" => { "type" => "string", "enum" => TRANSITIONS.keys },
                                        "lock_version" => { "type" => "integer" }, "published_at" => { "type" => "string" },

@@ -23,6 +23,7 @@ const LINES: Record<string, string> = {
   'form.submitted': 'New submission to',
   'webhook.disabled': 'Turned off after repeated failures:',
   'apps.connected': 'New app connected to your account:',
+  'apps.approval_requested': 'Waiting for your approval:',
 }
 
 const items = ref<Notification[]>([])

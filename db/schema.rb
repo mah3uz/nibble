@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_28_000800) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_28_000900) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -234,6 +234,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_000800) do
     t.datetime "updated_at", null: false
     t.index ["created_by_id"], name: "index_nibble_api_tokens_on_created_by_id"
     t.index ["token_digest"], name: "index_nibble_api_tokens_on_token_digest", unique: true
+  end
+
+  create_table "nibble_approvals", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "decided_at"
+    t.string "digest", null: false
+    t.datetime "expires_at", null: false
+    t.integer "grant_id", null: false
+    t.json "input", default: {}, null: false
+    t.string "operation", null: false
+    t.json "preview", default: {}, null: false
+    t.string "public_id", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.index ["grant_id", "status"], name: "index_nibble_approvals_on_grant_id_and_status"
+    t.index ["public_id"], name: "index_nibble_approvals_on_public_id", unique: true
   end
 
   create_table "nibble_device_codes", force: :cascade do |t|
