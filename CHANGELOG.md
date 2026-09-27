@@ -12,6 +12,10 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+> **AI apps work on a site as the people who connect them.** Claude, ChatGPT, Codex and Cursor connect over MCP,
+> and the `nibble` command from a terminal. None can do more than the person it acts for, and an app waits for that
+> person before anything goes live.
+
 ### What's new
 
 - **AI apps can work on a site as the people who connect them.** An administrator turns on **Agent access** under
@@ -20,6 +24,9 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   choose what the app may do: read, write drafts, everything their role allows, or area by area. An app can never do
   more than its person, and whatever this page, the person's roles or the connection allow — the smallest of the
   three — is checked on every request.
+
+  **Upgrade:** a site that sets `outbound.allowed_hosts` adds `claude.ai` to it before anyone connects Claude Code,
+  whose description of itself the site fetches from there.
 - **Publishing, trashing and live changes through an app wait for approval.** The person the app acts for sees exactly
   what would change, with a warning if it links to another site, and approves it once.
 - **Connected apps** in the account menu lists each app, when it was last used, and pending approvals, and makes
@@ -28,8 +35,11 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   retries that don't repeat a change, `lock_version` so nobody's edit is overwritten, rich text as Markdown, and
   errors that say what to do next. Every answer carries its contract number, `Nibble::MANAGEMENT_API_VERSION`, so a
   client can tell whether it or the site needs upgrading.
-- **The `nibble` command-line tool:** start a site, run its tasks as `nibble check`, and sign in to any number of
-  sites and accounts to work on their content from a terminal or an agent.
+- **The `nibble` command-line tool,** released on its own from
+  [mah3uz/nibble-cli](https://github.com/mah3uz/nibble-cli): start a site, run its tasks as `nibble check`, sign in
+  to any number of sites and accounts to work on their content from a terminal or an agent, and complete all of it
+  in bash, zsh, fish and PowerShell. Install it with
+  `curl -LsSf https://github.com/mah3uz/nibble-cli/releases/latest/download/nibble-cli-installer.sh | sh`.
 - **A guide for agents,** written from the schema and the site's own notes in `site/agents/*.md`, served over MCP as a
   skill through its Skills extension, and installable as one.
 - **Developer tools for agents building a site:** `bin/rails nibble:dev:mcp` renders a path and shows what answered it
@@ -53,6 +63,9 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **API tokens only read.** The `manage:<collection>` scope is gone; changes go through the management API as a
   person.
 
+  **Upgrade:** a token that had the scope keeps reading but can no longer write. A script that wrote through it
+  uses a token made under **Connected apps** instead, with the management API.
+
 ### What's fixed
 
 - **Approving or rejecting a review needs the approve permission,** as the editor's buttons already assumed; it had
@@ -63,6 +76,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **Navigation links and link fields refuse `javascript:` and `data:` addresses,** which a theme would have put into
   a page as a link that runs script.
 - **Failed sign-ins to the content API are limited per address,** where each made-up token had its own allowance.
+- **The content API's route lookup answers only for collections the API serves.** It resolved an address in any
+  collection, so a token could learn the titles of entries the API otherwise keeps back.
 
 ## 0.18.3 — 2026-09-27 04:51 +0600
 

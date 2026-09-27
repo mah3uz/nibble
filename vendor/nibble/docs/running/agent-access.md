@@ -54,6 +54,11 @@ Collections kept as files offer only **Read**: their entries live in the site's 
 > Turn on only what someone asked for. "Marketing wants Claude to draft blog posts" needs **Posts: Read, Write** and
 > nothing more.
 
+> [!NOTE]
+> An app can describe itself with a document on its own site, which Nibble fetches when someone connects it; Claude
+> Code's is on `claude.ai`. If [`outbound.allowed_hosts`](configuration.md#4-every-key) is set, add those hosts to it,
+> or the app can't connect.
+
 ## 3. Who may connect apps
 
 A person needs the **Connect apps** permission. Administrators have it; give it to other roles under **Roles**. The
