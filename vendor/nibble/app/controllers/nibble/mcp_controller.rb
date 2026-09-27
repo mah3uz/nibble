@@ -114,7 +114,7 @@ module Nibble
       @grant = bearer_grant(:mcp)
       return if @grant
 
-      challenge("api/v1/mcp")
+      challenge("mcp")
       render json: { "error" => "unauthorized", "error_description" => "Connect this app to the site first." }, status: :unauthorized
     end
   end

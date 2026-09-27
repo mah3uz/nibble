@@ -16,7 +16,7 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 - **AI apps can work on a site as the people who connect them.** An administrator turns on **Agent access** under
   Users, and chooses what apps may touch area by area — reading content and writing entry drafts to begin with.
-  People then connect Claude, ChatGPT, Codex, Cursor or anything that speaks MCP at `/api/v1/mcp`, sign in on the site, and
+  People then connect Claude, ChatGPT, Codex, Cursor or anything that speaks MCP at `/mcp`, sign in on the site, and
   choose what the app may do: read, write drafts, everything their role allows, or area by area. An app can never do
   more than its person, and whatever this page, the person's roles or the connection allow — the smallest of the
   three — is checked on every request.

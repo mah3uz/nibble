@@ -23,7 +23,7 @@ class Api::OperationsTest < ActionDispatch::IntegrationTest
   end
 
   test "a token meant for the MCP endpoint doesn't open the API" do
-    mcp = Nibble::OauthToken.issue(@grant, "access", resource: "https://example.com/api/v1/mcp")
+    mcp = Nibble::OauthToken.issue(@grant, "access", resource: "https://example.com/mcp")
 
     get "/api/v1/operations/whoami", headers: headers(mcp)
     assert_response :unauthorized

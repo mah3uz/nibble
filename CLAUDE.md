@@ -164,7 +164,7 @@ the audit log, notifications, the page cache, the search index and webhooks.
 - **One permission check for every change:** `Nibble::Lifecycle.call` requires an `actor:` (a user, a
   `Nibble::Principal` carrying a connected app's grant, or `Nibble::Principal.system`) and asks `Nibble::Policy` before
   it runs, whoever calls it. An app's permission is the person's roles ∩ its grant ∩ the site's Agent access settings.
-  The management API (`/api/v1/operations`) and MCP (`/api/v1/mcp`) are generated from `Nibble::Operations`; nothing hand-mirrors it.
+  The management API (`/api/v1/operations`) and MCP (`/mcp`) are generated from `Nibble::Operations`; nothing hand-mirrors it.
 - **Links are safe:** navigation URLs, link fields and agent-written Markdown accept only web, email, phone and on-site
   links (`Nibble::SafeUrl`).
 - **Redirects are single-hop:** chains are repointed on save.

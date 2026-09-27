@@ -71,8 +71,8 @@ class Nibble::OauthTest < ActionDispatch::IntegrationTest
     assert metadata["authorization_response_iss_parameter_supported"]
     assert_nil metadata["device_authorization_endpoint"], "device sign-in stays hidden until it's turned on"
 
-    get "/.well-known/oauth-protected-resource/api/v1/mcp"
-    assert_equal "#{issuer}/api/v1/mcp", json["resource"]
+    get "/.well-known/oauth-protected-resource/mcp"
+    assert_equal "#{issuer}/mcp", json["resource"]
     assert_equal [ issuer ], json["authorization_servers"]
   end
 

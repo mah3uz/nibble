@@ -21,14 +21,14 @@ After reading this guide, you will know:
 ## 1. Connecting an app
 
 Open **Connected apps** from your account menu and copy the site's address for apps — for Tidewater,
-`https://tidewater.example/api/v1/mcp`.
+`https://tidewater.example/mcp`.
 
 | App | Where to paste it |
 |---|---|
 | Claude (web, desktop) | Settings → Connectors → Add custom connector |
 | ChatGPT | its connector settings, with developer mode on |
-| Claude Code | `claude mcp add --transport http tidewater https://tidewater.example/api/v1/mcp` |
-| Codex | `[mcp_servers.tidewater]` with `url = "https://tidewater.example/api/v1/mcp"` in `~/.codex/config.toml`, then `codex mcp login tidewater` |
+| Claude Code | `claude mcp add --transport http tidewater https://tidewater.example/mcp` |
+| Codex | `[mcp_servers.tidewater]` with `url = "https://tidewater.example/mcp"` in `~/.codex/config.toml`, then `codex mcp login tidewater` |
 | Cursor | its MCP settings, as a server with that URL |
 
 `nibble mcp install --client claude-code` (or `codex`, `cursor`) does this for you — see

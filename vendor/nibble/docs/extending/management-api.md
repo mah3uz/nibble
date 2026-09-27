@@ -25,7 +25,7 @@ Agent access must be [turned on](../running/agent-access.md); until then these e
 
 | Endpoint | For |
 |---|---|
-| `POST /api/v1/mcp` | MCP clients — Claude, ChatGPT, Codex, Cursor. Stateless JSON-RPC over HTTP; each operation is a tool |
+| `POST /mcp` | MCP clients — Claude, ChatGPT, Codex, Cursor. Stateless JSON-RPC over HTTP; each operation is a tool |
 | `GET /api/v1/operations` | the operations this token may use, with their arguments as JSON Schema |
 | `GET /api/v1/operations/<operation>` | an operation that only reads; arguments in the query string |
 | `POST /api/v1/operations/<operation>` | any operation; arguments as a JSON body |
@@ -37,7 +37,7 @@ carries `Nibble-Api-Version`.
 
 The site is its own OAuth authorization server, for public clients only:
 
-- **Discovery:** `/.well-known/oauth-protected-resource/api/v1/mcp` (or `/api/v1`) names the site as the authorization
+- **Discovery:** `/.well-known/oauth-protected-resource/mcp` (or `/api/v1`) names the site as the authorization
   server; `/.well-known/oauth-authorization-server` describes it.
 - **Authorization code with PKCE (S256)**, the only flow a browser takes. Loopback redirects may use any port.
 - **Clients** identify themselves with a client metadata document (an `https` URL as `client_id`), register
