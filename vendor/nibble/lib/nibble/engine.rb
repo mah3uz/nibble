@@ -47,6 +47,7 @@ module Nibble
       ::Nibble::Environment.boot!(serving: Rails.const_defined?(:Server)) if ::Nibble::Environment.deployed?
       # The types describe the theme this server renders, whatever wrote them last.
       ::Nibble.schema_changed! if Rails.application.config.enable_reloading && Rails.const_defined?(:Server)
+      ::Nibble::Dev::Logs.install! if ::Nibble::Dev.allowed? && Rails.const_defined?(:Server)
     end
   end
 end

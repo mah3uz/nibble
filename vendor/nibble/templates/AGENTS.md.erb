@@ -1,0 +1,27 @@
+# <%= name %>
+
+This file is yours. Nibble generated it once and will never write it again, so put whatever you want an agent
+to know about this site here: its conventions, what you are building, anything you would otherwise have to
+repeat. Claude Code reads it through CLAUDE.md; Codex, Cursor and most other agents read it directly.
+
+## How this site works
+
+Read [vendor/nibble/NIBBLE-ARCHITECTURE.md](vendor/nibble/NIBBLE-ARCHITECTURE.md) first. That file is Nibble's, it arrives with every release, and it
+describes the CMS underneath this site: where its code lives, how a request becomes a page, what is yours to
+change and what belongs to Nibble.
+
+The short version: everything under `vendor/nibble/` is Nibble's and an upgrade replaces it. `app/`, `site/` (schema,
+content, your theme and Control Plane overrides), `config/nibble.yml`, `config/deploy*.yml`, `Dockerfile`,
+`db/migrate` and this file are yours.
+
+## Tools for agents
+
+In development, `bin/rails nibble:dev:mcp` serves tools an agent can call: render a page and see its props and the
+files that answered it, check the schema, run the tests, read the development log, and search Nibble's docs for the
+installed version. `bin/rails nibble:dev:setup` connects Claude Code, Cursor and Codex to them and stops Claude Code
+editing `vendor/nibble/`.
+
+## Conventions
+
+<!-- Yours to fill in. Some things worth writing down: how you name things, what you want tested, which
+     decisions are settled so nobody reopens them. -->
