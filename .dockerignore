@@ -54,6 +54,13 @@
 /.dockerignore
 /Dockerfile*
 
+# cli/ is the nibble command's own repository, with gigabytes of Rust build output; nothing in it runs on the server.
+/cli/
+
+# Editor settings and browser-test output.
+/.idea/
+/.playwright-mcp/
+
 # site/ isn't tracked here: a checkout that has one keeps its git folder and theme packages out of the image.
 /site/.git/
 /site/themes/*/node_modules/
