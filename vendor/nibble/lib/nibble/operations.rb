@@ -176,6 +176,8 @@ module Nibble
         hint: "The person's role, the app's access, or the site's Agent access settings don't allow it.")
     end
 
-    def not_found!(what) = raise(Failure.new("not_found", "no #{what}", status: :not_found))
+    def not_found!(what)
+      raise Failure.new("not_found", "no #{what}", status: :not_found, hint: "describe_site and the list_ operations show what exists.")
+    end
   end
 end

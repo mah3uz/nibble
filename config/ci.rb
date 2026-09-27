@@ -29,4 +29,9 @@ CI.run do
   step "Tests: nibble.ink", "bin/rails test site/test" if Dir.glob("site/test/**/*_test.rb").any?
 
   step "Tests: Seeds", "env RAILS_ENV=test bin/rails db:seed:replant"
+
+  # cli/ is its own repository, so a clone without it skips this.
+  if File.exist?("cli/Cargo.toml")
+    step "Tests: CLI", "cd cli && cargo clippy --all-targets -- -D warnings && cargo test && script/contract"
+  end
 end
