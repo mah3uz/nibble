@@ -26,7 +26,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   tokens for scripts. Revisions and the audit log say which app a change came through.
 - **The management API** at `/api/v1/operations`: every operation an app can take, with its arguments as JSON Schema, a dry run,
   retries that don't repeat a change, `lock_version` so nobody's edit is overwritten, rich text as Markdown, and
-  errors that say what to do next.
+  errors that say what to do next. Every answer carries its contract number, `Nibble::MANAGEMENT_API_VERSION`, so a
+  client can tell whether it or the site needs upgrading.
 - **The `nibble` command-line tool:** start a site, run its tasks as `nibble check`, and sign in to any number of
   sites and accounts to work on their content from a terminal or an agent.
 - **A guide for agents,** written from the schema and the site's own notes in `site/agents/*.md`, served over MCP as a

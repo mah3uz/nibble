@@ -22,6 +22,15 @@ class Api::OperationsTest < ActionDispatch::IntegrationTest
     assert_equal "application/problem+json", response.media_type
   end
 
+  test "every answer, refusals included, carries the API's contract number, so a client can tell which side to upgrade" do
+    get "/api/v1/operations/whoami"
+    assert_equal Nibble::MANAGEMENT_API_VERSION.to_s, response.headers["Nibble-Api-Version"]
+
+    get "/api/v1/operations/whoami", headers: headers
+    assert_equal Nibble::MANAGEMENT_API_VERSION.to_s, response.headers["Nibble-Api-Version"]
+    assert_equal Nibble::MANAGEMENT_API_VERSION, json["meta"]["api_version"]
+  end
+
   test "a token meant for the MCP endpoint doesn't open the API" do
     mcp = Nibble::OauthToken.issue(@grant, "access", resource: "https://example.com/mcp")
 

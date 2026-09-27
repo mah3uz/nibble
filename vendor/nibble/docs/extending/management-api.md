@@ -30,8 +30,11 @@ Agent access must be [turned on](../running/agent-access.md); until then these e
 | `GET /api/v1/operations/<operation>` | an operation that only reads; arguments in the query string |
 | `POST /api/v1/operations/<operation>` | any operation; arguments as a JSON body |
 
-Both are built from one list of operations, so they never disagree. Answers are never cached. Every `/api/v1/operations` answer
-carries `Nibble-Api-Version`.
+Both are built from one list of operations, so they never disagree. Answers are never cached. Every `/api/v1/operations` answer,
+refusals included, carries `Nibble-Api-Version`: the management API's contract number. It changes only when a client
+written for the old number would misread the new answers; a new operation or argument doesn't change it, because
+clients read those from the list. The `nibble` CLI checks it on every answer and says whether the CLI or the site needs
+upgrading.
 
 ## 2. Signing in
 

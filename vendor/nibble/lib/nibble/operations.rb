@@ -2,8 +2,6 @@ module Nibble
   # Everything an app or the CLI can do to a site, declared once. The management API and the MCP server are both
   # generated from this list, and every operation checks Policy through the principal it is given.
   module Operations
-    VERSION = "2026-09-27"
-
     Operation = Data.define(:name, :title, :description, :input, :read_only, :destructive, :needs, :handler, :consequential) do
       def initialize(consequential: false, **rest) = super(consequential:, **rest)
 

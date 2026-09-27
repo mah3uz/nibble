@@ -42,8 +42,8 @@ the second time. That is what makes a failed deploy safe to retry.
 
 ## 5. Versioned contracts
 
-`Nibble::SCHEMA_FORMAT`, `THEME_API_VERSION` and `CONTENT_FORMAT_VERSION` in `vendor/nibble/lib/nibble.rb` change only
-with a migration or an upgrade path. A theme pins the theme API (`nibble: '^1'` in `theme.yml`), not Nibble's version,
+`Nibble::SCHEMA_FORMAT`, `THEME_API_VERSION`, `CONTENT_FORMAT_VERSION` and `MANAGEMENT_API_VERSION` in
+`vendor/nibble/lib/nibble.rb` change only with a migration or an upgrade path. A theme pins the theme API (`nibble: '^1'` in `theme.yml`), not Nibble's version,
 so a theme does not break because Nibble reached 2.0.
 
 ## 6. The ownership line

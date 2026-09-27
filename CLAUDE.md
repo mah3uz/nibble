@@ -138,8 +138,8 @@ evaluates `vendor/nibble/Gemfile`, which loads `Nibble::Engine`; `config/applica
   `vendor/nibble/docs`, where the documentation lives and ships with each release. The tracked settings name
   `crumbs`, so a clone works without it; nibble.ink runs with `NIBBLE_THEME=bite`. `bin/rails test site/test` checks
   its content, and `bin/ci` runs that when `site/` is present.
-- `cli/` is the `nibble` command-line tool (Rust), in its own repository and not tracked here; `bin/ci` lints and
-  tests it, and runs its contract test against this checkout, when `cli/` is present.
+- `cli/` is the `nibble` command-line tool (Rust), in its own repository (`mah3uz/nibble-cli`) and not tracked here;
+  its own CI tests it against a Nibble checkout. `bin/ci` checks only Nibble.
 
 **Public request flow:**
 1. `NibbleRedirectsMiddleware`, backed by the `redirects` table and cached.
@@ -169,8 +169,8 @@ the audit log, notifications, the page cache, the search index and webhooks.
   links (`Nibble::SafeUrl`).
 - **Redirects are single-hop:** chains are repointed on save.
 - **Content import:** package import and content migrations are idempotent and safely re-runnable.
-- **Versioned contracts:** `Nibble::SCHEMA_FORMAT`, `THEME_API_VERSION` and `CONTENT_FORMAT_VERSION` in `vendor/nibble/lib/nibble.rb`
-  change only with a migration or upgrade path.
+- **Versioned contracts:** `Nibble::SCHEMA_FORMAT`, `THEME_API_VERSION`, `CONTENT_FORMAT_VERSION` and
+  `MANAGEMENT_API_VERSION` in `vendor/nibble/lib/nibble.rb` change only with a migration or upgrade path.
 
 ## File searching and grep
 For any file search or grep in the current git-indexed directory, use fff tools.

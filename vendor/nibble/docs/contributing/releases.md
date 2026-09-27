@@ -85,8 +85,8 @@ names.
 
 ## 3. Versions
 
-`Nibble::VERSION` orders releases for people. The contracts — `SCHEMA_FORMAT`, `THEME_API_VERSION` and
-`CONTENT_FORMAT_VERSION` — are what code checks. `Release::MINIMUM_UPGRADE_FROM` says how far back an upgrade can start,
+`Nibble::VERSION` orders releases for people. The contracts — `SCHEMA_FORMAT`, `THEME_API_VERSION`,
+`CONTENT_FORMAT_VERSION` and `MANAGEMENT_API_VERSION` — are what code checks. `Release::MINIMUM_UPGRADE_FROM` says how far back an upgrade can start,
 and the Ruby and Node floors come from `.ruby-version` and `package.json`, checked before an upgrade changes anything.
 
 Nibble is `0.x` until someone outside installs it; while it is, anything can change between releases.

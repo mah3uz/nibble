@@ -89,8 +89,8 @@ the audit log, notifications, the page cache, the search index and webhooks.
   links (`Nibble::SafeUrl`).
 - **Redirects are single-hop:** chains are repointed on save.
 - **Content import:** package import and content migrations are idempotent and safely re-runnable.
-- **Versioned contracts:** `Nibble::SCHEMA_FORMAT`, `THEME_API_VERSION` and `CONTENT_FORMAT_VERSION` in `vendor/nibble/lib/nibble.rb`
-  change only with a migration or upgrade path.
+- **Versioned contracts:** `Nibble::SCHEMA_FORMAT`, `THEME_API_VERSION`, `CONTENT_FORMAT_VERSION` and
+  `MANAGEMENT_API_VERSION` in `vendor/nibble/lib/nibble.rb` change only with a migration or upgrade path.
 
 ## Commands
 

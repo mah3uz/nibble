@@ -6,6 +6,7 @@ module Nibble
   SCHEMA_FORMAT = 1
   THEME_API_VERSION = 1
   CONTENT_FORMAT_VERSION = 1
+  MANAGEMENT_API_VERSION = 1
   DEFAULT_THEME = "crumbs".freeze
   # A theme is layouts, views and schema; content is a site's own. This is the installer's to offer, not a theme's to carry.
   STARTER_CONTENT = Pathname(__dir__).parent.join("starter_content").freeze

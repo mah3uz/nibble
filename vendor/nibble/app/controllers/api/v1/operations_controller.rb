@@ -5,7 +5,7 @@ module Api
       include Nibble::BearerAuthentication
 
       before_action { response.headers["Cache-Control"] = "no-store" }
-      before_action { response.headers["Nibble-Api-Version"] = Nibble::Operations::VERSION }
+      before_action { response.headers["Nibble-Api-Version"] = Nibble::MANAGEMENT_API_VERSION.to_s }
       before_action :refuse_query_tokens
       rate_limit to: 600, within: 1.minute, name: "address", with: -> { too_many }
       before_action :authenticate
@@ -38,7 +38,7 @@ module Api
 
       def issuer = Nibble::Oauth.issuer(request)
 
-      def meta = { "site" => issuer, "api_version" => Nibble::Operations::VERSION }
+      def meta = { "site" => issuer, "api_version" => Nibble::MANAGEMENT_API_VERSION }
 
       def refuse_query_tokens
         return unless params.key?(:access_token)
