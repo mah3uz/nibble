@@ -35,18 +35,11 @@ module Nibble
       scopes.include?(scope.to_s) || (scope.to_s == "read" && scopes.include?("preview"))
     end
 
-    def manages?(collection) = active? && scopes.include?("manage:#{collection}")
-
     private
 
     def scopes_are_known
-      unknown = Array(scopes).reject { |scope| SCOPES.include?(scope) || manage_scope?(scope) }
+      unknown = Array(scopes).reject { |scope| SCOPES.include?(scope) }
       errors.add(:scopes, "can't include #{unknown.to_sentence}") if unknown.any?
-    end
-
-    def manage_scope?(scope)
-      handle = scope.to_s.delete_prefix("manage:")
-      scope.to_s.start_with?("manage:") && Nibble.schema.collections.any? { |item| item.handle == handle }
     end
   end
 end

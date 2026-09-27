@@ -40,8 +40,7 @@ module Nibble
 
       def scope_options
         [ { value: "read", label: "Read live content" }, { value: "preview", label: "Read drafts as well" },
-          { value: "health", label: "Check site health (for uptime monitors)" } ] +
-          Nibble.schema.collections.map { |item| { value: "manage:#{item.handle}", label: "Manage #{item['title'] || item.handle}" } }
+          { value: "health", label: "Check site health (for uptime monitors)" } ]
       end
     end
   end

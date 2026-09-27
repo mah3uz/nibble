@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_28_000700) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_28_000800) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -198,6 +198,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_000700) do
     t.datetime "updated_at", null: false
     t.index ["handle", "locale"], name: "index_global_sets_on_handle_and_locale", unique: true
     t.index ["origin_id"], name: "index_global_sets_on_origin_id"
+  end
+
+  create_table "idempotency_keys", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "digest", null: false
+    t.integer "grant_id", null: false
+    t.string "key", null: false
+    t.string "operation", null: false
+    t.json "response", default: {}, null: false
+    t.index ["created_at"], name: "index_idempotency_keys_on_created_at"
+    t.index ["grant_id", "key"], name: "index_idempotency_keys_on_grant_id_and_key", unique: true
   end
 
   create_table "navigation_trees", force: :cascade do |t|

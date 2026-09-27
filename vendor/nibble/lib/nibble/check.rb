@@ -79,6 +79,10 @@ module Nibble
           name = rule.to_s.split(":", 2).first
           problem(source, "field '#{field.path}' uses unknown validation rule '#{name}'") unless Validation.known?(name)
         end
+        unless Operations::FieldSchema.known?(field)
+          @warnings << Problem.new(source:, level: :warning,
+            message: "field '#{field.path}' is a #{field.type}, which apps can't be told how to write: give the fieldtype a json_schema")
+        end
         field.fieldtype.nested_fields.each { |nested| check_fields(nested, source) }
       end
     end

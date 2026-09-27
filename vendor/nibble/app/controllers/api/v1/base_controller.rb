@@ -8,8 +8,9 @@ module Api
       rescue_from Nibble::Query::Invalid, with: :invalid_query
       rescue_from ActiveRecord::RecordNotFound, with: :not_found
 
+      rate_limit to: 600, within: 1.minute, name: "address", with: -> { too_many }
       before_action :authenticate_token
-      rate_limit to: 300, within: 1.minute, by: -> { request.headers["Authorization"].to_s }, with: -> { too_many }
+      rate_limit to: 300, within: 1.minute, name: "token", by: -> { @token.id }, with: -> { too_many }
 
       private
 

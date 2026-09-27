@@ -22,6 +22,10 @@ Rails.application.routes.draw do
       get "schema", to: "schema#show"
       get "health", to: "health#show"
     end
+    namespace :v2 do
+      get "operations", to: "operations#index"
+      match ":operation", to: "operations#create", via: %i[get post], constraints: { operation: /[a-z_]+/ }, as: :operation
+    end
   end
 
   namespace :cp, module: "nibble/cp" do

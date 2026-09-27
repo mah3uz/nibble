@@ -82,16 +82,15 @@ class Nibble::PermissionMatrixTest < ActiveSupport::TestCase
     assert Nibble::Access.can?(admin, "something.invented.later")
   end
 
-  test "API token scopes are separate from a person's abilities" do
+  test "API token scopes are separate from a person's abilities, and only ever read" do
     _, read = Nibble::ApiToken.issue(name: "Read", scopes: %w[read])
     _, preview = Nibble::ApiToken.issue(name: "Preview", scopes: %w[preview])
-    _, manager = Nibble::ApiToken.issue(name: "Manager", scopes: %w[read manage:posts])
 
     assert Nibble::ApiToken.authenticate(read).allows?("read")
     assert_not Nibble::ApiToken.authenticate(read).allows?("preview")
     assert Nibble::ApiToken.authenticate(preview).allows?("read")
-    assert Nibble::ApiToken.authenticate(manager).manages?("posts")
-    assert_not Nibble::ApiToken.authenticate(manager).manages?("pages")
-    assert_not Nibble::ApiToken.authenticate(read).manages?("posts")
+    assert_raises(ActiveRecord::RecordInvalid, "changes are made as a person, through a connected app") do
+      Nibble::ApiToken.issue(name: "Manager", scopes: %w[read manage:posts])
+    end
   end
 end

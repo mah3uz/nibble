@@ -1,0 +1,414 @@
+{
+  "create_entry": {
+    "arguments": [
+      "blueprint",
+      "collection",
+      "data",
+      "dry_run",
+      "idempotency_key",
+      "locale"
+    ],
+    "required": [
+      "collection",
+      "data"
+    ],
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  "create_term": {
+    "arguments": [
+      "data",
+      "dry_run",
+      "idempotency_key",
+      "locale",
+      "taxonomy"
+    ],
+    "required": [
+      "data",
+      "taxonomy"
+    ],
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  "describe_schema": {
+    "arguments": [
+      "handle",
+      "kind"
+    ],
+    "required": [
+      "handle",
+      "kind"
+    ],
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "describe_site": {
+    "arguments": [],
+    "required": [],
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "get_asset": {
+    "arguments": [
+      "id"
+    ],
+    "required": [
+      "id"
+    ],
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "get_entry": {
+    "arguments": [
+      "collection",
+      "id",
+      "uri"
+    ],
+    "required": [],
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "get_global": {
+    "arguments": [
+      "handle",
+      "locale"
+    ],
+    "required": [
+      "handle"
+    ],
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "get_navigation": {
+    "arguments": [
+      "handle",
+      "locale"
+    ],
+    "required": [
+      "handle"
+    ],
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "get_term": {
+    "arguments": [
+      "id"
+    ],
+    "required": [
+      "id"
+    ],
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "list_assets": {
+    "arguments": [
+      "filename",
+      "folder",
+      "page",
+      "per_page"
+    ],
+    "required": [],
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "list_entries": {
+    "arguments": [
+      "collection",
+      "filter",
+      "locale",
+      "page",
+      "per_page",
+      "sort",
+      "status"
+    ],
+    "required": [
+      "collection"
+    ],
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "list_form_submissions": {
+    "arguments": [
+      "form",
+      "page",
+      "per_page"
+    ],
+    "required": [
+      "form"
+    ],
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "list_revisions": {
+    "arguments": [
+      "id"
+    ],
+    "required": [
+      "id"
+    ],
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "list_terms": {
+    "arguments": [
+      "locale",
+      "page",
+      "per_page",
+      "taxonomy"
+    ],
+    "required": [
+      "taxonomy"
+    ],
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "transition_asset": {
+    "arguments": [
+      "action",
+      "dry_run",
+      "id",
+      "idempotency_key"
+    ],
+    "required": [
+      "action",
+      "id"
+    ],
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  "transition_entry": {
+    "arguments": [
+      "action",
+      "comment",
+      "dry_run",
+      "id",
+      "idempotency_key",
+      "lock_version",
+      "published_at",
+      "revision_id"
+    ],
+    "required": [
+      "action",
+      "id"
+    ],
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  "transition_term": {
+    "arguments": [
+      "action",
+      "dry_run",
+      "id",
+      "idempotency_key",
+      "lock_version",
+      "revision_id"
+    ],
+    "required": [
+      "action",
+      "id"
+    ],
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  "update_asset": {
+    "arguments": [
+      "data",
+      "dry_run",
+      "id",
+      "idempotency_key",
+      "lock_version"
+    ],
+    "required": [
+      "data",
+      "id",
+      "lock_version"
+    ],
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  "update_entry": {
+    "arguments": [
+      "data",
+      "dry_run",
+      "id",
+      "idempotency_key",
+      "lock_version"
+    ],
+    "required": [
+      "data",
+      "id",
+      "lock_version"
+    ],
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  "update_global": {
+    "arguments": [
+      "data",
+      "dry_run",
+      "handle",
+      "idempotency_key",
+      "locale",
+      "lock_version"
+    ],
+    "required": [
+      "data",
+      "handle",
+      "lock_version"
+    ],
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  "update_navigation": {
+    "arguments": [
+      "dry_run",
+      "handle",
+      "idempotency_key",
+      "locale",
+      "lock_version",
+      "tree"
+    ],
+    "required": [
+      "handle",
+      "lock_version",
+      "tree"
+    ],
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  "update_term": {
+    "arguments": [
+      "data",
+      "dry_run",
+      "id",
+      "idempotency_key",
+      "lock_version"
+    ],
+    "required": [
+      "data",
+      "id",
+      "lock_version"
+    ],
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  "upload_asset": {
+    "arguments": [
+      "alt",
+      "content_base64",
+      "dry_run",
+      "filename",
+      "folder",
+      "idempotency_key",
+      "title"
+    ],
+    "required": [
+      "content_base64",
+      "filename"
+    ],
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  "whoami": {
+    "arguments": [],
+    "required": [],
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  }
+}

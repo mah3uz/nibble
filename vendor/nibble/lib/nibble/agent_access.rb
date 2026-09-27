@@ -99,17 +99,20 @@ module Nibble
       end.to_a
     end
 
-    def person_can?(user, area, column, schema: Nibble.schema)
+    def concrete_abilities(area, column, schema: Nibble.schema)
       kind = area.split(".").first
-      concrete = abilities_for(area, column).flat_map do |ability|
+      abilities_for(area, column).flat_map do |ability|
         next [ ability ] unless ability.include?("*")
 
         handles = { "globals" => schema.globals, "navigation" => schema.navigations, "forms" => schema.forms }.fetch(kind, []).map(&:handle)
         handles.map { |handle| ability.sub("*", handle) }
       end
-      return true if column == "read" && %w[globals navigation].include?(kind)
+    end
 
-      concrete.any? { |ability| Access.can?(user, ability) }
+    def person_can?(user, area, column, schema: Nibble.schema)
+      return true if column == "read" && %w[globals navigation].include?(area)
+
+      concrete_abilities(area, column, schema:).any? { |ability| Access.can?(user, ability) }
     end
 
     def preset(name) = PRESETS.fetch(name.to_s)
