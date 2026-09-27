@@ -4,7 +4,7 @@ module Nibble
   class DemoContent
     BANK = Nibble.core_root.join("db/dev_content.yml")
 
-    def initialize(images:, actor: nil, random: Random.new(42))
+    def initialize(images:, actor: Principal.system, random: Random.new(42))
       @bank = YAML.load_file(BANK)
       @images = images
       @actor = actor

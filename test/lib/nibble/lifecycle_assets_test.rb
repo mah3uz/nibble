@@ -45,7 +45,7 @@ class Nibble::LifecycleAssetsTest < ActiveSupport::TestCase
 
   test "a reupload clears the crop and zoom, because they described the old image" do
     asset = create_asset({ "edits" => { "rotate" => 90 }, "focal_zoom" => 3 })
-    assert Nibble::Assets::Upload.replace(asset, upload_blob("pixel.png")).ok?
+    assert Nibble::Assets::Upload.replace(asset, upload_blob("pixel.png"), actor: Nibble::Principal.system).ok?
 
     assert_equal [ {}, 1.0 ], asset.reload.values_at(:edits, :focal_zoom)
   end
@@ -53,11 +53,11 @@ class Nibble::LifecycleAssetsTest < ActiveSupport::TestCase
   test "a reupload may change format but not kind, so fields expecting an image keep getting one" do
     asset = create_asset
     svg = ActiveStorage::Blob.create_and_upload!(io: StringIO.new(%(<svg xmlns="http://www.w3.org/2000/svg"/>)), filename: "logo.svg", content_type: "image/svg+xml")
-    assert Nibble::Assets::Upload.replace(asset, svg).ok?
-    assert Nibble::Assets::Upload.replace(asset.reload, upload_blob("pixel.png")).ok?
+    assert Nibble::Assets::Upload.replace(asset, svg, actor: Nibble::Principal.system).ok?
+    assert Nibble::Assets::Upload.replace(asset.reload, upload_blob("pixel.png"), actor: Nibble::Principal.system).ok?
     assert_equal "photo.png", asset.reload.filename
 
-    result = Nibble::Assets::Upload.replace(asset, ActiveStorage::Blob.create_and_upload!(io: StringIO.new("%PDF-1.4"), filename: "doc.pdf"))
+    result = Nibble::Assets::Upload.replace(asset, ActiveStorage::Blob.create_and_upload!(io: StringIO.new("%PDF-1.4"), filename: "doc.pdf"), actor: Nibble::Principal.system)
     assert result.invalid?
     assert_equal [ "Reupload an image to replace an image." ], result.errors["file"]
     assert_equal "photo.png", asset.reload.filename

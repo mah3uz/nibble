@@ -313,7 +313,7 @@ class NibbleCommand < Rails::Command::Base
     fixture = Rails.root.join("test/fixtures/files/photo.jpg")
     existing + (existing.size...3).map do |index|
       blob = ActiveStorage::Blob.create_and_upload!(io: fixture.open, filename: "bench-#{index}.jpg")
-      Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, {}).record
+      Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, {}, actor: Nibble::Principal.system).record
     end
   end
 

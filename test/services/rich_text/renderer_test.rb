@@ -98,7 +98,7 @@ class RichText::RendererTest < ActiveSupport::TestCase
 
   test "library images render the preset's sizes and fall back to the asset's alt text" do
     blob = ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "body.jpg")
-    asset = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, { "alt" => "Clinic" }).record
+    asset = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, { "alt" => "Clinic" }, actor: Nibble::Principal.system).record
     img = ->(attrs) { Nokogiri::HTML5.fragment(RichText::Renderer.call({ "type" => "doc", "content" => [ { "type" => "image", "attrs" => attrs } ] }, image_preset: "content")).at_css("img") }
 
     rendered = img.({ "asset" => asset.id, "alt" => "" })

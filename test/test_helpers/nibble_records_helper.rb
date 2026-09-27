@@ -94,11 +94,11 @@ module NibbleRecordsHelper
   end
 
   def lifecycle(record, action, attrs = {}, **options)
-    keywords = options.select { |key, _| key.is_a?(Symbol) }
+    keywords = { actor: Nibble::Principal.system }.merge(options.select { |key, _| key.is_a?(Symbol) })
     Nibble::Lifecycle.call(record, action, attrs.merge(options.except(*keywords.keys)), **keywords)
   end
 
-  def create_entry(collection, attrs = {}, actor: nil)
+  def create_entry(collection, attrs = {}, actor: Nibble::Principal.system)
     defaults = collection == "docs" ? { "title" => "Doc", "body" => "Body" } : { "title" => "Article" }
     result = lifecycle(Nibble::Records::Entry.new(collection:), :create, defaults.merge(attrs.deep_stringify_keys), actor:)
     assert result.ok?, "create failed: #{result.errors}"

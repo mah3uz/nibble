@@ -1,15 +1,17 @@
 module Nibble
   class Lifecycle
     class Handler
-      attr_reader :record, :attrs, :actor, :mode, :action
+      attr_reader :record, :attrs, :principal, :mode, :action
 
-      def initialize(record, attrs, actor:, mode:, action:)
+      def initialize(record, attrs, principal:, mode:, action:)
         @record = record
         @attrs = attrs
-        @actor = actor
+        @principal = principal
         @mode = mode
         @action = action
       end
+
+      def actor = principal.user
 
       private
 
@@ -33,7 +35,7 @@ module Nibble
       end
 
       def emit(name, extra = {})
-        Events.publish(name, record.event_payload.merge("actor" => actor && { "type" => "user", "id" => actor.id },
+        Events.publish(name, record.event_payload.merge("actor" => principal.event_actor,
           "ip" => Current.ip, "mode" => mode&.to_s).merge(extra))
       end
 

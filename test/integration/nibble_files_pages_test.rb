@@ -111,7 +111,7 @@ class NibbleFilesPagesTest < ActionDispatch::IntegrationTest
     write("docs/index.md" => page("docs-home", "Docs"))
 
     result = Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "pages"), :create,
-                                    { "title" => "Docs", "slug" => "docs" })
+                                    { "title" => "Docs", "slug" => "docs" }, actor: Nibble::Principal.system)
 
     assert_not result.ok?, "/docs is the folder's own page"
     assert_match "already used by", result.errors["uri"].to_a.join
@@ -121,7 +121,7 @@ class NibbleFilesPagesTest < ActionDispatch::IntegrationTest
     write("docs/index.md" => page("docs-home", "Docs"))
 
     result = Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "pages"), :create,
-                                    { "title" => "Pricing", "slug" => "pricing" })
+                                    { "title" => "Pricing", "slug" => "pricing" }, actor: Nibble::Principal.system)
 
     assert result.ok?, result.errors.inspect
   end

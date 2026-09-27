@@ -40,8 +40,8 @@ class Nibble::QueryTest < ActiveSupport::TestCase
   end
 
   test "public queries never return drafts or trashed entries" do
-    ok Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create, { "title" => "Draft post" })
-    ok Nibble::Lifecycle.call(@posts[0], :unpublish)
+    ok Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create, { "title" => "Draft post" }, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(@posts[0], :unpublish, actor: Nibble::Principal.system)
 
     assert_equal [ "Type scales", "Remote work", "Grids" ], titles({ from: "entries:posts" })
   end

@@ -29,7 +29,7 @@ class NibbleFormsThemeTest < ActionDispatch::IntegrationTest
 
   test "the site key reaches the theme once CAPTCHA is configured, never the secret" do
     ok Nibble::Lifecycle.call(Nibble::Records::GlobalSet.new(handle: "integrations", locale: "en"), :save,
-      { "captcha_provider" => "turnstile", "captcha_site_key" => "site-key-1", "captcha_secret_key" => { "plain" => "very-secret" } })
+      { "captcha_provider" => "turnstile", "captcha_site_key" => "site-key-1", "captcha_secret_key" => { "plain" => "very-secret" } }, actor: Nibble::Principal.system)
 
     get "/about"
     assert_equal({ "provider" => "turnstile", "site_key" => "site-key-1" }, contact["captcha"])

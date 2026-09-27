@@ -21,7 +21,7 @@ class Nibble::PackagesUpdateTest < ActiveSupport::TestCase
 
   def create_asset(title: nil)
     blob = ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "photo.jpg")
-    result = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, { "title" => title }.compact)
+    result = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, { "title" => title }.compact, actor: Nibble::Principal.system)
     assert result.ok?, "asset create failed: #{result.errors}"
     result.record
   end

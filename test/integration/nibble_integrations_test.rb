@@ -7,7 +7,7 @@ class NibbleIntegrationsTest < ActionDispatch::IntegrationTest
 
   def save_integrations(values)
     record = Nibble::Records::GlobalSet.find_or_initialize_by(handle: "integrations", locale: "en")
-    ok Nibble::Lifecycle.call(record, :save, values)
+    ok Nibble::Lifecycle.call(record, :save, values, actor: Nibble::Principal.system)
   end
 
   def live
@@ -46,7 +46,7 @@ class NibbleIntegrationsTest < ActionDispatch::IntegrationTest
 
   test "IDs that aren't Google's formats are refused, so they can't break out of the snippet" do
     record = Nibble::Records::GlobalSet.new(handle: "integrations", locale: "en")
-    result = Nibble::Lifecycle.call(record, :save, { "ga4_measurement_id" => "G-1');alert(1)//" })
+    result = Nibble::Lifecycle.call(record, :save, { "ga4_measurement_id" => "G-1');alert(1)//" }, actor: Nibble::Principal.system)
     assert result.invalid?
   end
 

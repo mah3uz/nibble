@@ -11,8 +11,8 @@ class Nibble::SearchTest < ActiveSupport::TestCase
   def search(query, **options) = Nibble::Query.build({ from: "search:site", q: query, **options }, Nibble::Query::Context.public).result
 
   test "live pages and posts are found by stemmed words, best match first, with an escaped highlighted snippet" do
-    ok Nibble::Lifecycle.call(@posts[1], :save, { "excerpt" => "Designers <b>love</b> aligning columns" })
-    ok Nibble::Lifecycle.call(@posts[1].reload, :publish)
+    ok Nibble::Lifecycle.call(@posts[1], :save, { "excerpt" => "Designers <b>love</b> aligning columns" }, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(@posts[1].reload, :publish, actor: Nibble::Principal.system)
     Nibble::Events.dispatch_pending
 
     result = search("column")
@@ -21,11 +21,11 @@ class Nibble::SearchTest < ActiveSupport::TestCase
   end
 
   test "drafts aren't indexed and unpublishing removes a record from results" do
-    ok Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create, { "title" => "Secret grids" })
+    ok Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create, { "title" => "Secret grids" }, actor: Nibble::Principal.system)
     Nibble::Events.dispatch_pending
     assert_equal [ "Grids" ], search("grids").records.map(&:title)
 
-    ok Nibble::Lifecycle.call(@posts[1], :unpublish)
+    ok Nibble::Lifecycle.call(@posts[1], :unpublish, actor: Nibble::Principal.system)
     Nibble::Events.dispatch_pending
     assert_empty search("grids").records
   end
@@ -44,8 +44,8 @@ class Nibble::SearchTest < ActiveSupport::TestCase
     Nibble.config = Nibble::Config.new({ "theme" => "starter", "url" => "https://example.test", "locales" => [
       { "code" => "en", "default" => true }, { "code" => "ja", "url_prefix" => "/ja", "search_tokenizer" => "trigram" }
     ] }, themes_path: Rails.root.join("test/nibble_themes"))
-    post = ok(Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts", locale: "ja"), :create, { "title" => "喫茶店のデザイン" }))
-    ok Nibble::Lifecycle.call(post, :publish, { "published_at" => 1.day.ago.utc.iso8601 })
+    post = ok(Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts", locale: "ja"), :create, { "title" => "喫茶店のデザイン" }, actor: Nibble::Principal.system))
+    ok Nibble::Lifecycle.call(post, :publish, { "published_at" => 1.day.ago.utc.iso8601 }, actor: Nibble::Principal.system)
     Nibble::Events.dispatch_pending
 
     hits = Nibble::Search.search("site", "茶店の", locale: "ja").hits

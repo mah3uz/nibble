@@ -17,7 +17,7 @@ class NibbleSeoTest < ActionDispatch::IntegrationTest
   end
 
   test "titles follow the SEO title template, and the canonical is absolute" do
-    ok Nibble::Lifecycle.call(Nibble::Records::GlobalSet.new(handle: "seo", locale: "en"), :save, { "title_template" => "{title} | {site_name}" })
+    ok Nibble::Lifecycle.call(Nibble::Records::GlobalSet.new(handle: "seo", locale: "en"), :save, { "title_template" => "{title} | {site_name}" }, actor: Nibble::Principal.system)
 
     get "/blog/grids"
     assert_equal "Grids | Starter", head.at_css("title").text
@@ -27,8 +27,8 @@ class NibbleSeoTest < ActionDispatch::IntegrationTest
 
   test "an entry's SEO fields override its title and description, and noindex reaches robots" do
     grids = @posts[1]
-    ok Nibble::Lifecycle.call(grids, :save, { "seo" => { "title" => "Grid systems explained", "description" => "Why grids work.", "noindex" => true } })
-    ok Nibble::Lifecycle.call(grids.reload, :publish)
+    ok Nibble::Lifecycle.call(grids, :save, { "seo" => { "title" => "Grid systems explained", "description" => "Why grids work.", "noindex" => true } }, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(grids.reload, :publish, actor: Nibble::Principal.system)
 
     with_indexing { get "/blog/grids" }
     assert_equal "Grid systems explained · Starter", head.at_css("title").text
@@ -40,9 +40,9 @@ class NibbleSeoTest < ActionDispatch::IntegrationTest
     get "/blog/grids"
     assert_nil head.at_css('link[rel="icon"]'), "no favicon set, no link to a missing file"
 
-    icon = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob: ActiveStorage::Blob.create_and_upload!(io: file_fixture("pixel.png").open, filename: "icon.png")), :create).record
+    icon = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob: ActiveStorage::Blob.create_and_upload!(io: file_fixture("pixel.png").open, filename: "icon.png")), :create, actor: Nibble::Principal.system).record
     site = Nibble::Records::GlobalSet.find_by(handle: "site", locale: "en") || Nibble::Records::GlobalSet.new(handle: "site", locale: "en")
-    ok Nibble::Lifecycle.call(site, :save, { "name" => "Starter", "favicon" => [ { "asset" => icon.id.to_s } ] })
+    ok Nibble::Lifecycle.call(site, :save, { "name" => "Starter", "favicon" => [ { "asset" => icon.id.to_s } ] }, actor: Nibble::Principal.system)
 
     Nibble::Events.dispatch_pending
     get "/blog/grids"
@@ -51,8 +51,8 @@ class NibbleSeoTest < ActionDispatch::IntegrationTest
   end
 
   test "share images fall back from the page's featured image to the site default, as absolute og-sized URLs" do
-    photo = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob: ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "photo.jpg")), :create).record
-    ok Nibble::Lifecycle.call(Nibble::Records::GlobalSet.new(handle: "seo", locale: "en"), :save, { "default_share_image" => { "asset" => photo.id.to_s } })
+    photo = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob: ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "photo.jpg")), :create, actor: Nibble::Principal.system).record
+    ok Nibble::Lifecycle.call(Nibble::Records::GlobalSet.new(handle: "seo", locale: "en"), :save, { "default_share_image" => { "asset" => photo.id.to_s } }, actor: Nibble::Principal.system)
 
     get "/blog/grids"
     assert_equal "https://example.test#{photo.url('og')}", head.at_css('meta[property="og:image"]')["content"]
@@ -85,10 +85,10 @@ class NibbleSeoTest < ActionDispatch::IntegrationTest
   end
 
   test "a collection sitemap lists live, indexable entries only" do
-    ok Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create, { "title" => "Draft" })
+    ok Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create, { "title" => "Draft" }, actor: Nibble::Principal.system)
     hidden = @posts[0]
-    ok Nibble::Lifecycle.call(hidden, :save, { "seo" => { "noindex" => true } })
-    ok Nibble::Lifecycle.call(hidden.reload, :publish)
+    ok Nibble::Lifecycle.call(hidden, :save, { "seo" => { "noindex" => true } }, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(hidden.reload, :publish, actor: Nibble::Principal.system)
 
     get "/sitemap-posts.xml"
     locs = Nokogiri::XML(response.body).remove_namespaces!.xpath("//loc").map(&:text)
@@ -99,8 +99,8 @@ class NibbleSeoTest < ActionDispatch::IntegrationTest
 
   test "a sitemap lists its addresses in order, whatever order the entries were created in" do
     %w[zebra-notes apple-notes].each do |slug|
-      entry = Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create, { "title" => slug.titleize, "slug" => slug }).record
-      ok Nibble::Lifecycle.call(entry, :publish, { "published_at" => 1.day.ago.utc.iso8601 })
+      entry = Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create, { "title" => slug.titleize, "slug" => slug }, actor: Nibble::Principal.system).record
+      ok Nibble::Lifecycle.call(entry, :publish, { "published_at" => 1.day.ago.utc.iso8601 }, actor: Nibble::Principal.system)
     end
 
     get "/sitemap-posts.xml"

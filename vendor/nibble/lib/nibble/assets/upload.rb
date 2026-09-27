@@ -9,7 +9,7 @@ module Nibble
         "#{filename} is larger than #{Nibble.config.max_upload_bytes / 1.megabyte} MB." if byte_size.to_i > Nibble.config.max_upload_bytes
       end
 
-      def call(blob, attrs = {}, actor: nil)
+      def call(blob, attrs = {}, actor:)
         if (message = refusal(blob.filename.to_s, blob.byte_size))
           blob.purge_later
           return Lifecycle::Result.new(status: :invalid, record: Records::Asset.new, errors: { "file" => [ message ] }, referrers: [])
@@ -23,7 +23,7 @@ module Nibble
         result
       end
 
-      def replace(asset, blob, actor: nil)
+      def replace(asset, blob, actor:)
         if (message = refusal(blob.filename.to_s, blob.byte_size) || kind_change(asset, blob.filename.to_s))
           blob.purge_later
           return Lifecycle::Result.new(status: :invalid, record: asset, errors: { "file" => [ message ] }, referrers: [])

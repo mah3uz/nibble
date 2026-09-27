@@ -19,7 +19,7 @@ class Nibble::PackagesTest < ActiveSupport::TestCase
 
   test "an inline image in a body lands on the asset its path names, not on the path itself" do
     blob = ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "photo.jpg")
-    asset = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, { "folder" => "site" }).record
+    asset = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, { "folder" => "site" }, actor: Nibble::Principal.system).record
     image = { "type" => "image", "attrs" => { "asset" => "site/photo.jpg", "alt" => "A desk" } }
     dir = package("collections/posts/en/pictured.yml" => { title: "Pictured", status: "draft", body: [ image ] })
 

@@ -5,7 +5,7 @@ class Nibble::Subscribers::NotificationsTest < ActiveSupport::TestCase
   include NibbleRecordsHelper
 
   def submit_doc(actor:)
-    doc = create_entry("docs", { "title" => "Needs review", "body" => "Body" })
+    doc = create_entry("docs", { "title" => "Needs review", "body" => "Body" }, actor:)
     lifecycle(doc, :submit, actor: actor)
     Nibble::Events.dispatch_pending
     doc.reload

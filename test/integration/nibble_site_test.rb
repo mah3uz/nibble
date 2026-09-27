@@ -61,7 +61,7 @@ class NibbleSiteTest < ActionDispatch::IntegrationTest
   end
 
   test "drafts and trashed entries are never public" do
-    draft = ok(Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create, { "title" => "Secret", "topics" => [ @design.id.to_s ] }))
+    draft = ok(Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create, { "title" => "Secret", "topics" => [ @design.id.to_s ] }, actor: Nibble::Principal.system))
 
     get draft.uri
     assert_response :not_found
@@ -138,8 +138,8 @@ class NibbleSiteTest < ActionDispatch::IntegrationTest
     %w[/blog?page=2 /topics/culture /about/team].each { |path| get path }
 
     grids = @posts[1]
-    ok Nibble::Lifecycle.call(grids, :save, { "title" => "Grids, revisited" })
-    ok Nibble::Lifecycle.call(grids.reload, :publish)
+    ok Nibble::Lifecycle.call(grids, :save, { "title" => "Grids, revisited" }, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(grids.reload, :publish, actor: Nibble::Principal.system)
     Nibble::Events.dispatch_pending
 
     get "/blog?page=2"
@@ -153,7 +153,7 @@ class NibbleSiteTest < ActionDispatch::IntegrationTest
 
   test "saving a draft of a live post leaves every cached page alone" do
     get "/blog"
-    ok Nibble::Lifecycle.call(@posts.first, :save, { "title" => "Not yet" })
+    ok Nibble::Lifecycle.call(@posts.first, :save, { "title" => "Not yet" }, actor: Nibble::Principal.system)
     Nibble::Events.dispatch_pending
 
     get "/blog"
@@ -211,8 +211,8 @@ class NibbleSiteTest < ActionDispatch::IntegrationTest
 
   test "each set instance gets its own sidecar results, and the view gets its collection layout" do
     about = Nibble::Records::Entry.find(@about.id)
-    ok Nibble::Lifecycle.call(about, :save, { "blocks" => [ { "type" => "quote", "quote" => "Less, but better." } ] })
-    ok Nibble::Lifecycle.call(about.reload, :publish)
+    ok Nibble::Lifecycle.call(about, :save, { "blocks" => [ { "type" => "quote", "quote" => "Less, but better." } ] }, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(about.reload, :publish, actor: Nibble::Principal.system)
 
     get "/about"
     props = page_props["props"]

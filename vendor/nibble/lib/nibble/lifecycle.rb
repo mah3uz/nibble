@@ -3,6 +3,7 @@ module Nibble
     Result = Data.define(:status, :record, :errors, :referrers) do
       def ok? = status == :ok
       def invalid? = status == :invalid
+      def forbidden? = status == :forbidden
       def conflict? = status == :conflict
       def needs_confirmation? = status == :confirm
     end
@@ -34,23 +35,28 @@ module Nibble
     }.freeze
 
     class << self
-      def call(record, action, attrs = {}, actor: nil, mode: nil)
+      def call(record, action, attrs = {}, actor:, mode: nil)
         action = action.to_s
         attrs = attrs.to_h.deep_stringify_keys
+        principal = Principal.for(actor)
         handler_class = HANDLERS.fetch(record.record_type).constantize
         raise Error, "#{record.record_type} has no '#{action}' action" unless handler_class::ACTIONS.include?(action)
+
+        if (denial = Policy.denial(principal, record, action))
+          return result(:forbidden, record, errors: { "base" => [ denial ] })
+        end
 
         if record.trashed? && action != "restore"
           return result(:invalid, record, errors: { "base" => [ "This is in the trash; restore it first." ] })
         end
-        if (veto = guards[action].lazy.filter_map { |guard| guard.call(record, attrs, actor) }.first)
+        if (veto = guards[action].lazy.filter_map { |guard| guard.call(record, attrs, principal.user) }.first)
           return result(:invalid, record, errors: { "base" => [ veto ] })
         end
         if attrs.key?("lock_version") && attrs["lock_version"].to_i != record.lock_version
           return result(:conflict, record, errors: { "lock_version" => [ "Someone saved this after you opened it." ] })
         end
 
-        record.class.transaction { handler_class.new(record, attrs, actor:, mode:, action:).public_send(action) }
+        record.class.transaction { handler_class.new(record, attrs, principal:, mode:, action:).public_send(action) }
         result(:ok, record)
       rescue Invalid => error
         result(:invalid, record, errors: error.errors)

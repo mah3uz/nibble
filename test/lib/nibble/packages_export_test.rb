@@ -27,10 +27,10 @@ class Nibble::PackagesExportTest < ActiveSupport::TestCase
 
   test "a Markdown field makes the round trip, with the asset it names carried as a path" do
     blob = ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "photo.jpg")
-    asset = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, { "folder" => "site" }).record
+    asset = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, { "folder" => "site" }, actor: Nibble::Principal.system).record
     notes = "See ![desk](nibble://asset/#{asset.id}) for the layout."
     created = Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create,
-      { "title" => "Round trip", "notes" => notes })
+      { "title" => "Round trip", "notes" => notes }, actor: Nibble::Principal.system)
     assert created.ok?, created.errors.inspect
 
     dir, = export

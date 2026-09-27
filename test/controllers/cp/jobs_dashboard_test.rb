@@ -86,7 +86,7 @@ class Nibble::Cp::JobsDashboardTest < ActionDispatch::IntegrationTest
       nil
     end
     blob = ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "photo.jpg")
-    asset = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, {}).record
+    asset = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, {}, actor: Nibble::Principal.system).record
     blob.update!(metadata: {})
     asset.update_columns(width: nil, height: nil)
     ActiveStorage::Blob.service.delete(blob.key)

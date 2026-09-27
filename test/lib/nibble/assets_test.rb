@@ -41,7 +41,7 @@ class Nibble::AssetsTest < ActiveSupport::TestCase
 
   test "uploads outside the allowlist or over the size limit are refused and their blob discarded" do
     script = ActiveStorage::Blob.create_and_upload!(io: StringIO.new("<?php"), filename: "shell.php")
-    result = Nibble::Assets::Upload.call(script)
+    result = Nibble::Assets::Upload.call(script, actor: Nibble::Principal.system)
     assert result.invalid?
     assert_match ".php", result.errors["file"].first
     assert_enqueued_with(job: ActiveStorage::PurgeJob, args: [ script ])
@@ -52,7 +52,7 @@ class Nibble::AssetsTest < ActiveSupport::TestCase
 
   test "an upload gets a clean filename and its kind from the extension" do
     blob = ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "Summer Trip (1).JPG")
-    asset = Nibble::Assets::Upload.call(blob).record
+    asset = Nibble::Assets::Upload.call(blob, actor: Nibble::Principal.system).record
 
     assert_equal [ "summer-trip-1.jpg", "image" ], [ asset.filename, asset.kind ]
     assert_equal "video", Nibble::Assets.kind_for("clip.MOV")
@@ -60,10 +60,10 @@ class Nibble::AssetsTest < ActiveSupport::TestCase
   end
 
   test "the same file uploaded twice becomes two assets sharing one stored blob" do
-    first = Nibble::Assets::Upload.call(upload_blob).record
-    second = Nibble::Assets::Upload.call(upload_blob).record
+    first = Nibble::Assets::Upload.call(upload_blob, actor: Nibble::Principal.system).record
+    second = Nibble::Assets::Upload.call(upload_blob, actor: Nibble::Principal.system).record
 
-    third = Nibble::Assets::Upload.call(upload_blob.tap { |blob| blob.update!(filename: "copy.jpg") }).record
+    third = Nibble::Assets::Upload.call(upload_blob.tap { |blob| blob.update!(filename: "copy.jpg") }, actor: Nibble::Principal.system).record
 
     assert_not_equal first.id, second.id
     assert_equal [ first.blob_id ] * 2, [ second.blob_id, third.blob_id ]
@@ -80,7 +80,7 @@ class Nibble::AssetsTest < ActiveSupport::TestCase
       </svg>
     SVG
     blob = ActiveStorage::Blob.create_and_upload!(io: StringIO.new(svg), filename: "logo.svg", content_type: "image/svg+xml")
-    stored = Nibble::Assets::Upload.call(blob).record.blob.download
+    stored = Nibble::Assets::Upload.call(blob, actor: Nibble::Principal.system).record.blob.download
 
     %w[onload script javascript: foreignObject iframe].each { |unsafe| assert_not_includes stored, unsafe }
     assert_includes stored, %(xlink:href="#shape"), "internal references still work"
@@ -88,7 +88,7 @@ class Nibble::AssetsTest < ActiveSupport::TestCase
   end
 
   test "file facts arrive after upload once the file is analyzed" do
-    asset = Nibble::Assets::Upload.call(upload_blob).record
+    asset = Nibble::Assets::Upload.call(upload_blob, actor: Nibble::Principal.system).record
     assert_nil asset.width
 
     perform_enqueued_jobs(only: Nibble::Jobs::AnalyzeAsset)

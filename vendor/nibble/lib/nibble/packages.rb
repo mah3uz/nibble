@@ -284,7 +284,7 @@ module Nibble
           attrs.merge!(doc.data.slice("published_at", "unpublish_at", "template", "position"))
           attrs["parent_id"] = @references.id("entry", doc.locale, doc.parent_key) if doc.parent_key
         end
-        record = succeed!(doc, Lifecycle.call(model, :create, attrs, mode: @lifecycle_mode))
+        record = succeed!(doc, Lifecycle.call(model, :create, attrs, actor: Principal.system, mode: @lifecycle_mode))
         @references.record!(doc, record)
         record
       end
@@ -295,10 +295,10 @@ module Nibble
         return if references.empty?
 
         attrs = references.to_h { |handle, field| [ handle, field.fieldtype.import(doc.data[handle], context) ] }
-        succeed!(doc, Lifecycle.call(record.reload, :save, attrs, mode: @lifecycle_mode))
+        succeed!(doc, Lifecycle.call(record.reload, :save, attrs, actor: Principal.system, mode: @lifecycle_mode))
       end
 
-      def publish(doc, record) = succeed!(doc, Lifecycle.call(record.reload, :publish, {}, mode: @lifecycle_mode))
+      def publish(doc, record) = succeed!(doc, Lifecycle.call(record.reload, :publish, {}, actor: Principal.system, mode: @lifecycle_mode))
 
       def update(doc, record)
         context = Context.new(@references, doc.locale, strict: true)
@@ -309,7 +309,7 @@ module Nibble
         columns = doc.kind == "collections" ? doc.data.slice("published_at", "unpublish_at", "template", "position") : {}
         return false if unchanged?(record, attrs, columns) && !moved?(record) && !(doc.kind == "collections" && doc.status == "published" && !record.live?)
 
-        succeed!(doc, Lifecycle.call(record, :save, attrs.merge(columns), mode: @lifecycle_mode))
+        succeed!(doc, Lifecycle.call(record, :save, attrs.merge(columns), actor: Principal.system, mode: @lifecycle_mode))
         publish(doc, record) if doc.kind == "collections" && doc.status == "published"
         true
       end
@@ -345,7 +345,7 @@ module Nibble
         attrs = record.blueprint_fields.all.select { |handle, _| doc.data.key?(handle) }.to_h { |handle, field| [ handle, field.fieldtype.import(doc.data[handle], context) ] }
         return :skipped if record.persisted? && unchanged?(record, attrs, {})
 
-        succeed!(doc, Lifecycle.call(record, :save, attrs, mode: @lifecycle_mode))
+        succeed!(doc, Lifecycle.call(record, :save, attrs, actor: Principal.system, mode: @lifecycle_mode))
         outcome
       end
 
@@ -357,7 +357,7 @@ module Nibble
         incoming = tree(doc.data["tree"].to_a, doc.locale)
         return :skipped if record.persisted? && normalize(incoming) == normalize(record.tree.to_a)
 
-        succeed!(doc, Lifecycle.call(record, :save, { "tree" => incoming }, mode: @lifecycle_mode))
+        succeed!(doc, Lifecycle.call(record, :save, { "tree" => incoming }, actor: Principal.system, mode: @lifecycle_mode))
         outcome
       end
 
@@ -379,7 +379,7 @@ module Nibble
         return :skipped if changes.all? { |key, value| asset.public_send(key) == value }
 
         succeed!(Document.new(kind: "assets", handle: "assets", locale: nil, key: row["path"], data: row, file: "assets.yml"),
-          Lifecycle.call(asset, :save, changes, mode: @lifecycle_mode))
+          Lifecycle.call(asset, :save, changes, actor: Principal.system, mode: @lifecycle_mode))
         :updated
       end
 

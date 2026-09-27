@@ -37,9 +37,9 @@ module NibbleStarterHelper
       post({ "title" => "Remote work", "topics" => [ @culture.id.to_s ] }, 3.days.ago),
       post({ "title" => "Type scales", "topics" => [ @design.id.to_s, @culture.id.to_s ] }, 2.days.ago)
     ]
-    ok Nibble::Lifecycle.call(Nibble::Records::GlobalSet.new(handle: "site", locale: "en"), :save, { "name" => "Starter" })
+    ok Nibble::Lifecycle.call(Nibble::Records::GlobalSet.new(handle: "site", locale: "en"), :save, { "name" => "Starter" }, actor: Nibble::Principal.system)
     ok Nibble::Lifecycle.call(Nibble::Records::NavigationTree.new(handle: "main", locale: "en"), :save,
-      { "tree" => [ { "type" => "entry", "id" => @blog.id }, { "type" => "entry", "id" => @about.id, "children" => [ { "type" => "entry", "id" => @team.id } ] } ] })
+      { "tree" => [ { "type" => "entry", "id" => @blog.id }, { "type" => "entry", "id" => @about.id, "children" => [ { "type" => "entry", "id" => @team.id } ] } ] }, actor: Nibble::Principal.system)
     Nibble::Events.dispatch_pending
     Nibble::PageCache.store.clear
   end
@@ -49,16 +49,16 @@ module NibbleStarterHelper
     result.record
   end
 
-  def term(title) = ok(Nibble::Lifecycle.call(Nibble::Records::Term.new(taxonomy: "topics"), :create, { "title" => title }))
+  def term(title) = ok(Nibble::Lifecycle.call(Nibble::Records::Term.new(taxonomy: "topics"), :create, { "title" => title }, actor: Nibble::Principal.system))
 
   def page(attrs)
-    entry = ok(Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "pages"), :create, attrs))
-    ok(Nibble::Lifecycle.call(entry, :publish))
+    entry = ok(Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "pages"), :create, attrs, actor: Nibble::Principal.system))
+    ok(Nibble::Lifecycle.call(entry, :publish, actor: Nibble::Principal.system))
   end
 
   def post(attrs, published_at)
-    entry = ok(Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create, attrs))
-    ok(Nibble::Lifecycle.call(entry, :publish, { "published_at" => published_at.utc.iso8601 }))
+    entry = ok(Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create, attrs, actor: Nibble::Principal.system))
+    ok(Nibble::Lifecycle.call(entry, :publish, { "published_at" => published_at.utc.iso8601 }, actor: Nibble::Principal.system))
   end
 
   def page_props = JSON.parse(Nokogiri::HTML(response.body).at_css("script[data-page]").text)

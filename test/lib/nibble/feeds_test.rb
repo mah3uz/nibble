@@ -20,7 +20,7 @@ class Nibble::FeedsTest < ActionDispatch::IntegrationTest
   end
 
   test "the feed is only the live pages, because that is what a subscriber can open" do
-    ok Nibble::Lifecycle.call(@posts.last, :unpublish)
+    ok Nibble::Lifecycle.call(@posts.last, :unpublish, actor: Nibble::Principal.system)
 
     refute_includes feed("/feed-posts.xml").css("entry > title").map(&:text), "Type scales"
   end

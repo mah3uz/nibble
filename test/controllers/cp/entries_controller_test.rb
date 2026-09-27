@@ -236,6 +236,18 @@ class Nibble::Cp::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "published", doc.reload.status
   end
 
+  test "the review buttons and the review actions answer to the same permission" do
+    doc = create_entry("docs", { "title" => "Guide", "body" => "Body" })
+    lifecycle(doc, :submit)
+    publisher = Nibble::Role.create!(handle: "publisher", title: "Publisher", abilities: %w[entries.docs.view entries.docs.publish])
+    sign_in_as users(:author).tap { |user| user.roles = [ publisher ] }
+
+    get "/cp/collections/docs/entries/#{doc.id}/edit"
+    assert_not props.dig("can", "review")
+    post "/cp/collections/docs/entries/#{doc.id}/approve"
+    assert_equal "in_review", doc.reload.status, "a button the screen hides must not work when called directly"
+  end
+
   test "authors only reach their own entries, and can't publish" do
     mine = create_entry("articles", { "title" => "Mine" }, actor: users(:author))
     theirs = create_entry("articles", { "title" => "Theirs" }, actor: users(:editor))

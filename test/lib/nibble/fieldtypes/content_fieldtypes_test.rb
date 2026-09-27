@@ -53,7 +53,7 @@ class Nibble::Fieldtypes::ContentFieldtypesTest < ActiveSupport::TestCase
 
   test "the editor gets each image's current URL from its asset, whatever src was stored" do
     blob = ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "photo.jpg")
-    asset = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, {}).record
+    asset = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, {}, actor: Nibble::Principal.system).record
     body = [
       { "type" => "image", "attrs" => { "asset" => asset.id.to_s, "alt" => "Never had a src" } },
       { "type" => "blockquote", "content" => [ { "type" => "image", "attrs" => { "asset" => asset.id.to_s, "src" => "/assets/stale/old.jpg" } } ] }

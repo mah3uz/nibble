@@ -42,9 +42,9 @@ class Nibble::PresenterTest < ActiveSupport::TestCase
   test "images in bodies are loaded with the rest of the page, not one query per image" do
     @posts.each_with_index do |post, index|
       blob = ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "photo-#{index}.jpg")
-      asset = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, {}).record
+      asset = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, {}, actor: Nibble::Principal.system).record
       body = [ { "type" => "image", "attrs" => { "asset" => asset.id.to_s, "alt" => "Picture #{index}" } } ]
-      assert Nibble::Lifecycle.call(post.reload, :publish, { "body" => body, "published_at" => 1.day.ago.utc.iso8601 }).ok?
+      assert Nibble::Lifecycle.call(post.reload, :publish, { "body" => body, "published_at" => 1.day.ago.utc.iso8601 }, actor: Nibble::Principal.system).ok?
     end
     first = @posts.first.reload
     one = count_queries { present([ first ]) }
@@ -59,10 +59,10 @@ class Nibble::PresenterTest < ActiveSupport::TestCase
 
   test "included relations are presented in full at depth 2, and cycles are cut" do
     grids, colour = @posts[1], @posts[0]
-    ok Nibble::Lifecycle.call(grids, :save, { "related" => [ colour.id.to_s ] })
-    ok Nibble::Lifecycle.call(grids.reload, :publish)
-    ok Nibble::Lifecycle.call(colour, :save, { "related" => [ grids.id.to_s ] })
-    ok Nibble::Lifecycle.call(colour.reload, :publish)
+    ok Nibble::Lifecycle.call(grids, :save, { "related" => [ colour.id.to_s ] }, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(grids.reload, :publish, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(colour, :save, { "related" => [ grids.id.to_s ] }, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(colour.reload, :publish, actor: Nibble::Principal.system)
 
     data = present([ grids.reload ], include: [ "related" ]).first
     related = data["related"].first
@@ -71,9 +71,9 @@ class Nibble::PresenterTest < ActiveSupport::TestCase
   end
 
   test "related drafts are hidden from public output" do
-    ok Nibble::Lifecycle.call(@posts[0], :save, { "related" => [ @posts[1].id.to_s ] })
-    ok Nibble::Lifecycle.call(@posts[0].reload, :publish)
-    ok Nibble::Lifecycle.call(@posts[1], :unpublish)
+    ok Nibble::Lifecycle.call(@posts[0], :save, { "related" => [ @posts[1].id.to_s ] }, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(@posts[0].reload, :publish, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(@posts[1], :unpublish, actor: Nibble::Principal.system)
 
     assert_equal [], present([ @posts[0].reload ]).first["related"]
   end
@@ -84,7 +84,7 @@ class Nibble::PresenterTest < ActiveSupport::TestCase
   end
 
   test "navigation links resolve to live entries and drop the rest" do
-    ok Nibble::Lifecycle.call(@about, :unpublish)
+    ok Nibble::Lifecycle.call(@about, :unpublish, actor: Nibble::Principal.system)
     tree = Nibble::Records::NavigationTree.find_by!(handle: "main")
 
     assert_equal [ "Blog" ], Nibble::Presenter.new(context: Nibble::Query::Context.public).present_navigation(tree).map { |link| link["title"] }

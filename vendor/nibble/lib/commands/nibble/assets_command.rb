@@ -15,7 +15,7 @@ class NibbleAssetsCommand < Rails::Command::Base
     strays = Nibble::Assets.stray_blobs(before: cutoff).to_a
 
     assets.each do |asset|
-      Nibble::Lifecycle.call(asset, :trash) if options[:confirm]
+      Nibble::Lifecycle.call(asset, :trash, actor: Nibble::Principal.system) if options[:confirm]
       puts "#{options[:confirm] ? 'trashed' : 'unused'}  #{[ asset.folder.presence, asset.filename ].compact.join('/')} (#{asset.size} bytes)"
     end
     strays.each do |blob|

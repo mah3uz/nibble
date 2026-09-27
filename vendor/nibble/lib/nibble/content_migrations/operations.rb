@@ -163,7 +163,7 @@ module Nibble
       def term(taxonomy, locale, title)
         slug = title.parameterize
         Records::Term.find_by(taxonomy:, locale:, slug:) ||
-          Lifecycle.call(Records::Term.new(taxonomy:, locale:), :create, { "title" => title, "slug" => slug }, mode: :import).then do |result|
+          Lifecycle.call(Records::Term.new(taxonomy:, locale:), :create, { "title" => title, "slug" => slug }, actor: Principal.system, mode: :import).then do |result|
             result.ok? ? result.record : raise(Error, "couldn't create #{taxonomy} term '#{title}': #{result.errors}")
           end
       end

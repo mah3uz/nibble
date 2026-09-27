@@ -18,7 +18,7 @@ class Nibble::PrepareTest < ActiveSupport::TestCase
   end
 
   def create_post(title)
-    result = Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create, { "title" => title })
+    result = Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create, { "title" => title }, actor: Nibble::Principal.system)
     assert result.ok?, result.errors.inspect
     result.record
   end
@@ -133,7 +133,7 @@ class Nibble::PrepareTest < ActiveSupport::TestCase
   # A new release can recreate the index, and a deploy has no other moment to refill it before readers search.
   test "preparing builds an empty index from what is published" do
     post = create_post("Invoice reminders")
-    assert Nibble::Lifecycle.call(post, :publish, { "published_at" => 1.day.ago.utc.iso8601 }).ok?
+    assert Nibble::Lifecycle.call(post, :publish, { "published_at" => 1.day.ago.utc.iso8601 }, actor: Nibble::Principal.system).ok?
     Nibble::Events.dispatch_pending
     Nibble::Search::TABLES.each_value { |table| ActiveRecord::Base.connection.execute("DELETE FROM #{table}") }
 

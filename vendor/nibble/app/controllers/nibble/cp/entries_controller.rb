@@ -28,11 +28,11 @@ module Nibble
       end
 
       def update = run(:save, "Saved.")
-      def publish = run(:publish, "Published.", permission: "publish")
-      def unpublish = run(:unpublish, "Unpublished.", permission: "publish")
+      def publish = run(:publish, "Published.")
+      def unpublish = run(:unpublish, "Unpublished.")
       def submit = run(:submit, "Sent for review.")
-      def approve = run(:approve, "Approved.", permission: "publish")
-      def reject = run(:reject, "Sent back for changes.", permission: "publish")
+      def approve = run(:approve, "Approved.")
+      def reject = run(:reject, "Sent back for changes.")
       def revert = run(:revert, "Revision restored.")
       def discard_draft = run(:discard_draft, "Draft discarded.")
 
@@ -65,8 +65,8 @@ module Nibble
         params[:date].to_s.include?("T") ? parsed : parsed.change(hour: 9)
       end
 
-      def run(action, notice, permission: "edit")
-        authorize!(ability(permission), @entry)
+      def run(action, notice)
+        authorize!(Nibble::Policy.ability(@entry, action), @entry)
         result = Nibble::Lifecycle.call(@entry, action, attrs, actor: Nibble::Current.user)
         return render_conflict(result) if result.conflict?
         return render_errors(@entry, result) unless result.ok?

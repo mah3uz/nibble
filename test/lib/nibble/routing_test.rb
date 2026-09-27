@@ -26,7 +26,7 @@ class Nibble::RoutingTest < ActiveSupport::TestCase
   end
 
   test "only live entries resolve, and non-canonical spellings redirect" do
-    ok Nibble::Lifecycle.call(@about, :unpublish)
+    ok Nibble::Lifecycle.call(@about, :unpublish, actor: Nibble::Principal.system)
     assert_nil Nibble::Routing.resolve("/about")
     assert_equal "/blog/grids", Nibble::Routing.resolve("/BLOG/grids/").redirect
     assert_nil Nibble::Routing.resolve("/nowhere/")
