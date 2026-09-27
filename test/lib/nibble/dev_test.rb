@@ -105,3 +105,28 @@ class Nibble::DevSetupTest < ActiveSupport::TestCase
     end
   end
 end
+
+class Nibble::DevLogEventsTest < ActiveSupport::TestCase
+  test "a failed server render is recorded with where it failed and whose file that is" do
+    error = InertiaRails::SSRError.new("window is not defined", type: "browser-api", browser_api: "window",
+      source_location: "site/themes/bite/views/pages/show.vue:7:26")
+
+    event = Nibble::Dev::Logs.ssr_event(error, { component: "theme/pages/show", url: "/about" })
+
+    assert_equal [ "ssr", "theme/pages/show", "window", "theme" ], event.values_at("kind", "component", "browser_api", "owner")
+  end
+
+  test "a failed job is recorded with its class and the error" do
+    Dir.mktmpdir do |dir|
+      Nibble::Dev::Logs.path = Pathname(dir).join("dev.jsonl")
+      job = Nibble::Jobs::RunSchedule.new
+      Nibble::Dev::Logs.job(ActiveSupport::Notifications::Event.new("perform.active_job", nil, nil, "1",
+        { job:, exception_object: RuntimeError.new("the queue fell over") }))
+
+      event = Nibble::Dev::Logs.events.last
+      assert_equal [ "job", "Nibble::Jobs::RunSchedule", "the queue fell over" ], event.values_at("kind", "job", "message")
+    ensure
+      Nibble::Dev::Logs.path = nil
+    end
+  end
+end

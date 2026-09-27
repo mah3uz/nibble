@@ -1,5 +1,6 @@
 import { createInertiaApp } from '@inertiajs/vue3'
 import { defineAsyncComponent } from 'vue'
+import { reportBrowserErrors } from '../nibble-cp/lib/dev-errors'
 import { installHistoryGuard } from '../nibble-cp/lib/history-guard'
 import { inertiaDefaults, layoutFor } from '../nibble-cp/lib/inertia-shared'
 import { resolvePage } from '../nibble-cp/lib/resolve-page'
@@ -9,6 +10,7 @@ const CpLayout = defineAsyncComponent(() => import('../nibble-cp/layouts/CpLayou
 const AuthLayout = defineAsyncComponent(() => import('../nibble-cp/layouts/AuthLayout.vue'))
 
 installHistoryGuard()
+reportBrowserErrors()
 
 createInertiaApp({
   resolve: resolvePage,

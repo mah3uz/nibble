@@ -1,9 +1,9 @@
 import vue from '@vitejs/plugin-vue'
 import inertia from '@inertiajs/vite'
 import tailwindcss from '@tailwindcss/vite'
-import { existsSync, readFileSync } from 'node:fs'
+import { appendFileSync, existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import RubyPlugin from 'vite-plugin-ruby'
 
 const siteRoot = process.cwd()
@@ -24,11 +24,85 @@ function activeTheme(): string {
   return 'crumbs'
 }
 
+// Vite's build errors, and errors in the browser sent over the HMR socket, join the log the developer tools read.
+function devLog(): Plugin {
+  const file = resolve(siteRoot, 'log/nibble-dev.jsonl')
+  let last = 0
+  let recent: number[] = []
+  const plain = (text: unknown) =>
+    String(text ?? '')
+      .replace(/\u001b\[[0-9;]*m/g, '')
+      .slice(0, 2000)
+  const write = (event: Record<string, unknown>) => {
+    const now = Date.now()
+    recent = recent.filter((time) => time > now - 60_000)
+    if (recent.length >= 60) return
+    recent.push(now)
+    last = Math.max(now * 1000, last + 1)
+    try {
+      appendFileSync(file, JSON.stringify({ ...event, id: last, time: new Date(now).toISOString() }) + '\n')
+    } catch {
+      // The log folder is missing until Rails first starts.
+    }
+  }
+  return {
+    name: 'nibble-dev-log',
+    apply: 'serve',
+    configureServer(server) {
+      const logger = server.config.logger
+      const error = logger.error.bind(logger)
+      logger.error = (message, options) => {
+        // Vite forwards the browser's console here too; the page reports those itself, with its URL and stack.
+        if (plain(message).startsWith('[console.')) return error(message, options)
+        const cause = options?.error as (Error & { id?: string; loc?: { file?: string; line?: number } }) | undefined
+        const at = cause?.loc?.file ? `${cause.loc.file}:${cause.loc.line ?? ''}` : cause?.id
+        write({
+          kind: 'vite',
+          message: plain(cause?.message ?? message),
+          at,
+          stack: cause?.stack?.split('\n').slice(0, 15),
+        })
+        error(message, options)
+      }
+      // Server-side rendering runs in this process in development; ssr/ssr.ts reports through this when it exists.
+      ;(globalThis as { __nibbleSsrError?: unknown }).__nibbleSsrError = (
+        cause: Error,
+        page: { component?: string; url?: string; info?: string },
+      ) => {
+        server.ssrFixStacktrace(cause)
+        const frame = cause.stack?.split('\n').find((line) => line.includes(siteRoot) && !line.includes('node_modules'))
+        write({
+          kind: 'ssr',
+          component: page.component,
+          url: plain(page.url),
+          during: page.info,
+          message: plain(cause.message),
+          at: frame
+            ?.trim()
+            .replace(/^at .*?\(?(\/.*?)\)?$/, '$1')
+            .replace(`${siteRoot}/`, ''),
+          stack: cause.stack?.split('\n').slice(0, 15),
+        })
+      }
+      server.ws.on('nibble:browser-error', (data: Record<string, unknown>) => {
+        write({
+          kind: 'browser',
+          source: plain(data.source),
+          message: plain(data.message),
+          url: plain(data.url),
+          stack: Array.isArray(data.stack) ? data.stack.slice(0, 15).map(plain) : undefined,
+        })
+      })
+    },
+  }
+}
+
 const theme = activeTheme()
 // A site's own theme first, then one that ships with Nibble.
 const themeDir =
-  [resolve(siteRoot, 'site/themes', theme), resolve(import.meta.dirname, 'themes', theme)].find((dir) => existsSync(dir)) ??
-  resolve(siteRoot, 'site/themes', theme)
+  [resolve(siteRoot, 'site/themes', theme), resolve(import.meta.dirname, 'themes', theme)].find((dir) =>
+    existsSync(dir),
+  ) ?? resolve(siteRoot, 'site/themes', theme)
 
 export default defineConfig(({ command, isSsrBuild }) => ({
   resolve: {
@@ -67,6 +141,7 @@ export default defineConfig(({ command, isSsrBuild }) => ({
         server.watcher.add([themeDir, resolve(siteRoot, 'site')])
       },
     },
+    devLog(),
     tailwindcss(),
     RubyPlugin(),
     inertia({ ssr: 'ssr/ssr.ts' }),

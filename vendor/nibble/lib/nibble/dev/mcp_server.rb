@@ -12,7 +12,8 @@ module Nibble
           Plane screens, or a slot under site/cp/slots/.
         - After changing a view, a layout or its .yml sidecar, call render with a path that uses it and read the props,
           the files that answered and any error. After changing schema YAML, call check.
-        - run_tests returns failures only; logs and last_error read the development server's requests and errors.
+        - run_tests returns failures only. logs and last_error show what happened while the site ran in development:
+          requests, Rails errors, server-rendering failures, failed jobs, Vite build errors and errors in the browser.
         - search_docs and read_doc read the documentation for the Nibble version installed here.
       TEXT
 

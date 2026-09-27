@@ -21,6 +21,7 @@ class NibbleDevCommand < Rails::Command::Base
 
   desc "mcp", "Serve the developer tools to an AI agent over MCP, on standard input and output (development only)"
   def mcp
+    ENV["NIBBLE_DEV_TOOLS"] = "1"
     boot_application!
     abort "nibble:dev:mcp runs only in development, with code reloading on" unless Nibble::Dev.allowed?
 
@@ -29,6 +30,7 @@ class NibbleDevCommand < Rails::Command::Base
 
   desc "tool NAME [JSON]", "Run one developer tool and print its answer as JSON, e.g. nibble:dev:tool render '{\"path\":\"/\"}'"
   def tool(name = nil, json = "{}")
+    ENV["NIBBLE_DEV_TOOLS"] = "1"
     boot_application!
     return puts(JSON.pretty_generate(Nibble::Dev.tools.values.map(&:listing))) unless name
 

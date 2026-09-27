@@ -43,7 +43,7 @@ from a terminal.
 | `check` | `nibble:check`'s findings, content the schema no longer covers, and Nibble files changed in place |
 | `run_tests` | the site's tests, failures as data: test, file and line, message, backtrace |
 | `lint` | RuboCop, ESLint or the Vue type checker, as findings with file and line |
-| `logs`, `last_error` | requests and errors the development server records, read after a cursor |
+| `logs`, `last_error` | what happened while the site ran: requests, Rails errors, server-rendering failures, failed jobs, Vite build errors and errors in the browser — read after a cursor |
 | `search_docs`, `read_doc` | this documentation, for the version installed |
 | `eject`, `generate` | take over a Control Plane screen; write a schema or theme stub |
 

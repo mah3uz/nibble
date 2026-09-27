@@ -27,6 +27,8 @@ const render = (await createInertiaApp({
       const page = props.initialPage
       console.error(`[ssr] ${page.component} failed while rendering ${page.url} (${info})`)
       console.error(error)
+      const report = (globalThis as { __nibbleSsrError?: (error: unknown, page: object) => void }).__nibbleSsrError
+      report?.(error, { component: page.component, url: page.url, info })
     }
     return app
   },
