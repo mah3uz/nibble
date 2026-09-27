@@ -12,6 +12,13 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### Changed
+
+- **`install.sh` installs the `nibble` command and hands over to `nibble new`,** so there is one way to start a
+  site, on Linux and macOS alike. It says how to get anything missing — mise for Ruby and Node, which systems package
+  too old, and Homebrew, apt or pacman for the rest — and checks Ruby and Node against what the release needs before
+  installing anything.
+
 ## 0.19.0 — 2026-09-28 02:01 +0600
 
 > **AI apps work on a site as the people who connect them.** Claude, ChatGPT, Codex and Cursor connect over MCP,

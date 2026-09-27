@@ -46,7 +46,8 @@ From the directory where you keep projects:
 curl -fsSL nibble.ink/install.sh | bash
 ```
 
-The installer checks your machine and asks for the site's name — answer **tidewater**, and it becomes the folder. It
+The installer gets the `nibble` command if you haven't got it, checks your machine, and asks for the site's name —
+answer **tidewater**, and it becomes the folder. It
 then downloads the latest release into `tidewater/vendor/nibble`, installs dependencies, and asks a handful of
 questions. Answer them like this:
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
-# Packs this checkout as a release and installs it with install.sh into an empty directory, the way someone new would,
-# then upgrades that site to a second release packed from a changed copy: a release that can't make a working site,
+# Packs this checkout as a release and installs it into an empty directory the way `nibble new` does once it has
+# verified the download — unpacked into vendor/nibble, then the release's own installer — and upgrades that site to a second release packed from a changed copy: a release that can't make a working site,
 # or can't be taken by one, fails here instead.
 require "fileutils"
 require "open3"
@@ -53,8 +53,10 @@ def next_release(root, into)
 end
 
 first = ReleaseArchive.new(root: ROOT, out: File.join(work, "release")).build
-run!({ "NIBBLE_ARCHIVE" => first.archive.to_s, "NIBBLE_OFFLINE" => "1" }, File.join(ROOT, "install.sh"), "site", "--defaults",
-     chdir: work)
+run!({}, "tar", "-xzf", first.archive.to_s, chdir: work)
+FileUtils.mkdir_p(File.join(site, "vendor"))
+FileUtils.mv(File.join(work, "nibble-#{first.version}"), File.join(site, "vendor/nibble"))
+run!({ "NIBBLE_OFFLINE" => "1" }, "ruby", "vendor/nibble/bin/install", "--defaults", chdir: site)
 
 check record(site).dig("install", "version") == first.version, "the install record names #{record(site).dig('install', 'version').inspect}"
 check Open3.capture2("bin/rails", "nibble:version", chdir: site).first.strip == first.version, "nibble:version doesn't name #{first.version}"

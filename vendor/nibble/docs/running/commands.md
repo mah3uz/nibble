@@ -79,7 +79,8 @@ bin/kamal app exec -i 'bin/rails nibble:admin:create'         # the same, on the
 ## 6. Installing, upgrading and deploying
 
 ```sh
-curl -fsSL nibble.ink/install.sh | bash   # a new site
+curl -fsSL nibble.ink/install.sh | bash   # a new site, getting the nibble command first
+nibble new my-site                        # a new site, with the nibble command already here
 bin/rails nibble:install                  # --defaults, --force, --only=deploy
 bin/rails nibble:eject <path>             # take one of Nibble's Control Plane screens on
 bin/rails nibble:upgrade [version]        # on your own machine, never a server; --force

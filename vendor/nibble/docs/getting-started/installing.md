@@ -22,27 +22,37 @@ After reading this guide, you will know:
 
 | Tool | Why |
 |---|---|
-| Ruby | the application |
-| Node and npm | the asset build, and server-side rendering |
+| Ruby 4 | the application |
+| Node 24 or newer, and npm | the asset build, and server-side rendering |
 | SQLite | the database — it also holds the cache and the job queue |
 | libvips | resizing images |
 | ffmpeg | thumbnails for video |
 
-The Ruby version is pinned in the site's `.ruby-version`, which [mise](https://mise.jdx.dev) and other version
-managers read. git is not needed to install or upgrade, though a site's own history belongs in it.
+Most systems' own Ruby and Node are older than that, so install those two with [mise](https://mise.jdx.dev), which
+also reads the Ruby version a site pins in its `.ruby-version`:
+
+```sh
+mise use --global ruby@latest node@lts
+```
+
+git is not needed to install or upgrade, though a site's own history belongs in it.
 
 > [!NOTE]
 > There is no database server, no Redis and no search service to set up. SQLite holds all of it, which is why a
 > Nibble site runs on one small machine.
 
 If something is missing, the installer stops **before doing anything** and names everything that is missing at
-once, with a command for your operating system:
+once: mise for Ruby and Node, and your system's own packages for the rest — Homebrew on macOS, apt on Debian and
+Ubuntu, pacman on Arch Linux:
 
 ```
-  Missing:
+error this computer is missing:
     vips — image resizing (package: libvips / libvips-tools)
-  Debian/Ubuntu: sudo apt install ruby-full nodejs npm sqlite3 libvips-tools ffmpeg curl
+  The rest, on Arch Linux: sudo pacman -S --needed sqlite libvips ffmpeg
 ```
+
+It checks the versions too, once it has the release: a Ruby or Node older than the release needs is named, with the
+mise command that gets the right one, before anything is installed.
 
 ## 2. Running the installer
 
@@ -52,17 +62,23 @@ Tidewater's site was created with:
 curl -fsSL nibble.ink/install.sh | bash
 ```
 
-It works from any shell, fish included. The installer then:
+It works from any shell, fish included, on Linux and macOS. It installs [the `nibble` command](../running/cli.md)
+into `~/.local/bin` if this computer hasn't got it, checked against the checksum published with it, and hands over
+to `nibble new`, which:
 
 1. Checks the tools above.
-2. Asks for the site's name and makes its folder from it: `Tidewater` becomes `tidewater/`, and spaces become dashes.
-   The folder must not already exist. `… | bash -s tidewater` names it without asking.
-3. Downloads the latest release, checks it against its published checksum, and unpacks it into
-   `tidewater/vendor/nibble`. Set `NIBBLE_VERSION=0.16.0` to take a particular release instead.
+2. Asks for the site's name and makes its folder from it, spaces becoming dashes: `Tide water` becomes
+   `Tide-water/`. If the folder already exists it asks again. `… | bash -s tidewater` names it without asking.
+3. Downloads the latest release, checks it against its published checksum, checks your Ruby and Node against what it
+   needs, and unpacks it into `tidewater/vendor/nibble`. Set `NIBBLE_VERSION=0.16.0` to take a particular release
+   instead.
 4. Writes the files that need no answers, and runs `bundle install` and `npm install`, starting from the versions that
    release was tested with — the slow part.
 5. Hands over to `bin/rails nibble:install`, which asks the questions below, then generates the types your theme
    reads.
+
+With the `nibble` command already installed, `nibble new tidewater` does the same; options for `nibble:install` go
+after `--`, as in `nibble new tidewater -- --defaults`.
 
 ## 3. The questions
 

@@ -89,7 +89,8 @@ with SSR, on SQLite. Content is schema-driven: YAML declares collections, taxono
 blueprints, globals, navigation and forms, read in three layers — Nibble's, the theme's, then the site's — and
 entries and terms are rows whose `data` is validated against a blueprint.
 
-Nibble is installed by `install.sh`, which unpacks a release archive into `vendor/nibble`, and
+Nibble is installed by `nibble new` (the CLI; `install.sh` fetches it first), which unpacks a release archive into
+`vendor/nibble`, and
 `bin/rails nibble:upgrade` replaces that folder with the next release. See `README.md` for
 setup, commands, what a site owns, and upgrading.
 

@@ -30,9 +30,11 @@ Upgrades arrive as releases, and each one replaces `vendor/nibble` whole.
 curl -fsSL nibble.ink/install.sh | bash
 ```
 
-It checks for what it needs — Ruby, Node, npm, SQLite, libvips, ffmpeg — names anything missing, asks for your site's
-name (its folder is named after it), then downloads the latest release, checks it against its published checksum,
-unpacks it into the site's `vendor/nibble` and asks a handful of questions. Everything outside `vendor/nibble` is
+It installs [the `nibble` command](https://github.com/mah3uz/nibble-cli) if you haven't got it, then runs
+`nibble new`: it checks for what it needs — Ruby, Node, npm, SQLite, libvips, ffmpeg — and says how to get anything
+missing, asks for your site's name (its folder is named after it), downloads the latest release, checks it against
+its published checksum and that your Ruby and Node are new enough, unpacks it into the site's `vendor/nibble` and asks
+a handful of questions. Everything outside `vendor/nibble` is
 written once, and is yours from then on. `… | bash -s my-site` names the folder without asking.
 
 ```sh

@@ -11,13 +11,6 @@ class RepositoryTest < ActiveSupport::TestCase
     refute_match %r{localhost|127\.0\.0\.1}, Nibble::CHANGELOGS_FEED
   end
 
-  test "the installer downloads releases from the same repository the app knows about" do
-    default = Rails.root.join("install.sh").read[/^\s*REPOSITORY="\$\{NIBBLE_REPOSITORY:-([^}]+)\}"/, 1]
-
-    assert_equal Nibble::REPOSITORY[%r{github\.com/(.+?)\.git\z}, 1], default,
-      "install.sh runs before the app exists, so it carries its own copy — this keeps the two from drifting"
-  end
-
   test "Nibble's own site runs every release's behaviour from the release that brings it" do
     raised = Rails.root.join("config/nibble.yml").read[/^\s*load_defaults:\s*"([^"]+)"/, 1]
 
