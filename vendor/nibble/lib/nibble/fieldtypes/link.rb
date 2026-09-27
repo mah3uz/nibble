@@ -38,7 +38,7 @@ module Nibble
         target && { "type" => type, "id" => id, "url" => target[:url], "title" => target[:title] }
       end
 
-      def rules = [ "string" ]
+      def rules = %w[string safe_link]
 
       def import(value, ctx = nil)
         return value unless ctx && value.is_a?(String) && value.include?(LinkTypes::SEPARATOR)

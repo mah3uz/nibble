@@ -31,6 +31,7 @@ module Nibble
       "size.array" => "The %{attribute} field must contain %{size} items.",
       "email" => "The %{attribute} field must be a valid email address.",
       "url" => "The %{attribute} field must be a valid URL.",
+      "safe_link" => "The %{attribute} field must be a web, email or phone link, or a link to content on this site.",
       "alpha" => "The %{attribute} field must only contain letters.",
       "alpha_num" => "The %{attribute} field must only contain letters and numbers.",
       "alpha_dash" => "The %{attribute} field must only contain letters, numbers, dashes, and underscores.",

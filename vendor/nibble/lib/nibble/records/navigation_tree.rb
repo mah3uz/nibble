@@ -53,6 +53,7 @@ module Nibble
         case node["type"]
         when "url"
           errors.add(:tree, "#{key} needs a title and a url") if node["url"].blank? || node["title"].blank?
+          errors.add(:tree, "#{key} must link to a web page, an email address or a phone number") if node["url"].present? && !SafeUrl.safe?(node["url"])
         when *LINK_TYPES.keys
           allowed = Array(item[LINK_TYPES[node["type"]]])
           target = Records.model(node["type"]).find_by(id: node["id"], deleted_at: nil)

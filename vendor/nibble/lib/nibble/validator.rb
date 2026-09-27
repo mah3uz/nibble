@@ -94,6 +94,7 @@ module Nibble
       when "size" then sized.("size", size: params.first) unless size(value, names) == params.first.to_f
       when "email" then message.("email") unless value.to_s.match?(/\A#{Validation::EMAIL}\z/)
       when "url" then message.("url") unless url?(value)
+      when "safe_link" then message.("safe_link") unless LinkTypes.parse(value) || SafeUrl.safe?(value)
       when "alpha" then message.("alpha") unless value.to_s.match?(/\A\p{L}+\z/)
       when "alpha_num" then message.("alpha_num") unless value.to_s.match?(/\A[\p{L}\p{N}]+\z/)
       when "alpha_dash" then message.("alpha_dash") unless value.to_s.match?(/\A[\p{L}\p{N}_-]+\z/)
