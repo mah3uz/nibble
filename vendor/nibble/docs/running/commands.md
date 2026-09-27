@@ -61,12 +61,12 @@ bin/rails nibble:content:export site/packages/default    # --collections= --taxo
 bin/rails nibble:content:validate site/packages/default  # check a package, write nothing
 bin/rails nibble:content:import site/packages/default    # --mode=create|update --dry-run --webhooks
 bin/rails nibble:content:migrate                                         # pending site/schema/migrations/*.yml; --dry-run
-bin/rails nibble:search:rebuild                                          # every search index, including files
-bin/rails nibble:assets:purge_unused                                     # lists unused uploads; --confirm deletes, --older-than-days=
+bin/rails nibble:reindex                                          # every search index, including files
+bin/rails nibble:cleanup:assets                                     # lists unused uploads; --confirm deletes, --older-than-days=
 ```
 
 > [!WARNING]
-> `nibble:assets:purge_unused --confirm` deletes files for good. Read [Backups](backups.md#51-uploads-and-the-database-can-disagree)
+> `nibble:cleanup:assets --confirm` deletes files for good. Read [Backups](backups.md#51-uploads-and-the-database-can-disagree)
 > before running it after a restore.
 
 ## 5. People
@@ -92,9 +92,19 @@ bin/kamal deploy                          # every deploy after
 
 ```sh
 bin/rails nibble:dev:seed                 # realistic demo posts, authors and topics
+bin/rails nibble:dev:setup                # connect Claude Code, Cursor and Codex to the developer tools
+bin/rails nibble:dev:mcp                  # the developer tools over MCP, for an agent
+bin/rails nibble:dev:tool render '{"path":"/"}'  # one developer tool, as JSON
 RAILS_ENV=test bin/rails nibble:bench     # render and listing budgets; --posts=, --requests=
 bin/ssr-smoke                             # every page through a fresh server-rendering build
 ```
+
+The developer tools are described in [Building with an agent](../extending/building-with-agents.md).
+
+## 8. The nibble command
+
+`nibble` runs every task above without `bin/rails nibble:` — `nibble check`, `nibble upgrade` — and works on the
+content of sites you sign in to. See [The nibble command](cli.md).
 
 The **playground**, at `/cp/nibble/playground` in development, renders every blueprint — plus one using every
 fieldtype — backed by records in memory. It is the fastest way to see what a field looks like without making content.

@@ -42,6 +42,15 @@ bin/rails nibble:version # the release this site runs
 ```
 
 To work on Nibble itself, clone this repository and run `bin/setup`; `bin/ci` runs every check Nibble runs on itself.
+The documentation is in `vendor/nibble/docs`, and ships with every release.
+
+## AI apps and agents
+
+Once an administrator turns on Agent access, people can connect Claude, ChatGPT, Codex or Cursor to the site at
+`/mcp`, and the `nibble` command-line tool to the management API at `/api/v2`. An app works as the person who
+connected it and can never do more than they can; publishing and changes that go live at once wait for that person's
+approval. In development, `bin/rails nibble:dev:mcp` gives an agent building the site tools to render pages, check,
+test and read logs. See [Agent access][agents] and [Building with an agent][dev-agents].
 
 ## Documentation
 
@@ -83,6 +92,8 @@ MIT — see `LICENSE`. Use it, change it, sell it, rebrand the Control Plane; ke
 copies. It comes with no warranty and no support promise.
 
 [site]: https://nibble.ink
+[agents]: https://nibble.ink/docs/running/agent-access
+[dev-agents]: https://nibble.ink/docs/extending/building-with-agents
 [start]: https://nibble.ink/docs/getting-started
 [users]: https://nibble.ink/docs/running
 [editors]: https://nibble.ink/docs/editing

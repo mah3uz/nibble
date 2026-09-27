@@ -57,6 +57,9 @@ scopes:
 
 ![API tokens in the Control Plane](../../images/cp/api-tokens.png)
 
+These tokens only ever read. A program that needs to change content does it as a person, through the
+[management API](../extending/management-api.md).
+
 > [!CAUTION]
 > A token is shown once, when it is created. Store it where the job that uses it can read it and nowhere else —
 > never in a theme, which is sent to every visitor's browser.

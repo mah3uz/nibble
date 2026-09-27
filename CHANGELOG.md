@@ -12,6 +12,55 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's new
+
+- **AI apps can work on a site as the people who connect them.** An administrator turns on **Agent access** under
+  Users, and chooses what apps may touch area by area — reading content and writing entry drafts to begin with.
+  People then connect Claude, ChatGPT, Codex, Cursor or anything that speaks MCP at `/mcp`, sign in on the site, and
+  choose what the app may do: read, write drafts, everything their role allows, or area by area. An app can never do
+  more than its person, and whatever this page, the person's roles or the connection allow — the smallest of the
+  three — is checked on every request.
+- **Publishing, trashing and live changes through an app wait for approval.** The person the app acts for sees exactly
+  what would change, with a warning if it links to another site, and approves it once.
+- **Connected apps** in the account menu lists each app, when it was last used, and pending approvals, and makes
+  tokens for scripts. Revisions and the audit log say which app a change came through.
+- **The management API** at `/api/v2`: every operation an app can take, with its arguments as JSON Schema, a dry run,
+  retries that don't repeat a change, `lock_version` so nobody's edit is overwritten, rich text as Markdown, and
+  errors that say what to do next.
+- **The `nibble` command-line tool:** start a site, run its tasks as `nibble check`, and sign in to any number of
+  sites and accounts to work on their content from a terminal or an agent.
+- **A guide for agents,** written from the schema and the site's own notes in `site/agents/*.md`, served over MCP and
+  installable as a skill.
+- **Developer tools for agents building a site:** `bin/rails nibble:dev:mcp` renders a path and shows what answered it
+  and its props, checks, runs tests with failures as data, lints, reads the development log and searches the docs;
+  `bin/rails nibble:dev:setup` connects Claude Code, Cursor and Codex and keeps them out of `vendor/nibble/`.
+- **The documentation ships with each release,** in `vendor/nibble/docs`.
+- **New sites get an `AGENTS.md`,** which their `CLAUDE.md` imports.
+
+### Changed
+
+- **`nibble:assets:purge_unused` is now `nibble:cleanup:assets`, and `nibble:search:rebuild` is now `nibble:reindex`.**
+
+  **Upgrade:** use the new names in scripts and deploy hooks.
+- **Every change to content names who is making it.** `Nibble::Lifecycle.call` requires `actor:` — a user, a
+  `Nibble::Principal`, or `Nibble::Principal.system` for jobs and imports — and checks that actor's permissions.
+
+  **Upgrade:** Ruby of your own that calls `Nibble::Lifecycle.call` or `Nibble::Assets::Upload.call` passes an
+  `actor:`.
+- **API tokens only read.** The `manage:<collection>` scope is gone; changes go through the management API as a
+  person.
+
+### What's fixed
+
+- **Approving or rejecting a review needs the approve permission,** as the editor's buttons already assumed; it had
+  asked for the publish permission instead.
+
+### Security
+
+- **Navigation links and link fields refuse `javascript:` and `data:` addresses,** which a theme would have put into
+  a page as a link that runs script.
+- **Failed sign-ins to the content API are limited per address,** where each made-up token had its own allowance.
+
 ## 0.18.3 — 2026-09-27 04:51 +0600
 
 ### What's fixed

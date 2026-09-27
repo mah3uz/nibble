@@ -238,7 +238,7 @@ bin/kamal app exec 'bin/rails nibble:content:import site/packages/default'
 and build the search index, so the help centre is searchable:
 
 ```sh
-bin/kamal app exec 'bin/rails nibble:search:rebuild'
+bin/kamal app exec 'bin/rails nibble:reindex'
 ```
 
 > [!WARNING]

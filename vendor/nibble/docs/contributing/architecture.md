@@ -61,6 +61,10 @@ against a blueprint built from the schema. A new field is not a database migrati
 
 - **`Nibble::Lifecycle`** owns everything that happens to a record: drafts, revisions, scheduling, workflow, trash
   and publishing. Nothing writes content around it.
+- **`Nibble::Policy`** is asked by `Lifecycle` before every change, whoever calls it: the Control Plane, the
+  management API, a job. `Lifecycle.call` takes an `actor:` — a person, a `Nibble::Principal` carrying the app they
+  connected, or `Nibble::Principal.system` for Nibble's own jobs and imports — and there is no default, so no caller
+  can forget who is acting. One table maps each action to the permission it needs.
 - **`Nibble::Uris`** works out a record's URL when it is saved, and records a 301 when a live record's URL changes.
 - **`Nibble::Events`** publishes through an outbox. Subscribers registered in `Nibble.boot!` update relations, URLs,
   the audit log, notifications, the page cache, the search index and webhooks.
@@ -78,7 +82,11 @@ queries and sitemaps ask. There are no rows, no sync and no step on the boot pat
 `Schema`, `Field`/`Fields`/`Fieldtype`, `Records::*`, `Lifecycle`, `Query`, `Presenter`, `Routing`, `PageProps`,
 `PageCache`, `Dependencies`, `Files`, `Search`, `Seo`, `Sitemaps`, `Feeds`, `Assets`, `Forms`, `Outbound`,
 `Webhooks`, `Events`, `Uris`, `Access`, `Packages`, `ContentMigrations`, `Drift`, `Release`, `Releases`, `Eject`,
-`Install`, `Upgrade`, `Prepare`, `Metadata`, `Check`.
+`Install`, `Upgrade`, `Prepare`, `Metadata`, `Check`, `Principal`, `Policy`, `AgentAccess`, `Oauth`, `Operations`,
+`RichTextMarkdown`, `SafeUrl`, `AgentGuide`, `Dev`.
+
+`Operations` is the one list of what an app can do; `/api/v2` and `/mcp` are both generated from it, and a snapshot
+test makes any change to it deliberate.
 
 Each is one idea. Looking for where something happens, the name is usually the answer.
 

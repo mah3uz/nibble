@@ -41,7 +41,7 @@ addresses visitors asked for and did not find. See [Redirects and SEO](redirects
 | **Content** | each collection — Tidewater's Help centre, Pages and Blog — its taxonomies, Authors and Topics, and Assets |
 | **Structure** | Globals and Navigation — the site's settings and menus |
 | **Tools** | Forms, Blueprints, Trash, Redirects, Webhooks, Updates and Utilities |
-| **Users** | Users, Roles and API tokens |
+| **Users** | Users, Roles, API tokens and Agent access |
 
 You only see what your role allows. A shorter sidebar than a colleague's is not a fault; it is the role you were
 given. See [Users and roles](../running/users-and-roles.md).
@@ -94,3 +94,4 @@ here would be overwritten at the next deploy. Ask whoever writes it. See
 | [Navigation](navigation.md) | building the menus |
 | [Form submissions](form-submissions.md) | what people sent, and exporting it |
 | [Redirects and SEO](redirects-and-seo.md) | search results, share cards, redirects and missing pages |
+| [Working with AI apps](ai-apps.md) | connecting Claude, ChatGPT, Codex or Cursor, and approving what they ask to publish |

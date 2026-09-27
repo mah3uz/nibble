@@ -36,10 +36,13 @@ evaluates `vendor/nibble/Gemfile`, which loads `Nibble::Engine`; `config/applica
 - `vendor/nibble/lib/nibble/` — the engine, autoloaded as `Nibble::`: `Schema`, `Field`/`Fields`/`Fieldtype`, `Records::*`,
   `Lifecycle`, `Query`, `Presenter`, `Routing`, `PageProps`, `PageCache`, `Search`, `Seo`, `Sitemaps`, `Assets`,
   `Forms`, `Outbound`, `Webhooks`, `Access`, `Packages`, `ContentMigrations`, `Release`, `Releases`, `Eject`,
-  `Install`, `Prepare`, `Check`.
+  `Install`, `Prepare`, `Check`, and for agents `Principal`, `Policy`, `AgentAccess`, `Oauth`, `Operations`,
+  `AgentGuide`, `Dev`.
 - `vendor/nibble/app/` — laid out as Rails lays out `app/`, and added the same way, so names are unchanged:
-  `controllers/` (`SiteController` catch-all, `Nibble::Cp::*`, `Api::V1::*`, `FormsController`, `SitemapsController`,
-  `AssetFilesController`), `models/` (only identity and access: users, roles, sessions, credentials, API tokens),
+  `controllers/` (`SiteController` catch-all, `Nibble::Cp::*`, `Api::V1::*` (read-only content API),
+  `Api::V2::OperationsController` (management API), `Nibble::McpController`, `Nibble::Oauth::*`, `FormsController`,
+  `SitemapsController`, `AssetFilesController`), `models/` (only identity and access: users, roles, sessions,
+  credentials, API tokens, grants, OAuth clients/codes/tokens, device codes, approvals),
   `jobs/`, `mailers/`, `services/`, `helpers/`, `channels/`, `views/`.
 - `vendor/nibble/frontend/` — `nibble-cp/` (the Control Plane, `@nibble-cp`, also `@` and `~`), `nibble/` (the
   theme runtime, `@nibble`), `entrypoints/`, `ssr/`. It is Vite's `sourceCodeDir`.
@@ -78,6 +81,12 @@ the audit log, notifications, the page cache, the search index and webhooks.
 - **Rich-text safety:** themes output rich text as HTML, so it is rendered server-side from Tiptap JSON by
   `RichText::Renderer` and must pass `RichText::Sanitizer`'s allowlist; uploaded SVGs pass
   `Nibble::Assets::SvgSanitizer`. Tests must prove `script`, `on*` attributes and `javascript:` URLs are stripped.
+- **One permission check for every change:** `Nibble::Lifecycle.call` requires an `actor:` (a user, a
+  `Nibble::Principal` carrying a connected app's grant, or `Nibble::Principal.system`) and asks `Nibble::Policy` before
+  it runs, whoever calls it. An app's permission is the person's roles ∩ its grant ∩ the site's Agent access settings.
+  The management API (`/api/v2`) and MCP (`/mcp`) are generated from `Nibble::Operations`; nothing hand-mirrors it.
+- **Links are safe:** navigation URLs, link fields and agent-written Markdown accept only web, email, phone and on-site
+  links (`Nibble::SafeUrl`).
 - **Redirects are single-hop:** chains are repointed on save.
 - **Content import:** package import and content migrations are idempotent and safely re-runnable.
 - **Versioned contracts:** `Nibble::SCHEMA_FORMAT`, `THEME_API_VERSION` and `CONTENT_FORMAT_VERSION` in `vendor/nibble/lib/nibble.rb`

@@ -191,7 +191,7 @@ indexes:
 ```
 
 `fields` lists what is searched; a field a blueprint does not have is skipped. Run
-`bin/rails nibble:search:rebuild` after changing an index. Entries are indexed as they are published; a collection
+`bin/rails nibble:reindex` after changing an index. Entries are indexed as they are published; a collection
 [written as files](content-as-files.md) on every deploy and, in development, as soon as a file changes.
 
 Every entry of a searched collection has an **Include in search** toggle in its sidebar, on unless someone turns it

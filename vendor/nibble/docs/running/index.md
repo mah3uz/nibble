@@ -25,6 +25,8 @@ releases, and move its content around.
 | [Upgrading](upgrading.md) | taking a release, what it asks, and how to undo it |
 | [Content packages](content-packages.md) | keeping content as YAML, and importing it |
 | [Commands](commands.md) | every command in one place |
+| [Agent access](agent-access.md) | letting people connect AI apps, and deciding what those apps may touch |
+| [The nibble command](cli.md) | starting a site, running its tasks, and working on content from a terminal |
 
 ## 2. A site's first week
 

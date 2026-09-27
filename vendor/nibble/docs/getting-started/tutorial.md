@@ -409,7 +409,7 @@ indexes:
 ```
 
 ```sh
-bin/rails nibble:search:rebuild
+bin/rails nibble:reindex
 ```
 
 Search keeps itself current from now on: an entry is indexed when it is published, and a help article on every

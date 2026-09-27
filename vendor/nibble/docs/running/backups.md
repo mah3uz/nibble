@@ -102,7 +102,7 @@ serving content it cannot understand is worse than a site that will not start.
 The database is restored to last night; the files in S3 are from right now.
 
 - **Uploaded after the backup:** the files are in the bucket but the database has no record of them, so
-  `bin/rails nibble:assets:purge_unused` would list them as unused. **Do not run it with `--confirm`** until you have
+  `bin/rails nibble:cleanup:assets` would list them as unused. **Do not run it with `--confirm`** until you have
   decided whether they need adding back.
 - **Deleted after the backup:** the database points at files that are gone, so those images are broken. They can only
   come back if the bucket keeps old versions — turn versioning on before you need it.

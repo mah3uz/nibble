@@ -72,6 +72,10 @@ Abilities are fine-grained on purpose. "Can write blog posts but not touch landi
 delete", "can read demo requests but not export them" are all expressible without code. For Tidewater, you
 might make a **Sales** role that can only read the Book a demo form's submissions.
 
+Two permissions concern AI apps: **Connect apps** lets someone connect Claude, the `nibble` command and the like to
+act as them, and **Manage agent access** opens [Agent access](agent-access.md). Only administrators have either until
+you grant them.
+
 **Administrator is the exception.** It grants everything rather than listing abilities, which is why a new feature is
 immediately available to administrators, and has to be granted to everyone else on purpose.
 
@@ -89,7 +93,8 @@ strip what makes it complete.
 
 Each person manages their own password, their signed-in devices and two-factor authentication from their account.
 
-- **Sensitive screens ask for the password again** before they open: users, roles, API tokens, imports.
+- **Sensitive screens ask for the password again** before they open: users, roles, API tokens, agent access,
+  approvals, imports.
 - **A session ends after two hours without activity**, on the server, so reloading the page doesn't bring it back.
   A minute before, a warning offers to extend it. Once it has ended, a dialog asks for the password (and the code, with
   two-factor on) and carries on where the page left off, unsaved changes included. `session.idle_minutes` in
