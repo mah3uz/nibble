@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.19.0 — 2026-09-28 02:01 +0600
+
 > **AI apps work on a site as the people who connect them.** Claude, ChatGPT, Codex and Cursor connect over MCP,
 > and the `nibble` command from a terminal. None can do more than the person it acts for, and an app waits for that
 > person before anything goes live.
