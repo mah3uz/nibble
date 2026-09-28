@@ -54,9 +54,12 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   URL and attributes, and the head and body code fields are gone.
 
   **Upgrade:** before deploying this release, note what is under **Globals → Integrations → Analytics** and
-  **Custom code**, then empty those fields and save. Values left in them would be stranded, and `nibble:prepare`
-  refuses to boot with stranded values. After deploying, add each tool back as a card, and each snippet as a
-  snippet. Analytics are off between the two steps, for as long as the deploy takes. A site with its own
+  **Custom code**, then remove the old values from the running site. Emptying them in the Control Plane isn't enough:
+  the release you are on stores an emptied field as an empty value, and `nibble:prepare` refuses to boot while a
+  removed field holds one. Run, on Kamal through `kamal app exec --reuse`:
+  `bin/rails runner 'Nibble::Records::GlobalSet.where(handle: "integrations").find_each { |g| g.update_columns(data: g.data.except("ga4_measurement_id", "gtm_container_id", "analytics_script_src", "analytics_script_attributes", "head_code", "body_code")) }'`.
+  After deploying, add each tool back as a card, and each snippet as a snippet. Analytics are off between the two
+  steps, for as long as the deploy takes. A site with its own
   `app/views/layouts/nibble.html.erb` adds `<%= Nibble::Integrations.body_start_html(@nibble_integrations) if
   @nibble_integrations %>` straight after `<body>`.
 - **`install.sh` installs the `nibble` command and hands over to `nibble new`,** so there is one way to start a
