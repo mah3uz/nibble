@@ -127,6 +127,15 @@ class Nibble::DriftTest < ActiveSupport::TestCase
     assert_equal [ "collections/articles: summary changed from toggle to textarea and 1 record hold a value; #{Nibble::Drift::HINT}" ], issues
   end
 
+  test "an emptied value still counts when its field changes type, since a grid or replicator can't read \"\"" do
+    create_entry("articles", { "title" => "A", "summary" => "" })
+    Nibble::Drift.record_snapshot!
+    snapshot = Nibble::Records::SchemaSnapshot.latest
+    snapshot.update_columns(types: snapshot.types.deep_merge("collections/articles" => { "summary" => "toggle" }))
+
+    assert_equal [ "collections/articles: summary changed from toggle to textarea and 1 record hold a value; #{Nibble::Drift::HINT}" ], issues
+  end
+
   test "a snapshot is only written when the types actually changed" do
     assert Nibble::Drift.record_snapshot!
     assert_not Nibble::Drift.record_snapshot!
