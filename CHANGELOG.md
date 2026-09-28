@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.19.2 — 2026-09-28 15:34 +0600
+
 ### Changed
 
 - **An analytics card takes the tool's snippet as the tool gives it,** and the page gets that snippet unchanged, where
