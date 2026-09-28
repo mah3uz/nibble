@@ -32,6 +32,10 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **Plausible's current `pa-` script tracks visits.** It only starts once an inline `plausible.init()` runs, which a
   script URL with data attributes never did; the Plausible card writes it.
 - **Tag Manager's `<noscript>` frame opens the body,** where Google says it goes, rather than closing it.
+- **The nightly backup runs without `DB_SNAPSHOT_BUCKET`,** keeping its copy on the server as the Backups screen
+  says, instead of failing every night and keeping nothing. With the bucket set, it's uploaded to S3 as well.
+- **Adding a passkey works.** The browser couldn't read the account id the server sent, and refused with an `atob`
+  error.
 
 ### Changed
 

@@ -3,8 +3,8 @@ require "aws-sdk-s3"
 # A complete, self-contained daily backup of the primary database: VACUUM INTO gives a compacted,
 # consistent copy in one step (no torn reads, no WAL/-shm files to worry about), gzipped and kept
 # in two places — the last 7 days on local disk (storage/backups, the same persistent volume the
-# databases live on) for a fast local restore, and uploaded to S3 for everything else (that bucket
-# already has its own 30-day lifecycle policy, so nothing to prune there). Independent of whatever
+# databases live on) for a fast local restore, and, when DB_SNAPSHOT_BUCKET is set, uploaded to S3 for
+# everything else (that bucket has its own lifecycle policy, so nothing to prune there). Independent of whatever
 # continuous replication may or may not be running. Cache/queue/cable databases are excluded on
 # purpose: they're ephemeral, nothing worth backing up.
 module DatabaseSnapshot
@@ -19,10 +19,8 @@ module DatabaseSnapshot
   def region = ENV.fetch("DB_SNAPSHOT_REGION", "ap-southeast-2")
   def local_dir = @@local_dir ||= Rails.root.join("storage", "backups")
 
-  # Returns the local path it wrote to (also uploaded to S3 under the same date).
+  # Returns the local path it wrote to. Without a bucket the copy stays local; every boot warns about that.
   def create!
-    raise "DB_SNAPSHOT_BUCKET is not configured" if bucket.blank?
-
     FileUtils.mkdir_p(local_dir)
     date = Time.current.strftime("%Y-%m-%d")
     raw_path = local_dir.join("#{date}.sqlite3")
@@ -32,8 +30,10 @@ module DatabaseSnapshot
     gzip(raw_path, gz_path)
     File.delete(raw_path)
 
-    key = "cms_db_snapshots/#{Rails.env}/#{date}.sqlite3.gz"
-    File.open(gz_path, "rb") { |file| client.put_object(bucket:, key:, body: file) }
+    if bucket.present?
+      key = "cms_db_snapshots/#{Rails.env}/#{date}.sqlite3.gz"
+      File.open(gz_path, "rb") { |file| client.put_object(bucket:, key:, body: file) }
+    end
 
     prune_local!
     gz_path

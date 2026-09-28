@@ -28,9 +28,11 @@ class DatabaseSnapshotTest < ActiveSupport::TestCase
     Nibble::Records::Entry.where(slug: "database-snapshot-test").delete_all
   end
 
-  test "raises a clear error instead of silently skipping when unconfigured" do
+  test "without a bucket the nightly copy still stays on the server, so a site without S3 keeps a week of backups" do
     ENV.delete("DB_SNAPSHOT_BUCKET")
-    assert_raises(RuntimeError) { DatabaseSnapshot.create! }
+
+    assert File.exist?(DatabaseSnapshot.create!)
+    assert_empty @put_calls
   end
 
   test "keeps a local gzipped copy and uploads the identical content to S3" do
