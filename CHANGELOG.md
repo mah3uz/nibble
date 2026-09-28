@@ -12,6 +12,11 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's fixed
+
+- **`nibble:content:import --dry-run` lists what it would create and update,** as the Control Plane's import does,
+  instead of only saying the package is valid.
+
 ## 0.19.2 — 2026-09-28 15:34 +0600
 
 ### Changed

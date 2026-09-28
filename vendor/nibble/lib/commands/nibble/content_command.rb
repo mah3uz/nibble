@@ -15,17 +15,21 @@ class NibbleContentCommand < Rails::Command::Base
 
   desc "import DIR", "Import a content package, validating everything first"
   option :mode, default: "create", enum: %w[create update], desc: "create adds what's missing; update also refreshes what's there"
-  option :dry_run, type: :boolean, desc: "Validate and report without writing anything"
+  option :dry_run, type: :boolean, desc: "List what would be created and updated, and write nothing"
   option :webhooks, type: :boolean, desc: "Deliver webhooks for the imported changes"
   def import(dir)
     boot_application!
-    report = Nibble::Packages::Importer.new(dir, mode: options[:mode], dry_run: options[:dry_run], notify: options[:webhooks]).call
+    importer = Nibble::Packages::Importer.new(dir, mode: options[:mode], notify: options[:webhooks] && !options[:dry_run])
+    report = options[:dry_run] ? importer.preview : importer.call
     report.errors.each { |error| puts "✗ #{error}" }
     abort "nothing imported: #{report.errors.size} problem(s)" unless report.ok?
-    Nibble::Events.dispatch_pending
     if options[:dry_run]
-      puts "dry run: package is valid"
+      report.created.each { |file| puts "+ #{file}" }
+      report.updated.each { |file| puts "~ #{file}" }
+      puts "dry run, nothing written: would create #{report.created.size}, update #{report.updated.size}, " \
+        "and leave #{report.skipped.size} as they were"
     else
+      Nibble::Events.dispatch_pending
       puts "created #{report.created.size}, updated #{report.updated.size}, left #{report.skipped.size} as they were"
     end
   end

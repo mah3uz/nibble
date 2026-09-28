@@ -104,7 +104,7 @@ bin/kamal app exec 'bin/rails nibble:content:import site/packages/default'
 |---|---|
 | `--mode=create` | adds what is missing and leaves everything else alone — the default |
 | `--mode=update` | also overwrites records that already exist with the package's version |
-| `--dry-run` | validates and reports, writes nothing |
+| `--dry-run` | lists what would be created (`+`) and updated (`~`), and writes nothing |
 | `--webhooks` | delivers webhooks for what was imported |
 
 Every field must exist in the blueprint and hold a value it accepts. The whole package is validated before anything

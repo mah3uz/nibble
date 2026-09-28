@@ -79,6 +79,14 @@ class Nibble::PackagesTest < ActiveSupport::TestCase
     assert_equal before, Nibble::Records::Entry.count
   end
 
+  test "a preview lists what an import would create, and writes nothing, so a dry run can be checked before it's run" do
+    before = Nibble::Records::Entry.count
+    report = Nibble::Packages::Importer.new(DEMO).preview
+
+    assert report.created.any? { |file| file.include?("grids") }, "the demo's posts would be created"
+    assert_equal before, Nibble::Records::Entry.count
+  end
+
   test "a dry run validates without writing, and unsupported modes are refused" do
     assert import(dry_run: true).ok?
     assert_equal 0, Nibble::Records::Entry.where(slug: "grids").count
