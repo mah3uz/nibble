@@ -13,6 +13,9 @@ module Nibble
         default = fieldtype.pre_process(fieldtype.default_value)
         survives(handle, "a default value must survive process") { fieldtype.process(default) }
         survives(handle, "augmenting an empty value must be safe") { fieldtype.augment(nil) }
+        untouched = survives(handle, "saving an untouched empty field must be safe") { Field.new(handle, { "type" => handle }).pre_process.process.value }
+        assert untouched.nil? || fieldtype.augment(untouched) == fieldtype.augment(nil),
+          "#{handle}: opening an empty field and saving it must store nothing a page would read differently, got #{untouched.inspect}"
 
         klass.contract_samples.each do |raw|
           assert_same_value raw, fieldtype.process(fieldtype.pre_process(raw)), "#{handle}: editing then saving #{raw.inspect} must not change it"

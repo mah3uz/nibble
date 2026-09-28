@@ -25,6 +25,15 @@ class Nibble::Cp::CpScreensTest < ActionDispatch::IntegrationTest
     assert_equal "site-key", Nibble::Records::GlobalSet.find_by!(handle: "integrations").data["captcha_site_key"]
   end
 
+  test "a global never saved opens with its defaults, and once saved shows only what it holds" do
+    get "/cp/globals/integrations/edit"
+    assert_equal 0.5, props.dig("values", "recaptcha_min_score")
+
+    post "/cp/globals/integrations", params: { global: { recaptcha_min_score: "" } }
+    get "/cp/globals/integrations/edit"
+    assert_nil props.dig("values", "recaptcha_min_score")
+  end
+
   test "an invalid global reports its error and saves nothing" do
     patch "/cp/globals/site", params: { global: { name: "" } }
     assert_match "required", session[:inertia_errors].with_indifferent_access[:name]

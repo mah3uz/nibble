@@ -156,15 +156,11 @@ module Nibble
 
           if fields.key?(key)
             @held[[ scope, key ]] += 1 if count_held
-          elsif !empty?(value)
+          else
             @stranded[[ scope, key ]] += 1
           end
         end
       end
-
-      # A field emptied in the Control Plane is stored as "" or [], not removed: nothing to lose if the field goes,
-      # but still a value a field of another type would have to read, so a type change counts it.
-      def empty?(value) = value.nil? || (value.respond_to?(:empty?) && value.empty?)
 
       def count_orphans(kind, counts, known)
         counts.each { |handle, count| @orphaned_parents << [ kind, handle, count ] unless known.key?(handle) }

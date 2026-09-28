@@ -56,7 +56,7 @@ module Nibble
 
       def set_preload(rows)
         existing = rows.to_h { |row| [ row[:id], set_fields(row[:type], row[:index]).add_values(row[:values]).meta ] }
-        defaults = sets_config.keys.index_with { |handle| set_fields(handle).pre_process.values }
+        defaults = sets_config.keys.index_with { |handle| set_fields(handle).with_defaults.pre_process.values }
         {
           "existing" => existing,
           "new" => sets_config.keys.index_with { |handle| set_fields(handle).add_values(defaults[handle]).meta },

@@ -81,15 +81,16 @@ class Nibble::FieldsTest < ActiveSupport::TestCase
     assert_equal "text", field.to_publish_h["config"]["input_type"]
   end
 
-  test "the value pipeline runs through the fieldtype: default, pre_process for editing, process for storage, preload meta" do
-    result = fields([
+  test "the value pipeline runs through the fieldtype: default for something new, pre_process for editing, process for storage, preload meta" do
+    blueprint = fields([
       { handle: "code", field: { type: "fake_upcase" } },
       { handle: "count", field: { type: "fake_integer" } },
       { handle: "note", field: { type: "fake_text", default: "hello" } }
-    ]).add_values("code" => "ABC")
+    ])
+    result = blueprint.add_values("code" => "ABC")
 
-    editing = result.pre_process.values
-    assert_equal({ "code" => "abc", "count" => 0, "note" => "hello" }, editing)
+    assert_equal({ "code" => "abc", "count" => nil, "note" => nil }, result.pre_process.values, "an existing record's missing value isn't its default")
+    assert_equal [ 0, "hello" ], blueprint.with_defaults("code" => "ABC").pre_process.values.values_at("count", "note"), "something new starts from its defaults"
 
     stored = result.add_values("code" => "xyz", "count" => "7").process.values
     assert_equal "XYZ", stored["code"]

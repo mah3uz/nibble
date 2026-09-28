@@ -57,7 +57,7 @@ module Nibble
       end
 
       def preload
-        defaults = row_fields.pre_process.values
+        defaults = row_fields.with_defaults.pre_process.values
         {
           "defaults" => defaults,
           "new" => row_fields.add_values(defaults).meta,

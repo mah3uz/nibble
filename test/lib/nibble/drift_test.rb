@@ -53,12 +53,11 @@ class Nibble::DriftTest < ActiveSupport::TestCase
     assert_empty issues
   end
 
-  test "a removed field someone emptied is no loss either, so clearing it before an upgrade lets the upgrade through" do
-    strand(create_entry("articles", { "title" => "A" }), "intro" => "", "links" => [], "meta" => {})
-    assert_empty issues
+  test "a field someone cleared holds nothing, so removing it afterwards strands nothing" do
+    article = create_entry("articles", { "title" => "A", "summary" => "Old" })
+    lifecycle(article, :save, "summary" => "")
 
-    strand(create_entry("articles", { "title" => "B" }), "featured" => false)
-    assert_equal [ "collections/articles: featured was removed and 1 record still hold it; #{Nibble::Drift::HINT}" ], issues
+    assert_not article.reload.data.key?("summary")
   end
 
   test "a pending migration that moves the data covers it" do
@@ -120,15 +119,6 @@ class Nibble::DriftTest < ActiveSupport::TestCase
     create_entry("articles", { "title" => "A", "summary" => "Some text" })
     assert_empty issues, "no snapshot yet, so nothing to compare types with"
 
-    Nibble::Drift.record_snapshot!
-    snapshot = Nibble::Records::SchemaSnapshot.latest
-    snapshot.update_columns(types: snapshot.types.deep_merge("collections/articles" => { "summary" => "toggle" }))
-
-    assert_equal [ "collections/articles: summary changed from toggle to textarea and 1 record hold a value; #{Nibble::Drift::HINT}" ], issues
-  end
-
-  test "an emptied value still counts when its field changes type, since a grid or replicator can't read \"\"" do
-    create_entry("articles", { "title" => "A", "summary" => "" })
     Nibble::Drift.record_snapshot!
     snapshot = Nibble::Records::SchemaSnapshot.latest
     snapshot.update_columns(types: snapshot.types.deep_merge("collections/articles" => { "summary" => "toggle" }))

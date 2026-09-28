@@ -35,7 +35,9 @@ module Nibble
 
     def values = @fields.transform_values(&:value)
 
-    def defaults = @fields.transform_values(&:default_value)
+    # What something new starts with: a record when it's created, a row when it's added.
+    def defaults = @fields.transform_values(&:default_value).compact
+    def with_defaults(values = {}) = add_values(defaults.merge(values.to_h.stringify_keys))
 
     def pre_process = map_fields(&:pre_process)
     def process = map_fields(&:process)

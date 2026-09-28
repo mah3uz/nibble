@@ -20,7 +20,8 @@ module Nibble
       ]
 
       def process(value)
-        return value unless !value.nil? && config("input_type") == "number"
+        return value unless config("input_type") == "number"
+        return nil if value.to_s.strip.empty?
 
         value.to_s.include?(".") ? value.to_f : value.to_i
       end

@@ -149,7 +149,7 @@ module Nibble
       def editor_props(entry)
         blueprint = entry.blueprint_definition
         source = entry.draft&.data || entry.snapshot
-        fields = entry.blueprint_fields.add_values(source)
+        fields = form_fields(entry.blueprint_fields, entry, source)
         {
           title: entry.title.presence || (entry.persisted? ? "Untitled" : "New #{@collection['title'].to_s.singularize.downcase}"),
           breadcrumbs: [ { label: @collection["title"], url: cp_collection_root_path(@collection.handle) } ],

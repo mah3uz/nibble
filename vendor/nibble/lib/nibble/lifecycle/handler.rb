@@ -19,7 +19,16 @@ module Nibble
       def field_handles = record.blueprint_fields.handles
       def column_keys = []
 
-      def incoming(base) = base.to_h.merge(attrs.slice(*field_handles, *column_keys))
+      def incoming(base) = starting(base).merge(attrs.slice(*field_handles, *column_keys))
+
+      # A new record starts from its fields' defaults; an import reproduces its source exactly, empty fields included.
+      def starting(base)
+        return base.to_h unless record.new_record? && !importing?
+
+        record.blueprint_fields.defaults.merge(base.to_h)
+      end
+
+      def importing? = mode.to_s.start_with?("import")
 
       def validate_fields!(snapshot, full:)
         errors = values.validate(snapshot.slice(*field_handles), full:)
@@ -31,7 +40,7 @@ module Nibble
       def invalid!(key, message) = raise(Invalid.new(key.to_s => [ message ]))
 
       def revision!(kind, snapshot = record.snapshot)
-        Revisions.write(record, mode.to_s.start_with?("import") ? :import : kind, snapshot:, actor:, grant: principal.grant,
+        Revisions.write(record, importing? ? :import : kind, snapshot:, actor:, grant: principal.grant,
           message: attrs["message"])
       end
 

@@ -39,6 +39,9 @@ module Nibble
           create: create ? { label: "New #{item['title'].to_s.singularize.downcase}", url: "/cp/collections/#{item.handle}/entries/new" } : nil }
       end
 
+      # A new record's form starts from its fields' defaults, as the record does when it's created.
+      def form_fields(fields, record, values) = record.new_record? ? fields.with_defaults(values) : fields.add_values(values)
+
       def authorize!(ability, record = nil)
         raise NotAuthorized unless Nibble::Access.can?(Nibble::Current.user, ability, record)
       end

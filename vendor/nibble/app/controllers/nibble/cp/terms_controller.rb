@@ -63,7 +63,7 @@ module Nibble
 
       def editor_props(term)
         blueprint = term.blueprint_definition
-        fields = blueprint.fields.add_values(term.snapshot)
+        fields = form_fields(blueprint.fields, term, term.snapshot)
         base = "/cp/taxonomies/#{@taxonomy.handle}/terms"
         member = term.persisted? ? "#{base}/#{term.id}" : nil
         {

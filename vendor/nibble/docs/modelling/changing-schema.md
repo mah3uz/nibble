@@ -111,7 +111,8 @@ Moves each value from one field to another. `title` and `slug` cannot be renamed
 - set_default: { collection: posts, field: reading_level, value: beginner }
 ```
 
-Fills a field on every entry where it is empty. Useful after adding a required field.
+Fills a field on every entry where it is empty, including entries where someone cleared it. Useful after adding a
+field with a default, or a required one.
 
 ### 4.3 `change_blueprint`
 

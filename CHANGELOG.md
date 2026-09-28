@@ -34,13 +34,22 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **Tag Manager's `<noscript>` frame opens the body,** where Google says it goes, rather than closing it.
 - **The nightly backup runs without `DB_SNAPSHOT_BUCKET`,** keeping its copy on the server as the Backups screen
   says, instead of failing every night and keeping nothing. With the bucket set, it's uploaded to S3 as well.
-- **A removed field that was emptied no longer blocks a deploy.** Clearing a field in the Control Plane stores an
-  empty value rather than none, and `nibble:check` counted it as data that would be lost.
+- **Clearing a field stores nothing.** Every fieldtype stores a cleared value, whether empty text, an empty list or an
+  empty grid, as no value at all, in entries, terms, globals, rows inside grids and replicators, and form submissions.
+  A removed field someone emptied first no longer blocks a deploy as data that would be lost, and opening a form and
+  saving it untouched writes nothing new. `false` and `0` are still values.
+- **An emptied number field stores nothing,** rather than `0`.
 - **Adding a passkey works.** The browser couldn't read the account id the server sent, and refused with an `atob`
   error.
 
 ### Changed
 
+- **A field's `default` is what something new starts with,** and nothing else: a new entry, term, global or row,
+  created from the Control Plane, the management API or MCP. An existing entry without a value no longer shows the
+  default in its form, which the page never had either; fill those with the `set_default` content migration. Imports
+  reproduce their source, so a field empty there stays empty.
+- **A form's API delivery leaves out questions nobody answered** when it sends the whole submission, rather than
+  sending them as empty strings. A `body` template renders them empty, as before.
 - **The Integrations global's Analytics and Custom code tabs are replaced.** The GA4 and Tag Manager IDs, the script
   URL and attributes, and the head and body code fields are gone.
 

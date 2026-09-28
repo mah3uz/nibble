@@ -15,7 +15,7 @@ module Nibble
         authorize!("globals.#{item.handle}.edit")
         record = global_set(item)
         blueprint = record.blueprint_definition
-        fields = blueprint.fields.add_values(record.values)
+        fields = form_fields(blueprint.fields, record, record.values)
 
         render inertia: "cp/globals/Edit", props: {
           title: item["title"],

@@ -85,6 +85,8 @@ module Nibble
     def rules = []
     def extra_rules(root_values: nil, prefix: "", replacements: {}) = {}
     def process(value) = value
+    # What a cleared field holds once processed. An empty value is stored as no value at all.
+    def empty?(value) = value.nil? || ((value.is_a?(String) || value.is_a?(Array) || value.is_a?(Hash)) && value.empty?)
     def pre_process_index(raw) = raw
     def augment(raw) = raw
     def shallow_augment(raw) = augment(raw)

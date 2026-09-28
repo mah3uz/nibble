@@ -74,7 +74,7 @@ terms. The collection lists which blueprints it allows; the first is the default
 | `instructions` | help text, shown below the label — `instructions_position: below` moves it under the input |
 | `required` | a value is needed to save |
 | `validate` | extra rules, such as `[max:200]` or `["required_with:{this}.button_label"]` |
-| `default` | the value a new entry starts with |
+| `default` | the value a new entry, term, global or row starts with; entries that already exist keep what they have, and [`set_default`](changing-schema.md#42-set_default) fills them |
 | `width` | how much of the row it takes: `25`, `33`, `50`, `66`, `75` or `100` |
 | `localizable` | the value differs per locale |
 | `listable` | `true` shows it as a column in the listing, `hidden` offers it in the column picker, `false` never |

@@ -109,8 +109,12 @@ module Nibble
     def path_keys = [ *parent_field&.path_keys, *parent_index, handle ].map(&:to_s)
     def path = path_keys.join(".")
 
-    def pre_process = with_value(fieldtype.pre_process(value.nil? ? default_value : value))
-    def process = with_value(fieldtype.process(value))
+    def pre_process = with_value(fieldtype.pre_process(value))
+
+    def process
+      processed = fieldtype.process(value)
+      with_value(fieldtype.empty?(processed) ? nil : processed)
+    end
     def pre_process_index = with_value(fieldtype.pre_process_index(value))
     def pre_process_validatable = with_value(fieldtype.pre_process_validatable(value))
     def augment = with_value(fieldtype.augment(value))
