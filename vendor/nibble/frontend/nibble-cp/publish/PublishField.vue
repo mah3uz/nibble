@@ -10,6 +10,7 @@ import { resolveFieldtype } from '../fieldtypes/registry'
 import { fieldConfig, type PublishField } from '../fieldtypes/types'
 import { getPath, joinPath } from '../lib/paths'
 import { useContainer } from './context'
+import FieldInstructions from './FieldInstructions.vue'
 
 const props = defineProps<{
   field: PublishField
@@ -88,11 +89,9 @@ const actions = computed(() => (props.field.actions ? (control.value?.fieldActio
           </Button>
         </div>
       </div>
-      <FieldDescription
-        v-if="field.instructions && field.instructions_position === 'above'"
-        class="st-text-trim-start"
-        >{{ field.instructions }}</FieldDescription
-      >
+      <FieldDescription v-if="field.instructions && field.instructions_position === 'above'" class="st-text-trim-start"
+        ><FieldInstructions :text="field.instructions"
+      /></FieldDescription>
     </div>
     <component
       :is="component"
@@ -110,9 +109,9 @@ const actions = computed(() => (props.field.actions ? (control.value?.fieldActio
       @update:meta="(updated: unknown) => container.setFieldMeta(metaPath, updated)"
     />
     <p v-else class="text-sm text-red-600">Unsupported fieldtype component "{{ field.component }}"</p>
-    <FieldDescription v-if="field.instructions && field.instructions_position === 'below'">{{
-      field.instructions
-    }}</FieldDescription>
+    <FieldDescription v-if="field.instructions && field.instructions_position === 'below'"
+      ><FieldInstructions :text="field.instructions"
+    /></FieldDescription>
     <FieldError v-if="errors.length" :errors="errors" />
   </div>
 </template>

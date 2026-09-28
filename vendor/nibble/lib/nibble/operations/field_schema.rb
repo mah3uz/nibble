@@ -2,7 +2,7 @@ module Nibble
   module Operations
     # The JSON Schema an app writes a field's value against. A fieldtype from an extension can define its own.
     module FieldSchema
-      HIDDEN = %w[secret].freeze
+      HIDDEN = %w[secret analytics_tags].freeze
       IDS = { "type" => "array", "items" => { "type" => "string" }, "description" => "IDs of the records it links to" }.freeze
       TYPES = {
         "text" => { "type" => "string" },

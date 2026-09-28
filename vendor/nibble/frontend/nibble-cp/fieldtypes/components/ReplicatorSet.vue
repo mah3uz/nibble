@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import PublishFields from '../../publish/PublishFields.vue'
 import { useContainer } from '../../publish/context'
+import { setPreview } from '../replicatorSets'
 import type { PublishSet, PublishSetGroup } from '../types'
 import SetPicker from './SetPicker.vue'
 
@@ -29,13 +30,7 @@ const emit = defineEmits<{
 }>()
 const { errors } = useContainer()
 
-const preview = computed(() => {
-  const field = props.set?.fields.find(
-    (candidate) => candidate.replicator_preview && typeof props.row[candidate.handle] === 'string',
-  )
-  const text = field ? String(props.row[field.handle]) : ''
-  return text.length > 60 ? `${text.slice(0, 60)}…` : text
-})
+const preview = computed(() => setPreview(props.set?.fields ?? [], props.row))
 const hasError = computed(() => Object.keys(errors.value).some((path) => path.startsWith(`${props.fieldPathPrefix}.`)))
 </script>
 

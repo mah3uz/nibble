@@ -22,6 +22,11 @@ module Nibble
       name ? ActionMailer::Base.email_address_with_name(address, name) : address
     end
 
+    def analytics_fields(type)
+      fieldtype = Records::GlobalSet.new(handle: HANDLE, locale: Nibble.config.default_locale.code).blueprint_fields.get("analytics")&.fieldtype
+      fieldtype.set_fields(type) if fieldtype&.sets_config&.key?(type.to_s)
+    end
+
     def head_html(values) = place_html(values, :head)
     def body_start_html(values) = place_html(values, :body_start)
     def body_html(values) = place_html(values, :body_end)
