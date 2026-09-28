@@ -43,3 +43,14 @@ export function provideFields(context: ComputedRef<FieldsContext>) {
 export function useFieldsContext() {
   return inject(FIELDS, null)
 }
+
+// Where a field may put an action of its own in the header of the section it sits in, such as a list's Add button.
+const SECTION_ACTIONS: InjectionKey<string | null> = Symbol('nibble-section-actions')
+
+export function provideSectionActions(id: string | null) {
+  provide(SECTION_ACTIONS, id)
+}
+
+export function useSectionActions() {
+  return inject(SECTION_ACTIONS, null)
+}

@@ -167,7 +167,9 @@ A set can also carry:
 | `max` | how many of this set the field may hold; the menu hides it once that many exist |
 
 On the field, `max_sets` caps the blocks of every set together, and `tab_count: true` shows how many are switched on
-beside the tab's name.
+beside the tab's name. `button_position: header` puts the Add button in the header of the section the field is in,
+and `insert_below: false` leaves out the button on each block that adds another beneath it, for a list whose order
+matters less than its contents.
 
 Each set is drawn by `views/sets/<set handle>.vue` in the theme, which receives the set's fields as props. The
 [Getting Started](../getting-started/tutorial.md#42-a-block-of-your-own-pricing) guide builds the pricing block end

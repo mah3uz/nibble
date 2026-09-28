@@ -3,6 +3,7 @@ import { useSortable } from '@vueuse/integrations/useSortable'
 import { computed, ref, useTemplateRef, watch } from 'vue'
 import { clone } from '../../lib/clone'
 import { rowId } from '../../lib/rowId'
+import { useSectionActions } from '../../publish/context'
 import { addableGroups, hasRoom } from '../replicatorSets'
 import type { PublishSetGroup } from '../types'
 import { fieldtypeEmits, fieldtypeProps, useFieldtype } from '../useFieldtype'
@@ -27,6 +28,9 @@ watch(
 const max = computed(() => Number(props.config.max_sets) || 0)
 const canAdd = computed(() => !isReadOnly.value && (!max.value || rows.value.length < max.value))
 const addable = computed(() => addableGroups(groups.value, rows.value))
+const showAdd = computed(() => canAdd.value && addable.value.length > 0)
+const sectionActions = useSectionActions()
+const addInHeader = computed(() => props.config.button_position === 'header' && !!sectionActions)
 const collapsed = ref(new Set<string>((props.meta.collapsed as string[]) ?? []))
 
 const listRef = useTemplateRef<HTMLElement>('list')
@@ -99,7 +103,7 @@ function toggle(id: string) {
         :groups="addable"
         :collapsed="collapsed.has(row._id)"
         :read-only="isReadOnly"
-        :can-add="canAdd && addable.length > 0"
+        :can-add="showAdd && config.insert_below !== false"
         :can-duplicate="canAdd && sets.some((set) => set.handle === row.type && hasRoom(set, rows))"
         :field-path-prefix="`${fieldPathPrefix}.${index}`"
         :meta-path-prefix="`${metaPathPrefix}.existing.${row._id}`"
@@ -110,8 +114,16 @@ function toggle(id: string) {
         @add-below="(handle) => addSet(handle, index + 1)"
       />
     </div>
+    <p v-if="addInHeader && !rows.length" class="text-sm text-muted-foreground">Nothing added yet.</p>
+    <Teleport v-if="showAdd && addInHeader" defer :to="`#${sectionActions}`">
+      <SetPicker
+        :groups="addable"
+        :label="(config.button_label as string) || undefined"
+        @pick="(handle) => addSet(handle)"
+      />
+    </Teleport>
     <SetPicker
-      v-if="canAdd && addable.length > 0"
+      v-else-if="showAdd"
       :groups="addable"
       :label="(config.button_label as string) || undefined"
       @pick="(handle) => addSet(handle)"

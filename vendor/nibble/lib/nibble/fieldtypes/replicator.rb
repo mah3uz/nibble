@@ -13,6 +13,8 @@ module Nibble
           "previews" => { "type" => "toggle", "default" => true, "width" => 50 },
           "fullscreen" => { "type" => "toggle", "default" => true, "width" => 50 },
           "button_label" => { "type" => "text", "default" => "", "width" => 50 },
+          "button_position" => { "type" => "select", "default" => "below", "options" => %w[below header], "width" => 50 },
+          "insert_below" => { "type" => "toggle", "default" => true, "width" => 50 },
           "tab_count" => { "type" => "toggle", "default" => false, "width" => 50 }
         } },
         { "display" => "Boundaries & Limits", "fields" => { "max_sets" => { "type" => "integer" } } }

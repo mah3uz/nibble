@@ -80,7 +80,7 @@ Tokens a person creates for their own scripts (under **Connected apps**) don't w
 
 ## 5. Seeing and disconnecting apps
 
-The bottom of the Agent access page lists every connected app on the site: whose it is, what it may do, when it was
+The sidebar of the Agent access page lists every connected app on the site: whose it is, what it may do, when it was
 last used and from where, and when it expires. **Disconnect** ends it immediately.
 
 Each person sees their own under **Connected apps** in their account menu, and gets a notification whenever a new

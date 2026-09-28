@@ -26,7 +26,10 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **Integrations asks for your password again,** as users, roles and API tokens do, because what it holds runs on
   every live page.
 - **Adding a block to a list that has one kind of block adds it straight away,** without a menu, and the menu of a
-  list with several kinds closes once one is picked, shows each kind by name, and searches only a long list.
+  list with several kinds closes once one is picked, shows each kind by name, and searches only a long list. A
+  replicator can put its Add button in its section's header with `button_position: header`, and leave out the
+  button on each block that adds one beneath it with `insert_below: false`; the Analytics and Custom code tabs do
+  both.
 - **A `code` field takes `rows`,** for how tall its editor starts.
 
 ## 0.19.1 — 2026-09-28 14:34 +0600
