@@ -7,6 +7,7 @@ module Nibble
       TYPES = {
         "text" => { "type" => "string" },
         "textarea" => { "type" => "string" },
+        "code" => { "type" => "string", "description" => "HTML" },
         "slug" => { "type" => "string", "pattern" => "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
         "markdown" => { "type" => "string", "description" => "Markdown" },
         "rich_text" => { "type" => [ "string", "array" ],

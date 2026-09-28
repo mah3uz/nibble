@@ -6,7 +6,8 @@ blueprint:
     analytics:
       display: Analytics
       sections:
-        - instructions: "Loaded on the live site only: not in previews, the Control Plane, or while indexing is blocked. You can run several tools at once."
+        - display: Tools
+          instructions: "Loaded on the live site only: not in previews, the Control Plane, or while indexing is blocked. You can run several tools at once."
           fields:
             - handle: analytics
               field:
@@ -128,7 +129,8 @@ blueprint:
     code:
       display: Custom code
       sections:
-        - instructions: Added to every live page exactly as written. Only paste code from sources you trust.
+        - display: Snippets
+          instructions: Added to every live page exactly as written. Only paste code from sources you trust.
           fields:
             - handle: custom_code
               field:
@@ -153,7 +155,7 @@ blueprint:
                           options: { head: In the head, body_start: At the start of the body, body_end: At the end of the body }
                           width: 50
                       - handle: code
-                        field: { type: textarea, display: Code, required: true, monospace: true, rows: 8, replicator_preview: false }
+                        field: { type: code, display: Code, required: true, replicator_preview: false }
     captcha:
       display: CAPTCHA
       sections:

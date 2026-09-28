@@ -22,7 +22,10 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **Custom code is named snippets,** each placed in the head, at the start of the body or at the end, in the order of
   their cards, and paused from its card.
 - **A replicator set can carry a `max`, a `badge` and an `icon`,** and `tab_count: true` shows how many blocks are
-  switched on beside the tab's name. A textarea takes `monospace: true`.
+  switched on beside the tab's name.
+- **A `code` fieldtype** edits HTML with line numbers and highlighting; custom code snippets use it.
+- **Analytics cards show the tags they will write,** and explain a value in the wrong shape as it's typed. Field
+  instructions can link to a page, so each card links to its vendor's install guide.
 
 ### What's fixed
 

@@ -86,7 +86,7 @@ terms. The collection lists which blueprints it allows; the first is the default
 
 | Group | Types |
 |---|---|
-| Text | `text`, `textarea`, `rich_text`, `markdown`, `slug`, `secret` |
+| Text | `text`, `textarea`, `code`, `rich_text`, `markdown`, `slug`, `secret` |
 | Numbers and dates | `integer`, `date` |
 | Choice | `select`, `radio`, `checkboxes`, `toggle`, `list` |
 | Relationships | `entries`, `terms`, `relationship`, `link` |
@@ -111,7 +111,7 @@ reference still finds it. `max_items: 1` makes a single choice.
 
 **`link`** accepts a URL or a link to an entry, and follows the entry if it moves.
 
-**`textarea`** is plain text over several lines; `monospace: true` suits pasted code.
+**`code`** is an editor for HTML, with line numbers and highlighting, for snippets pasted from another tool.
 
 **`secret`** stores its value encrypted, and never shows it again in full — for an API key a site setting needs.
 
