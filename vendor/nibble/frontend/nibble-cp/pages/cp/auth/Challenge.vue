@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3'
+import { CircleAlert } from '@lucide/vue'
 import { ref } from 'vue'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -9,7 +11,7 @@ import { useFlashToasts } from '@/lib/cp'
 import { signInWithPasskey, supported } from '@/lib/passkeys'
 
 const props = defineProps<{ flash: { notice?: string; alert?: string } }>()
-useFlashToasts(() => props.flash)
+useFlashToasts(() => ({ notice: props.flash.notice }))
 const passkeyError = ref<string | null>(null)
 
 async function usePasskey() {
@@ -33,7 +35,14 @@ const form = useForm({ code: '' })
       </CardDescription>
     </CardHeader>
     <CardContent>
-      <form class="space-y-4" @submit.prevent="form.post('/cp/session/challenge')">
+      <form
+        class="space-y-4"
+        @submit.prevent="form.post('/cp/session/challenge', { onFinish: () => (form.code = '') })"
+      >
+        <Alert v-if="flash.alert && !form.processing" variant="destructive">
+          <CircleAlert />
+          <AlertDescription>{{ flash.alert }}</AlertDescription>
+        </Alert>
         <div class="space-y-2">
           <Label for="code">Code</Label>
           <Input

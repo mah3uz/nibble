@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import PasswordInput from '@/components/cp/PasswordInput.vue'
 import { useBreadcrumbs } from '@/lib/breadcrumbs'
 import { useConfirm } from '@/lib/confirm'
 import { elevate } from '@/lib/elevation'
@@ -214,13 +215,7 @@ useBreadcrumbs([{ label: 'Connected apps' }])
           </div>
           <div v-if="!elevated" class="space-y-1.5">
             <Label for="app-token-password">Confirm your password</Label>
-            <Input
-              id="app-token-password"
-              v-model="password"
-              type="password"
-              autocomplete="current-password"
-              required
-            />
+            <PasswordInput id="app-token-password" v-model="password" autocomplete="current-password" required />
             <p v-if="passwordError" class="text-sm text-destructive">{{ passwordError }}</p>
           </div>
           <p v-if="form.errors.preset" class="text-sm text-destructive">{{ form.errors.preset }}</p>

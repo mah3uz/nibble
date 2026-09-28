@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import PasswordInput from '@/components/cp/PasswordInput.vue'
 import { useCp, type CpPreferences } from '@/lib/cp'
 import { usePreference } from '@/lib/preferences'
 
@@ -130,10 +131,9 @@ const afterSave = usePreference<CpPreferences['after_save']>('after_save', 'cont
         <form id="password-change-form" class="space-y-5" @submit.prevent="changePassword">
           <div class="space-y-2">
             <Label for="current_password">Current Password</Label>
-            <Input
+            <PasswordInput
               id="current_password"
               v-model="passwordForm.current_password"
-              type="password"
               autocomplete="current-password"
               required
             />
@@ -141,15 +141,14 @@ const afterSave = usePreference<CpPreferences['after_save']>('after_save', 'cont
           </div>
           <div class="space-y-2">
             <Label for="password">Password</Label>
-            <Input id="password" v-model="passwordForm.password" type="password" autocomplete="new-password" required />
+            <PasswordInput id="password" v-model="passwordForm.password" autocomplete="new-password" required />
             <p v-if="errors.password" class="text-sm text-destructive">{{ errors.password }}</p>
           </div>
           <div class="space-y-2">
             <Label for="password_confirmation">Password Confirmation</Label>
-            <Input
+            <PasswordInput
               id="password_confirmation"
               v-model="passwordForm.password_confirmation"
-              type="password"
               autocomplete="new-password"
               required
             />

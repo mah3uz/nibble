@@ -5,8 +5,8 @@ import AccessChooser, { type Area, type Preset } from '@/components/cp/agents/Ac
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import PasswordInput from '@/components/cp/PasswordInput.vue'
 import { elevate } from '@/lib/elevation'
 
 const props = defineProps<{
@@ -91,7 +91,7 @@ async function submit(decision: 'approve' | 'deny') {
 
       <div v-if="needsPassword" class="space-y-1.5">
         <Label for="consent-password">Confirm your password</Label>
-        <Input id="consent-password" v-model="password" type="password" autocomplete="current-password" />
+        <PasswordInput id="consent-password" v-model="password" autocomplete="current-password" />
         <p v-if="passwordError" class="text-sm text-destructive">{{ passwordError }}</p>
       </div>
       <p v-if="form.errors.preset" class="text-sm text-destructive">{{ form.errors.preset }}</p>

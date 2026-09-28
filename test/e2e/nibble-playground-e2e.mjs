@@ -21,7 +21,7 @@ const json = async (testid) => JSON.parse(await page.getByTestId(testid).textCon
 await page.goto(`${base}/cp`)
 await page.waitForLoadState('networkidle')
 await page.getByLabel('Email').fill(email)
-await page.getByLabel('Password').fill(password)
+await page.getByLabel('Password', { exact: true }).fill(password)
 await page.getByRole('button', { name: 'Sign in' }).click()
 await page.waitForURL(`${base}/cp`)
 

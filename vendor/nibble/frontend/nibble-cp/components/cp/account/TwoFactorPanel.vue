@@ -13,6 +13,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import PasswordInput from '@/components/cp/PasswordInput.vue'
 
 const props = defineProps<{
   hasPasskeys: boolean
@@ -194,10 +195,9 @@ async function keptCodes() {
       </DialogHeader>
       <form id="password-form" class="space-y-1.5" @submit.prevent="submitPassword">
         <Label for="twofactor-password">Current password</Label>
-        <Input
+        <PasswordInput
           id="twofactor-password"
           v-model="passwordForm.current_password"
-          type="password"
           autocomplete="current-password"
           required
         />

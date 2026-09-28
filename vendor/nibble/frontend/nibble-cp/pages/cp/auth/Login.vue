@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { Link, useForm } from '@inertiajs/vue3'
+import { CircleAlert } from '@lucide/vue'
 import { ref } from 'vue'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import PasswordInput from '@/components/cp/PasswordInput.vue'
 import { useFlashToasts } from '@/lib/cp'
 import { signInWithPasskey, supported } from '@/lib/passkeys'
 
 const props = defineProps<{ flash: { notice?: string; alert?: string } }>()
-useFlashToasts(() => props.flash)
+useFlashToasts(() => ({ notice: props.flash.notice }))
 const passkeyError = ref<string | null>(null)
 
 async function usePasskey() {
@@ -31,14 +34,18 @@ const form = useForm({ email_address: '', password: '' })
       <CardDescription>Use your CMS account.</CardDescription>
     </CardHeader>
     <CardContent>
-      <form class="space-y-4" @submit.prevent="form.post('/cp/session')">
+      <form class="space-y-4" @submit.prevent="form.post('/cp/session', { onFinish: () => (form.password = '') })">
+        <Alert v-if="flash.alert && !form.processing" variant="destructive">
+          <CircleAlert />
+          <AlertDescription>{{ flash.alert }}</AlertDescription>
+        </Alert>
         <div class="space-y-2">
           <Label for="email">Email</Label>
           <Input id="email" v-model="form.email_address" type="email" autocomplete="username" required autofocus />
         </div>
         <div class="space-y-2">
           <Label for="password">Password</Label>
-          <Input id="password" v-model="form.password" type="password" autocomplete="current-password" required />
+          <PasswordInput id="password" v-model="form.password" autocomplete="current-password" required />
         </div>
         <Button type="submit" class="w-full" :disabled="form.processing">Sign in</Button>
         <template v-if="supported()">

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3'
-import { BellRing, Eye, EyeOff, RotateCcw } from '@lucide/vue'
+import { BellRing, RotateCcw } from '@lucide/vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
@@ -13,13 +13,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import PasswordInput from '@/components/cp/PasswordInput.vue'
 import { useCp } from '@/lib/cp'
 import { active, confirmCode, expiry, extend, signIn, start, warning, watchExpiry } from '@/lib/session-expiry'
 
 const cp = useCp()
 const password = ref('')
 const code = ref('')
-const visible = ref(false)
 const error = ref<string | null>(null)
 const busy = ref(false)
 
@@ -119,26 +119,15 @@ const submitCode = () => run(() => confirmCode(code.value))
 
       <form v-if="!expiry.twoFactor" class="space-y-1.5" @submit.prevent="submitPassword">
         <div class="flex items-center gap-2 sm:gap-3">
-          <div class="relative flex-1">
-            <Input
-              id="session-password"
-              v-model="password"
-              :type="visible ? 'text' : 'password'"
-              autocomplete="current-password"
-              aria-label="Password"
-              class="pe-10"
-              required
-              autofocus
-            />
-            <button
-              type="button"
-              class="absolute inset-y-0 end-0 flex w-10 cursor-pointer items-center justify-center text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
-              :aria-label="visible ? 'Hide password' : 'Show password'"
-              @click="visible = !visible"
-            >
-              <component :is="visible ? EyeOff : Eye" class="size-4" />
-            </button>
-          </div>
+          <PasswordInput
+            id="session-password"
+            v-model="password"
+            autocomplete="current-password"
+            aria-label="Password"
+            required
+            autofocus
+            class="flex-1"
+          />
           <Button type="submit" :disabled="busy">Sign in</Button>
         </div>
         <p v-if="error" class="text-sm text-destructive">{{ error }}</p>

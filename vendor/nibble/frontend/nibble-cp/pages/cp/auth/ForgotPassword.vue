@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3'
+import { CircleAlert } from '@lucide/vue'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -7,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { useFlashToasts } from '@/lib/cp'
 
 const props = defineProps<{ flash: { notice?: string; alert?: string } }>()
-useFlashToasts(() => props.flash)
+useFlashToasts(() => ({ notice: props.flash.notice }))
 const form = useForm({ email_address: '' })
 </script>
 
@@ -19,6 +21,10 @@ const form = useForm({ email_address: '' })
     </CardHeader>
     <CardContent>
       <form class="space-y-4" @submit.prevent="form.post('/cp/passwords')">
+        <Alert v-if="flash.alert && !form.processing" variant="destructive">
+          <CircleAlert />
+          <AlertDescription>{{ flash.alert }}</AlertDescription>
+        </Alert>
         <div class="space-y-2">
           <Label for="email">Email</Label>
           <Input id="email" v-model="form.email_address" type="email" required autofocus />

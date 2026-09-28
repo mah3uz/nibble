@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3'
-import { Eye, EyeOff } from '@lucide/vue'
 import { ref } from 'vue'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import PasswordInput from '@/components/cp/PasswordInput.vue'
 import { elevate } from '@/lib/elevation'
 
 const password = ref('')
-const visible = ref(false)
 const busy = ref(false)
 const error = ref<string | null>(null)
 
@@ -40,25 +38,7 @@ async function submit() {
         </div>
         <div class="space-y-2">
           <Label for="confirm-password">Password</Label>
-          <div class="relative">
-            <Input
-              id="confirm-password"
-              v-model="password"
-              :type="visible ? 'text' : 'password'"
-              autocomplete="current-password"
-              class="pe-10"
-              required
-              autofocus
-            />
-            <button
-              type="button"
-              class="absolute inset-y-0 end-0 flex w-10 cursor-pointer items-center justify-center text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
-              :aria-label="visible ? 'Hide password' : 'Show password'"
-              @click="visible = !visible"
-            >
-              <component :is="visible ? EyeOff : Eye" class="size-4" />
-            </button>
-          </div>
+          <PasswordInput id="confirm-password" v-model="password" autocomplete="current-password" required autofocus />
           <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
         </div>
         <Button type="submit" class="mt-6 w-full" :disabled="busy">Submit</Button>
