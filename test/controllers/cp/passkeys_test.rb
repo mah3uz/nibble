@@ -22,6 +22,17 @@ class Nibble::Cp::PasskeysTest < ActionDispatch::IntegrationTest
     assert users(:editor).reload.two_factor?, "a passkey counts as a second factor"
   end
 
+  test "registering answers in JSON the browser can parse, or the dialog reports a saved passkey as a failure" do
+    sign_in_as users(:editor)
+    post "/cp/account/passkeys/options", headers: { "Accept" => "application/json" }
+    credential = client.create(challenge: json["challenge"], user_verified: true)
+
+    post "/cp/account/passkeys", params: { name: "Laptop", credential: }, headers: { "Accept" => "application/json" }
+
+    assert_response :created
+    assert_nothing_raised { json }
+  end
+
   test "every binary value in the options is base64url, because the browser decodes each one before asking the authenticator" do
     sign_in_as users(:editor)
     register(name: "First")

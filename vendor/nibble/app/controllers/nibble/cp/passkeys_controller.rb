@@ -22,7 +22,7 @@ module Nibble
           sign_count: credential.sign_count, name: params[:name].presence || "Passkey")
         Nibble::AuthLog.record("passkey_added", user: Nibble::Current.user, ip: request.remote_ip)
         offer_recovery_codes
-        head :created
+        render json: {}, status: :created
       rescue WebAuthn::Error => e
         render json: { error: e.message }, status: :unprocessable_content
       end

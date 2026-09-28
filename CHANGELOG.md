@@ -16,6 +16,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 - **`nibble:content:import --dry-run` lists what it would create and update,** as the Control Plane's import does,
   instead of only saying the package is valid.
+- **Adding a passkey no longer says it failed when it worked.** The dialog reported "Unexpected end of JSON input"
+  after the passkey was saved; check your account's passkeys for one added this way.
 
 ## 0.19.2 — 2026-09-28 15:34 +0600
 
