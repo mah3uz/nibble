@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.19.1 — 2026-09-28 14:34 +0600
+
 ### What's new
 
 - **Analytics are cards: pick a tool, fill in what it needs, run as many as you like.** Plausible, Fathom, Umami,
