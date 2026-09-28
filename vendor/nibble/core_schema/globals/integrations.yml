@@ -7,7 +7,7 @@ blueprint:
       display: Analytics
       sections:
         - display: Tools
-          instructions: "Loaded on the live site only: not in previews, the Control Plane, or while indexing is blocked. You can run several tools at once."
+          instructions: Paste each tool's snippet as it gives it. Runs on the live site only, never in previews or the Control Plane.
           fields:
             - handle: analytics
               field:
@@ -18,114 +18,56 @@ blueprint:
                 tab_count: true
                 sets:
                   private:
-                    display: Privacy-friendly, no cookies
+                    display: No cookies
                     sets:
                       plausible:
                         display: Plausible
                         icon: chart
                         badge: No cookies
-                        instructions: Simple, privacy-friendly analytics, hosted or self-hosted.
                         fields:
-                          - handle: script_url
-                            field:
-                              type: text
-                              input_type: url
-                              display: Script URL
-                              required: true
-                              placeholder: https://plausible.io/js/pa-XXXXXXXX.js
-                              instructions: "The src of the script in Plausible → Site settings → Site installation. [Plausible's guide](https://plausible.io/docs/plausible-script)"
-                              validate: ["analytics_id:script_url"]
-                          - handle: domain
-                            field:
-                              type: text
-                              display: Domain
-                              required: true
-                              placeholder: example.com
-                              instructions: The older script.js needs the site's domain as Plausible knows it.
-                              validate: ["analytics_id:domain"]
-                              if: { script_url: "contains /script." }
-                          - handle: tags
-                            field: { type: analytics_tags, display: What Nibble writes, replicator_preview: false }
+                          - handle: head
+                            field: { type: code, display: Snippet, required: true, rows: 5, replicator_preview: false, validate: [analytics_snippet], instructions: "From Plausible → Site settings → Site installation. [Guide](https://plausible.io/docs/plausible-script)" }
                       fathom:
                         display: Fathom
                         icon: chart
                         badge: No cookies
-                        instructions: Privacy-first analytics from a Canadian company.
                         fields:
-                          - handle: site_id
-                            field: { type: text, display: Site ID, required: true, placeholder: ABCDEFGH, instructions: "Fathom → Settings → Sites → Embed code. [Fathom's guide](https://usefathom.com/docs/script/embed)", validate: ["analytics_id:fathom"] }
-                          - handle: tags
-                            field: { type: analytics_tags, display: What Nibble writes, replicator_preview: false }
+                          - handle: head
+                            field: { type: code, display: Snippet, required: true, rows: 5, replicator_preview: false, validate: [analytics_snippet], instructions: "From Fathom → Settings → Sites → Embed code. Add data-spa=\"auto\" to its script tag, so page changes are counted. [Guide](https://usefathom.com/docs/script/embed)" }
                       umami:
                         display: Umami
                         icon: chart
                         badge: No cookies
-                        instructions: Open-source analytics, Umami Cloud or self-hosted.
                         fields:
-                          - handle: website_id
-                            field: { type: text, display: Website ID, required: true, placeholder: 94db1cb1-74f4-4a40-ad6c-962362670409, instructions: "Umami → Settings → Websites → Edit → Website ID. [Umami's guide](https://docs.umami.is/docs/tracker-configuration)", validate: ["analytics_id:umami"] }
-                          - handle: script_url
-                            field: { type: text, input_type: url, display: Script URL, placeholder: https://cloud.umami.is/script.js, instructions: Only for a self-hosted Umami; Umami Cloud's is used when empty., validate: ["analytics_id:script_url"] }
-                          - handle: tags
-                            field: { type: analytics_tags, display: What Nibble writes, replicator_preview: false }
+                          - handle: head
+                            field: { type: code, display: Snippet, required: true, rows: 5, replicator_preview: false, validate: [analytics_snippet], instructions: "From Umami → Settings → Websites → Edit → Tracking code. [Guide](https://docs.umami.is/docs/tracker-configuration)" }
                       cloudflare:
                         display: Cloudflare Web Analytics
                         icon: chart
                         badge: No cookies
                         max: 1
-                        instructions: Free analytics from Cloudflare, for any site. One per page.
                         fields:
-                          - handle: token
-                            field: { type: text, display: Token, required: true, instructions: "Cloudflare → Analytics & Logs → Web Analytics → Manage site: the token in the JS snippet. [Cloudflare's guide](https://developers.cloudflare.com/web-analytics/get-started/)", validate: ["analytics_id:cloudflare"] }
-                          - handle: tags
-                            field: { type: analytics_tags, display: What Nibble writes, replicator_preview: false }
+                          - handle: body_end
+                            field: { type: code, display: Snippet, required: true, rows: 5, replicator_preview: false, validate: [analytics_snippet], instructions: "From Cloudflare → Web Analytics → Manage site. Added at the end of the page, as Cloudflare asks. [Guide](https://developers.cloudflare.com/web-analytics/get-started/)" }
                   consent:
-                    display: Sets cookies, needs consent in the EU and UK
+                    display: Needs cookie consent
                     sets:
                       ga4:
                         display: Google Analytics 4
                         icon: chart
                         badge: Needs consent
-                        instructions: Google's analytics. Several measurement IDs share one loader.
                         fields:
-                          - handle: measurement_id
-                            field: { type: text, display: Measurement ID, required: true, placeholder: G-XXXXXXXXXX, instructions: "Google Analytics → Admin → Data streams → your web stream. [Google's guide](https://developers.google.com/tag-platform/gtagjs/install)", validate: ["analytics_id:ga4"] }
-                          - handle: tags
-                            field: { type: analytics_tags, display: What Nibble writes, replicator_preview: false }
+                          - handle: head
+                            field: { type: code, display: Snippet, required: true, rows: 5, replicator_preview: false, validate: [analytics_snippet], instructions: "From Google Analytics → Admin → Data streams → View tag instructions → Install manually. [Guide](https://support.google.com/analytics/answer/9304153)" }
                       gtm:
                         display: Google Tag Manager
                         icon: chart
                         badge: Needs consent
-                        instructions: Loads the tags you manage in Google Tag Manager.
                         fields:
-                          - handle: container_id
-                            field: { type: text, display: Container ID, required: true, placeholder: GTM-XXXXXXX, instructions: "Tag Manager → Workspace; the ID beside the container's name. [Google's guide](https://developers.google.com/tag-platform/tag-manager/web)", validate: ["analytics_id:gtm"] }
-                          - handle: tags
-                            field: { type: analytics_tags, display: What Nibble writes, replicator_preview: false }
-                  other:
-                    display: Other
-                    sets:
-                      script:
-                        display: Script tag
-                        icon: code-block
-                        instructions: Any tool that loads from one script tag with data- attributes.
-                        fields:
-                          - handle: script_url
-                            field: { type: text, input_type: url, display: Script URL, required: true, placeholder: https://example.com/script.js, validate: ["analytics_id:script_url"] }
-                          - handle: attributes
-                            field:
-                              type: grid
-                              mode: table
-                              display: Script attributes
-                              instructions: For example data-domain, data-site or data-website-id.
-                              add_row: Add attribute
-                              fields:
-                                - handle: name
-                                  field: { type: text, required: true, validate: ["regex:/\\Adata-[a-z0-9-]+\\z/"] }
-                                - handle: value
-                                  field: { type: text, required: true }
-                          - handle: tags
-                            field: { type: analytics_tags, display: What Nibble writes, replicator_preview: false }
+                          - handle: head
+                            field: { type: code, display: Head snippet, required: true, rows: 5, replicator_preview: false, validate: [analytics_snippet], instructions: "From Tag Manager → Admin → Install Google Tag Manager: the part for the head. [Guide](https://support.google.com/tagmanager/answer/14842164)" }
+                          - handle: body_start
+                            field: { type: code, display: Body snippet, rows: 4, replicator_preview: false, validate: [analytics_snippet], instructions: "The part for straight after the opening body tag." }
     code:
       display: Custom code
       sections:

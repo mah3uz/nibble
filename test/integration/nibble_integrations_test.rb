@@ -25,10 +25,12 @@ class NibbleIntegrationsTest < ActionDispatch::IntegrationTest
     Nibble::Lifecycle.call(record, :save, values, actor: Nibble::Principal.system).errors
   end
 
-  test "analytics cards and snippets reach live pages, each snippet in its place and order, paused ones left out" do
+  test "a vendor's snippet reaches live pages exactly as pasted, where the vendor says, with custom code in its places" do
+    plausible = %(<script async src="https://stats.example.com/js/pa-AbC123.js"></script>\n<script>plausible.init()</script>)
     save_integrations(
-      "analytics" => [ { "type" => "plausible", "script_url" => "https://stats.example.com/js/pa-AbC123.js" },
-        { "type" => "gtm", "container_id" => "GTM-XYZ9" } ],
+      "analytics" => [ { "type" => "plausible", "head" => plausible },
+        { "type" => "gtm", "head" => "<script>gtm()</script>", "body_start" => %(<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XYZ9"></iframe></noscript>) },
+        { "type" => "cloudflare", "body_end" => %(<script defer src="https://static.cloudflareinsights.com/beacon.min.js"></script>) } ],
       "custom_code" => [
         { "type" => "snippet", "name" => "Verify", "placement" => "head", "code" => %(<meta name="head-marker">) },
         { "type" => "snippet", "name" => "Chat", "placement" => "body_end", "code" => %(<div id="end-first"></div>) },
@@ -38,19 +40,19 @@ class NibbleIntegrationsTest < ActionDispatch::IntegrationTest
       ])
 
     live { get "/blog/grids" }
+    assert_includes response.body, plausible, "the snippet is written as the vendor gave it"
     html = Nokogiri::HTML(response.body)
-    assert html.at_css('head script[src="https://stats.example.com/js/pa-AbC123.js"]')
-    assert_includes html.at_css("head").to_html, "plausible.init()"
     assert html.at_css('head meta[name="head-marker"]')
     assert_nil html.at_css('meta[name="paused"]')
     body = html.at_css("body").element_children
-    assert_equal "noscript", body.first.name, "GTM's frame opens the body"
+    assert_equal "noscript", body.first.name, "Tag Manager's frame opens the body"
     assert_equal "start-marker", body[1]["id"]
-    assert_equal %w[end-first end-second], body.to_a.last(2).map { |node| node["id"] }
+    assert_equal [ "static.cloudflareinsights.com", "end-first", "end-second" ],
+      body.to_a.last(3).map { |node| node["src"].to_s[%r{//([^/]+)}, 1] || node["id"] }, "Cloudflare's beacon closes the page, before custom code"
   end
 
   test "nothing loads where the site isn't indexable, so staging and development never report analytics" do
-    save_integrations("analytics" => [ { "type" => "ga4", "measurement_id" => "G-ABC123" } ],
+    save_integrations("analytics" => [ { "type" => "ga4", "head" => "<script>gtag('config', 'G-ABC123')</script>" } ],
       "custom_code" => [ { "type" => "snippet", "name" => "Verify", "placement" => "head", "code" => %(<meta name="head-marker">) } ])
 
     get "/blog/grids"
@@ -58,18 +60,13 @@ class NibbleIntegrationsTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "head-marker"
   end
 
-  test "an ID in the wrong shape is refused with the shape it should have, so it can't break out of the snippet" do
-    errors = errors_for("analytics" => [ { "type" => "ga4", "measurement_id" => "G-1');alert(1)//" } ])
-    assert_equal [ "That isn't a GA4 measurement ID; it looks like G-XXXXXXXXXX." ], errors["analytics.0.measurement_id"]
-  end
-
-  test "Plausible's older script.js needs a domain, and the pa- script doesn't ask for one" do
-    assert errors_for("analytics" => [ { "type" => "plausible", "script_url" => "https://plausible.io/js/script.js" } ]).key?("analytics.0.domain")
-    assert_empty errors_for("analytics" => [ { "type" => "plausible", "script_url" => "https://plausible.io/js/pa-AbC123.js" } ])
+  test "a card refuses what isn't a snippet, such as a pasted ID, so a mistake is caught on save" do
+    errors = errors_for("analytics" => [ { "type" => "ga4", "head" => "G-ABC123" } ])
+    assert_match "exactly as the vendor gives it", errors["analytics.0.head"].sole
   end
 
   test "Cloudflare can't be added twice, because a page carries one beacon" do
-    card = { "type" => "cloudflare", "token" => "0123456789abcdef0123456789abcdef" }
+    card = { "type" => "cloudflare", "body_end" => "<script>beacon()</script>" }
     assert errors_for("analytics" => [ card, card ]).key?("analytics")
   end
 

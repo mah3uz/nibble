@@ -1,6 +1,9 @@
 module Nibble
   module Cp
     class GlobalsController < BaseController
+      before_action :require_elevated_page, only: :edit, if: :writes_to_pages?
+      before_action :require_elevated_session, only: :update, if: :writes_to_pages?
+
       def index
         sets = Nibble.schema.globals.select { |item| Nibble::Access.can?(Nibble::Current.user, "globals.#{item.handle}.edit") }
         raise NotAuthorized if sets.empty?
@@ -44,6 +47,9 @@ module Nibble
       end
 
       private
+
+      # Integrations puts code on every live page, so it asks for the password again, as users and roles do.
+      def writes_to_pages? = params[:handle] == Nibble::Integrations::HANDLE
 
       def global_set(item)
         locale = params[:locale].presence || Nibble.config.default_locale.code

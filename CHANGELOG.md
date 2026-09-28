@@ -12,6 +12,23 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### Changed
+
+- **An analytics card takes the tool's snippet as the tool gives it,** and the page gets that snippet unchanged, where
+  the tool says it goes: the head for most, both of Tag Manager's parts, and the end of the body for Cloudflare. Each
+  card says where the tool shows its snippet. A card checks only that what was pasted is a snippet, so a tool changing
+  its snippet never stops Nibble accepting it. The Script tag card is gone, since custom code does the same, and so is
+  `Nibble::Analytics.register`: a site adds a tool of its own as a set in its Integrations schema.
+
+  **Upgrade:** analytics cards added on 0.19.1 hold values this release doesn't read. Before deploying, note each
+  tool, then remove the cards: `bin/rails runner 'Nibble::Records::GlobalSet.where(handle: "integrations").find_each { |g| g.update_columns(data: g.data.except("analytics")) }'`,
+  on Kamal through `kamal app exec --reuse`. After deploying, add each tool again and paste its snippet.
+- **Integrations asks for your password again,** as users, roles and API tokens do, because what it holds runs on
+  every live page.
+- **Adding a block to a list that has one kind of block adds it straight away,** without a menu, and the menu of a
+  list with several kinds closes once one is picked, shows each kind by name, and searches only a long list.
+- **A `code` field takes `rows`,** for how tall its editor starts.
+
 ## 0.19.1 — 2026-09-28 14:34 +0600
 
 ### What's new

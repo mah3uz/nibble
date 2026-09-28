@@ -5,7 +5,7 @@ module Nibble
       Nibble::Fieldtypes::Select Nibble::Fieldtypes::Radio Nibble::Fieldtypes::Checkboxes Nibble::Fieldtypes::Date
       Nibble::Fieldtypes::Slug Nibble::Fieldtypes::RichText Nibble::Fieldtypes::Markdown Nibble::Fieldtypes::Link Nibble::Fieldtypes::List Nibble::Fieldtypes::Seo
       Nibble::Fieldtypes::Grid Nibble::Fieldtypes::Replicator Nibble::Fieldtypes::Assets Nibble::Fieldtypes::Entries Nibble::Fieldtypes::Terms
-      Nibble::Fieldtypes::Secret Nibble::Fieldtypes::Files Nibble::Fieldtypes::AnalyticsTags
+      Nibble::Fieldtypes::Secret Nibble::Fieldtypes::Files
     ].freeze
 
     class << self

@@ -1,7 +1,6 @@
 import { registerFieldtype } from './registry'
 
 const components = {
-  analytics_tags: () => import('./components/AnalyticsTagsFieldtype.vue'),
   assets: () => import('./components/AssetsFieldtype.vue'),
   checkboxes: () => import('./components/CheckboxesFieldtype.vue'),
   code: () => import('./components/CodeFieldtype.vue'),

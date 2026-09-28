@@ -62,7 +62,7 @@ on, and two-factor authentication.
 
 Two things happen automatically, and are worth knowing before they surprise you:
 
-- **Sensitive screens ask for your password again** — users, roles, API tokens, imports.
+- **Sensitive screens ask for your password again** — users, roles, API tokens, imports, and the Integrations global.
 - **After a while without activity you are locked out** until you enter your password again. A "Your Session is
   Expiring" warning comes first, with an **Extend Session** button, so nothing you are writing is lost.
 

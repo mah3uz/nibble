@@ -24,41 +24,37 @@ After reading this guide, you will know:
 
 ## 1. Analytics
 
-Open **Globals → Integrations → Analytics** and choose **Add analytics**. Pick a tool, and a card opens with only
-the fields that tool needs. Add as many as you like; the tab's name counts those that are running, as in
-**Analytics · 2**.
+Open **Globals → Integrations → Analytics** and choose **Add analytics**. Pick a tool, then paste its snippet into
+the card exactly as the tool gives it: every tool has one on its install page, and each card says where. Add as many
+tools as you like; the tab's name counts those that are running, as in **Analytics · 2**.
 
-| Tool | Asks for | Where to find it |
+| Tool | Where its snippet is | Goes |
 |---|---|---|
-| Plausible | the script URL, and a domain only for the older `script.js` | Plausible → Site settings → Site installation: the `src` of the script |
-| Fathom | the site ID | Fathom → Settings → Sites → Embed code |
-| Umami | the website ID, and a script URL only when self-hosted | Umami → Settings → Websites → Edit |
-| Cloudflare Web Analytics | the token | Cloudflare → Analytics & Logs → Web Analytics → Manage site: the token in the JS snippet |
-| Google Analytics 4 | the measurement ID, `G-…` | Google Analytics → Admin → Data streams → your web stream |
-| Google Tag Manager | the container ID, `GTM-…` | Tag Manager, beside the container's name |
-| Script tag | a script URL and its `data-` attributes | the tool's install instructions |
+| [Plausible](https://plausible.io/docs/plausible-script) | Site settings → Site installation | in the head |
+| [Fathom](https://usefathom.com/docs/script/embed) | Settings → Sites → Embed code | in the head |
+| [Umami](https://docs.umami.is/docs/tracker-configuration) | Settings → Websites → Edit → Tracking code | in the head |
+| [Cloudflare Web Analytics](https://developers.cloudflare.com/web-analytics/get-started/) | Web Analytics → Manage site | at the end of the body |
+| [Google Analytics 4](https://support.google.com/analytics/answer/9304153) | Admin → Data streams → View tag instructions → Install manually | in the head |
+| [Google Tag Manager](https://support.google.com/tagmanager/answer/14842164) | Admin → Install Google Tag Manager: two snippets | the first in the head, the second at the start of the body |
 
-Nibble writes each tool's tags itself, as its vendor's install instructions show them: [Plausible](https://plausible.io/docs/plausible-script),
-[Fathom](https://usefathom.com/docs/script/embed), [Umami](https://docs.umami.is/docs/tracker-configuration),
-[Cloudflare](https://developers.cloudflare.com/web-analytics/get-started/),
-[Google Analytics](https://developers.google.com/tag-platform/gtagjs/install) and
-[Tag Manager](https://developers.google.com/tag-platform/tag-manager/web), and each card links to its guide. Under
-**What Nibble writes**, **Show the tags Nibble writes** shows them exactly, to compare with the vendor's page. An ID in
-the wrong shape is explained there as you type, with the shape it should have, and refused when you save.
+The snippet reaches the page exactly as you pasted it, where its tool says it goes. A card only checks that what you
+pasted is a snippet, `<script>` tags and `<noscript>` if it has one, so a pasted ID or a stray tag is refused when
+you save.
 
-The public site changes pages without a full reload, and every tool here counts those page changes. Tools that need
-to be told, Fathom and Cloudflare, are told. For Google Analytics, keep **Enhanced measurement → Page changes based on
-browser history events** on, as it is by default; in Tag Manager, a **History Change** trigger does the same.
+The public site changes pages without a full reload. Plausible, Umami and Cloudflare count those page changes on their
+own. Fathom counts them once its script tag has `data-spa="auto"`, which its card reminds you to add. For Google
+Analytics, keep **Enhanced measurement → Page changes based on browser history events** on, as it is by default; in
+Tag Manager, a **History Change** trigger does the same.
 
 Nibble sets no Content Security Policy for scripts, so each tool loads as it is. A site that adds its own policy has
 to allow every tool's script and the address it sends visits to.
 
-Cloudflare Web Analytics can be added once, since a page carries one beacon. Two Google Analytics cards share one
-loader, each sending to its own property.
+Cloudflare Web Analytics can be added once, since a page carries one beacon.
 
 > [!TIP]
-> Use **Script tag** for a tool not in the list that loads from one script tag, such as `<script defer
-> src="https://…" data-site="…">`. Anything more than that belongs in custom code.
+> A tool that isn't listed goes in [custom code](#2-custom-code), or a developer can add a card for it, as a set in
+> the site's own `site/schema/globals/integrations.yml` whose snippet field is named `head`, `body_start` or
+> `body_end` for where it goes.
 
 ### 1.1 Consent
 
@@ -96,5 +92,6 @@ Saving clears every cached page, so a change reaches visitors straight away.
 
 ## 4. Who can change these
 
-Anyone whose role may edit the **Integrations** global. That permission is separate from the other globals, and AI
-apps connected to the site can't reach Integrations at all. See [Users and roles](../running/users-and-roles.md).
+Anyone whose role may edit the **Integrations** global, after entering their password again: what it holds runs on
+every live page. That permission is separate from the other globals, and AI apps connected to the site can't reach
+Integrations at all. See [Users and roles](../running/users-and-roles.md).

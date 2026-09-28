@@ -34,6 +34,18 @@ class Nibble::Cp::CpScreensTest < ActionDispatch::IntegrationTest
     assert_nil props.dig("values", "recaptcha_min_score")
   end
 
+  test "Integrations asks for the password again, because what it holds runs on every live page" do
+    Nibble::Current.session.update!(elevated_at: 20.minutes.ago)
+
+    get "/cp/globals/integrations/edit"
+    assert_equal "cp/Confirm", component
+    post "/cp/globals/integrations", params: { global: { mail_from_name: "Tidewater" } }
+    assert_nil Nibble::Records::GlobalSet.find_by(handle: "integrations")&.data&.dig("mail_from_name")
+
+    get "/cp/globals/site/edit"
+    assert_equal "cp/globals/Edit", component, "other globals don't"
+  end
+
   test "an invalid global reports its error and saves nothing" do
     patch "/cp/globals/site", params: { global: { name: "" } }
     assert_match "required", session[:inertia_errors].with_indifferent_access[:name]

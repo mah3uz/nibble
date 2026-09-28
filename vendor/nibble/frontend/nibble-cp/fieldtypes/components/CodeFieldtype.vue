@@ -21,7 +21,11 @@ const theme = {
   },
   '&.cm-focused': { outline: '2px solid var(--color-ring, var(--color-blue-500))', outlineOffset: '1px' },
   '.cm-scroller': { fontFamily: 'var(--default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, monospace)' },
-  '.cm-content': { minHeight: '10rem', padding: '0.625rem 0', caretColor: 'var(--color-gray-100)' },
+  '.cm-content': {
+    minHeight: `${(Number(props.config.rows) || 8) * 1.4}em`,
+    padding: '0.625rem 0',
+    caretColor: 'var(--color-gray-100)',
+  },
   '.cm-gutters': { backgroundColor: 'transparent', color: 'var(--color-gray-500)', border: 'none' },
   '.cm-activeLine, .cm-activeLineGutter': {
     backgroundColor: 'color-mix(in oklab, var(--color-gray-700) 35%, transparent)',
