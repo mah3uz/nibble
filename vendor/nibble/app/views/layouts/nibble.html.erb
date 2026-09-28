@@ -28,6 +28,7 @@
     <%= Nibble::Integrations.head_html(@nibble_integrations) if @nibble_integrations %>
   </head>
   <body>
+    <%= Nibble::Integrations.body_start_html(@nibble_integrations) if @nibble_integrations %>
     <%= yield %>
     <%= Nibble::Integrations.body_html(@nibble_integrations) if @nibble_integrations %>
   </body>

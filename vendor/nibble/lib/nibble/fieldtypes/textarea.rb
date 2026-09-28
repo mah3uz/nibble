@@ -8,7 +8,8 @@ module Nibble
         { "display" => "Appearance", "fields" => {
           "placeholder" => { "type" => "text", "width" => 50 },
           "character_limit" => { "type" => "integer", "width" => 50 },
-          "rows" => { "type" => "integer", "width" => 50 }
+          "rows" => { "type" => "integer", "width" => 50 },
+          "monospace" => { "type" => "toggle", "default" => false, "width" => 50 }
         } }
       ]
 

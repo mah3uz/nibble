@@ -22,32 +22,16 @@ module Nibble
       name ? ActionMailer::Base.email_address_with_name(address, name) : address
     end
 
-    def head_html(values)
-      parts = []
-      if (id = values["gtm_container_id"].presence)
-        parts << %(<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer',#{id.to_json});</script>)
-      end
-      if (id = values["ga4_measurement_id"].presence)
-        parts << %(<script async src="https://www.googletagmanager.com/gtag/js?id=#{ERB::Util.url_encode(id)}"></script>)
-        parts << %(<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config',#{id.to_json});</script>)
-      end
-      if (src = values["analytics_script_src"].presence)
-        attributes = Array(values["analytics_script_attributes"]).filter_map do |row|
-          %( #{row['name']}="#{ERB::Util.html_escape(row['value'])}") if row["name"].to_s.match?(/\Adata-[a-z0-9-]+\z/)
-        end
-        parts << %(<script defer src="#{ERB::Util.html_escape(src)}"#{attributes.join}></script>)
-      end
-      parts << values["head_code"] if values["head_code"].present?
-      parts.join("\n").html_safe
-    end
+    def head_html(values) = place_html(values, :head)
+    def body_start_html(values) = place_html(values, :body_start)
+    def body_html(values) = place_html(values, :body_end)
 
-    def body_html(values)
-      parts = []
-      if (id = values["gtm_container_id"].presence)
-        parts << %(<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=#{ERB::Util.url_encode(id)}" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>)
+    def place_html(values, place)
+      snippets = Array(values["custom_code"]).filter_map do |row|
+        row = row.to_h.stringify_keys
+        row["code"] if row["enabled"] != false && row["placement"] == place.to_s && row["code"].present?
       end
-      parts << values["body_code"] if values["body_code"].present?
-      parts.join("\n").html_safe
+      (Analytics.render(values["analytics"]).tags.fetch(place) + snippets).join("\n").html_safe
     end
   end
 end

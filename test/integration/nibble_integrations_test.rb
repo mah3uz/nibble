@@ -20,34 +20,57 @@ class NibbleIntegrationsTest < ActionDispatch::IntegrationTest
 
   def page_props = JSON.parse(Nokogiri::HTML(response.body).at_css("script[data-page]").text)["props"]
 
-  test "analytics and custom code reach live pages, with IDs escaped and attributes limited to data-*" do
-    save_integrations("ga4_measurement_id" => "G-ABC123", "gtm_container_id" => "GTM-XYZ9",
-      "analytics_script_src" => "https://plausible.io/js/script.js",
-      "analytics_script_attributes" => [ { "name" => "data-domain", "value" => "example.test\"><script>x</script>" } ],
-      "head_code" => "<meta name=\"head-marker\">", "body_code" => "<div id=\"body-marker\"></div>")
+  def errors_for(values)
+    record = Nibble::Records::GlobalSet.new(handle: "integrations", locale: "en")
+    Nibble::Lifecycle.call(record, :save, values, actor: Nibble::Principal.system).errors
+  end
+
+  test "analytics cards and snippets reach live pages, each snippet in its place and order, paused ones left out" do
+    save_integrations(
+      "analytics" => [ { "type" => "plausible", "script_url" => "https://stats.example.com/js/pa-AbC123.js" },
+        { "type" => "gtm", "container_id" => "GTM-XYZ9" } ],
+      "custom_code" => [
+        { "type" => "snippet", "name" => "Verify", "placement" => "head", "code" => %(<meta name="head-marker">) },
+        { "type" => "snippet", "name" => "Chat", "placement" => "body_end", "code" => %(<div id="end-first"></div>) },
+        { "type" => "snippet", "name" => "Banner", "placement" => "body_start", "code" => %(<div id="start-marker"></div>) },
+        { "type" => "snippet", "name" => "Old", "placement" => "head", "code" => %(<meta name="paused">), "enabled" => false },
+        { "type" => "snippet", "name" => "Widget", "placement" => "body_end", "code" => %(<div id="end-second"></div>) }
+      ])
 
     live { get "/blog/grids" }
     html = Nokogiri::HTML(response.body)
-    assert html.at_css('script[src="https://www.googletagmanager.com/gtag/js?id=G-ABC123"]')
-    assert_includes response.body, %('dataLayer',"GTM-XYZ9")
-    assert html.at_css('noscript iframe[src="https://www.googletagmanager.com/ns.html?id=GTM-XYZ9"]')
-    assert_equal "example.test\"><script>x</script>", html.at_css('script[src="https://plausible.io/js/script.js"]')["data-domain"]
+    assert html.at_css('head script[src="https://stats.example.com/js/pa-AbC123.js"]')
+    assert_includes html.at_css("head").to_html, "plausible.init()"
     assert html.at_css('head meta[name="head-marker"]')
-    assert html.at_css("body #body-marker")
+    assert_nil html.at_css('meta[name="paused"]')
+    body = html.at_css("body").element_children
+    assert_equal "noscript", body.first.name, "GTM's frame opens the body"
+    assert_equal "start-marker", body[1]["id"]
+    assert_equal %w[end-first end-second], body.to_a.last(2).map { |node| node["id"] }
   end
 
   test "nothing loads where the site isn't indexable, so staging and development never report analytics" do
-    save_integrations("ga4_measurement_id" => "G-ABC123", "head_code" => "<meta name=\"head-marker\">")
+    save_integrations("analytics" => [ { "type" => "ga4", "measurement_id" => "G-ABC123" } ],
+      "custom_code" => [ { "type" => "snippet", "name" => "Verify", "placement" => "head", "code" => %(<meta name="head-marker">) } ])
 
     get "/blog/grids"
     assert_not_includes response.body, "G-ABC123"
     assert_not_includes response.body, "head-marker"
   end
 
-  test "IDs that aren't Google's formats are refused, so they can't break out of the snippet" do
-    record = Nibble::Records::GlobalSet.new(handle: "integrations", locale: "en")
-    result = Nibble::Lifecycle.call(record, :save, { "ga4_measurement_id" => "G-1');alert(1)//" }, actor: Nibble::Principal.system)
-    assert result.invalid?
+  test "an ID in the wrong shape is refused with the shape it should have, so it can't break out of the snippet" do
+    errors = errors_for("analytics" => [ { "type" => "ga4", "measurement_id" => "G-1');alert(1)//" } ])
+    assert_equal [ "That isn't a GA4 measurement ID; it looks like G-XXXXXXXXXX." ], errors["analytics.0.measurement_id"]
+  end
+
+  test "Plausible's older script.js needs a domain, and the pa- script doesn't ask for one" do
+    assert errors_for("analytics" => [ { "type" => "plausible", "script_url" => "https://plausible.io/js/script.js" } ]).key?("analytics.0.domain")
+    assert_empty errors_for("analytics" => [ { "type" => "plausible", "script_url" => "https://plausible.io/js/pa-AbC123.js" } ])
+  end
+
+  test "Cloudflare can't be added twice, because a page carries one beacon" do
+    card = { "type" => "cloudflare", "token" => "0123456789abcdef0123456789abcdef" }
+    assert errors_for("analytics" => [ card, card ]).key?("analytics")
   end
 
   test "the CAPTCHA secret is encrypted at rest, masked for the CP and never sent to theme pages" do

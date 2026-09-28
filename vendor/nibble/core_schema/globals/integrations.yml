@@ -6,40 +6,141 @@ blueprint:
     analytics:
       display: Analytics
       sections:
-        - display: Google
-          instructions: Loaded on the live site only, never in previews or on staging.
+        - instructions: "Loaded on the live site only: not in previews, the Control Plane, or while indexing is blocked. You can run several tools at once."
           fields:
-            - handle: ga4_measurement_id
-              field: { type: text, display: GA4 measurement ID, placeholder: G-XXXXXXXXXX, validate: ["regex:/\\AG-[A-Z0-9]+\\z/"], width: 50 }
-            - handle: gtm_container_id
-              field: { type: text, display: Tag Manager container ID, placeholder: GTM-XXXXXXX, validate: ["regex:/\\AGTM-[A-Z0-9]+\\z/"], width: 50 }
-        - display: Script analytics
-          instructions: For Plausible, Fathom, Umami and similar tools that load one script tag.
-          fields:
-            - handle: analytics_script_src
-              field: { type: text, input_type: url, display: Script URL, placeholder: https://plausible.io/js/script.js }
-            - handle: analytics_script_attributes
+            - handle: analytics
               field:
-                type: grid
-                mode: table
-                display: Script attributes
-                instructions: For example data-domain, data-site or data-website-id.
-                add_row: Add attribute
-                fields:
-                  - handle: name
-                    field: { type: text, required: true, validate: ["regex:/\\Adata-[a-z0-9-]+\\z/"] }
-                  - handle: value
-                    field: { type: text, required: true }
+                type: replicator
+                display: Analytics
+                hide_display: true
+                button_label: Add analytics
+                tab_count: true
+                sets:
+                  private:
+                    display: Privacy-friendly, no cookies
+                    sets:
+                      plausible:
+                        display: Plausible
+                        icon: chart
+                        badge: No cookies
+                        instructions: Simple, privacy-friendly analytics, hosted or self-hosted.
+                        fields:
+                          - handle: script_url
+                            field:
+                              type: text
+                              input_type: url
+                              display: Script URL
+                              required: true
+                              placeholder: https://plausible.io/js/pa-XXXXXXXX.js
+                              instructions: The src of the script in Plausible → Site settings → Site installation.
+                              validate: ["analytics_id:script_url"]
+                          - handle: domain
+                            field:
+                              type: text
+                              display: Domain
+                              required: true
+                              placeholder: example.com
+                              instructions: The older script.js needs the site's domain as Plausible knows it.
+                              validate: ["analytics_id:domain"]
+                              if: { script_url: "contains /script." }
+                      fathom:
+                        display: Fathom
+                        icon: chart
+                        badge: No cookies
+                        instructions: Privacy-first analytics from a Canadian company.
+                        fields:
+                          - handle: site_id
+                            field: { type: text, display: Site ID, required: true, placeholder: ABCDEFGH, instructions: Fathom → Settings → Sites → Embed code., validate: ["analytics_id:fathom"] }
+                      umami:
+                        display: Umami
+                        icon: chart
+                        badge: No cookies
+                        instructions: Open-source analytics, Umami Cloud or self-hosted.
+                        fields:
+                          - handle: website_id
+                            field: { type: text, display: Website ID, required: true, placeholder: 94db1cb1-74f4-4a40-ad6c-962362670409, instructions: Umami → Settings → Websites → Edit → Website ID., validate: ["analytics_id:umami"] }
+                          - handle: script_url
+                            field: { type: text, input_type: url, display: Script URL, placeholder: https://cloud.umami.is/script.js, instructions: Only for a self-hosted Umami; Umami Cloud's is used when empty., validate: ["analytics_id:script_url"] }
+                      cloudflare:
+                        display: Cloudflare Web Analytics
+                        icon: chart
+                        badge: No cookies
+                        max: 1
+                        instructions: Free analytics from Cloudflare, for any site. One per page.
+                        fields:
+                          - handle: token
+                            field: { type: text, display: Token, required: true, instructions: "Cloudflare → Analytics & Logs → Web Analytics → Manage site: the token in the JS snippet.", validate: ["analytics_id:cloudflare"] }
+                  consent:
+                    display: Sets cookies, needs consent in the EU and UK
+                    sets:
+                      ga4:
+                        display: Google Analytics 4
+                        icon: chart
+                        badge: Needs consent
+                        instructions: Google's analytics. Several measurement IDs share one loader.
+                        fields:
+                          - handle: measurement_id
+                            field: { type: text, display: Measurement ID, required: true, placeholder: G-XXXXXXXXXX, instructions: Google Analytics → Admin → Data streams → your web stream., validate: ["analytics_id:ga4"] }
+                      gtm:
+                        display: Google Tag Manager
+                        icon: chart
+                        badge: Needs consent
+                        instructions: Loads the tags you manage in Google Tag Manager.
+                        fields:
+                          - handle: container_id
+                            field: { type: text, display: Container ID, required: true, placeholder: GTM-XXXXXXX, instructions: Tag Manager → Workspace; the ID beside the container's name., validate: ["analytics_id:gtm"] }
+                  other:
+                    display: Other
+                    sets:
+                      script:
+                        display: Script tag
+                        icon: code-block
+                        instructions: Any tool that loads from one script tag with data- attributes.
+                        fields:
+                          - handle: script_url
+                            field: { type: text, input_type: url, display: Script URL, required: true, placeholder: https://example.com/script.js, validate: ["analytics_id:script_url"] }
+                          - handle: attributes
+                            field:
+                              type: grid
+                              mode: table
+                              display: Script attributes
+                              instructions: For example data-domain, data-site or data-website-id.
+                              add_row: Add attribute
+                              fields:
+                                - handle: name
+                                  field: { type: text, required: true, validate: ["regex:/\\Adata-[a-z0-9-]+\\z/"] }
+                                - handle: value
+                                  field: { type: text, required: true }
     code:
       display: Custom code
       sections:
-        - display: Custom code
-          instructions: Added to every live page exactly as written. Only paste code from sources you trust.
+        - instructions: Added to every live page exactly as written. Only paste code from sources you trust.
           fields:
-            - handle: head_code
-              field: { type: textarea, display: Head code, instructions: Placed at the end of the head. }
-            - handle: body_code
-              field: { type: textarea, display: Body code, instructions: Placed at the end of the body. }
+            - handle: custom_code
+              field:
+                type: replicator
+                display: Custom code
+                hide_display: true
+                button_label: Add snippet
+                tab_count: true
+                sets:
+                  snippet:
+                    display: Snippet
+                    icon: code-block
+                    fields:
+                      - handle: name
+                        field: { type: text, display: Name, required: true, placeholder: Chat widget, width: 50 }
+                      - handle: placement
+                        field:
+                          type: select
+                          display: Where
+                          required: true
+                          default: head
+                          options: { head: In the head, body_start: At the start of the body, body_end: At the end of the body }
+                          width: 50
+                          replicator_preview: false
+                      - handle: code
+                        field: { type: textarea, display: Code, required: true, monospace: true, rows: 8, replicator_preview: false }
     captcha:
       display: CAPTCHA
       sections:

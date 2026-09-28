@@ -86,6 +86,7 @@ module Nibble
       Resolvers.register("asset", Records::AssetResolver.new)
       LinkTypes.register("entry", title: "Entry", resolver: entries)
       LinkTypes.register("term", title: "Term", resolver: terms)
+      Validation.register("analytics_id") { |value, params:, **| Analytics.format_error(params.first, value) }
     end
 
     def core_root = Engine.root

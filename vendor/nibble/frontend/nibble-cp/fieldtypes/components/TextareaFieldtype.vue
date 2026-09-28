@@ -25,6 +25,8 @@ const limit = computed(() => Number(props.config.character_limit) || 0)
       :rows="(config.rows as number) || 3"
       :placeholder="config.placeholder as string"
       :readonly="isReadOnly"
+      :class="{ 'font-mono text-xs': config.monospace }"
+      :spellcheck="config.monospace ? false : undefined"
       @update:model-value="(raw) => updateDebounced((text = String(raw)))"
       @focus="emit('focus')"
       @blur="emit('blur')"
