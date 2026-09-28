@@ -16,10 +16,9 @@ const theme = {
   '&': {
     backgroundColor: 'var(--color-gray-900)',
     color: 'var(--color-gray-100)',
-    borderRadius: 'var(--radius-md)',
     fontSize: '0.8125rem',
   },
-  '&.cm-focused': { outline: '2px solid var(--color-ring, var(--color-blue-500))', outlineOffset: '1px' },
+  '&.cm-focused': { outline: 'none' },
   '.cm-scroller': { fontFamily: 'var(--default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, monospace)' },
   '.cm-content': {
     minHeight: `${(Number(props.config.rows) || 8) * 1.4}em`,
@@ -104,5 +103,9 @@ onBeforeUnmount(() => view?.destroy())
 </script>
 
 <template>
-  <div ref="host" class="min-w-0" :data-field="handle" />
+  <div
+    ref="host"
+    class="min-w-0 overflow-hidden rounded-lg border border-gray-300 shadow-ui-sm has-[.cm-focused]:focus-outline dark:border-gray-700"
+    :data-field="handle"
+  />
 </template>
