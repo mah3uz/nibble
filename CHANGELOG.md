@@ -34,6 +34,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 - **Tag Manager's `<noscript>` frame opens the body,** where Google says it goes, rather than closing it.
 - **The nightly backup runs without `DB_SNAPSHOT_BUCKET`,** keeping its copy on the server as the Backups screen
   says, instead of failing every night and keeping nothing. With the bucket set, it's uploaded to S3 as well.
+- **A removed field that was emptied no longer blocks a deploy.** Clearing a field in the Control Plane stores an
+  empty value rather than none, and `nibble:check` counted it as data that would be lost.
 - **Adding a passkey works.** The browser couldn't read the account id the server sent, and refused with an `atob`
   error.
 

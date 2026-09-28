@@ -152,7 +152,7 @@ module Nibble
 
       def tally(scope, fields, data, count_held: true)
         data.to_h.each do |key, value|
-          next if value.nil?
+          next if empty?(value)
 
           if fields.key?(key)
             @held[[ scope, key ]] += 1 if count_held
@@ -161,6 +161,9 @@ module Nibble
           end
         end
       end
+
+      # A field emptied in the Control Plane is stored as "" or [], not removed, and holds nothing to lose.
+      def empty?(value) = value.nil? || (value.respond_to?(:empty?) && value.empty?)
 
       def count_orphans(kind, counts, known)
         counts.each { |handle, count| @orphaned_parents << [ kind, handle, count ] unless known.key?(handle) }

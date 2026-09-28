@@ -53,6 +53,14 @@ class Nibble::DriftTest < ActiveSupport::TestCase
     assert_empty issues
   end
 
+  test "a removed field someone emptied is no loss either, so clearing it before an upgrade lets the upgrade through" do
+    strand(create_entry("articles", { "title" => "A" }), "intro" => "", "links" => [], "meta" => {})
+    assert_empty issues
+
+    strand(create_entry("articles", { "title" => "B" }), "featured" => false)
+    assert_equal [ "collections/articles: featured was removed and 1 record still hold it; #{Nibble::Drift::HINT}" ], issues
+  end
+
   test "a pending migration that moves the data covers it" do
     strand(create_entry("articles", { "title" => "A" }), "intro" => "Old")
     migration("2026_10_01_rename", { "rename_field" => { "collection" => "articles", "from" => "intro", "to" => "summary" } })
