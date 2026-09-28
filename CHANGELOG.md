@@ -31,6 +31,12 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   button on each block that adds one beneath it with `insert_below: false`; the Analytics and Custom code tabs do
   both.
 - **A `code` field takes `rows`,** for how tall its editor starts.
+- **Agent access lists connected apps in a sidebar,** one card per app with its access, its person, when and from
+  where it was last used, when it expires, and Disconnect.
+
+### What's fixed
+
+- **A code field has a border like other inputs,** so in dark mode its help text no longer reads as part of it.
 
 ## 0.19.1 — 2026-09-28 14:34 +0600
 
