@@ -141,7 +141,7 @@ async function notesAndBell(id) {
 
   await page.getByRole('button', { name: 'Notifications' }).click()
   await page.waitForTimeout(800)
-  check('the notification list opens', (await page.getByText(/Notifications|Nothing yet/).count()) > 0)
+  check('the notification list opens', (await page.getByText(/Notifications|all caught up/).count()) > 0)
   const listed = page.locator('[data-slot=popover-content] li')
   const before = await listed.count()
   if (before) {

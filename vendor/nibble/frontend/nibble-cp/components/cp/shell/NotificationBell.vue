@@ -4,6 +4,7 @@ import { onMounted, ref } from 'vue'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { timeAgo } from '@/lib/format'
 
 type Notification = {
   id: number
@@ -24,6 +25,17 @@ const LINES: Record<string, string> = {
   'webhook.disabled': 'Turned off after repeated failures:',
   'apps.connected': 'New app connected to your account:',
   'apps.approval_requested': 'Waiting for your approval:',
+}
+
+const ICONS: Record<string, string> = {
+  'workflow.review_requested': 'edit',
+  'workflow.approved': 'edit',
+  'workflow.rejected': 'edit',
+  'comment.mentioned': 'user-avatar',
+  'form.submitted': 'forms',
+  'webhook.disabled': 'webhooks',
+  'apps.connected': 'key',
+  'apps.approval_requested': 'fingerprint',
 }
 
 const items = ref<Notification[]>([])
@@ -79,38 +91,64 @@ onMounted(load)
         <span v-if="unread" class="absolute top-1.5 right-1.5 size-2 rounded-full bg-rose-500 ring-2 ring-header" />
       </button>
     </PopoverTrigger>
-    <PopoverContent align="end" class="w-80 p-0">
-      <div class="flex items-center justify-between px-4 py-2">
-        <span class="text-sm font-medium">Notifications</span>
-        <div class="flex items-center gap-3">
-          <Button v-if="unread" variant="link" size="sm" class="h-auto p-0" @click="markAllRead">Mark all read</Button>
-          <Button v-if="items.length" variant="link" size="sm" class="h-auto p-0" @click="remove()">Clear all</Button>
+    <PopoverContent align="end" class="w-96 overflow-hidden bg-gray-50 p-0 dark:bg-gray-800">
+      <header
+        class="flex items-center gap-2 border-b border-gray-200 bg-white px-3.5 py-2.5 dark:border-black dark:bg-gray-850"
+      >
+        <span class="text-sm font-medium text-gray-900 dark:text-gray-200">Notifications</span>
+        <span
+          v-if="unread"
+          class="rounded-full bg-gray-100 px-1.5 text-2xs leading-4.5 font-medium text-gray-600 dark:bg-white/10 dark:text-gray-300"
+          >{{ unread }} new</span
+        >
+        <Button v-if="unread" variant="ghost" size="xs" class="ms-auto -me-1.5 text-gray-600" @click="markAllRead"
+          >Mark all read</Button
+        >
+      </header>
+      <div class="bg-white shadow-ui-xs dark:bg-gray-850" :class="items.length ? 'rounded-b-xl p-1.5' : 'rounded-b-xl'">
+        <div v-if="!items.length" class="flex flex-col items-center gap-2 px-4 py-8 text-center">
+          <CpIcon name="bell" class="size-5 text-gray-400" />
+          <p class="text-sm text-gray-500 dark:text-gray-400">You're all caught up.</p>
         </div>
+        <ul v-else class="max-h-96 space-y-0.5 overflow-y-auto" role="list">
+          <li v-for="item in items" :key="item.id" class="group relative">
+            <button
+              type="button"
+              class="flex w-full cursor-pointer items-start gap-2.5 rounded-lg py-2 ps-2 pe-9 text-left text-sm hover:bg-gray-100 focus-visible:bg-gray-100 focus-visible:outline-none dark:hover:bg-white/7 dark:focus-visible:bg-white/7"
+              @click="go(item)"
+            >
+              <span
+                class="mt-px flex size-6 shrink-0 items-center justify-center rounded-md bg-gray-100 text-gray-500 dark:bg-white/7 dark:text-gray-400"
+              >
+                <CpIcon :name="ICONS[item.kind] ?? 'bell'" class="size-3.5" />
+              </span>
+              <span class="min-w-0 flex-1">
+                <span
+                  class="block"
+                  :class="item.read ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-gray-200'"
+                  >{{ LINES[item.kind] ?? item.kind }}
+                  <span class="font-medium">{{ item.title ?? 'a record' }}</span></span
+                >
+                <span v-if="item.comment" class="mt-0.5 block truncate text-xs text-gray-500">{{ item.comment }}</span>
+                <time :datetime="item.at" class="mt-0.5 block text-xs text-gray-400">{{ timeAgo(item.at) }}</time>
+              </span>
+              <span v-if="!item.read" class="mt-2 size-1.5 shrink-0 rounded-full bg-rose-500" aria-label="Unread" />
+            </button>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              class="absolute top-1.5 right-1.5 text-gray-400 hover:text-gray-900 dark:hover:text-white pointer-fine:not-group-hover:not-focus-visible:opacity-0"
+              :aria-label="`Remove notification: ${LINES[item.kind] ?? item.kind} ${item.title ?? 'a record'}`"
+              @click="remove(item.id)"
+            >
+              <CpIcon name="x" class="size-3" />
+            </Button>
+          </li>
+        </ul>
       </div>
-      <p v-if="!items.length" class="px-4 pb-3 text-sm text-muted-foreground">Nothing yet.</p>
-      <ul v-else class="max-h-80 divide-y divide-gray-200 overflow-y-auto dark:divide-gray-700" role="list">
-        <li v-for="item in items" :key="item.id" class="group relative">
-          <button
-            type="button"
-            class="w-full cursor-pointer py-2 ps-4 pe-10 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
-            :class="item.read ? 'text-muted-foreground' : 'text-gray-900 dark:text-gray-100'"
-            @click="go(item)"
-          >
-            <span>{{ LINES[item.kind] ?? item.kind }} {{ item.title ?? 'a record' }}</span>
-            <span v-if="item.comment" class="mt-0.5 block truncate text-xs text-muted-foreground">{{
-              item.comment
-            }}</span>
-          </button>
-          <button
-            type="button"
-            class="absolute top-2 right-2 inline-flex size-6 cursor-pointer items-center justify-center rounded-md text-gray-500 hover:bg-gray-400/15 hover:text-gray-900 dark:hover:text-white pointer-fine:not-group-hover:not-focus-visible:opacity-0"
-            :aria-label="`Remove notification: ${LINES[item.kind] ?? item.kind} ${item.title ?? 'a record'}`"
-            @click="remove(item.id)"
-          >
-            <CpIcon name="x" class="size-3" />
-          </button>
-        </li>
-      </ul>
+      <footer v-if="items.length" class="flex justify-end px-1.75 py-1.5">
+        <Button variant="ghost" size="xs" class="text-gray-600 dark:text-gray-400" @click="remove()">Clear all</Button>
+      </footer>
     </PopoverContent>
   </Popover>
 </template>
