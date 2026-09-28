@@ -24,7 +24,7 @@ After reading this guide, you will know:
 
 | Change | What happens to existing content |
 |---|---|
-| add a field, a blueprint, a collection | nothing; the field is empty until someone fills it |
+| add a field, a blueprint, a collection | nothing; the field is empty until someone fills it, even if it has a `default` — [`set_default`](#42-set_default) fills it |
 | make a field required | existing entries are fine until next saved, when they must fill it |
 | rename a field or a collection | the old values are stranded under the old name — **migrate** |
 | change a field's type | values stored as the old type may not fit — **check first** |
@@ -39,6 +39,9 @@ content with no field to belong to:
 ✗ collections/posts: intro was removed and 14 records still hold it; add a migration in schema/migrations, or run nibble:check --allow-data-loss
 nibble:check found 1 problem(s)
 ```
+
+Only records that hold a value count: a field someone cleared holds nothing, so emptying a field everywhere is one
+way to decide it can go.
 
 It runs before every deploy, as part of `bin/rails nibble:prepare`. A deploy it refuses never becomes healthy, and
 Kamal keeps the old release serving — a mistake here costs a failed deploy, not the site.

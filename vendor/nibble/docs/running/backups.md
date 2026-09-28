@@ -46,7 +46,8 @@ Set `DB_SNAPSHOT_BUCKET` and `DB_SNAPSHOT_REGION` in the deploy to turn the offs
 [Deploying](deploying.md#21-configdeployyml). Give the bucket a lifecycle rule, such as 30 days, so old copies expire.
 
 > [!IMPORTANT]
-> Without `DB_SNAPSHOT_BUCKET`, every boot warns that nothing is copied offsite. Take the warning seriously before
+> Without `DB_SNAPSHOT_BUCKET`, the nightly copy stays on the server only, and every boot warns that nothing is
+> copied offsite. Take the warning seriously before
 > there is anything in the site you would mind losing.
 
 **Upgrades take their own snapshot too**, before they change anything, and print the command that restores it. See
