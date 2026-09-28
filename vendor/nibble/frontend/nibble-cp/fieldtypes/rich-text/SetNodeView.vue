@@ -31,6 +31,7 @@ const collapsed = ref(false)
       :collapsed="collapsed"
       :read-only="storage.readOnly"
       :can-add="storage.canAdd()"
+      :can-duplicate="storage.canAdd()"
       :field-path-prefix="`${storage.fieldPathPrefix}.${index}.attrs.values`"
       :meta-path-prefix="`${storage.metaPathPrefix}.existing.${node.attrs.id}`"
       @toggle="collapsed = !collapsed"

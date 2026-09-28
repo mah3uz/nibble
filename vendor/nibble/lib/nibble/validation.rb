@@ -52,6 +52,7 @@ module Nibble
       "different" => "The %{attribute} field and %{other} must be different.",
       "mimes" => "The %{attribute} field must be a file of type: %{values}.",
       "max_file_size" => "Each %{attribute} file must not be larger than %{max} MB.",
+      "max_of_set" => "The %{attribute} field must not have more than %{max} %{set} sets.",
       "records_exist" => "The %{attribute} field contains items that don't exist or aren't allowed here."
     }.freeze
 

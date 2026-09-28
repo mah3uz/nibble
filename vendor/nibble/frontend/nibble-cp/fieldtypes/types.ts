@@ -36,6 +36,8 @@ export type PublishSet = {
   display: string
   instructions: string | null
   icon: string | null
+  badge: string | null
+  max: number | null
   fields: PublishField[]
 }
 export type PublishSetGroup = {

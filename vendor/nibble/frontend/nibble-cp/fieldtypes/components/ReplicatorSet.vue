@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { AlertCircle, ChevronDown, ChevronRight, Copy, Eye, EyeOff, GripVertical, Trash2 } from '@lucide/vue'
 import { computed } from 'vue'
+import CpIcon from '@/components/cp/icons/CpIcon.vue'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import PublishFields from '../../publish/PublishFields.vue'
 import { useContainer } from '../../publish/context'
@@ -14,6 +16,7 @@ const props = defineProps<{
   collapsed: boolean
   readOnly: boolean
   canAdd: boolean
+  canDuplicate: boolean
   fieldPathPrefix: string
   metaPathPrefix: string
 }>()
@@ -46,9 +49,11 @@ const hasError = computed(() => Object.keys(errors.value).some((path) => path.st
       <GripVertical v-if="!readOnly" class="drag-handle size-4 shrink-0 cursor-grab text-muted-foreground" />
       <button type="button" class="flex flex-1 items-center gap-1.5 text-left text-sm" @click="emit('toggle')">
         <ChevronDown v-if="!collapsed" class="size-4 shrink-0" /><ChevronRight v-else class="size-4 shrink-0" />
+        <CpIcon v-if="set?.icon" :name="set.icon" class="size-4 text-muted-foreground" />
         <span class="font-medium">{{ set?.display ?? row.type }}</span>
         <span v-if="collapsed && preview" class="truncate text-muted-foreground">— {{ preview }}</span>
       </button>
+      <Badge v-if="set?.badge" variant="secondary">{{ set.badge }}</Badge>
       <AlertCircle v-if="hasError" class="size-4 shrink-0 text-destructive" aria-label="Has errors" />
       <SetPicker
         v-if="canAdd"
@@ -72,7 +77,7 @@ const hasError = computed(() => Object.keys(errors.value).some((path) => path.st
         type="button"
         size="icon-sm"
         variant="ghost"
-        :disabled="readOnly || !canAdd"
+        :disabled="readOnly || !canDuplicate"
         aria-label="Duplicate set"
         @click="emit('duplicate')"
         ><Copy

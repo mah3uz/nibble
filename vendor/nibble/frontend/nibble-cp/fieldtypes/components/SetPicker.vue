@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Plus } from '@lucide/vue'
+import CpIcon from '@/components/cp/icons/CpIcon.vue'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -34,8 +36,12 @@ const emit = defineEmits<{ pick: [handle: string] }>()
               :value="set.display"
               @select="emit('pick', set.handle)"
             >
+              <CpIcon v-if="set.icon" :name="set.icon" class="size-4 self-start text-muted-foreground" />
               <div class="flex min-w-0 flex-1 flex-col">
-                <span class="truncate">{{ set.display }}</span>
+                <span class="flex items-center gap-2">
+                  <span class="truncate">{{ set.display }}</span>
+                  <Badge v-if="set.badge" variant="secondary">{{ set.badge }}</Badge>
+                </span>
                 <span v-if="set.instructions" class="truncate text-xs text-muted-foreground">{{
                   set.instructions
                 }}</span>

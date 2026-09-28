@@ -43,7 +43,7 @@ module Nibble
           { "handle" => group_handle, "display" => group["display"], "instructions" => group["instructions"], "icon" => group["icon"],
             "sets" => group["sets"].to_h.map do |set_handle, set|
               { "handle" => set_handle, "display" => set["display"] || set_handle.humanize, "instructions" => set["instructions"],
-                "icon" => set["icon"], "fields" => set_fields(set_handle).to_publish_a }
+                "icon" => set["icon"], "badge" => set["badge"], "max" => set["max"], "fields" => set_fields(set_handle).to_publish_a }
             end }
         end
       end
@@ -102,7 +102,8 @@ module Nibble
 
       def set_max_rules
         max = config("max_sets").to_i
-        max.positive? ? [ "max:#{max}" ] : []
+        per_set = sets_config.filter_map { |handle, set| "max_of_set:#{handle},#{set['max']}" if set["max"].to_i.positive? }
+        [ *("max:#{max}" if max.positive?), *per_set ]
       end
 
       def augment_set(type, id, values, index, shallow: false)

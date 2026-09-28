@@ -85,6 +85,16 @@ class Nibble::Fieldtypes::StructuredFieldtypesTest < ActiveSupport::TestCase
     assert errors({ type: "replicator", sets: HERO, max_sets: 1 }, [ { "type" => "hero", "title" => "a" }, { "type" => "hero", "title" => "b" } ]).key?("items")
   end
 
+  test "a set's max caps that set alone, since a tool that may appear once per page can't be added twice" do
+    sets = HERO.merge("quote" => { "fields" => [], "max" => 1 })
+    one_each = [ { "type" => "hero", "title" => "a" }, { "type" => "hero", "title" => "b" }, { "type" => "quote" } ]
+
+    assert_empty errors({ type: "replicator", sets: }, one_each)
+    assert_equal [ "The Items field must not have more than 1 quote sets." ], errors({ type: "replicator", sets: }, one_each + [ { "type" => "quote" } ])["items"]
+    published = Nibble::Fields.new([ { handle: "items", field: { type: "replicator", sets: } } ], source: "test").to_publish_a.first
+    assert_equal 1, published["config"]["sets"].first["sets"].find { |set| set["handle"] == "quote" }["max"]
+  end
+
   test "entries store ids (one id when max_items is 1) and augment to resolved summaries" do
     related = fieldtype(:entries)
     single = fieldtype(:entries, max_items: 1)

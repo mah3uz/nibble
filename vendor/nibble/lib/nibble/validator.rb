@@ -112,6 +112,8 @@ module Nibble
       when "different" then message.("different", other: humanize(params.first)) if value == lookup(root, params.first).last
       when "records_exist" then message.("records_exist") unless records_exist?(value, params)
       when "mimes" then message.("mimes", values: params.join(", ")) unless Array.wrap(value).all? { |file| Forms::Uploads.allowed?(file, params) }
+      when "max_of_set"
+        message.("max_of_set", set: params.first, max: params.second) if Array(value).count { |row| row.to_h.stringify_keys["type"] == params.first } > params.second.to_i
       when "max_file_size"
         message.("max_file_size", max: params.first) if Array.wrap(value).any? { |file| !Forms::Uploads.file?(file) || file.size > params.first.to_i.megabytes }
       else

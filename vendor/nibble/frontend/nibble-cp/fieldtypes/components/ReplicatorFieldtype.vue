@@ -3,6 +3,7 @@ import { useSortable } from '@vueuse/integrations/useSortable'
 import { computed, ref, useTemplateRef, watch } from 'vue'
 import { clone } from '../../lib/clone'
 import { rowId } from '../../lib/rowId'
+import { addableGroups, hasRoom } from '../replicatorSets'
 import type { PublishSetGroup } from '../types'
 import { fieldtypeEmits, fieldtypeProps, useFieldtype } from '../useFieldtype'
 import ReplicatorSet from './ReplicatorSet.vue'
@@ -25,6 +26,7 @@ watch(
 
 const max = computed(() => Number(props.config.max_sets) || 0)
 const canAdd = computed(() => !isReadOnly.value && (!max.value || rows.value.length < max.value))
+const addable = computed(() => addableGroups(groups.value, rows.value))
 const collapsed = ref(new Set<string>((props.meta.collapsed as string[]) ?? []))
 
 const listRef = useTemplateRef<HTMLElement>('list')
@@ -94,10 +96,11 @@ function toggle(id: string) {
         :key="row._id"
         :row="row"
         :set="sets.find((set) => set.handle === row.type)"
-        :groups="groups"
+        :groups="addable"
         :collapsed="collapsed.has(row._id)"
         :read-only="isReadOnly"
-        :can-add="canAdd"
+        :can-add="canAdd && addable.length > 0"
+        :can-duplicate="canAdd && sets.some((set) => set.handle === row.type && hasRoom(set, rows))"
         :field-path-prefix="`${fieldPathPrefix}.${index}`"
         :meta-path-prefix="`${metaPathPrefix}.existing.${row._id}`"
         @toggle="toggle(row._id)"
@@ -108,8 +111,8 @@ function toggle(id: string) {
       />
     </div>
     <SetPicker
-      v-if="canAdd"
-      :groups="groups"
+      v-if="canAdd && addable.length > 0"
+      :groups="addable"
       :label="(config.button_label as string) || undefined"
       @pick="(handle) => addSet(handle)"
     />
