@@ -22,6 +22,18 @@ class Nibble::Cp::PasskeysTest < ActionDispatch::IntegrationTest
     assert users(:editor).reload.two_factor?, "a passkey counts as a second factor"
   end
 
+  test "every binary value in the options is base64url, because the browser decodes each one before asking the authenticator" do
+    sign_in_as users(:editor)
+    register(name: "First")
+    post "/cp/account/passkeys/options"
+
+    [ json["challenge"], json.dig("user", "id"), *json["excludeCredentials"].map { |item| item["id"] } ].each do |value|
+      assert_match(/\A[A-Za-z0-9_-]+\z/, value)
+      assert_not_equal 1, value.length % 4, "#{value.inspect} can't be base64: a browser's atob refuses it"
+    end
+    assert_equal users(:editor).id.to_s, Base64.urlsafe_decode64(json.dig("user", "id"))
+  end
+
   test "a lapsed elevation answers the passkey request in JSON so the dialog can say what to do" do
     sign_in_as users(:editor)
 

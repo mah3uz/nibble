@@ -6,7 +6,7 @@ module Nibble
       def options
         user = Nibble::Current.user
         options = WebAuthn::Credential.options_for_create(
-          user: { id: user.id.to_s, name: user.email_address, display_name: user.name },
+          user: { id: Base64.urlsafe_encode64(user.id.to_s, padding: false), name: user.email_address, display_name: user.name },
           exclude: user.user_credentials.pluck(:external_id),
           authenticator_selection: { resident_key: "preferred", user_verification: "required" }
         )
