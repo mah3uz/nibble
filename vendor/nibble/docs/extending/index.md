@@ -51,6 +51,7 @@ None of those needs a seam, and all of them are easier to live with. Reach for a
 | load hooks `:nibble_entry`, `:nibble_term`, `:nibble_asset` | behaviour on a record, without reopening its class | [Ruby hooks and events](hooks.md) |
 | `Nibble::Events.subscribe` | reacting after content changes | [Ruby hooks and events](hooks.md) |
 | `Nibble::Forms.register_handler` | a form that does something Ruby has to do | [Ruby hooks and events](hooks.md) |
+| `Nibble::Analytics.register` | an analytics tool the Integrations global doesn't list | [Ruby hooks and events](hooks.md#7-an-analytics-tool-of-your-own) |
 | **Webhooks**, in the Control Plane | telling another application | [Ruby hooks and events](hooks.md#6-webhooks) |
 | `app/views/layouts/nibble/mailer.html.erb`, and each email's views | how the emails Nibble sends look, and what they say | [Emails](emails.md) |
 | `site/cp/pages/<same path as ours>.vue` | replacing a Control Plane screen | [Customising the Control Plane](control-plane.md) |

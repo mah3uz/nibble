@@ -12,8 +12,35 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's new
+
+- **Analytics are cards: pick a tool, fill in what it needs, run as many as you like.** Plausible, Fathom, Umami,
+  Cloudflare Web Analytics, Google Analytics 4, Google Tag Manager and a generic script tag each ask only for their own
+  values, say whether they need consent, and pause from their card. Nibble writes each tool's tags as its vendor
+  documents them, and tells the tools that need it to count page changes made without a reload. A site can add a
+  tool of its own with `Nibble::Analytics.register`. The Analytics and custom code guide covers each tool.
+- **Custom code is named snippets,** each placed in the head, at the start of the body or at the end, in the order of
+  their cards, and paused from its card.
+- **A replicator set can carry a `max`, a `badge` and an `icon`,** and `tab_count: true` shows how many blocks are
+  switched on beside the tab's name. A textarea takes `monospace: true`.
+
+### What's fixed
+
+- **Plausible's current `pa-` script tracks visits.** It only starts once an inline `plausible.init()` runs, which a
+  script URL with data attributes never did; the Plausible card writes it.
+- **Tag Manager's `<noscript>` frame opens the body,** where Google says it goes, rather than closing it.
+
 ### Changed
 
+- **The Integrations global's Analytics and Custom code tabs are replaced.** The GA4 and Tag Manager IDs, the script
+  URL and attributes, and the head and body code fields are gone.
+
+  **Upgrade:** before deploying this release, note what is under **Globals → Integrations → Analytics** and
+  **Custom code**, then empty those fields and save. Values left in them would be stranded, and `nibble:prepare`
+  refuses to boot with stranded values. After deploying, add each tool back as a card, and each snippet as a
+  snippet. Analytics are off between the two steps, for as long as the deploy takes. A site with its own
+  `app/views/layouts/nibble.html.erb` adds `<%= Nibble::Integrations.body_start_html(@nibble_integrations) if
+  @nibble_integrations %>` straight after `<body>`.
 - **`install.sh` installs the `nibble` command and hands over to `nibble new`,** so there is one way to start a
   site, on Linux and macOS alike. It says how to get anything missing — mise for Ruby and Node, which systems package
   too old, and Homebrew, apt or pacman for the rest — and checks Ruby and Node against what the release needs before

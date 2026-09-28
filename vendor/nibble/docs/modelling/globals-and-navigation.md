@@ -26,7 +26,7 @@ A global is one set of fields for the whole site — not a page, not a list. Nib
 |---|---|
 | `site` | the site's name, tagline, logo, favicon, contact address and social links |
 | `seo` | the title template, default description and share image, and verification tags |
-| `integrations` | analytics IDs, head and body code, CAPTCHA keys, and who mail comes from |
+| `integrations` | [analytics tools and custom code](../editing/analytics.md), CAPTCHA keys, and who mail comes from |
 
 Editors fill them in under **Globals**.
 

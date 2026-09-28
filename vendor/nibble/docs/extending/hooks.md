@@ -18,6 +18,7 @@ After reading this guide, you will know:
 - How to react to content changing.
 - How to give a form a handler.
 - How to tell another application with a webhook.
+- How to add an analytics tool Nibble doesn't know.
 
 ## 1. Your own code
 
@@ -128,3 +129,42 @@ You could, for example, rebuild the product's in-app "What's new" panel from a w
 > [!NOTE]
 > Webhook URLs are subject to `outbound.allowed_hosts` in [configuration](../running/configuration.md#4-every-key),
 > like every call Nibble makes.
+
+## 7. An analytics tool of your own
+
+The [Analytics tab](../editing/analytics.md) lists the tools Nibble knows. To add one, give it a set in the
+Integrations global and a renderer in Ruby that writes its tags.
+
+Copy `vendor/nibble/core_schema/globals/integrations.yml` to `site/schema/globals/integrations.yml`, and add a set
+under the `analytics` field's `other` group:
+
+```yaml
+counter:
+  display: Counter
+  icon: chart
+  badge: No cookies
+  instructions: Tidewater's own visit counter.
+  fields:
+    - handle: site_code
+      field: { type: text, display: Site code, required: true, validate: ["regex:/\\A[a-z0-9]+\\z/"] }
+```
+
+Then register a renderer under the set's handle:
+
+```ruby
+# config/initializers/analytics.rb
+Nibble::Analytics.register("counter") do |card, page|
+  code = card["site_code"].to_s
+  next unless code.match?(/\A[a-z0-9]+\z/)
+
+  page.add(:head, %(<script defer src="https://counter.tidewater.example/count.js" data-code="#{ERB::Util.html_escape(code)}"></script>))
+end
+```
+
+The block receives the card's values and the page. `page.add` takes the place, `:head`, `:body_start` or
+`:body_end`, and the HTML; pass `once: "<key>"` for a loader several cards share, and it is written once. A paused
+card never reaches the block.
+
+> [!WARNING]
+> The renderer writes HTML into every live page. Check each value against the shape it should have, as above, and
+> escape it, even though the blueprint validates it too: a value stored before a rule existed never passed it.

@@ -94,4 +94,5 @@ here would be overwritten at the next deploy. Ask whoever writes it. See
 | [Navigation](navigation.md) | building the menus |
 | [Form submissions](form-submissions.md) | what people sent, and exporting it |
 | [Redirects and SEO](redirects-and-seo.md) | search results, share cards, redirects and missing pages |
+| [Analytics and custom code](analytics.md) | analytics tools, consent, and snippets of your own on every page |
 | [Working with AI apps](ai-apps.md) | connecting Claude, ChatGPT, Codex or Cursor, and approving what they ask to publish |

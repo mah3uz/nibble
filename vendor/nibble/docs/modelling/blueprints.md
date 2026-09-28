@@ -111,6 +111,8 @@ reference still finds it. `max_items: 1` makes a single choice.
 
 **`link`** accepts a URL or a link to an entry, and follows the entry if it moves.
 
+**`textarea`** is plain text over several lines; `monospace: true` suits pasted code.
+
 **`secret`** stores its value encrypted, and never shows it again in full — for an API key a site setting needs.
 
 **`grid`** is a table of rows with the same fields — opening hours, a price list.
@@ -154,6 +156,18 @@ Tidewater's marketing pages are a stack of blocks that marketing chooses and ord
                     - handle: features
                       field: { type: list }
 ```
+
+A set can also carry:
+
+| Key | What it does |
+|---|---|
+| `instructions` | one line under the set's name in the menu |
+| `icon` | a Control Plane icon beside its name |
+| `badge` | a short label on the menu entry and on each block's header, such as `Needs consent` |
+| `max` | how many of this set the field may hold; the menu hides it once that many exist |
+
+On the field, `max_sets` caps the blocks of every set together, and `tab_count: true` shows how many are switched on
+beside the tab's name.
 
 Each set is drawn by `views/sets/<set handle>.vue` in the theme, which receives the set's fields as props. The
 [Getting Started](../getting-started/tutorial.md#42-a-block-of-your-own-pricing) guide builds the pricing block end
