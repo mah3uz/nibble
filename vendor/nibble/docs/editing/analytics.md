@@ -42,8 +42,9 @@ Nibble writes each tool's tags itself, as its vendor's install instructions show
 [Fathom](https://usefathom.com/docs/script/embed), [Umami](https://docs.umami.is/docs/tracker-configuration),
 [Cloudflare](https://developers.cloudflare.com/web-analytics/get-started/),
 [Google Analytics](https://developers.google.com/tag-platform/gtagjs/install) and
-[Tag Manager](https://developers.google.com/tag-platform/tag-manager/web). An ID in the wrong shape is refused when
-you save, with the shape it should have.
+[Tag Manager](https://developers.google.com/tag-platform/tag-manager/web), and each card links to its guide. Under
+**What Nibble writes**, **Show the tags Nibble writes** shows them exactly, to compare with the vendor's page. An ID in
+the wrong shape is explained there as you type, with the shape it should have, and refused when you save.
 
 The public site changes pages without a full reload, and every tool here counts those page changes. Tools that need
 to be told, Fathom and Cloudflare, are told. For Google Analytics, keep **Enhanced measurement → Page changes based on
@@ -71,7 +72,8 @@ to hold back the tools marked **Needs consent** until a visitor agrees.
 ## 2. Custom code
 
 **Custom code** holds snippets a tool gives you to paste into a page: a chat widget, a heatmap, a verification tag.
-Choose **Add snippet**, name it, choose where it goes and paste the code.
+Choose **Add snippet**, name it, choose where it goes and paste the code into the editor. A collapsed card reads
+as its name and place, such as "Chat widget · At the end of the body".
 
 | Where | For |
 |---|---|
