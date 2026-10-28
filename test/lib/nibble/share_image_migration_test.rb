@@ -29,6 +29,15 @@ class Nibble::ShareImageMigrationTest < ActiveSupport::TestCase
     assert_equal({ "title" => "Keep" }, other.reload.data["seo"])
   end
 
+  test "a site's own field that happens to be called og_image is not an SEO value, so it is left alone" do
+    entry = create_entry("articles", { "title" => "Three" })
+    entry.update_columns(data: entry.data.merge("og_image" => "https://elsewhere.test/b.png"))
+
+    migrate
+
+    assert_equal "https://elsewhere.test/b.png", entry.reload.data["og_image"]
+  end
+
   test "running it again changes nothing" do
     asset = photo
     entry = create_entry("articles", { "title" => "One" })
