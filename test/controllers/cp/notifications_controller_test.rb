@@ -58,4 +58,13 @@ class Nibble::Cp::NotificationsControllerTest < ActionDispatch::IntegrationTest
     assert_equal ids.first(5).reverse, rest["notifications"].map { |row| row["id"] }
     assert_not rest["more"]
   end
+
+  test "a failing task's notification links to the scheduled tasks page" do
+    Nibble::Records::Notification.notify(users(:editor).id, "task.failed", title: "Exchange rates", task: "rates")
+
+    get "/cp/notifications", as: :json
+
+    row = response.parsed_body["notifications"].find { |item| item["title"] == "Exchange rates" }
+    assert_equal "/cp/utilities/tasks", row["url"]
+  end
 end

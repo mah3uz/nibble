@@ -38,6 +38,7 @@ Most things people want to add are a schema change, not code:
 | a new field | a line in a [blueprint](../modelling/blueprints.md) |
 | a new block on landing pages | a set in a replicator, and a `.vue` file |
 | a form that reaches your CRM | an [`api` delivery](../modelling/forms.md#5-sending-submissions-to-another-system) |
+| figures or a feed from another system, kept up to date | a [scheduled task](../modelling/scheduled-tasks.md) |
 | to tell another system something changed | a webhook, set up in the Control Plane |
 
 None of those needs a seam, and all of them are easier to live with. Reach for a seam when you need *behaviour*.
@@ -51,7 +52,8 @@ None of those needs a seam, and all of them are easier to live with. Reach for a
 | load hooks `:nibble_entry`, `:nibble_term`, `:nibble_asset` | behaviour on a record, without reopening its class | [Ruby hooks and events](hooks.md) |
 | `Nibble::Events.subscribe` | reacting after content changes | [Ruby hooks and events](hooks.md) |
 | `Nibble::Forms.register_handler` | a form that does something Ruby has to do | [Ruby hooks and events](hooks.md) |
-| **Webhooks**, in the Control Plane | telling another application | [Ruby hooks and events](hooks.md#6-webhooks) |
+| `Nibble::Tasks.register_handler` | Ruby that runs on a schedule, updating a global or calling an API | [Ruby hooks and events](hooks.md#6-task-handlers) |
+| **Webhooks**, in the Control Plane | telling another application | [Ruby hooks and events](hooks.md#7-webhooks) |
 | `app/views/layouts/nibble/mailer.html.erb`, and each email's views | how the emails Nibble sends look, and what they say | [Emails](emails.md) |
 | `site/cp/pages/<same path as ours>.vue` | replacing a Control Plane screen | [Customising the Control Plane](control-plane.md) |
 | `site/cp/slots/*.vue` | the Control Plane's logo, sidebar and scripts | [Customising the Control Plane](control-plane.md) |

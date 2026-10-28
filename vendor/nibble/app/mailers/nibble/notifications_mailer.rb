@@ -8,7 +8,8 @@ module Nibble
       "form.submitted" => "New form submission",
       "webhook.disabled" => "A webhook was turned off after repeated failures",
       "apps.connected" => "A new app was connected to your account",
-      "apps.approval_requested" => "An app is waiting for your approval"
+      "apps.approval_requested" => "An app is waiting for your approval",
+      "task.failed" => "A scheduled task started failing"
     }.freeze
 
     def notify(notification)

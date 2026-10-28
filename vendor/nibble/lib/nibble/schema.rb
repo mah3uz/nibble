@@ -37,6 +37,7 @@ module Nibble
     def navigations = all(:navigation)
     def forms = all(:forms)
     def apis = all(:apis)
+    def tasks = all(:tasks)
     def fieldsets = all(:fieldsets)
     def search = find(:search, "search")
 

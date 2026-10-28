@@ -76,6 +76,7 @@ the next.
 - [Forms](modelling/forms.md) — the demo request form, from YAML to inbox and CRM.
 - [Content as files](modelling/content-as-files.md) — Tidewater's help centre, written as Markdown.
 - [Changing the schema](modelling/changing-schema.md) — renaming and removing fields once content exists.
+- [Scheduled tasks](modelling/scheduled-tasks.md) — figures from an API, a feed of jobs, and your own Ruby, on a schedule.
 
 ## Building a theme
 

@@ -52,6 +52,9 @@ module Nibble
           Forms.problems(form, schema:).each { |message| problem(item.path, message) }
         end
       end
+      schema.tasks.each do |item|
+        capture(item.path) { Tasks::Problems.for(Tasks::Task.new(item:), schema:).each { |message| problem(item.path, message) } }
+      end
       # A build has no database and no secrets, so what needs either is checked where the site runs.
       check_database(schema) unless @static
       check_outbound

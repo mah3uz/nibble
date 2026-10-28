@@ -48,6 +48,7 @@ same on staging.
 | [Global](globals-and-navigation.md) | one set of site-wide fields | `site`, `seo`, `integrations` |
 | [Navigation](globals-and-navigation.md) | a menu | `main`, `footer`, `help` |
 | [Form](forms.md) | a public form and where submissions go | `demo` |
+| [Task](scheduled-tasks.md) | work done on a schedule: fetching figures, importing a feed | `stats`, `jobs` |
 
 ## 3. Three layers
 
@@ -92,6 +93,7 @@ site/schema/
 ├── globals/company.yml
 ├── navigation/help.yml
 ├── forms/demo.yml
+├── tasks/stats.yml
 └── migrations/2026_10_01_rename_intro.yml
 ```
 
@@ -141,3 +143,4 @@ It runs before every deploy, and a deploy it refuses never goes live. Run it whe
 
 - [Collections](collections.md) — declaring Tidewater's blog and help centre.
 - [Blueprints and fields](blueprints.md) — the landing page's blocks, and every fieldtype.
+- [Scheduled tasks](scheduled-tasks.md) — keeping the home page's figures and the careers page up to date.

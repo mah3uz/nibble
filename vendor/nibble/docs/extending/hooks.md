@@ -1,8 +1,8 @@
 ---
 id: extending-hooks
 title: Ruby hooks and events
-description: Your own Ruby beside Nibble's — initializers, load hooks, event subscribers, form handlers, webhooks and
-  gems.
+description: Your own Ruby beside Nibble's — initializers, load hooks, event subscribers, form and task handlers,
+  webhooks and gems.
 order: 1
 ---
 
@@ -17,6 +17,7 @@ After reading this guide, you will know:
 - How to add behaviour to a record without reopening its class.
 - How to react to content changing.
 - How to give a form a handler.
+- How to update a global or call an API from Ruby on a schedule.
 - How to tell another application with a webhook.
 
 ## 1. Your own code
@@ -114,7 +115,45 @@ handler: start_trial
 The handler runs in a background job after the submission is stored, so a slow handler never keeps the visitor
 waiting. `nibble:check` refuses a form whose handler is not registered.
 
-## 6. Webhooks
+## 6. Task handlers
+
+A [scheduled task](../modelling/scheduled-tasks.md) can name a handler, and the handler is the supported way for your
+own Ruby to change a global or call an API connection. Say Tidewater wants the number of active carriers on its home
+page, and the API only lists them:
+
+```ruby
+# config/initializers/tasks.rb
+Nibble::Tasks.register_handler("carrier_count", lambda do |task|
+  task.logger.info("carriers last counted at #{task.last_success_at || 'no time yet'}")
+  carriers = task.connection(:tidewater).get("/carriers").json.fetch("carriers")
+  task.update_global(:stats, { carriers: carriers.count { |carrier| carrier["active"] } })
+  { carriers: carriers.size }
+end)
+```
+
+```yaml
+# site/schema/tasks/carriers.yml
+title: Carrier count
+schedule: at 6am every day
+handler: carrier_count
+```
+
+The handler is given one argument, the task's context:
+
+| Method | What it does |
+|---|---|
+| `update_global(handle, values, locale: nil)` | saves `values` over the global's stored ones, in the site's default locale unless you name another, through the same checks and history as an editor's save; raises `Nibble::Error` when they aren't valid |
+| `connection(handle)` | the [API connection](../modelling/forms.md#51-api-connections) of that name, with `get(path, **options)`, `post(path, body:, **options)` and `request(method, path, **options)`, each returning the response (`status`, `ok?`, `json`, `body`) |
+| `last_success_at` | when the task's last successful run started, or `nil` |
+| `task` | the task: `handle`, `title`, `schedule` |
+| `logger` | the application's logger |
+
+Calls through `connection` go through the same checks as every call Nibble makes — `outbound.allowed_hosts`, no
+private addresses — and are logged with the run. A hash the handler returns is kept with the run; an error it
+raises fails the run, and administrators hear about it. `nibble:check` refuses a task whose handler isn't
+registered.
+
+## 7. Webhooks
 
 When the thing to tell is another application, you may not need Ruby at all. **Webhooks**, in the Control Plane,
 posts a signed payload to a URL on the events you choose — the same events as above — and shows each delivery and

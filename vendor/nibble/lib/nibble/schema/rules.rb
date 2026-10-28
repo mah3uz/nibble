@@ -56,6 +56,12 @@ module Nibble
           required: %w[base_url],
           keys: { "base_url" => STRING, "headers" => HASH, "timeout" => INTEGER, "errors" => HASH, "retry" => HASH }
         },
+        "tasks" => {
+          required: %w[title schedule],
+          keys: {
+            "title" => STRING, "description" => STRING, "schedule" => STRING, "fetch" => HASH, "request" => HASH, "handler" => STRING
+          }
+        },
         "blueprints" => {
           required: %w[title tabs],
           keys: { "title" => STRING, "hide" => BOOLEAN, "order" => INTEGER, "template" => STRING, "tabs" => HASH }

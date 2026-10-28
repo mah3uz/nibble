@@ -89,6 +89,26 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     ].each { |message| assert_includes problems, message }
   end
 
+  test "a task that could never run as written is refused before it ships, starting with a mistyped schedule" do
+    theme_file("globals/figures.yml", title: "Figures", blueprint: { title: "Figures", tabs: { main: { sections: [ { fields: [ { handle: "usd", field: { type: "text" } } ] } ] } } })
+    theme_file("tasks/typo.yml", title: "Typo", schedule: "evrey 2 hours", request: { url: "https://hooks.example.test/in" })
+    theme_file("tasks/both.yml", title: "Both", schedule: "every hour", handler: "sync", request: { url: "https://hooks.example.test/in" })
+    theme_file("tasks/rates.yml", title: "Rates", schedule: "every 2 hours",
+                                  fetch: { use: "rates", into: { global: "figures", map: { usd: "{response.usd}", gbp: "{response.gbp}" } } })
+    theme_file("tasks/sync.yml", title: "Sync", schedule: "*/5 * * * *", handler: "missing.handler")
+    theme_file("tasks/fine.yml", title: "Fine", schedule: "at 5am every day", fetch: { url: "https://api.example.test/rates", into: { global: "figures", map: { usd: "{response.usd}" } } })
+
+    problems = check.problems.map(&:to_s).join("\n")
+    [
+      "tasks/typo.yml: schedule 'evrey 2 hours' isn't a schedule Nibble can read",
+      "tasks/both.yml: needs exactly one of fetch, request or handler",
+      "tasks/rates.yml: fetch uses the API connection 'rates', which isn't in the schema",
+      "tasks/rates.yml: fetch.into.map names 'gbp', which global figures doesn't have",
+      "tasks/sync.yml: handler 'missing.handler' isn't registered"
+    ].each { |message| assert_includes problems, message }
+    assert_not_includes problems, "tasks/fine.yml"
+  end
+
   test "a collection or taxonomy icon must be one of the Control Plane icons, so the sidebar never shows a blank" do
     theme_file("taxonomies/people.yml", title: "People", blueprints: [ "person" ], icon: "user-avatar")
     theme_file("blueprints/taxonomies/people/person.yml", title: "Person", tabs: { main: { sections: [ { fields: [ { handle: "title", field: { type: "text" } } ] } ] } })

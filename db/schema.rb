@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_29_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_000300) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -469,6 +469,45 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_000000) do
     t.string "record_type", null: false
     t.index ["actor_id"], name: "index_revisions_on_actor_id"
     t.index ["record_type", "record_id", "number"], name: "index_revisions_on_record_type_and_record_id_and_number", unique: true
+  end
+
+  create_table "scheduled_task_entries", force: :cascade do |t|
+    t.string "collection", null: false
+    t.datetime "created_at", null: false
+    t.integer "entry_id", null: false
+    t.string "handle", null: false
+    t.string "key", null: false
+    t.datetime "missing_since"
+    t.datetime "updated_at", null: false
+    t.index ["entry_id"], name: "index_scheduled_task_entries_on_entry_id"
+    t.index ["handle", "collection", "key"], name: "index_scheduled_task_entries_on_handle_and_collection_and_key", unique: true
+  end
+
+  create_table "scheduled_task_runs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "details", default: {}, null: false
+    t.datetime "finished_at"
+    t.string "handle", null: false
+    t.boolean "manual", default: false, null: false
+    t.string "message"
+    t.datetime "scheduled_for", null: false
+    t.datetime "started_at"
+    t.string "status", default: "queued", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_scheduled_task_runs_on_created_at"
+    t.index ["handle", "scheduled_for"], name: "index_scheduled_task_runs_on_handle_and_scheduled_for", unique: true
+  end
+
+  create_table "scheduled_tasks", force: :cascade do |t|
+    t.datetime "active_since", null: false
+    t.datetime "claimed_at"
+    t.datetime "created_at", null: false
+    t.integer "current_run_id"
+    t.datetime "failing_since"
+    t.string "handle", null: false
+    t.boolean "paused", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["handle"], name: "index_scheduled_tasks_on_handle", unique: true
   end
 
   create_table "schema_snapshots", force: :cascade do |t|
