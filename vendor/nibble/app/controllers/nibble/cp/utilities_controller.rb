@@ -96,6 +96,46 @@ module Nibble
         redirect_to jobs_cp_utilities_path, notice: "Job discarded."
       end
 
+      TASK_RUNS = 100
+
+      def tasks
+        render inertia: "cp/utilities/Tasks", props: {
+          tasks: Nibble::Tasks.overview.map { |summary| task_props(summary) },
+          scheduler: Nibble::Cp::JobsDashboard.available?,
+          time_zone: Time.zone.tzinfo.name
+        }
+      end
+
+      def task_runs
+        task = find_task
+        runs = Nibble::Tasks.runs(task.handle, limit: TASK_RUNS).select { |run| run.created_at >= Nibble::Tasks::RETENTION.ago }
+        render json: { runs: runs.map { |run| run_props(run) }, limit: TASK_RUNS }
+      end
+
+      def run_task
+        task = find_task
+        run = Nibble::Tasks.run_now(task.handle)
+        if run.nil?
+          redirect_to tasks_cp_utilities_path, notice: "#{task.title} was started a moment ago."
+        elsif run.status == "skipped"
+          redirect_to tasks_cp_utilities_path, alert: "#{task.title} didn't start: its previous run is still going."
+        else
+          redirect_to tasks_cp_utilities_path, notice: "#{task.title} is queued to run."
+        end
+      end
+
+      def pause_task
+        task = find_task
+        Nibble::Tasks.pause(task.handle)
+        redirect_to tasks_cp_utilities_path, notice: "#{task.title} is paused."
+      end
+
+      def resume_task
+        task = find_task
+        Nibble::Tasks.resume(task.handle)
+        redirect_to tasks_cp_utilities_path, notice: "#{task.title} is resumed, from its next slot."
+      end
+
       def clear_cache
         Nibble::PageCache.store.clear
         redirect_to cache_cp_utilities_path, notice: "Page cache cleared."
@@ -150,6 +190,21 @@ module Nibble
         { imported: confirm && report.ok?, ok: report.ok?, mode: params[:mode].presence || "create",
           created: report.created.size, updated: report.updated.size, skipped: report.skipped.size,
           errors: report.errors.first(REPORT_ERRORS), more_errors: [ report.errors.size - REPORT_ERRORS, 0 ].max }
+      end
+
+      def find_task = Nibble::Tasks.find(params[:handle]) || raise(ActiveRecord::RecordNotFound)
+
+      def task_props(summary)
+        task = summary.task
+        { handle: task.handle, title: task.title, description: task.description, schedule: task.schedule,
+          paused: summary.paused, running: summary.running, failing_since: summary.failing_since&.utc&.iso8601,
+          next_run_at: summary.next_run_at&.utc&.iso8601, last_run: summary.last_run && run_props(summary.last_run) }
+      end
+
+      def run_props(run)
+        { id: run.id, status: run.status, manual: run.manual, scheduled_for: run.scheduled_for.utc.iso8601,
+          started_at: run.started_at&.utc&.iso8601, finished_at: run.finished_at&.utc&.iso8601,
+          message: run.message, details: run.details }
       end
 
       def failed_execution

@@ -5,6 +5,7 @@ module Nibble
         { key: "cache", title: "Cache", icon: "cache", description: "Clear cached pages, all at once or only the ones a tag names." },
         { key: "search", title: "Search", icon: "search-magnifying-glass", description: "See what each search index covers, and rebuild them." },
         { key: "jobs", title: "Jobs", icon: "jobs", description: "Queues, work in progress, failed jobs and the recurring schedule." },
+        { key: "tasks", title: "Scheduled tasks", icon: "calendar", description: "Tasks the schema runs on a schedule, how their runs went, and running one now." },
         { key: "health", title: "Health", icon: "health", description: "Database, job queue, file storage and server rendering, checked now." },
         { key: "content", title: "Content", icon: "package", description: "Export the site's content as a package, or import one." },
         { key: "schema", title: "Schema", icon: "blueprints", description: "Problems nibble:check finds in blueprints, fieldsets, forms and the theme." },

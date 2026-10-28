@@ -149,12 +149,17 @@ Rails.application.routes.draw do
       get :backups
       get :audit
       get :jobs
+      get :tasks
       get :health
       get :content
       get "content/export", action: :export_content, as: :export_content
       post "content/import", action: :import_content, as: :import_content
       post "jobs/:id/retry", action: :retry_job, as: :retry_job
       delete "jobs/:id", action: :discard_job, as: :discard_job
+      get "tasks/:handle/runs", action: :task_runs, as: :task_runs
+      post "tasks/:handle/run", action: :run_task, as: :run_task
+      post "tasks/:handle/pause", action: :pause_task, as: :pause_task
+      post "tasks/:handle/resume", action: :resume_task, as: :resume_task
     end
 
     scope "taxonomies/:handle", as: :taxonomy do
