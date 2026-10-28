@@ -73,4 +73,22 @@ class Nibble::TypeGeneratorTest < ActiveSupport::TestCase
       assert_match "subtitle", types.read, "the field added to the blueprint reaches the types the views compile against"
     end
   end
+
+  test "each collection and taxonomy gets a union of its blueprints, for a view that takes any of them" do
+    assert_match(/^export type PostsEntry = PostsPost( \| \w+)*$/, generated)
+    assert_match(/^export type TopicsTerm = TopicsTopic( \| \w+)*$/, generated)
+  end
+
+  test "a union is left out where its name is already a blueprint's, or the file would declare the name twice" do
+    with_copied_theme do |types, blueprint|
+      FileUtils.cp(blueprint, blueprint.dirname.join("entry.yml"))
+      posts = blueprint.dirname.join("../../../collections/posts.yml")
+      posts.write(posts.read.sub("blueprints: [post]", "blueprints: [post, entry]"))
+      Nibble.reset_schema!
+
+      generated = Nibble::TypeGenerator.new.generate
+      assert_equal 1, generated.scan(/^export interface PostsEntry\b/).size
+      assert_no_match(/^export type PostsEntry =/, generated)
+    end
+  end
 end

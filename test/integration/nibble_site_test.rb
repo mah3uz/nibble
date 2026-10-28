@@ -81,6 +81,21 @@ class NibbleSiteTest < ActionDispatch::IntegrationTest
     assert_includes tags, "term:#{@design.id}"
   end
 
+  test "in development a page is cached only while dev:cache is on, or an edited view would keep serving the old page" do
+    env, caching = Rails.env, ActionController::Base.perform_caching
+    Rails.env = "development"
+    ActionController::Base.perform_caching = false
+    2.times { get "/blog" }
+    assert_nil response.headers["X-Nibble-Cache"]
+
+    ActionController::Base.perform_caching = true
+    2.times { get "/blog" }
+    assert_equal "hit", response.headers["X-Nibble-Cache"]
+  ensure
+    Rails.env = env
+    ActionController::Base.perform_caching = caching
+  end
+
   test "a cached page answers a client-side visit as Inertia, or the browser shows its error modal" do
     2.times { get "/blog", headers: { "X-Inertia" => "true", "X-Inertia-Version" => ViteRuby.digest } }
 

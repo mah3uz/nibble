@@ -49,9 +49,13 @@ module Nibble
       blocks = [ PRELUDE ]
       (@schema.collections + @schema.taxonomies).each do |parent|
         scope = parent.kind == "collections" ? "collection: '#{parent.handle}'" : "taxonomy: '#{parent.handle}'"
-        @schema.blueprints_for(parent).each do |item|
-          blocks << interface("#{pascal(parent.handle)}#{pascal(item.handle)}", Blueprint.new(item, schema: @schema).fields, extends: "RecordBase", extra: [ scope ])
+        names = @schema.blueprints_for(parent).map do |item|
+          name = "#{pascal(parent.handle)}#{pascal(item.handle)}"
+          blocks << interface(name, Blueprint.new(item, schema: @schema).fields, extends: "RecordBase", extra: [ scope ])
+          name
         end
+        union = "#{pascal(parent.handle)}#{parent.kind == 'collections' ? 'Entry' : 'Term'}"
+        blocks << "export type #{union} = #{names.join(' | ')}\n" if names.any? && !names.include?(union)
       end
       @schema.globals.reject { |item| item.handle == Integrations::HANDLE }.each do |item|
         inline = Schema::Item.new(kind: "blueprints", handle: item.handle, parent: item.key, path: item.path, layer: item.layer, data: item["blueprint"])

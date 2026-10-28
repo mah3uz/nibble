@@ -64,7 +64,7 @@ class SiteController < Nibble::ApplicationController
   end
 
   def cacheable?
-    (request.get? || request.head?) && cookies[:nibble_session_id].blank? && flash.empty? &&
+    (!Rails.env.development? || ActionController::Base.perform_caching) && (request.get? || request.head?) && cookies[:nibble_session_id].blank? && flash.empty? &&
       request.headers["X-Inertia-Partial-Component"].blank?
   end
 

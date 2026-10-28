@@ -81,7 +81,8 @@ many Nibble releases come out, and a site will not start with a theme built for 
 5. **The view renders on the server** with Vue, inside its layout, and is hydrated in the browser. Visitors and
    search engines get finished HTML.
 6. **The response is cached** against everything it used, so publishing any of it clears exactly the pages that
-   depended on it.
+   depended on it. In development pages are not cached unless you turn caching on with `bin/rails dev:cache`, so an
+   edited view shows on the next request.
 
 Steps 3 to 5 are yours; the rest is Nibble's.
 

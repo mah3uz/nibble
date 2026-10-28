@@ -139,6 +139,25 @@ props. `Blocks` loops over a field's blocks and picks the right component for ea
 <Blocks :blocks="page.blocks" />
 ```
 
+The block's own `id` and `type` are not passed, so they do not land on your root element as HTML attributes. A
+`select` field reaches the view as `{ value, label }`, or a list of them when it allows several.
+
+A set can run queries of its own. Put a sidecar beside its view, `views/sets/<set handle>.yml`, in the same form as a
+[view's](queries.md), and the results arrive as the `queries` prop. `$set` in it is the block's own values:
+
+```yaml
+# views/sets/related_posts.yml
+posts:
+  from: entries:posts
+  topics: { in: $set.topics }
+```
+
+```vue
+<script setup lang="ts">
+defineProps<{ heading: string; queries: { posts: PostsPost[] } }>()
+</script>
+```
+
 A block whose set has no view renders nothing, so adding a set to a blueprint before its view exists is safe.
 Tidewater's pricing block is built end to end in
 [Getting Started](../getting-started/tutorial.md#42-a-block-of-your-own-pricing).
