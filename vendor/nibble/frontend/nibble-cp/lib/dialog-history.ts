@@ -11,7 +11,9 @@ const open: Array<() => void> = []
 let entry: { token: string; href: string } | null = null
 let leaving: { token?: string } | null = null
 let visits = 0
+const navigations = new Set<string>()
 let writes = 0
+let rewrite = false
 let scheduled = false
 let installed = false
 
@@ -25,12 +27,6 @@ function withoutMarks(value: State) {
   return copy
 }
 
-// Inertia may have written a newer page into the dialog's entry, so it rewrites the page into the entry now current,
-// through its own history queue so the write lands after any of its own still pending.
-function rewritePage() {
-  router.remember(++writes, ENTRY)
-}
-
 function sync() {
   if (visits > 0 || leaving) return
   const current = state()
@@ -40,10 +36,16 @@ function sync() {
     window.history.replaceState({ ...withoutMarks(current), [BASE]: token }, '')
     window.history.pushState({ ...withoutMarks(current), [ENTRY]: token }, '')
     entry = { token, href: here() }
+    rewrite = false
   } else if (!open.length && entry) {
     leaving = { token: entry.token }
     entry = null
     window.history.back()
+  } else if (!open.length && rewrite) {
+    // Inertia may have written a newer page into the dialog's entry; this writes its current page into the entry now
+    // current, through its own history queue so the write lands after any of its own still pending.
+    rewrite = false
+    router.remember(++writes, ENTRY)
   }
 }
 
@@ -64,14 +66,14 @@ function onPopstate(event: PopStateEvent) {
     schedule()
     if (left.token === undefined) return true
     if (popped?.[BASE] !== left.token) return false
-    rewritePage()
+    rewrite = true
     return true
   }
   if (entry) {
     const left = entry
     entry = null
     if (popped?.[BASE] !== left.token) return false
-    rewritePage()
+    rewrite = true
     open.at(-1)?.()
     schedule()
     return true
@@ -88,9 +90,12 @@ function install() {
   if (installed) return
   installed = true
   addHistoryGuard(onPopstate)
-  // A visit made while a dialog's entry is current lands on that entry, so leaving the page leaves no dead entry behind.
-  router.on('before', (event) => {
-    if (entry && !event.detail.visit.prefetch) event.detail.visit.replace = true
+  // A visit that would push while a dialog's entry is current replaces that entry instead, so leaving the page leaves
+  // no dead entry behind.
+  router.on('before', ({ detail: { visit } }) => {
+    if (!entry || visit.prefetch || visit.replace) return
+    visit.replace = true
+    navigations.add(visit.id)
   })
   router.on('start', (event) => {
     if (!event.detail.visit.prefetch) visits++
@@ -98,8 +103,12 @@ function install() {
   router.on('finish', (event) => {
     if (event.detail.visit.prefetch) return
     visits = Math.max(0, visits - 1)
-    if (entry && here() !== entry.href) entry = null
-    else if (entry) window.history.replaceState({ ...withoutMarks(state()), [ENTRY]: entry.token }, '')
+    const navigated = navigations.delete(event.detail.visit.id)
+    if (entry && navigated && here() !== entry.href) entry = null
+    else if (entry) {
+      entry.href = here()
+      window.history.replaceState({ ...withoutMarks(state()), [ENTRY]: entry.token }, '')
+    }
     schedule()
   })
   router.on('navigate', schedule)

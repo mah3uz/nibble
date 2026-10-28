@@ -3,7 +3,7 @@ import { effectScope, nextTick, ref } from 'vue'
 
 type Handler = (event: { detail: { visit: Record<string, unknown> } }) => void
 const handlers = vi.hoisted(() => new Map<string, Handler>())
-const inertia = vi.hoisted(() => ({ page: 'media', write: () => {} }))
+const inertia = vi.hoisted(() => ({ page: 'media', url: '', write: () => {} }))
 vi.mock('@inertiajs/vue3', () => ({
   router: {
     on: (name: string, handler: Handler) => {
@@ -90,12 +90,13 @@ function dialog({ dismissable = true } = {}) {
   return { open, unmount: () => scope.stop() }
 }
 
-function visit(url: string, page: string) {
-  const pending: Record<string, unknown> = { replace: false, prefetch: false }
+function visit(url: string, page: string, replace = false) {
+  const pending: Record<string, unknown> = { id: url + page, replace, prefetch: false }
   handlers.get('before')!({ detail: { visit: pending } })
   handlers.get('start')!({ detail: { visit: pending } })
   const same = url === window.location.href
   inertia.page = page
+  inertia.url = url
   if (pending.replace || same) site.history.replaceState({ page }, '', url)
   else site.history.pushState({ page }, '', url)
   return () => handlers.get('finish')!({ detail: { visit: pending } })
@@ -106,7 +107,8 @@ beforeEach(async () => {
   vi.resetModules()
   site = browser()
   inertia.page = 'media'
-  inertia.write = () => site.history.replaceState({ page: inertia.page }, '')
+  inertia.url = 'https://cms.test/cp/media'
+  inertia.write = () => site.history.replaceState({ page: inertia.page }, '', inertia.url)
   ;(await import('../history-guard')).installHistoryGuard()
   useDialogHistory = (await import('../dialog-history')).useDialogHistory
 })
@@ -162,6 +164,10 @@ describe('useDialogHistory', () => {
     await settle()
     expect([outer.open.value, inner.open.value]).toEqual([false, false])
     expect(site.index()).toBe(1)
+
+    site.history.forward()
+    await settle()
+    expect(site.index()).toBe(1)
     expect(site.inertiaSaw).toEqual([])
   })
 
@@ -181,6 +187,23 @@ describe('useDialogHistory', () => {
       'https://cms.test/cp/entries/1',
     ])
     expect(site.index()).toBe(2)
+  })
+
+  test('a dialog kept in the URL by replacing visits closes back to one entry for the page', async () => {
+    const editor = dialog()
+    visit('https://cms.test/cp/media?asset=1', 'media with asset', true)()
+    editor.open.value = true
+    await settle()
+
+    editor.open.value = false
+    visit('https://cms.test/cp/media', 'media', true)()
+    await settle()
+
+    expect(site.index()).toBe(1)
+    expect(window.location.href).toBe('https://cms.test/cp/media')
+    site.history.back()
+    await settle()
+    expect(site.inertiaSaw).toEqual([{ page: 'previous' }])
   })
 
   test('a save that returns to the same page leaves that newer page in history once the dialog closes', async () => {
