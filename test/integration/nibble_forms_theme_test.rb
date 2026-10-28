@@ -1,4 +1,5 @@
 require "test_helper"
+require "webmock"
 
 class NibbleFormsThemeTest < ActionDispatch::IntegrationTest
   include NibbleStarterHelper
@@ -37,7 +38,15 @@ class NibbleFormsThemeTest < ActionDispatch::IntegrationTest
   end
 
   test "without JavaScript the outcome of a post shows on the page it came from, and isn't cached for anyone else" do
-    process :post, "/forms/contact", params: { email: "not an email" }, headers: { "Referer" => "http://www.example.com/about" }
+    ok Nibble::Lifecycle.call(Nibble::Records::GlobalSet.new(handle: "integrations", locale: "en"), :save,
+      { "captcha_provider" => "turnstile", "captcha_site_key" => "site-key-1", "captcha_secret_key" => { "plain" => "very-secret" } }, actor: Nibble::Principal.system)
+    WebMock.enable!
+    WebMock.disable_net_connect!(allow_localhost: true)
+    resolver = Nibble::Outbound::Guard.resolver
+    Nibble::Outbound::Guard.resolver = ->(_host) { [ "93.184.216.34" ] }
+    WebMock::API.stub_request(:post, Nibble::Forms::Captcha::VERIFY_URLS.fetch("turnstile")).to_return(body: { success: true }.to_json)
+
+    process :post, "/forms/contact", params: { email: "not an email", _captcha: "good" }, headers: { "Referer" => "http://www.example.com/about" }
     follow_redirect!
     assert_equal "invalid", contact.dig("result", "status")
     assert_equal [ "email" ], contact.dig("result", "errors").keys
@@ -47,6 +56,10 @@ class NibbleFormsThemeTest < ActionDispatch::IntegrationTest
     get "/about"
     assert_equal "hit", response.headers["X-Nibble-Cache"]
     assert_nil contact["result"]
+  ensure
+    Nibble::Outbound::Guard.resolver = resolver if resolver
+    WebMock.reset!
+    WebMock.disable!
   end
 
   test "a sidecar can't use query options on a form source, or name a form that doesn't exist" do
