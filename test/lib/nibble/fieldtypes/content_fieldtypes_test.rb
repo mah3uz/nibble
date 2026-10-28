@@ -167,6 +167,28 @@ class Nibble::Fieldtypes::ContentFieldtypesTest < ActiveSupport::TestCase
     assert_equal [], fieldtype(:list).pre_process(nil)
   end
 
+  test "seo's share image is a library asset, carried through a package as a path and tagged for cache invalidation" do
+    blob = ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "photo.jpg")
+    asset = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, { "folder" => "site" }, actor: Nibble::Principal.system).record
+    seo = fieldtype(:seo)
+    keys = Nibble::Packages::Keys.new
+    exporting = Nibble::Packages::ExportContext.new(keys)
+    importing = Class.new { define_method(:resolve) { |_type, key| key == "site/photo.jpg" ? asset.id.to_s : nil } }.new
+    value = { "title" => "Hi", "og_image" => { "asset" => asset.id.to_s } }
+
+    assert_equal value, seo.process(value)
+    assert_equal({ "title" => "Hi", "og_image" => "site/photo.jpg" }, seo.export(value, exporting))
+    assert_equal value, seo.import(seo.export(value, exporting), importing)
+    assert_equal [ [ "asset", asset.id.to_s ] ], seo.relations(value)
+    assert_equal [ "asset:#{asset.id}" ], seo.dependencies(value)
+    assert_equal asset.id.to_s, seo.augment(value).dig("og_image", "id").to_s
+  end
+
+  test "seo's share image must be an existing image" do
+    fields = Nibble::Fields.new([ { handle: "seo", field: { type: "seo" } } ], source: "test")
+    assert_equal [ "seo.og_image" ], Nibble::Validator.new(fields).validate("seo" => { "og_image" => { "asset" => "999999" } }).errors.keys
+  end
+
   test "seo stores only set keys, normalises noindex, and validates canonical and schema type" do
     seo = fieldtype(:seo)
     assert_equal({ "title" => "Hi", "noindex" => true }, seo.process("title" => "Hi", "description" => "", "noindex" => "1", "bogus" => "x"))

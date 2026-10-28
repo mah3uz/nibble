@@ -44,6 +44,23 @@ class Nibble::PackagesExportTest < ActiveSupport::TestCase
     assert_equal notes, Nibble::Records::Entry.find_by!(slug: "round-trip").values["notes"]
   end
 
+  test "a share image makes the round trip, named by its path" do
+    blob = ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "photo.jpg")
+    asset = Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, { "folder" => "site" }, actor: Nibble::Principal.system).record
+    created = Nibble::Lifecycle.call(Nibble::Records::Entry.new(collection: "posts"), :create,
+      { "title" => "Shared", "seo" => { "og_image" => { "asset" => asset.id.to_s } } }, actor: Nibble::Principal.system)
+    assert created.ok?, created.errors.inspect
+
+    dir, = export
+
+    assert_equal "site/photo.jpg", read(dir, "collections/posts/en/shared.yml").dig("seo", "og_image")
+
+    created.record.update_column(:data, created.record.data.merge("seo" => {}))
+    assert Nibble::Packages::Importer.new(dir, mode: "update").call.ok?
+
+    assert_equal({ "asset" => asset.id.to_s }, Nibble::Records::Entry.find_by!(slug: "shared").values.dig("seo", "og_image"))
+  end
+
   test "references come out as natural keys, not database ids" do
     dir, = export
 

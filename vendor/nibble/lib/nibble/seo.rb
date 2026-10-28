@@ -30,16 +30,15 @@ module Nibble
     end
 
     def image
-      value = @values["og_image"].presence
-      return value.start_with?("/") ? Presenter.url(value) : value if value
-
-      picked = [ @page["featured_image"], @globals["default_share_image"] ].find { |item| item.is_a?(Hash) && item["id"] }
+      picked = [ @values["og_image"], @page["featured_image"], @globals["default_share_image"] ].find { |item| item.is_a?(Hash) && item["id"] }
       asset = picked && Records::Asset.kept.find_by(id: picked["id"]) or return nil
       Presenter.url(asset.url(Assets.preset("og") && Assets.transformable?(asset) ? "og" : nil))
     end
 
     def title
       base = @values["title"].presence || @page["title"].to_s
+      return base if @values["exact_title"]
+
       template = @globals["title_template"].presence || "{title} · {site_name}"
       return base unless @site_name
 

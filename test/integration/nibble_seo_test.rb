@@ -92,7 +92,7 @@ class NibbleSeoTest < ActionDispatch::IntegrationTest
 
     get "/sitemap-posts.xml"
     locs = Nokogiri::XML(response.body).remove_namespaces!.xpath("//loc").map(&:text)
-    assert_equal %w[grids remote-work type-scales].map { |slug| "https://example.test/blog/#{slug}" }, locs
+    assert_equal [ *%w[grids remote-work type-scales].map { |slug| "https://example.test/blog/#{slug}" }, "https://example.test/journal" ], locs
     get "/sitemap-nope.xml"
     assert_response :not_found
   end
@@ -116,5 +116,56 @@ class NibbleSeoTest < ActionDispatch::IntegrationTest
 
     with_indexing { get "/robots.txt" }
     assert_includes response.body, "Sitemap: https://example.test/sitemap.xml"
+  end
+
+  def photo_asset
+    Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob: ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "photo.jpg")), :create, actor: Nibble::Principal.system).record
+  end
+
+  test "a landing page's title is exactly what the editor wrote, in the tab and in the share card" do
+    ok Nibble::Lifecycle.call(Nibble::Records::GlobalSet.new(handle: "seo", locale: "en"), :save, { "title_template" => "{title} | {site_name}" }, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(@posts[1], :save, { "seo" => { "title" => "Grids: the full guide", "exact_title" => true } }, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(@posts[1].reload, :publish, actor: Nibble::Principal.system)
+
+    get "/blog/grids"
+    assert_equal "Grids: the full guide", head.at_css("title").text
+    assert_equal "Grids: the full guide", head.at_css('meta[property="og:title"]')["content"]
+
+    ok Nibble::Lifecycle.call(@posts[2], :save, { "seo" => { "exact_title" => true } }, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(@posts[2].reload, :publish, actor: Nibble::Principal.system)
+    get "/blog/remote-work"
+    assert_equal "Remote work", head.at_css("title").text, "with no SEO title, the page's own title stands, still without the template"
+  end
+
+  test "an entry left out of the sitemap stays indexable" do
+    entry = @posts[0]
+    ok Nibble::Lifecycle.call(entry, :save, { "seo" => { "nositemap" => true } }, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(entry.reload, :publish, actor: Nibble::Principal.system)
+
+    get "/sitemap-posts.xml"
+    locs = Nokogiri::XML(response.body).remove_namespaces!.xpath("//loc").map(&:text)
+    assert_not_includes locs, "https://example.test/blog/colour-theory"
+    assert_includes locs, "https://example.test/blog/grids"
+
+    Nibble::PageCache.store.clear
+    with_indexing { get "/blog/colour-theory" }
+    assert_nil head.at_css('meta[name="robots"]')
+  end
+
+  test "a collection's index page is in its sitemap, dated by its newest published entry" do
+    get "/sitemap-posts.xml"
+    url = Nokogiri::XML(response.body).remove_namespaces!.xpath("//url").find { |node| node.at_xpath("loc").text == "https://example.test/journal" }
+    assert url
+    newest = Nibble::Records::Entry.where(collection: "posts", status: "published", deleted_at: nil).maximum(:updated_at)
+    assert_equal newest.utc.iso8601, url.at_xpath("lastmod").text
+  end
+
+  test "a share image picked from the library is the page's absolute og-sized image, ahead of the featured and default ones" do
+    photo = photo_asset
+    ok Nibble::Lifecycle.call(@posts[1], :save, { "seo" => { "og_image" => { "asset" => photo.id.to_s } } }, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(@posts[1].reload, :publish, actor: Nibble::Principal.system)
+
+    get "/blog/grids"
+    assert_equal "https://example.test#{photo.url('og')}", head.at_css('meta[property="og:image"]')["content"]
   end
 end

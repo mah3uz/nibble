@@ -1,5 +1,6 @@
 module Nibble
   module Sitemaps
+    Page = Data.define(:uri, :updated_at, :values)
     Source = Data.define(:handle, :item, :model, :scope_column, :priority, :changefreq)
 
     class << self
@@ -21,12 +22,14 @@ module Nibble
 
       def urlset_xml(source)
         urls = +""
-        records = (scope(source).where.not(uri: nil).to_a + file_pages(source)).sort_by(&:uri)
+        records = (scope(source).where.not(uri: nil).to_a + file_pages(source) + index_page(source)).sort_by(&:uri)
         records.each do |record|
-          next if record.values.to_h.dig("seo", "noindex")
+          seo = record.values.to_h["seo"].to_h
+          next if seo["noindex"] || seo["nositemap"]
 
-          lastmod = (record.updated_at || Time.current).utc.iso8601
-          urls << "<url><loc>#{escape(Presenter.url(record.uri))}</loc><lastmod>#{lastmod}</lastmod>" \
+          lastmod = record.updated_at&.utc&.iso8601
+          lastmod = lastmod ? "<lastmod>#{lastmod}</lastmod>" : ""
+          urls << "<url><loc>#{escape(Presenter.url(record.uri))}</loc>#{lastmod}" \
                   "<changefreq>#{source.changefreq}</changefreq><priority>#{source.priority}</priority></url>"
         end
         %(<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">#{urls}</urlset>\n)
@@ -50,6 +53,13 @@ module Nibble
 
       def file_pages(source)
         source.scope_column == :collection ? Files.index.of(source.item.handle) : []
+      end
+
+      def index_page(source)
+        route = source.item["index_route"]
+        return [] if source.scope_column != :collection || route.blank?
+
+        [ Page.new(uri: Uris.normalize(route), updated_at: scope(source).maximum(:updated_at), values: {}) ]
       end
 
       def scope(source)

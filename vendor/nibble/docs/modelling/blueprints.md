@@ -194,7 +194,7 @@ A fieldset is a list of fields several blueprints import. Nibble ships four:
 
 | Fieldset | Fields |
 |---|---|
-| `nibble::seo` | the SEO title, description, share image, canonical URL and `noindex` |
+| `nibble::seo` | the SEO title, description, share image, canonical URL, `noindex` and sitemap switches |
 | `nibble::page_fields` | a title and the standard blocks |
 | `nibble::post_fields` | a title, an excerpt and a body |
 | `nibble::featured_image` | one image |

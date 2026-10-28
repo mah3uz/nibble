@@ -21,7 +21,8 @@ After reading this guide, you will know:
 ## 1. Page titles, descriptions and share images
 
 Every blueprint that imports `nibble::seo` gives editors an **SEO** tab: a title, a description, a share image, a
-canonical URL, a "hide from search engines" switch, and the kind of structured data the page is.
+canonical URL, a "hide from search engines" switch, a "leave out of the sitemap" switch, and the kind of structured
+data the page is.
 
 Left empty, each falls back to something sensible:
 
@@ -29,10 +30,17 @@ Left empty, each falls back to something sensible:
 |---|---|
 | title | the SEO title, else the entry's title — then put through the site's **title template** |
 | description | the SEO description, else the entry's excerpt, else the site's default description |
-| share image | the SEO image, else the featured image, else the site's default share image |
+| share image | the SEO share image, else the featured image, else the site's default share image |
 | canonical URL | the SEO canonical URL, else the page's own URL |
 
 So a post published without anyone touching the SEO tab still has a proper title, description and share card.
+
+**Use this title as written** skips the title template for that page: the tab title and the share card's title are
+exactly the SEO title, or the entry's title when the SEO title is empty. It suits a landing page whose title already
+says everything.
+
+**The share image is picked from the media library**, images only, one per page. Nibble sends it as an absolute URL,
+cropped to the `og` preset, the same as the featured and default share images.
 
 The page gets its title, description, canonical link and robots tag from `SeoHead`, and its Open Graph and Twitter
 tags, structured data and verification tags from the HTML Nibble sends. See
@@ -56,6 +64,8 @@ tags, structured data and verification tags from the HTML Nibble sends. See
 `/sitemap-posts.xml`, `/sitemap-help.xml`, `/sitemap-taxonomy-topics.xml`. They list published content only, stay
 current as content is published, and include pages [written as files](../modelling/content-as-files.md).
 
+A collection with an `index_route` lists that page too, in its own sitemap, dated by its newest published entry.
+
 Tune a collection's entry, or leave it out:
 
 ```yaml
@@ -70,7 +80,8 @@ sitemap:
   enabled: false
 ```
 
-An entry whose SEO tab says "hide from search engines" is left out of the sitemap and marked `noindex`.
+An entry whose SEO tab says "hide from search engines" is left out of the sitemap and marked `noindex`. An entry whose
+SEO tab says "leave out of the sitemap" is left out of the sitemap only: search engines can still index it.
 
 ## 4. robots.txt, and sites that should not be indexed
 
