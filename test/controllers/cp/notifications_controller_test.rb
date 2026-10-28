@@ -60,11 +60,12 @@ class Nibble::Cp::NotificationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "a failing task's notification links to the scheduled tasks page" do
-    Nibble::Records::Notification.notify(users(:editor).id, "task.failed", title: "Exchange rates", task: "rates")
+    Nibble::Records::Notification.notify(users(:editor).id, "task.failed", title: "Exchange rates", task: "rates", message: "HTTP 503")
 
     get "/cp/notifications", as: :json
 
     row = response.parsed_body["notifications"].find { |item| item["title"] == "Exchange rates" }
     assert_equal "/cp/utilities/tasks", row["url"]
+    assert_equal "HTTP 503", row["comment"], "the bell should say why the task failed, not only that it did"
   end
 end

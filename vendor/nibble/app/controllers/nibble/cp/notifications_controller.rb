@@ -27,7 +27,7 @@ module Nibble
         found = before ? scope.where(id: ...before.to_i) : scope
         found.order(id: :desc).limit(PAGE).map do |item|
           { id: item.id, kind: item.kind, at: item.created_at.utc.iso8601, read: item.read_at.present?,
-            title: item.data["title"], comment: item.data["comment"], url: url_for_subject(item) }
+            title: item.data["title"], comment: item.data["comment"] || item.data["message"], url: url_for_subject(item) }
         end
       end
 
