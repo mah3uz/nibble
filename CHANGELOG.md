@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.20.0 — 2026-10-29 03:37 +0600
+
 ### What's new
 
 - **Scheduled tasks.** A task in `site/schema/tasks/` runs on a schedule such as `every 2 hours`, `at 5am every day`
