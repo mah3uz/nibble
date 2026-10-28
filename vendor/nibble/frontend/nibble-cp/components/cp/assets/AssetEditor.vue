@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { DialogContent, DialogDescription, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
+import { DialogContent, DialogDescription, DialogPortal, DialogTitle } from 'reka-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { DialogOverlay } from '@/components/ui/dialog'
+import { Dialog, DialogOverlay } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useConfirm } from '@/lib/confirm'
@@ -144,7 +144,7 @@ function run(action: AssetMenuAction) {
 </script>
 
 <template>
-  <DialogRoot :open="open" @update:open="(value) => !value && leave(() => emit('close'))">
+  <Dialog :open="open" @update:open="(value) => !value && leave(() => emit('close'))">
     <DialogPortal>
       <DialogOverlay :style="{ zIndex }" />
       <DialogContent
@@ -341,5 +341,5 @@ function run(action: AssetMenuAction) {
         </div>
       </DialogContent>
     </DialogPortal>
-  </DialogRoot>
+  </Dialog>
 </template>

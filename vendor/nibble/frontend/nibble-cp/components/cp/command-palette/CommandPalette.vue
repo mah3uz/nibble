@@ -6,7 +6,6 @@ import {
   DialogDescription,
   DialogOverlay,
   DialogPortal,
-  DialogRoot,
   DialogTitle,
   ListboxContent,
   ListboxFilter,
@@ -18,6 +17,7 @@ import {
 import { computed, ref, useTemplateRef, watch, type Component } from 'vue'
 import StatusIndicator from '@/components/cp/page/StatusIndicator.vue'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
+import { Dialog } from '@/components/ui/dialog'
 import { NAV_ICONS } from '@/components/cp/shell/icons'
 import { useCp, type CpPreferences } from '@/lib/cp'
 import { commandPaletteOpen } from '@/lib/commandPalette'
@@ -240,7 +240,7 @@ function onKeydownCapture(event: KeyboardEvent) {
 </script>
 
 <template>
-  <DialogRoot v-model:open="commandPaletteOpen">
+  <Dialog v-model:open="commandPaletteOpen">
     <DialogPortal>
       <DialogOverlay
         :style="{ zIndex }"
@@ -343,5 +343,5 @@ function onKeydownCapture(event: KeyboardEvent) {
         </div>
       </DialogContent>
     </DialogPortal>
-  </DialogRoot>
+  </Dialog>
 </template>
