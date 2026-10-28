@@ -10,6 +10,7 @@ module Nibble
         @collection = into["collection"]
         @counts = Hash.new(0)
         @errors = []
+        @skipped = []
       end
 
       def call
@@ -41,7 +42,7 @@ module Nibble
         return create(link, key, values) unless entry
         return "skipped" if entry.trashed?
 
-        update(entry, link, values)
+        update(entry, link, values, key)
       end
 
       def create(link, key, values)
@@ -57,11 +58,12 @@ module Nibble
       end
 
       # Republishes only what this task unpublished; an entry someone unpublished by hand stays unpublished.
-      def update(entry, link, values)
+      def update(entry, link, values, key)
         republish = link.missing_since.present? && entry.status == "unpublished"
         link.update!(missing_since: nil) if link.missing_since
         changed = !Tasks.unchanged?(entry, values.except("slug")) || (values.key?("slug") && values["slug"].to_s != entry.slug.to_s)
         return "unchanged" unless changed || republish
+        return skip_draft(key) if entry.draft
 
         live = entry.live?
         succeed!(Lifecycle.call(entry, :save, values, actor: Principal.system)) if changed
@@ -75,6 +77,7 @@ module Nibble
 
           entry = Records::Entry.find_by(id: link.entry_id)
           next unless entry&.live?
+          next @counts[skip_draft(link.key)] += 1 if entry.draft
 
           ActiveRecord::Base.transaction do
             succeed!(Lifecycle.call(entry, :unpublish, {}, actor: Principal.system))
@@ -87,8 +90,15 @@ module Nibble
         end
       end
 
+      # Saving or unpublishing a live entry folds its pending draft in, and publishing would then put an editor's
+      # unfinished work live, so an entry with a draft waits until the editor publishes or discards it.
+      def skip_draft(key)
+        @skipped << "#{key}: has unpublished edits"
+        "skipped"
+      end
+
       def finish(total)
-        details = @counts.merge("items" => total, "errors" => @errors.first(10))
+        details = @counts.merge("items" => total, "errors" => @errors.first(10), "skipped_reasons" => @skipped.first(10))
         counts = @counts.except("failed").map { |name, count| "#{count} #{name}" }.join(", ").presence || "nothing to do"
         return Runner::Outcome.new(status: "succeeded", message: counts, details:) if @errors.empty?
 

@@ -1,5 +1,3 @@
-require "fugit"
-
 module Nibble
   module Tasks
     ACTIONS = %w[fetch request handler].freeze

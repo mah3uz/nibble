@@ -178,6 +178,31 @@ class Nibble::TasksTest < ActiveSupport::TestCase
     assert_equal "Alpha two", listing("a").reload.title
   end
 
+  test "an editor's unfinished work must not go live because a feed refreshed" do
+    feed({ id: "a", name: "Alpha" }, { id: "b", name: "Beta" })
+    run_now("feed")
+    entry = listing("a")
+    assert lifecycle(entry, :save, { "title" => "Alpha, being rewritten" }).ok?
+    assert entry.reload.draft
+
+    feed({ id: "a", name: "Alpha renamed" }, { id: "b", name: "Beta" })
+    run = run_now("feed")
+    assert_equal 1, run.details["skipped"]
+    assert_equal [ "a: has unpublished edits" ], run.details["skipped_reasons"]
+    assert_equal "Alpha", entry.reload.title, "the live version isn't changed under the editor"
+    assert_equal "Alpha, being rewritten", entry.draft.data["title"], "the draft is left exactly as the editor left it"
+
+    feed({ id: "b", name: "Beta" })
+    run_now("feed")
+    assert entry.reload.live?, "withdrawing it would fold the draft in, and bringing it back would publish it"
+    assert_equal "Alpha, being rewritten", entry.draft.data["title"]
+
+    assert lifecycle(entry, :discard_draft).ok?
+    feed({ id: "a", name: "Alpha renamed" }, { id: "b", name: "Beta" })
+    assert_equal 1, run_now("feed").details["updated"]
+    assert_equal "Alpha renamed", entry.reload.title
+  end
+
   test "unpublish_missing only ever unpublishes entries the task created" do
     hand_made = publish_entry(create_entry("listings", { title: "Hand made", ref: "b" }))
     keyless = publish_entry(create_entry("listings", { title: "No key" }))

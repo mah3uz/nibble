@@ -118,7 +118,7 @@ fetch:
 
 `items` names the list in the answer, and inside `map`, `{item.…}` reads one entry of it. `key` names the mapped
 field — or `slug` — that identifies an item from one run to the next. `blueprint` picks a blueprint other than the
-collection's first.
+collection's first. Entries are written in the site's default locale.
 
 An item seen for the first time becomes a new, published entry. Next time, the same key updates that entry, and an
 item whose values haven't changed is left alone, so running the same feed twice changes nothing the second time. An
@@ -135,6 +135,10 @@ it comes back. Two more rules keep it safe:
 - An empty list unpublishes nothing. A feed that suddenly lists nothing is far likelier to be a fault at the other end
   than every job filled at once.
 - An entry someone unpublished by hand stays unpublished. Only what the task unpublished does it republish.
+
+An entry with unpublished edits is left alone until the editor publishes or discards them: the task neither updates
+it nor unpublishes it, so a feed refreshing never puts someone's unfinished work live. The run counts it as skipped,
+and says why.
 
 Imported fields are the feed's: a change made to one in the Control Plane is replaced on the next run that brings a
 different value.

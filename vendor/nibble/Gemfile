@@ -17,6 +17,8 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 gem "solid_cache"
 gem "solid_queue"
 gem "solid_cable"
+# Reads scheduled tasks' schedules as Solid Queue reads recurring.yml [https://github.com/floraison/fugit]
+gem "fugit", "~> 1.14"
 
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
