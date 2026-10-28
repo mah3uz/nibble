@@ -55,7 +55,7 @@ module Nibble
 
     def run_queries(queries, context, presenter)
       queries.to_h do |name, spec|
-        spec = Query::Spec.parse(spec)
+        spec = Query::Spec.parse(spec, context:)
         next [ name, Forms::Definition.call(Forms.find(spec.source.handle), result: @form_result) ] if spec.source.form?
 
         result = Query.build(spec, context).result

@@ -69,7 +69,7 @@ Only published content is ever returned to a public page.
 | `locale` | a locale other than the page's |
 | `q` | the search terms, for a `search:` source |
 
-`paginate` and `limit` cannot be combined. `per_page` is capped at 100.
+`paginate` and `limit` cannot be combined. `limit` and `per_page` are between 1 and 100; a longer list paginates.
 
 ## 4. Conditions
 
@@ -125,6 +125,17 @@ related:
 ```
 
 *Other posts in any of this post's topics, not this one, at most three.*
+
+`limit` and `paginate.per_page` also take `$set.<field>` (or `$entry.<field>`), so an editor chooses how many a block
+shows. A blank field behaves as if the key were absent, and a number outside 1 to 100 is held to that range:
+
+```yaml
+# site/themes/tidewater/views/sets/latest_posts.yml
+posts:
+  from: entries:posts
+  sort: published_at:desc
+  limit: $set.count
+```
 
 ## 6. Pagination
 

@@ -4,7 +4,7 @@ module Nibble
 
     PRESENTER_COLUMNS = %w[id uuid collection taxonomy blueprint locale title slug uri status published_at updated_at author_id].freeze
 
-    def self.build(spec, context) = new(spec.is_a?(Spec) ? spec : Spec.parse(spec), context)
+    def self.build(spec, context) = new(spec.is_a?(Spec) ? spec : Spec.parse(spec, context:), context)
 
     attr_reader :spec, :context
 

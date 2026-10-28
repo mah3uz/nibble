@@ -11,11 +11,14 @@ module Nibble
 
       attr_reader :source, :conditions, :exclusions, :q, :locale, :sorts, :paginate, :limit, :offset, :include, :fields, :raw
 
-      def self.parse(raw, schema: Nibble.schema) = new(raw, schema)
+      VARIABLE = /\A\$(set|entry)\.\w+\z/
 
-      def initialize(raw, schema)
+      def self.parse(raw, schema: Nibble.schema, context: nil) = new(raw, schema, context)
+
+      def initialize(raw, schema, context = nil)
         @raw = raw.to_h.deep_stringify_keys
         @schema = schema
+        @context = context
         unknown = @raw.keys - KEYS
         raise Invalid.new(unknown.first, "isn't a query key") if unknown.any?
         raise Invalid.new("from", "is required") if @raw["from"].blank?
@@ -36,7 +39,7 @@ module Nibble
         @paginate = parse_paginate
         @limit = bounded("limit", @raw["limit"])
         @offset = @raw["offset"].nil? ? nil : Integer(@raw["offset"], exception: false) || raise(Invalid.new("offset", "must be a number"))
-        raise Invalid.new("paginate", "can't be combined with limit/offset") if @paginate && (@limit || @offset)
+        raise Invalid.new("paginate", "can't be combined with limit/offset") if @paginate && (@limit || @offset || (!@context && variable?(@raw["limit"])))
         @include = @raw["include"].nil? ? [] : parse_list("include") { |handle| @relation_fields.key?(handle) || raise(Invalid.new("include", "'#{handle}' isn't a relationship field")) }
         @fields = @raw.key?("fields") ? parse_list("fields") { |handle| valid_field?(handle) || raise(Invalid.new("fields", "unknown field '#{handle}'")) } : nil
       end
@@ -88,17 +91,29 @@ module Nibble
 
         raise Invalid.new("paginate.scroll", "must be true or false") unless [ nil, true, false ].include?(raw["scroll"])
 
-        { "per_page" => bounded("paginate.per_page", raw["per_page"] || 12), "param" => (raw["param"] || "page").to_s,
+        { "per_page" => bounded("paginate.per_page", raw["per_page"] || 12, fallback: 12), "param" => (raw["param"] || "page").to_s,
           "scroll" => raw["scroll"] == true }
       end
 
-      def bounded(key, value)
+      def variable?(value) = value.is_a?(String) && value.start_with?("$")
+
+      def bounded(key, value, fallback: nil)
         return nil if value.nil?
+        return variable_number(key, value, fallback) if variable?(value)
 
         number = Integer(value, exception: false)
         raise Invalid.new(key, "must be between 1 and #{MAX_PER_PAGE}") unless number && number.between?(1, MAX_PER_PAGE)
 
         number
+      end
+
+      def variable_number(key, value, fallback)
+        raise Invalid.new(key, "variable must be $set.<field> or $entry.<field>") unless value.match?(VARIABLE)
+        return fallback unless @context
+
+        resolved = @context.resolve(value)
+        number = Integer(resolved.to_s.strip, exception: false) || Float(resolved.to_s.strip, exception: false)&.round
+        number ? number.clamp(1, MAX_PER_PAGE) : fallback
       end
 
       def parse_list(key, &check)

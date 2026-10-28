@@ -83,4 +83,32 @@ class Nibble::QueryTest < ActiveSupport::TestCase
       assert_equal key, error.key, spec.inspect
     end
   end
+
+  test "a block's own number decides how many entries it lists" do
+    set = { "id" => "a", "type" => "latest_posts", "count" => "2" }
+    assert_equal 2, run_query({ from: "entries:posts", limit: "$set.count" }, set:).records.size
+    paged = run_query({ from: "entries:posts", paginate: { per_page: "$set.count" } }, set:)
+    assert_equal 2, paged.pagination["per_page"]
+    assert_equal 2, paged.records.size
+  end
+
+  test "an editor typing a number past the cap can't make a page load more than 100 entries" do
+    spec = Nibble::Query::Spec.parse({ from: "entries:posts", limit: "$set.count" }, context: Nibble::Query::Context.public(set: { "count" => 500 }))
+    assert_equal 100, spec.limit
+    assert_equal 1, Nibble::Query::Spec.parse({ from: "entries:posts", limit: "$set.count" }, context: Nibble::Query::Context.public(set: { "count" => -3 })).limit
+  end
+
+  test "a blank count behaves as if the key were absent, so the block still renders" do
+    set = { "count" => "" }
+    assert_equal run_query({ from: "entries:posts" }).records.size, run_query({ from: "entries:posts", limit: "$set.count" }, set:).records.size
+    assert_equal 12, run_query({ from: "entries:posts", paginate: { per_page: "$set.count" } }, set: {}).pagination["per_page"]
+    assert_equal run_query({ from: "entries:posts" }).records.size, run_query({ from: "entries:posts", limit: "$set.count" }, set: { "count" => "lots" }).records.size
+  end
+
+  test "limit variables are limited to the block or entry, and literals stay strict" do
+    assert_equal "limit", assert_raises(Nibble::Query::Invalid) { Nibble::Query::Spec.parse({ from: "entries:posts", limit: "$params.n" }) }.key
+    assert_equal "limit", assert_raises(Nibble::Query::Invalid) { Nibble::Query::Spec.parse({ from: "entries:posts", limit: 500 }) }.key
+    assert_equal "paginate", assert_raises(Nibble::Query::Invalid) { Nibble::Query::Spec.parse({ from: "entries:posts", limit: "$set.count", paginate: { per_page: 5 } }) }.key
+    assert_nothing_raised { Nibble::Query::Spec.parse({ from: "entries:posts", limit: "$entry.count", paginate: nil }) }
+  end
 end

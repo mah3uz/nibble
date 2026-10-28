@@ -141,6 +141,14 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     assert_match "query 'posts' where.excerpt: isn't filterable", check.problems.map(&:to_s).join("\n")
   end
 
+  test "a sidecar may take limit and per_page from its block" do
+    view = @themes.join("check", "views", "sets", "latest.yml")
+    FileUtils.mkdir_p(view.dirname)
+    view.write({ "posts" => { "from" => "entries:posts", "limit" => "$set.count" }, "paged" => { "from" => "entries:posts", "paginate" => { "per_page" => "$set.per_page" } } }.to_yaml)
+
+    assert_not_includes check.problems.map(&:to_s).join("\n"), "latest.yml"
+  end
+
   # A list that is no longer read would otherwise drop collections from search without a word.
   test "from 0.17.0 a search.yml that lists collections is reported, naming the key that replaces it" do
     theme_file("search.yml", { schema: 1, indexes: { site: { collections: [ "pages" ] } } })
