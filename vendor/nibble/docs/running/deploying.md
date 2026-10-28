@@ -26,6 +26,12 @@ Inside the container: Puma behind Thruster, the Node process that renders pages 
 scheduled publishing, emails and background work — inside Puma. SQLite files and uploaded files live on a Docker
 volume mounted at `/rails/storage`, so they survive every deploy.
 
+Scheduled publishing, the [scheduled tasks](../modelling/scheduled-tasks.md) a site declares, update checks and
+nightly clean-ups all start from the recurring jobs in `config/recurring.yml`. The one named `run_publishing_schedule`
+runs every minute on the `maintenance` queue and also checks which tasks are due, so tasks keep time only where
+Solid Queue runs: in production, with `SOLID_QUEUE_IN_PUMA` set as above. In development nothing ticks on its own, and
+**Utilities → Scheduled tasks** in the Control Plane still has **Run now**.
+
 You need a server you can SSH into with Docker installable, a domain pointing at it, and an account with a
 container registry such as Docker Hub or GitHub's.
 
@@ -287,6 +293,10 @@ bin/kamal dbc        # the database console
 cached for a long time; HTML is sent `Cache-Control: private`, because caching a whole page at the edge could share
 one visitor's session with another. Nibble's own page cache sits inside the application, where it knows who is
 asking.
+
+**Scheduled tasks.** **Utilities → Scheduled tasks** lists each task with its next run and last result, and can run
+one now, pause it, resume it and show its history. A task that starts failing notifies the site's administrators once.
+**Utilities → Jobs** shows the queues and the recurring schedule if tasks stop running.
 
 **Backups.** A nightly job copies the database and, with `DB_SNAPSHOT_BUCKET` set, uploads it. See
 [Backups](backups.md).

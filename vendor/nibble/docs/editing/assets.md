@@ -72,4 +72,4 @@ Each asset shows what uses it. Check that list before deleting.
 
 > [!WARNING]
 > If something still uses an asset, deleting it takes the image off that page at once. Deleted assets go to the
-> trash like entries, so a mistake can be undone for as long as the trash keeps them.
+> trash like entries, under **Kind → assets**, so a mistake can be undone for as long as the trash keeps them.

@@ -105,6 +105,9 @@ The page whose slug is `home`, at the top level, is the site's home page.
 **Tools → Trash**, where it can be restored — URL and all — until the trash is emptied, 30 days later unless the site
 says otherwise.
 
+The trash shows one kind at a time — entries, terms or assets, chosen with **Kind** — a page at a time, newest first.
+**Restore** puts an item back; **Delete** removes it for good. An item that other records still refer to says so.
+
 A page with pages under it cannot be trashed until they are moved or trashed first.
 
 > [!WARNING]

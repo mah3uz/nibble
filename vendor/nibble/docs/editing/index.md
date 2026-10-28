@@ -51,7 +51,16 @@ given. See [Users and roles](../running/users-and-roles.md).
 **Search** at the top of every screen — or `Ctrl-K` — finds entries, terms, assets and screens by what is in them, not
 only by title.
 
-## 4. Your account
+## 4. Notifications and Back
+
+The bell shows what needs you: a review requested, an entry approved or sent back, a mention, a form submitted, an
+app asking for approval. It lists the latest first, and **Load more** brings older ones. **Mark all read** and **Clear all** tidy it up. When a scheduled task
+starts failing, administrators get a notification that opens **Utilities → Scheduled tasks**.
+
+The browser's Back button closes the dialog or panel you have open, the innermost first, before it takes you to the
+previous page.
+
+## 5. Your account
 
 The circle with your initials, top right, opens your account: your name and password, the devices you are signed in
 on, and two-factor authentication.
@@ -66,7 +75,7 @@ Two things happen automatically, and are worth knowing before they surprise you:
 - **After a while without activity you are locked out** until you enter your password again. A "Your Session is
   Expiring" warning comes first, with an **Extend Session** button, so nothing you are writing is lost.
 
-## 5. Two ideas worth five minutes
+## 6. Two ideas worth five minutes
 
 **Collections and blueprints.** A *collection* is a kind of content: Pages, Blog, Help centre. A *blueprint* is the
 list of fields one of those has. Both are decided by whoever builds the site, which is why the form you see fits the
@@ -77,14 +86,14 @@ content rather than being one big text box. If a field is missing or confusing, 
 you can go back to. Deleting moves things to the trash, where they wait before disappearing. You would have to work
 quite hard to lose anything.
 
-## 6. Pages you cannot edit
+## 7. Pages you cannot edit
 
 Tidewater's **Help centre** opens like any other collection, but its pages are locked, and each one says which file
 it is written in. That is deliberate: the help centre is written in files, alongside the product's code, and an edit
 here would be overwritten at the next deploy. Ask whoever writes it. See
 [Content as files](../modelling/content-as-files.md).
 
-## 7. The guides in this section
+## 8. The guides in this section
 
 | Guide | Covers |
 |---|---|

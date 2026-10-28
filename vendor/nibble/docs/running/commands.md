@@ -58,8 +58,8 @@ npm run format:check   # or only reports the files it would change
 
 ```sh
 bin/rails nibble:content:export site/packages/default    # --collections= --taxonomies= --locales= --status=
-bin/rails nibble:content:validate site/packages/default  # check a package, write nothing
-bin/rails nibble:content:import site/packages/default    # --mode=create|update --dry-run --webhooks
+bin/rails nibble:content:validate site/packages/default  # check a package, asset files included; write nothing
+bin/rails nibble:content:import site/packages/default    # --mode=create|update --dry-run --webhooks; uploads assets/ files
 bin/rails nibble:content:migrate                                         # pending site/schema/migrations/*.yml; --dry-run
 bin/rails nibble:reindex                                          # every search index, including files
 bin/rails nibble:cleanup:assets                                     # lists unused uploads; --confirm deletes, --older-than-days=
