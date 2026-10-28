@@ -60,6 +60,13 @@ class Nibble::Cp::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ users(:editor).email_address ], props["listing"]["rows"].map { |row| row["email_address"] }
   end
 
+  test "the listing sorts descending when the list asks with dir, as every other listing does" do
+    get "/cp/users", params: { sort: "email_address", dir: "desc" }
+    emails = props["listing"]["rows"].map { |row| row["email_address"] }
+    assert_equal "desc", props["listing"]["sort"]["direction"]
+    assert_equal emails.sort.reverse, emails
+  end
+
   test "revoking a session signs that browser out at once" do
     session = users(:editor).sessions.create!(user_agent: "Test", ip_address: "127.0.0.1")
 

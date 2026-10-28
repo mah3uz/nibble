@@ -63,7 +63,7 @@ module Nibble
 
       def sort_column = SORTABLE.include?(params[:sort]) ? params[:sort] : "email_address"
 
-      def sort_direction = params[:direction] == "desc" ? "desc" : "asc"
+      def sort_direction = params[:dir] == "desc" ? "desc" : "asc"
 
       def page = [ params[:page].to_i, 1 ].max
 
