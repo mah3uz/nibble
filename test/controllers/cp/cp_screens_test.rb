@@ -80,7 +80,7 @@ class Nibble::Cp::CpScreensTest < ActionDispatch::IntegrationTest
     lifecycle(entry, :trash)
 
     get "/cp/trash"
-    assert_equal [ "Gone" ], props["items"].map { |item| item["title"] }
+    assert_equal [ "Gone" ], props.dig("listing", "rows").map { |row| row["title"] }
 
     post "/cp/trash/entry-#{entry.id}/restore"
     assert_not entry.reload.trashed?
@@ -88,6 +88,44 @@ class Nibble::Cp::CpScreensTest < ActionDispatch::IntegrationTest
     lifecycle(entry.reload, :trash)
     delete "/cp/trash/entry-#{entry.id}/purge"
     assert_not Nibble::Records::Entry.exists?(entry.id)
+  end
+
+  test "a deleted page beyond the first screen of the trash is still reachable, one kind at a time" do
+    entries = 30.times.map { |n| create_entry("articles", { "title" => "Gone #{n}" }) }
+    entries.each { |entry| lifecycle(entry, :trash) }
+    Nibble::Records::Entry.where(id: entries.first.id).update_all(deleted_at: 1.year.ago)
+
+    get "/cp/trash"
+    assert_equal "entries", props.dig("listing", "filters", 0, "value")
+    assert_equal 30, props.dig("listing", "pagination", "total")
+    assert_equal 25, props.dig("listing", "rows").size
+
+    get "/cp/trash", params: { page: 2 }
+    assert_includes props.dig("listing", "rows").map { |row| row["title"] }, "Gone 0"
+  end
+
+  test "the trash opens on the first kind that has anything, and a kind can be chosen" do
+    entry = create_entry("articles", { "title" => "Entry gone" })
+    lifecycle(entry, :trash)
+    term = create_term("Tag gone")
+    lifecycle(term, :trash)
+
+    get "/cp/trash", params: { kind: "terms" }
+    assert_equal [ term.title ], props.dig("listing", "rows").map { |row| row["title"] }
+    assert_equal [ "terms" ], [ props.dig("listing", "filters", 0, "value") ]
+  end
+
+  test "the 404 monitor pages past the first screen and finds a path by search" do
+    30.times { |n| Nibble::Records::NotFound.record("/missing-#{n}") }
+    Nibble::Records::NotFound.record("/rare-one")
+    Nibble::Records::NotFound.where(path: "/rare-one").update_all(hits: 1)
+
+    get "/cp/404s"
+    assert_equal 31, props.dig("listing", "pagination", "total")
+    assert_equal 25, props.dig("listing", "rows").size
+
+    get "/cp/404s", params: { q: "RARE" }
+    assert_equal [ "/rare-one" ], props.dig("listing", "rows").map { |row| row["path"] }
   end
 
   test "redirects are managed from the CP and stay single-hop" do
@@ -105,7 +143,7 @@ class Nibble::Cp::CpScreensTest < ActionDispatch::IntegrationTest
     Nibble::Records::NotFound.record("/gone", referrer: "https://example.test/")
 
     get "/cp/404s"
-    assert_equal [ "/gone" ], props["paths"].map { |row| row["path"] }
+    assert_equal [ "/gone" ], props.dig("listing", "rows").map { |row| row["path"] }
 
     delete "/cp/404s/#{Nibble::Records::NotFound.find_by!(path: '/gone').id}"
     assert_equal 0, Nibble::Records::NotFound.count

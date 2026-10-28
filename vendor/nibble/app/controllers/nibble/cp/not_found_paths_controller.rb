@@ -4,12 +4,8 @@ module Nibble
       before_action { authorize!("redirects.manage") }
 
       def index
-        render inertia: "cp/not_found/Index", props: {
-          paths: Nibble::Records::NotFound.order(hits: :desc).limit(100).map do |row|
-            { id: row.id, path: row.path, hits: row.hits, referrer: row.referrer,
-              first_seen_at: row.first_seen_at.utc.iso8601, last_seen_at: row.last_seen_at.utc.iso8601 }
-          end
-        }
+        listing = Nibble::Cp::NotFoundListing.new(user: Nibble::Current.user, params:)
+        render inertia: "cp/not_found/Index", props: { listing: listing.props, empty: !listing.any? }
       end
 
       def destroy

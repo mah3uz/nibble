@@ -2,7 +2,9 @@ module Nibble
   module Cp
     class NotificationsController < BaseController
       def index
-        render json: { notifications: rows, unread: scope.unread.count }
+        page = rows(before: params[:before].presence)
+        more = page.any? && scope.where(id: ...page.last[:id]).exists?
+        render json: { notifications: page, unread: scope.unread.count, more: }
       end
 
       def update
@@ -17,10 +19,13 @@ module Nibble
 
       private
 
+      PAGE = 25
+
       def scope = Nibble::Records::Notification.where(user_id: Nibble::Current.user.id)
 
-      def rows
-        scope.order(created_at: :desc).limit(25).map do |item|
+      def rows(before: nil)
+        found = before ? scope.where(id: ...before.to_i) : scope
+        found.order(id: :desc).limit(PAGE).map do |item|
           { id: item.id, kind: item.kind, at: item.created_at.utc.iso8601, read: item.read_at.present?,
             title: item.data["title"], comment: item.data["comment"], url: url_for_subject(item) }
         end

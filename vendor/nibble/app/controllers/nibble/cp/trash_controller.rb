@@ -3,7 +3,8 @@ module Nibble
     class TrashController < BaseController
       def index
         authorize!("trash.view")
-        render inertia: "cp/trash/Index", props: { items: entries + terms + assets }
+        listing = Nibble::Cp::TrashListing.new(user: Nibble::Current.user, params:)
+        render inertia: "cp/trash/Index", props: { listing: listing.props, empty: listing.empty? }
       end
 
       def restore
@@ -36,36 +37,6 @@ module Nibble
         when Nibble::Records::Term then "terms.#{record.taxonomy}.#{action}"
         else "assets.#{action}"
         end
-      end
-
-      def entries
-        Nibble::Records::Entry.where.not(deleted_at: nil).order(deleted_at: :desc).filter_map do |entry|
-          next unless Nibble::Access.can?(Nibble::Current.user, "entries.#{entry.collection}.delete", entry)
-
-          item(entry, "entry", entry.collection)
-        end
-      end
-
-      def terms
-        Nibble::Records::Term.where.not(deleted_at: nil).order(deleted_at: :desc).filter_map do |term|
-          next unless Nibble::Access.can?(Nibble::Current.user, "terms.#{term.taxonomy}.delete", term)
-
-          item(term, "term", term.taxonomy)
-        end
-      end
-
-      def assets
-        return [] unless Nibble::Access.can?(Nibble::Current.user, "assets.delete")
-
-        Nibble::Records::Asset.where.not(deleted_at: nil).order(deleted_at: :desc).map do |asset|
-          { id: "asset-#{asset.id}", type: "asset", group: asset.folder.presence || "assets", title: asset.filename, uri: nil,
-            deleted_at: asset.deleted_at.utc.iso8601, referrers: asset.referrers.size }
-        end
-      end
-
-      def item(record, type, group)
-        { id: "#{type}-#{record.id}", type:, group:, title: record.title, uri: record.uri,
-          deleted_at: record.deleted_at.utc.iso8601, referrers: record.referrers.size }
       end
     end
   end

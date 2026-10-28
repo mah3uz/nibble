@@ -42,4 +42,20 @@ class Nibble::Cp::NotificationsControllerTest < ActionDispatch::IntegrationTest
     row = response.parsed_body["notifications"].find { |item| item["title"] == "Linked" }
     assert_equal "/cp/collections/articles/entries/#{entry.id}/edit", row["url"], "a mention you can't click through to is a dead end"
   end
+
+  test "an old notification beyond the first screen is still reachable by paging back from the oldest shown" do
+    Nibble::Records::Notification.where(user_id: users(:editor).id).delete_all
+    ids = 30.times.map { |n| Nibble::Records::Notification.create!(user_id: users(:editor).id, kind: "comment.mentioned", data: { "title" => "N#{n}" }).id }
+
+    get "/cp/notifications", as: :json
+    first = response.parsed_body
+    assert_equal 25, first["notifications"].size
+    assert first["more"]
+    assert_equal 30, first["unread"]
+
+    get "/cp/notifications", params: { before: first["notifications"].last["id"] }, as: :json
+    rest = response.parsed_body
+    assert_equal ids.first(5).reverse, rest["notifications"].map { |row| row["id"] }
+    assert_not rest["more"]
+  end
 end

@@ -41,14 +41,20 @@ const ICONS: Record<string, string> = {
 const items = ref<Notification[]>([])
 const unread = ref(0)
 const open = ref(false)
+const more = ref(false)
 
-async function load() {
-  const response = await fetch('/cp/notifications', { headers: { Accept: 'application/json' } })
+async function load(before?: number) {
+  const response = await fetch(before ? `/cp/notifications?before=${before}` : '/cp/notifications', {
+    headers: { Accept: 'application/json' },
+  })
   if (!response.ok) return
   const payload = await response.json()
-  items.value = payload.notifications
+  items.value = before ? [...items.value, ...payload.notifications] : payload.notifications
   unread.value = payload.unread
+  more.value = payload.more
 }
+
+const loadMore = () => load(items.value.at(-1)?.id)
 
 async function send(method: 'PUT' | 'DELETE', id?: number) {
   const csrf = document.querySelector<HTMLMetaElement>('meta[name=csrf-token]')?.content ?? ''
@@ -58,8 +64,14 @@ async function send(method: 'PUT' | 'DELETE', id?: number) {
   })
   if (!response.ok) return
   const payload = await response.json()
-  items.value = payload.notifications
   unread.value = payload.unread
+  if (method === 'PUT')
+    items.value = items.value.map((item) => (!id || item.id === id ? { ...item, read: true } : item))
+  else if (id) items.value = items.value.filter((item) => item.id !== id)
+  else {
+    items.value = []
+    more.value = false
+  }
 }
 
 const markRead = (id?: number) => send('PUT', id)
@@ -85,7 +97,7 @@ onMounted(load)
         type="button"
         class="relative inline-flex size-8 cursor-pointer items-center justify-center rounded-lg text-white/85 hover:bg-white/15"
         :aria-label="unread ? `Notifications, ${unread} unread` : 'Notifications'"
-        @click="load"
+        @click="load()"
       >
         <CpIcon name="bell" class="size-4" />
         <span v-if="unread" class="absolute top-1.5 right-1.5 size-2 rounded-full bg-rose-500 ring-2 ring-header" />
@@ -142,6 +154,11 @@ onMounted(load)
               @click="remove(item.id)"
             >
               <CpIcon name="x" class="size-3" />
+            </Button>
+          </li>
+          <li v-if="more" class="flex justify-center py-1">
+            <Button variant="ghost" size="xs" class="text-gray-600 dark:text-gray-400" @click="loadMore">
+              Load more
             </Button>
           </li>
         </ul>
