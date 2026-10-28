@@ -31,6 +31,12 @@ module Nibble
 
       def assets = list("assets")
 
+      def asset_file(path)
+        folder = @root.join("assets").expand_path
+        file = folder.join(path.to_s).expand_path
+        file if file.to_s.start_with?("#{folder}/") && file.file?
+      end
+
       def list(name)
         file = %W[#{name}.yml #{name}.json].map { |candidate| @root.join(candidate) }.find(&:file?) or return []
         Array(parse(file))
@@ -39,7 +45,7 @@ module Nibble
       private
 
       def document(relative)
-        return if relative.start_with?("redirects.", "assets.")
+        return if relative.start_with?("redirects.", "assets.", "assets/")
 
         parts = relative.sub(/\.(ya?ml|json)\z/, "").split("/")
         kind = parts.shift
@@ -76,12 +82,20 @@ module Nibble
     end
 
     class References
-      def initialize(documents)
+      def self.asset_location(key)
+        folder, filename = File.split(key.to_s)
+        [ folder == "." ? "" : folder, filename ]
+      end
+
+      def initialize(documents, asset_files: [])
+        @asset_files = asset_files.map { |path| clean_location(path) }.to_set
         @package = documents.select { |doc| %w[collections taxonomies].include?(doc.kind) }.index_by { |doc| [ doc.kind == "collections" ? "entry" : "term", doc.locale, doc.key ] }
         @ids = {}
       end
 
-      def known?(type, locale, key) = @package.key?([ type, locale, key ]) || existing(type, locale, key).present?
+      def known?(type, locale, key) = @package.key?([ type, locale, key ]) || existing(type, locale, key).present? || packaged_asset?(type, key)
+
+      def packaged_asset?(type, key) = type == "asset" && @asset_files.include?(clean_location(key))
 
       def record!(document, record) = @ids[[ record.record_type, document.locale, document.key ]] = record.id
 
@@ -94,7 +108,8 @@ module Nibble
         return nil if slugs.empty? && type != "asset"
 
         if type == "asset"
-          Records::Asset.kept.find_by(folder: slugs.any? ? [ handle, *slugs[0..-2] ].join("/") : "", filename: slugs.last || handle)
+          folder, filename = self.class.asset_location(key)
+          Records::Asset.kept.find_by(folder:, filename: [ filename, Assets.clean_filename(filename) ].uniq)
         elsif type == "term"
           Records::Term.kept.find_by(taxonomy: handle, locale:, slug: slugs.join("/"))
         else
@@ -103,6 +118,13 @@ module Nibble
             found or break nil
           end
         end
+      end
+
+      private
+
+      def clean_location(key)
+        folder, filename = self.class.asset_location(key)
+        [ folder, Assets.clean_filename(filename) ]
       end
     end
 
@@ -117,7 +139,7 @@ module Nibble
         return key.to_s if key.to_s.match?(/\A\d+\z/)
 
         id = @references.id(type.to_s, @locale, key)
-        raise Error, "unknown #{type} reference '#{key}'" if id.nil? && @strict
+        raise Error, "unknown #{type} reference '#{key}'" if id.nil? && @strict && !@references.packaged_asset?(type.to_s, key)
 
         id&.to_s
       end
@@ -146,19 +168,21 @@ module Nibble
         @update = mode.to_s == "update"
         @dry_run = dry_run
         @lifecycle_mode = notify ? :import_notify : :import
+        @previewing = false
       end
 
       def validate
         @documents = @reader.documents
         @redirects = @reader.redirects
-        @references = References.new(@documents)
         @assets = @reader.assets
+        @references = References.new(@documents, asset_files: packaged_assets.map { |row| row["path"] })
         errors = @reader.errors + @documents.flat_map { |doc| document_errors(doc) } + redirect_errors + asset_errors
         Report.new(errors:, created: [], updated: [], skipped: [])
       end
 
       def preview
         report = nil
+        @previewing = true
         ActiveRecord::Base.transaction do
           report = call
           raise ActiveRecord::Rollback
@@ -173,6 +197,7 @@ module Nibble
         created = []
         updated = []
         skipped = []
+        upload_assets(created)
         ActiveRecord::Base.transaction do
           records = []
           existing = []
@@ -370,7 +395,31 @@ module Nibble
         :created
       end
 
-      # Binaries travel separately, so a row only ever describes an asset that is already here.
+      def packaged_assets
+        @assets.select { |row| row.is_a?(Hash) && row["path"].present? && @reader.asset_file(row["path"]) }
+      end
+
+      def upload_assets(created)
+        packaged_assets.each do |row|
+          next if @references.existing("asset", nil, row["path"])
+
+          created << "assets/#{row['path']}"
+          upload_asset(row) unless @previewing
+        end
+      end
+
+      def upload_asset(row)
+        folder, filename = References.asset_location(row["path"])
+        Records::AssetFolder.ensure!(folder) if folder.present?
+        blob = @reader.asset_file(row["path"]).open do |io|
+          ActiveStorage::Blob.create_and_upload!(io:, filename:, content_type: row["mime"])
+        end
+        result = Assets::Upload.call(blob, row.slice(*ASSET_KEYS).merge("folder" => folder), actor: Principal.system)
+        raise Error, "assets/#{row['path']}: #{result.errors.values.flatten.to_sentence}" unless result.ok?
+
+        Jobs::AnalyzeAsset.perform_now(result.record)
+      end
+
       def save_asset(row)
         asset = @references.existing("asset", nil, row["path"]) or return :skipped
         return :skipped unless @update

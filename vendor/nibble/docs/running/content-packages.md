@@ -114,16 +114,36 @@ is written, so a typo stops the import rather than half-filling a database.
 > `--mode=update` replaces what editors have changed since the package was made. Use it on a database you are
 > happy to overwrite — a demo, a fresh copy — not on the live site.
 
-> [!WARNING]
-> `assets.yml` holds each asset's details — alt text, focal point, folder — but not the file. An import in `update`
-> mode refreshes the details of assets that already exist and skips everything else, so move the files themselves
-> separately: upload them again, or copy the storage volume or bucket.
+A package can carry its images and files. Beside `assets.yml`, an `assets/` folder holds each file at the `path` its
+row names:
+
+```
+site/packages/default/
+├── assets.yml                  # - path: team/Priya Nair.JPG
+└── assets/team/Priya Nair.JPG
+```
+
+An import uploads each such file before it creates entries and terms, but only when the site has no asset at that
+folder and filename, so running it again uploads nothing. The row's details (title, alt text, focal point, tags)
+are applied to the uploaded asset. `--dry-run` lists the uploads (`+ assets/team/Priya Nair.JPG`) and writes
+nothing. A row with no file under `assets/` describes an asset that must already be on the site: `--mode=update`
+refreshes its details and the import skips it otherwise, and a reference to an asset the site does not have fails
+validation.
+
+> [!NOTE]
+> An upload stores the filename lowercased and made URL-safe, so `Team Photo (1).JPG` becomes `team-photo-1.jpg`.
+> A package may write a reference either way: `team/Priya Nair.JPG` and `team/priya-nair.jpg` both find the stored
+> asset. Exported paths are already in the stored form.
+
+An import stores exactly what the package says. It does not fill in a blueprint's `default` values, because an
+export leaves out empty fields and filling defaults would bring back a value an editor had cleared. A package
+written by hand therefore states every value it wants.
 
 ### 4.1 From the Control Plane
 
 **Utilities** has the same thing for people without a terminal: **export** downloads the site's content as a zip, and
 **import** takes one, shows what it would create or change, and only writes when you confirm. Both need their own
-permissions, and ask for your password again.
+permissions, and ask for your password again. The zip carries the `assets/` folder too, and a confirmed import uploads it the same way.
 
 ## 5. On a fresh install
 

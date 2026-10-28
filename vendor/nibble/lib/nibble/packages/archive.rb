@@ -39,7 +39,7 @@ module Nibble
           prefix = wrapper_folder(entries)
           entries.each do |entry|
             relative = safe_path(entry.name.delete_prefix(prefix))
-            next unless EXTENSIONS.include?(File.extname(relative).downcase)
+            next unless EXTENSIONS.include?(File.extname(relative).downcase) || relative.start_with?("assets/")
 
             target = root.join(relative)
             target.dirname.mkpath
