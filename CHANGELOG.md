@@ -36,6 +36,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   developing. It works in development and test only; production ignores it, and `nibble:check` reports it there.
 - **An API connection's `base_url` can use `{config.x}` and `{secret.x}`,** so development, staging and production
   can call different addresses.
+- **Back closes the open dialog or panel in the Control Plane,** innermost first, instead of leaving the page, and a
+  dialog closed another way leaves no extra step in the browser's history.
 - **The generated types have a union per collection and taxonomy** (`PagesEntry`, `TopicsTerm`), for a view that
   renders any of its blueprints.
 
