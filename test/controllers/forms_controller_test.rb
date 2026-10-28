@@ -69,12 +69,40 @@ class FormsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 5, Submission.count
   end
 
-  test "a form that doesn't store keeps nothing, and skips CAPTCHA until one is configured" do
-    submit :signup, { email: "ada@example.test" }
+  test "a form that doesn't store keeps nothing" do
+    captcha(provider: "turnstile")
+    stub_request(:post, TURNSTILE).to_return(body: { success: true }.to_json)
+
+    submit :signup, { email: "ada@example.test", _captcha: "good" }
 
     assert_response :created
     assert_equal "/thanks", response.parsed_body["redirect"]
     assert_empty Submission.all
+  end
+
+  test "a CAPTCHA form with no keys refuses everyone and logs it, so removing the keys can't silently open the form to spam" do
+    logged = StringIO.new
+    previous = Rails.logger
+    Rails.logger = ActiveSupport::Logger.new(logged)
+
+    submit :signup, { email: "ada@example.test", _captcha: "anything" }
+
+    assert_response :unprocessable_entity
+    assert_equal [ "This form can't take submissions right now. Please try again later." ], response.parsed_body["errors"]["base"]
+    assert_includes logged.string, "signup"
+  ensure
+    Rails.logger = previous
+  end
+
+  test "with keys set, a missing token is refused and a valid one accepted" do
+    captcha(provider: "turnstile")
+    stub_request(:post, TURNSTILE).with(body: hash_including("response" => "good")).to_return(body: { success: true }.to_json)
+
+    submit :signup, { email: "ada@example.test" }
+    assert_response :unprocessable_entity
+    assert_equal [ "Please confirm you're not a robot." ], response.parsed_body["errors"]["base"]
+    submit :signup, { email: "ada@example.test", _captcha: "good" }
+    assert_response :created
   end
 
   test "Turnstile tokens are verified server-side, and a failed or missing check blocks the submission" do
@@ -114,7 +142,9 @@ class FormsControllerTest < ActionDispatch::IntegrationTest
     post "/forms/contact", params: VALID.except(:email), headers: { "Referer" => "http://www.example.com/contact" }
     assert_equal({ "email" => "The email field is required." }.keys, flash[:nibble_form]["errors"].keys)
 
-    post "/forms/signup", params: { email: "ada@example.test" }
+    captcha(provider: "turnstile")
+    stub_request(:post, TURNSTILE).to_return(body: { success: true }.to_json)
+    post "/forms/signup", params: { email: "ada@example.test", _captcha: "good" }
     assert_redirected_to "/thanks"
 
     post "/forms/contact", params: VALID, headers: { "Referer" => "https://evil.test/phish" }

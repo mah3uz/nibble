@@ -22,11 +22,11 @@ module Nibble
           "og" => { "w" => 1200, "h" => 630, "fit" => "crop" }
         }
       },
-      "outbound" => { "allowed_hosts" => [], "secrets" => [], "config" => {} }
+      "outbound" => { "allowed_hosts" => [], "secrets" => [], "config" => {}, "allow_private_networks" => false }
     }.freeze
 
     attr_reader :load_defaults, :theme, :url, :locales, :reserved_paths, :disable, :trash_retention_days, :session_idle, :asset_extensions, :asset_presets, :max_upload_bytes,
-                :outbound_allowed_hosts, :outbound_secrets, :outbound_config
+                :outbound_allowed_hosts, :outbound_secrets, :outbound_config, :outbound_allow_private_networks
 
     def initialize(values, themes_path: nil, site_schema_path: nil, content_path: nil, published_path: nil, types_path: nil, agents_path: nil)
       values = DEFAULTS.deep_merge(values.to_h.deep_stringify_keys.compact)
@@ -52,6 +52,7 @@ module Nibble
       @outbound_allowed_hosts = Array(outbound["allowed_hosts"]).map { |host| host.to_s.downcase }.freeze
       @outbound_secrets = Array(outbound["secrets"]).map(&:to_s).freeze
       @outbound_config = outbound["config"].to_h.deep_dup.freeze
+      @outbound_allow_private_networks = outbound["allow_private_networks"] == true
       freeze
     end
 

@@ -21,7 +21,7 @@ module Nibble
       def call
         return result(:rate_limited, errors: { "base" => [ "Too many submissions. Please try again in a minute." ] }) if rate_limited?
         return spam! if @form.honeypot && @params[@form.honeypot].present?
-        return result(:invalid, errors: { "base" => [ "Please confirm you're not a robot." ] }) unless captcha_passed?
+        return result(:invalid, errors: { "base" => [ captcha_message ] }) unless captcha_passed?
 
         fields = @form.fields
         values = @params.slice(*fields.handles)
@@ -48,8 +48,18 @@ module Nibble
       def captcha_passed?
         return true unless @form.captcha?
 
-        settings = Integrations.captcha or return true
+        settings = Integrations.captcha or return captcha_unavailable!
         Captcha.verify(settings, Captcha.token(@params), ip: @ip)
+      end
+
+      def captcha_unavailable!
+        @captcha_unavailable = true
+        Rails.logger.warn("Form '#{@form.handle}' has captcha: true but Integrations has no CAPTCHA keys, so its submissions are refused")
+        false
+      end
+
+      def captcha_message
+        @captcha_unavailable ? "This form can't take submissions right now. Please try again later." : "Please confirm you're not a robot."
       end
 
       def spam!

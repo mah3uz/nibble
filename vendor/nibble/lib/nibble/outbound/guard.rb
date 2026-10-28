@@ -32,10 +32,14 @@ module Nibble
 
         addresses = literal(host) || resolver.call(host)
         raise Refused, "#{host} doesn't resolve" if addresses.empty?
-        raise Refused, "#{host} points at a private or reserved address" if addresses.any? { |address| blocked_ip?(address) }
+        if !private_networks_allowed? && addresses.any? { |address| blocked_ip?(address) }
+          raise Refused, "#{host} points at a private or reserved address"
+        end
 
         addresses.first
       end
+
+      def private_networks_allowed? = Nibble.config.outbound_allow_private_networks && (Rails.env.development? || Rails.env.test?)
 
       def allowed_host?(host)
         allowed = Nibble.config.outbound_allowed_hosts

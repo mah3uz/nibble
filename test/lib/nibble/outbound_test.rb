@@ -86,6 +86,33 @@ class Nibble::OutboundTest < ActiveSupport::TestCase
     refused("https://api.example.test/loop")
   end
 
+  test "allow_private_networks lets a developer call a private host, but only in development and test, and nothing else is relaxed" do
+    refused("https://internal.example.test/")
+
+    configure("allow_private_networks" => true)
+    assert_equal "10.0.0.5", Outbound::Guard.check!(URI("https://internal.example.test/"))
+    assert_raises(Outbound::Refused) { Outbound::Guard.check!(URI("https://nowhere.example.test/")) }
+    assert_raises(Outbound::Refused) { Outbound::Guard.check!(URI("ftp://internal.example.test/")) }
+    Rails.env = "production"
+    assert_raises(Outbound::Refused) { Outbound::Guard.check!(URI("https://internal.example.test/")) }
+    Rails.env = "test"
+
+    configure("allow_private_networks" => true, "allowed_hosts" => [ "api.example.test" ])
+    assert_raises(Outbound::Refused) { Outbound::Guard.check!(URI("https://internal.example.test/")) }
+  ensure
+    Rails.env = "test"
+  end
+
+  test "an API connection's base_url takes config and secret values like its path and headers" do
+    configure("config" => { "crm_url" => "https://api.example.test/v1" }, "secrets" => [ "crm_token" ])
+    stub_request(:post, "https://api.example.test/v1/leads").to_return(status: 200)
+    item = Nibble::Schema::Item.new(kind: "apis", handle: "crm", parent: nil, path: "apis/crm.yml", layer: :site, data: { "base_url" => "{config.crm_url}/" })
+
+    response = Outbound::Connection.new(item:).request(:post, "/leads", purpose: "test", template: Outbound::Template.new)
+
+    assert response.ok?, "the request went to the rendered base_url"
+  end
+
   test "only http and https are allowed, and an allowlist narrows public hosts when set" do
     %w[file:///etc/passwd ftp://api.example.test/ gopher://api.example.test/].each { |url| refused(url) }
 

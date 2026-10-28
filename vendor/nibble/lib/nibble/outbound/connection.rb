@@ -9,11 +9,15 @@ module Nibble
       def retry_policy = { "attempts" => 3, "backoff_seconds" => 30 }.merge(item["retry"].to_h)
       def error_mapping = item["errors"].to_h
 
-      def url(path) = path.to_s.match?(%r{\Ahttps?://}) ? path.to_s : "#{base_url.chomp('/')}/#{path.to_s.delete_prefix('/')}"
+      def url(path, template = Template.new)
+        return path.to_s if path.to_s.match?(%r{\Ahttps?://})
+
+        "#{template.render(base_url).to_s.chomp('/')}/#{path.to_s.delete_prefix('/')}"
+      end
 
       def request(method, path, purpose:, template: Template.new, headers: {}, body: nil, **options)
         rendered_headers = template.render(item["headers"].to_h).merge(headers)
-        target = url(template.render(path))
+        target = url(template.render(path), template)
         payload = template.render(body)
         Outbound.request(method, target, purpose:, headers: rendered_headers, body: payload, timeout:, secrets: template.secrets_used, **options)
       end

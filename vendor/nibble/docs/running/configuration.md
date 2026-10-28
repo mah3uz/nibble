@@ -99,6 +99,11 @@ In production, a missing job or a passkey setting that no longer allows the site
 | `outbound.allowed_hosts` | the only hosts Nibble may call, for form deliveries and webhooks |
 | `outbound.secrets` | the secret names those calls may use |
 | `outbound.config` | plain values those calls may use, as `{config.name}` |
+| `outbound.allow_private_networks` | `true` lets calls reach your own machine or a private network while developing; `false` by default |
+
+`outbound.allow_private_networks` is for calling a CRM or API on your own machine or a private network while you
+develop. It only takes effect in development and test; production ignores it, and `bin/rails nibble:check` reports an
+error if it is set there. Everything else still applies: only http and https, `allowed_hosts`, and the host must resolve.
 
 > [!NOTE]
 > `reserved_paths` only adds. Nibble always reserves `/cp`, `/api`, `/forms`, `/media`, `/assets`, `/nibble-assets`, `/up`,

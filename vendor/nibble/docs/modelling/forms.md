@@ -143,6 +143,29 @@ api:
 at once, and a failed delivery is retried and shown on the submission in the Control Plane. `mode: sync` makes the
 visitor wait for it instead.
 
+A delivery counts as rejected, rather than failed, when the other system answers 400 or 422. A failed delivery is
+retried; a rejected one is not, because sending the same data again would get the same answer. List other statuses
+under `errors.status` to change which answers are rejections:
+
+```yaml
+api:
+  - url: https://api.crm.example/v1/leads
+    mode: sync
+    errors:
+      status: [400, 409, 422]
+      path: errors
+```
+
+Nibble reads the field errors out of the JSON the other system returns. `errors.path` is where they are, as dotted
+keys (`data.errors`); without it Nibble reads the top-level `errors`. They can be an object of `field: message`, or a
+list of `{ field, message }` objects, and `errors.field` and `errors.message` name those two keys if the other system
+calls them something else. A field name that is not one of the form's fields is shown as a general error on the form.
+If the other system's names differ from yours, `error_fields` renames them: `error_fields: { email_address: email }`.
+
+With `mode: sync` a rejection puts those messages on the visitor's form, beside the matching fields, and the
+submission is not reported as a success. With `mode: async` the visitor has already seen the success message, so a
+rejection is shown on the submission in the Control Plane instead.
+
 Nibble only calls out to hosts you allow, and only uses secrets you name:
 
 ```yaml
@@ -170,7 +193,20 @@ headers:
 timeout: 10
 ```
 
-and deliver to it with `use: crm` instead of `url:`.
+and deliver to it with `use: crm` instead of `url:`, adding the path to call with `path:`.
+
+`base_url`, like the path and the headers, can use `{config.x}` and `{secret.x}`, so the address can differ per
+environment without editing the schema:
+
+```yaml
+base_url: "{config.crm_url}/v1"
+```
+
+with `crm_url` set under `outbound.config` in `config/nibble.yml`. The rendered address is still checked against
+`outbound.allowed_hosts`.
+
+A connection can hold the `errors` mapping described above, so every form that uses it reads rejections the same
+way; a delivery's own `errors` keys win over the connection's.
 
 ### 5.2 Handlers in Ruby
 
@@ -197,7 +233,7 @@ personal details for years. `store: false` keeps nothing at all — the email an
 | `title`, `fields` | **required** |
 | `success` | `{ message }` or `{ redirect }` |
 | `notify` | a list of `{ to, reply_to, fields }` |
-| `api` | a list of `{ url or use, method, format, body, mode }` |
+| `api` | a list of `{ url or use, path, method, format, body, mode, errors, error_fields, retry }`; `errors` is `{ status, path, field, message }`, and a connection in `site/schema/apis/` takes `base_url`, `headers`, `timeout`, `errors` and `retry` |
 | `spam` | `{ honeypot, rate_limit: { requests, per_minutes }, captcha }` |
 | `store`, `cp_notify` | true / false |
 | `retention_days` | a positive number |

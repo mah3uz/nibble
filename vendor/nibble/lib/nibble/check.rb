@@ -54,6 +54,7 @@ module Nibble
       end
       # A build has no database and no secrets, so what needs either is checked where the site runs.
       check_database(schema) unless @static
+      check_outbound
       check_navigation(schema)
       check_icons(schema)
       check_search(schema)
@@ -97,11 +98,31 @@ module Nibble
       return problem("database", "not set up, or has migrations to run: run bin/rails db:prepare") if database_behind?
 
       check_roles(schema)
+      check_captcha(schema)
       capture("site/schema/migrations") { ContentMigrations.pending } if @config.equal?(Nibble.config)
       check_drift(schema) if @config.equal?(Nibble.config)
     end
 
     def database_behind? = ActiveRecord::Base.connection_pool.migration_context.needs_migration?
+
+    def check_captcha(schema)
+      return if Integrations.captcha
+
+      schema.forms.each do |item|
+        next unless Forms::Form.new(item:).captcha?
+
+        @warnings << Problem.new(source: item.path.to_s.delete_prefix("#{Rails.root}/"), level: :warning,
+          message: "has captcha: true but Integrations has no CAPTCHA keys, so every submission is refused")
+      end
+    rescue ActiveRecord::StatementInvalid
+      nil
+    end
+
+    def check_outbound
+      return unless @config.outbound_allow_private_networks && Environment.deployed?
+
+      problem("outbound.allow_private_networks", "is set in #{Rails.env}, where it is ignored: remove it from config/nibble.yml")
+    end
 
     def check_roles(schema)
       return unless @config.equal?(Nibble.config)

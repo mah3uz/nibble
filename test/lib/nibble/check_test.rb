@@ -24,6 +24,31 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     assert_not_includes sources, "backups"
   end
 
+  test "a form that needs a CAPTCHA warns, not fails, while Integrations has no keys" do
+    theme_file("forms/signup.yml", title: "Signup", fields: [ { handle: "email", field: { type: "text", input_type: "email" } } ],
+      spam: { captcha: true }, success: { message: "Thanks!" })
+
+    result = check
+    assert(result.warnings.any? { |warning| warning.source.end_with?("forms/signup.yml") && warning.message.include?("no CAPTCHA keys") })
+    assert_empty result.problems.select { |problem| problem.source.include?("forms/signup") }
+
+    original = Nibble::Integrations.method(:captcha)
+    Nibble::Integrations.define_singleton_method(:captcha) { { "provider" => "turnstile" } }
+    assert_not check.warnings.any? { |warning| warning.message.include?("no CAPTCHA keys") }
+  ensure
+    Nibble::Integrations.define_singleton_method(:captcha, original) if original
+  end
+
+  test "allow_private_networks is an error where it is ignored, and fine in development and test" do
+    config = Nibble::Config.new({ "theme" => "check", "locales" => [ { "code" => "en", "default" => true } ], "outbound" => { "allow_private_networks" => true } }, themes_path: @themes)
+
+    assert Nibble::Check.run(config:).problems.none? { |problem| problem.source == "outbound.allow_private_networks" }
+    Rails.env = "production"
+    assert Nibble::Check.run(config:, static: true).problems.any? { |problem| problem.source == "outbound.allow_private_networks" }
+  ensure
+    Rails.env = "test"
+  end
+
   test "a database that isn't set up is one problem naming the fix, not a crash on its missing tables" do
     check = Nibble::Check.new(config: Nibble.config)
     check.define_singleton_method(:database_behind?) { true }
