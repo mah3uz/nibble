@@ -12,12 +12,74 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's new
+
+- **Scheduled tasks.** A task in `site/schema/tasks/` runs on a schedule such as `every 2 hours`, `at 5am every day`
+  or a cron line, in the site's time zone. It can fetch from an API into a global, import a feed into a collection,
+  call a URL, or run a Ruby handler. Tasks tick with the publishing schedule, so none needs a `config/recurring.yml`
+  entry. Each slot runs once, a run never overlaps the one before, a failing API leaves stored values as they were,
+  and administrators are told once when a task starts failing. An import changes only the entries it created, and
+  leaves one alone while an editor has unpublished edits to it. A handler's context can update a global and call an
+  API connection, which makes it the supported way for site code to do either. `nibble:check` checks every task, and
+  **Utilities → Scheduled tasks** shows them, runs one now and pauses one.
+- **A content package can carry its images and files** in an `assets/` folder beside `assets.yml`.
+  `nibble:content:import` and the Control Plane's import upload the ones the site doesn't have before creating
+  entries, and `--dry-run` lists them.
+- **"Use this title as written" in the SEO field** gives a page's `<title>` and `og:title` exactly as the editor
+  wrote them, without the title template.
+- **"Leave out of the sitemap" in the SEO field** keeps an entry out of the sitemap while it stays indexable, and a
+  collection's sitemap lists its index page, dated by its newest published entry.
+- **A block's query can take how many items to show from the block** (`limit: $set.count`, and
+  `paginate.per_page`), so an editor chooses. A blank value falls back to the default, and numbers are held between 1
+  and 100.
+- **`outbound.allow_private_networks`** lets a site call a CRM or API on your own machine or a private network while
+  developing. It works in development and test only; production ignores it, and `nibble:check` reports it there.
+- **An API connection's `base_url` can use `{config.x}` and `{secret.x}`,** so development, staging and production
+  can call different addresses.
+- **The generated types have a union per collection and taxonomy** (`PagesEntry`, `TopicsTerm`), for a view that
+  renders any of its blueprints.
+
 ### What's fixed
 
 - **`nibble:content:import --dry-run` lists what it would create and update,** as the Control Plane's import does,
   instead of only saying the package is valid.
 - **Adding a passkey no longer says it failed when it worked.** The dialog reported "Unexpected end of JSON input"
   after the passkey was saved; check your account's passkeys for one added this way.
+- **A package's asset references match the stored filename as well as the one written,** so `Team Photo (1).JPG`
+  finds the uploaded `team-photo-1.jpg`.
+- **Development serves no cached pages unless `bin/rails dev:cache` is on,** so an edited view shows on the next
+  request, and a change saved from a runner or a job appears.
+- **A block's view no longer receives the block's `id` and `type`,** so the row's id no longer lands as an HTML `id`
+  on the view's root element.
+- **A site's type check covers its own code, not the bundled themes,** so `vue-tsc` passes on a site that doesn't
+  use them.
+
+  **Upgrade:** `tsconfig.app.json` is your site's; remove the two `vendor/nibble/themes/*` lines from its `include`.
+- **The Trash shows a page at a time,** one kind at a time (entries, terms or assets), so something deleted beyond
+  the first screen can still be restored.
+- **Missing pages are paged and searchable by path,** instead of showing only the 100 most visited.
+- **The notification bell loads older notifications** with Load more.
+- **Sorting Users by a column descending works;** it always sorted ascending.
+
+### Changed
+
+- **Redirects are listed like Users:** a page at a time, searched by From and To, sorted by hits or last hit, and
+  deleted in bulk, showing who added each (by hand, automatically or by an import) and when it was last used. Adding
+  or editing one opens a dialog that keeps what you typed when a field is rejected, says what From and To accept,
+  names each status ("Permanent (301)"), and suggests pages for To.
+- **The share image is picked from the media library** and sized by the `og` preset, instead of typed as a URL.
+
+  **Upgrade:** `bin/rails db:migrate` turns a share image that points at one of the site's assets into that asset
+  and removes any other, printing each one so you can pick it again. This migration can't be undone; the snapshot is
+  the way back.
+
+### Security
+
+- **A form with `captcha: true` refuses submissions while no CAPTCHA keys are set,** as the documentation says,
+  instead of accepting every one. The visitor is told the form can't take submissions right now, and `nibble:check`
+  warns about each such form.
+
+  **Upgrade:** if a form uses a CAPTCHA, make sure its keys are under **Globals → Integrations** before you deploy.
 
 ## 0.19.2 — 2026-09-28 15:34 +0600
 
