@@ -6,12 +6,12 @@ const BASE = 'nibbleDialogBase'
 const ENTRY = 'nibbleDialog'
 
 type State = Record<string, unknown> | null
-type Entry = { token: string; href: string; page: unknown }
 
 const open: Array<() => void> = []
-let entry: Entry | null = null
-let leaving: { token?: string; page?: unknown } | null = null
+let entry: { token: string; href: string } | null = null
+let leaving: { token?: string } | null = null
 let visits = 0
+let writes = 0
 let scheduled = false
 let installed = false
 
@@ -25,9 +25,10 @@ function withoutMarks(value: State) {
   return copy
 }
 
-// The entry beneath ours missed any page Inertia wrote into ours while a dialog was open, so it takes that page over.
-function restore(page: unknown) {
-  window.history.replaceState({ ...withoutMarks(state()), page }, '')
+// Inertia may have written a newer page into the dialog's entry, so it rewrites the page into the entry now current,
+// through its own history queue so the write lands after any of its own still pending.
+function rewritePage() {
+  router.remember(++writes, ENTRY)
 }
 
 function sync() {
@@ -38,9 +39,9 @@ function sync() {
     const token = `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`
     window.history.replaceState({ ...withoutMarks(current), [BASE]: token }, '')
     window.history.pushState({ ...withoutMarks(current), [ENTRY]: token }, '')
-    entry = { token, href: here(), page: current.page }
+    entry = { token, href: here() }
   } else if (!open.length && entry) {
-    leaving = { token: entry.token, page: current?.page }
+    leaving = { token: entry.token }
     entry = null
     window.history.back()
   }
@@ -63,14 +64,14 @@ function onPopstate(event: PopStateEvent) {
     schedule()
     if (left.token === undefined) return true
     if (popped?.[BASE] !== left.token) return false
-    restore(left.page)
+    rewritePage()
     return true
   }
   if (entry) {
     const left = entry
     entry = null
     if (popped?.[BASE] !== left.token) return false
-    restore(left.page)
+    rewritePage()
     open.at(-1)?.()
     schedule()
     return true
@@ -98,10 +99,7 @@ function install() {
     if (event.detail.visit.prefetch) return
     visits = Math.max(0, visits - 1)
     if (entry && here() !== entry.href) entry = null
-    else if (entry) {
-      entry.page = state()?.page
-      window.history.replaceState({ ...withoutMarks(state()), [ENTRY]: entry.token }, '')
-    }
+    else if (entry) window.history.replaceState({ ...withoutMarks(state()), [ENTRY]: entry.token }, '')
     schedule()
   })
   router.on('navigate', schedule)

@@ -3,12 +3,14 @@ import { effectScope, nextTick, ref } from 'vue'
 
 type Handler = (event: { detail: { visit: Record<string, unknown> } }) => void
 const handlers = vi.hoisted(() => new Map<string, Handler>())
+const inertia = vi.hoisted(() => ({ page: 'media', write: () => {} }))
 vi.mock('@inertiajs/vue3', () => ({
   router: {
     on: (name: string, handler: Handler) => {
       handlers.set(name, handler)
       return () => handlers.delete(name)
     },
+    remember: () => setTimeout(() => inertia.write()),
   },
 }))
 
@@ -93,6 +95,7 @@ function visit(url: string, page: string) {
   handlers.get('before')!({ detail: { visit: pending } })
   handlers.get('start')!({ detail: { visit: pending } })
   const same = url === window.location.href
+  inertia.page = page
   if (pending.replace || same) site.history.replaceState({ page }, '', url)
   else site.history.pushState({ page }, '', url)
   return () => handlers.get('finish')!({ detail: { visit: pending } })
@@ -102,6 +105,8 @@ beforeEach(async () => {
   handlers.clear()
   vi.resetModules()
   site = browser()
+  inertia.page = 'media'
+  inertia.write = () => site.history.replaceState({ page: inertia.page }, '')
   ;(await import('../history-guard')).installHistoryGuard()
   useDialogHistory = (await import('../dialog-history')).useDialogHistory
 })
@@ -207,6 +212,24 @@ describe('useDialogHistory', () => {
     expect(site.history.state).toMatchObject({ page: 'media reloaded' })
   })
 
+  test.each([
+    ['the dialog’s entry', true],
+    ['the page’s entry', false],
+  ])('a page Inertia writes as the dialog closes stays in history when it lands on %s', async (_when, beforeBack) => {
+    const issued = dialog()
+    issued.open.value = true
+    await settle()
+
+    inertia.page = 'media without the secret'
+    if (beforeBack) inertia.write()
+    issued.open.value = false
+    if (!beforeBack) setTimeout(() => setTimeout(() => inertia.write()))
+    await settle()
+
+    expect(site.index()).toBe(1)
+    expect(site.history.state).toMatchObject({ page: 'media without the secret' })
+  })
+
   test('Forward after a Back-close neither reopens the dialog nor reaches Inertia', async () => {
     const editor = dialog()
     editor.open.value = true
@@ -218,6 +241,21 @@ describe('useDialogHistory', () => {
     await settle()
 
     expect(editor.open.value).toBe(false)
+    expect(site.index()).toBe(1)
+    expect(site.inertiaSaw).toEqual([])
+  })
+
+  test('Forward does nothing even after Inertia rewrote the dialog’s entry', async () => {
+    const editor = dialog()
+    editor.open.value = true
+    await settle()
+    visit('https://cms.test/cp/media', 'media saved')()
+    editor.open.value = false
+    await settle()
+
+    site.history.forward()
+    await settle()
+
     expect(site.index()).toBe(1)
     expect(site.inertiaSaw).toEqual([])
   })
