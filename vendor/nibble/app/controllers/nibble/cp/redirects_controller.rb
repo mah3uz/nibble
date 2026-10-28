@@ -5,8 +5,8 @@ module Nibble
 
       def index
         render inertia: "cp/redirects/Index", props: {
-          redirects: Nibble::Records::Redirect.order(:from).map { |redirect| props_for(redirect) },
-          statuses: Nibble::Records::Redirect::STATUSES
+          listing: Nibble::Cp::RedirectListing.new(user: Nibble::Current.user, params:).props,
+          statuses: Nibble::Records::Redirect::STATUSES.map { |status| { value: status, label: Nibble::Cp::RedirectListing.status_label(status) } }
         }
       end
 
@@ -15,21 +15,16 @@ module Nibble
 
       def destroy
         Nibble::Records::Redirect.find(params[:id]).destroy!
-        redirect_to cp_redirects_path, notice: "Redirect deleted."
+        redirect_back_or_to cp_redirects_path, notice: "Redirect deleted."
       end
 
       private
 
       def save(redirect, notice)
         redirect.assign_attributes(params.require(:redirect).permit(:from, :to, :status))
-        return redirect_to(cp_redirects_path, inertia: { errors: redirect.errors.to_hash(true).transform_values(&:first) }) unless redirect.save
+        return redirect_back_or_to(cp_redirects_path, inertia: { errors: redirect.errors.to_hash(true).transform_values(&:first) }) unless redirect.save
 
-        redirect_to cp_redirects_path, notice:
-      end
-
-      def props_for(redirect)
-        { id: redirect.id, from: redirect.from, to: redirect.to, status: redirect.status, source: redirect.source,
-          hits: redirect.hits, last_hit_at: redirect.last_hit_at&.utc&.iso8601 }
+        redirect_back_or_to cp_redirects_path, notice:
       end
     end
   end

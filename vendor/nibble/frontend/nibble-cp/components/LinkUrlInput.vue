@@ -8,6 +8,7 @@ const STATUS_DOT = { draft: 'bg-muted-foreground/40', scheduled: 'bg-amber-500',
 
 const href = defineModel<string>({ required: true })
 defineProps<{ id: string }>()
+defineOptions({ inheritAttrs: false })
 const emit = defineEmits<{ submit: [] }>()
 
 const suggestions = ref<Suggestion[]>([])
@@ -68,6 +69,7 @@ function onKeydown(event: KeyboardEvent) {
 <template>
   <div>
     <Input
+      v-bind="$attrs"
       :id="id"
       v-model="href"
       placeholder="https:// or / for pages and posts"

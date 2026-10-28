@@ -7,8 +7,8 @@ module Nibble
       SOURCES = %w[manual auto import].freeze
       TARGET = %r{\A(?:/\S*|https?://\S+)\z}
 
-      validates :from, presence: true, uniqueness: true, format: { with: %r{\A/\S*\z} }
-      validates :to, presence: true, format: { with: TARGET }
+      validates :from, presence: true, uniqueness: true, format: { with: %r{\A/\S*\z}, message: "must be a path on this site, starting with /" }
+      validates :to, presence: true, format: { with: TARGET, message: "must be a path starting with / or a full http(s) URL" }
       validates :status, inclusion: { in: STATUSES }
       validates :source, inclusion: { in: SOURCES }
       validate :no_loop

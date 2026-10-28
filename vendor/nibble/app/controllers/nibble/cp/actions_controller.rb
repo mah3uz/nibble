@@ -5,6 +5,7 @@ module Nibble
 
       def run
         return delete_submissions if params[:resource].to_s.start_with?("forms.")
+        return delete_redirects if params[:resource] == "redirects"
 
         model, item = resource
         action = ACTIONS.fetch(params[:handle]) { params[:handle].to_s.start_with?("assign_") ? :assign_terms : raise(ActiveRecord::RecordNotFound) }
@@ -27,6 +28,14 @@ module Nibble
         records = Nibble::Records::FormSubmission.where(form: form.handle, id: Array(params[:ids])).to_a
         records.each(&:destroy!)
         redirect_back_or_to "/cp/forms/#{form.handle}", notice: "#{records.size} #{'submission'.pluralize(records.size)} deleted."
+      end
+
+      def delete_redirects
+        raise ActiveRecord::RecordNotFound unless params[:handle] == "delete"
+
+        authorize!("redirects.manage")
+        count = Nibble::Records::Redirect.where(id: Array(params[:ids])).destroy_all.size
+        redirect_back_or_to cp_redirects_path, notice: "#{count} #{'redirect'.pluralize(count)} deleted."
       end
 
       def apply(records, action)
