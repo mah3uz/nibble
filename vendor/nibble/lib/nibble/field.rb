@@ -6,6 +6,7 @@ module Nibble
     BOOLEAN = ->(value) { value == true || value == false }
 
     TEXT = ->(value) { value.is_a?(String) || (value.is_a?(Hash) && value.values.all?(String)) }
+    CONDITIONAL = ->(value) { value.is_a?(Hash) && value.size == 1 && Conditions::KEYS.include?(value.keys.first.to_s) && [ Hash, String ].any? { |type| value.values.first.is_a?(type) } }
 
     COMMON_OPTIONS = {
       "type" => ->(value) { value.is_a?(String) },
@@ -18,7 +19,7 @@ module Nibble
       "messages" => ->(value) { value.is_a?(Hash) && value.values.all? { |message| message.is_a?(String) || (message.is_a?(Hash) && message.values.all?(String)) } },
       "default" => ->(_value) { true },
       "visibility" => ->(value) { VISIBILITIES.include?(value) },
-      "read_only" => BOOLEAN,
+      "read_only" => ->(value) { BOOLEAN.(value) || CONDITIONAL.(value) },
       "always_save" => BOOLEAN,
       "localizable" => BOOLEAN,
       "listable" => ->(value) { [ true, false, "hidden" ].include?(value) },
@@ -73,7 +74,15 @@ module Nibble
     def visibility
       return get("visibility") if get("visibility")
 
-      get("read_only") ? "read_only" : "visible"
+      get("read_only") == true ? "read_only" : "visible"
+    end
+
+    def read_only_condition = get("read_only").is_a?(Hash) ? get("read_only") : nil
+
+    def read_only?(values = {}, root_values: nil)
+      return true if visibility == "read_only"
+
+      read_only_condition.present? && Conditions.visible?(read_only_condition, values:, root_values:, path:, prefix:)
     end
 
     def required? = get("required", false) == true || validation_rules.include?("required")
@@ -164,6 +173,7 @@ module Nibble
         "required" => required?,
         "visibility" => visibility,
         "read_only" => visibility == "read_only",
+        "read_only_when" => read_only_condition,
         "always_save" => always_save?,
         "localizable" => localizable?,
         "hide_display" => get("hide_display", false),

@@ -15,6 +15,7 @@ export type PublishField = {
   required_when?: Record<string, unknown>
   visibility: Visibility
   read_only: boolean
+  read_only_when?: Record<string, unknown> | null
   always_save: boolean
   localizable: boolean
   hide_display: boolean

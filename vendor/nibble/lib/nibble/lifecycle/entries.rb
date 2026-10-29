@@ -53,6 +53,7 @@ module Nibble
         handle = attrs["field"].to_s
         field = record.blueprint_fields.get(handle)
         invalid!(:field, "isn't a taxonomy field on this entry") unless field&.type == "terms"
+        invalid!(:field, "is read-only") if !principal.system? && field.read_only?(record.draft&.data || record.snapshot)
         ids = Array(attrs["term_ids"]).map(&:to_s).compact_blank
         invalid!(:term_ids, "choose at least one term") if ids.empty?
 

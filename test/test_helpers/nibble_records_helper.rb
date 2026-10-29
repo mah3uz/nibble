@@ -149,6 +149,28 @@ module NibbleRecordsHelper
     Nibble::Records::GlobalSet.create!(handle: "site", locale: "en", data: values.deep_stringify_keys)
   end
 
+  def use_read_only_notes
+    schema = @nibble_themes.join("records", "schema")
+    schema.join("collections/notes.yml").write({ "title" => "Notes", "route" => "/notes/{slug}", "blueprints" => [ "note" ] }.to_yaml)
+    FileUtils.mkdir_p(schema.join("blueprints/collections/notes"))
+    schema.join("blueprints/collections/notes/note.yml").write({ "title" => "Note", "tabs" => { "main" => { "sections" => [ { "fields" => [
+      { "handle" => "title", "field" => { "type" => "text", "required" => true } },
+      { "handle" => "code", "field" => { "type" => "text", "read_only" => true } },
+      { "handle" => "origin", "field" => { "type" => "text", "visibility" => "read_only", "default" => "web" } },
+      { "handle" => "locked", "field" => { "type" => "toggle" } },
+      { "handle" => "reference", "field" => { "type" => "text", "read_only" => { "if" => { "locked" => true } } } },
+      { "handle" => "rows", "field" => { "type" => "grid", "fields" => [
+        { "handle" => "label", "field" => { "type" => "text" } },
+        { "handle" => "checksum", "field" => { "type" => "text", "read_only" => true, "default" => "none" } }
+      ] } },
+      { "handle" => "blocks", "field" => { "type" => "replicator", "sets" => { "item" => { "fields" => [
+        { "handle" => "name", "field" => { "type" => "text" } },
+        { "handle" => "source", "field" => { "type" => "text", "read_only" => true } }
+      ] } } } }
+    ] } ] } } }.to_yaml)
+    Nibble.reset_schema!
+  end
+
   def reset_nibble_records_schema
     Nibble.config = nil
     Nibble.reset_schema!

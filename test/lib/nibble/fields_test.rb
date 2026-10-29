@@ -66,6 +66,20 @@ class Nibble::FieldsTest < ActiveSupport::TestCase
     end
   end
 
+  test "read_only takes true, false or one condition, and refuses anything nibble:check couldn't evaluate" do
+    field = fields([ { handle: "ref", field: { type: "fake_text", read_only: { if: { locked: true } } } } ]).get("ref")
+    assert_equal "visible", field.visibility, "a conditional read_only isn't always read-only"
+    assert field.read_only?({ "locked" => true })
+    assert_not field.read_only?({ "locked" => false })
+    assert_equal({ "if" => { "locked" => true } }, field.to_publish_h["read_only_when"])
+
+    [ { if: { a: 1 }, unless: { b: 2 } }, { when: { a: 1 } }, { if: 5 }, "yes" ].each do |malformed|
+      assert_raises(Nibble::SchemaError, match: /fields\.0\.field\.read_only: has an invalid value/) do
+        fields([ { handle: "ref", field: { type: "fake_text", read_only: malformed } } ])
+      end
+    end
+  end
+
   test "extensions can add options to an existing fieldtype" do
     NibbleFakes::FakeText.append_config_fields("autocomplete" => { "type" => "fake_text" })
     assert fields([ { handle: "name", field: { type: "fake_text", autocomplete: "name" } } ]).get("name")

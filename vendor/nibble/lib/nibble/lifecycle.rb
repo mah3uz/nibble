@@ -1,6 +1,7 @@
 module Nibble
   class Lifecycle
-    Result = Data.define(:status, :record, :errors, :referrers) do
+    Result = Data.define(:status, :record, :errors, :referrers, :ignored) do
+      def initialize(status:, record:, errors:, referrers:, ignored: []) = super
       def ok? = status == :ok
       def invalid? = status == :invalid
       def forbidden? = status == :forbidden
@@ -56,8 +57,9 @@ module Nibble
           return result(:conflict, record, errors: { "lock_version" => [ "Someone saved this after you opened it." ] })
         end
 
-        record.class.transaction { handler_class.new(record, attrs, principal:, mode:, action:).public_send(action) }
-        result(:ok, record)
+        handler = handler_class.new(record, attrs, principal:, mode:, action:)
+        record.class.transaction { handler.public_send(action) }
+        result(:ok, record, ignored: handler.ignored)
       rescue Invalid => error
         result(:invalid, record, errors: error.errors)
       rescue ActiveRecord::RecordInvalid => error
@@ -75,7 +77,7 @@ module Nibble
 
       def guards = @guards ||= Hash.new { |hash, key| hash[key] = [] }
 
-      def result(status, record, errors: {}, referrers: []) = Result.new(status:, record:, errors:, referrers:)
+      def result(status, record, errors: {}, referrers: [], ignored: []) = Result.new(status:, record:, errors:, referrers:, ignored:)
     end
   end
 end

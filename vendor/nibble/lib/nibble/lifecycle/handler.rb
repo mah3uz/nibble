@@ -13,13 +13,21 @@ module Nibble
 
       def actor = principal.user
 
+      def ignored = @read_only&.ignored || []
+
       private
 
       def values = @values ||= RecordValues.new(record)
       def field_handles = record.blueprint_fields.handles
       def column_keys = []
 
-      def incoming(base) = starting(base).merge(attrs.slice(*field_handles, *column_keys))
+      def incoming(base)
+        before = starting(base)
+        values = before.merge(attrs.slice(*field_handles, *column_keys))
+        return values if principal.system? || action == "replace_asset"
+
+        (@read_only ||= ReadOnly.new).keep(record.blueprint_fields, values, before)
+      end
 
       # A new record starts from its fields' defaults; an import reproduces its source exactly, empty fields included.
       def starting(base)

@@ -139,6 +139,15 @@ class Nibble::Cp::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ tag.id.to_s ], doc.reload.data["tags"], "a field that shows a choice and then drops it looks like it saved"
   end
 
+  test "an editor can't change a read-only field by posting it, and the rest of the save goes through" do
+    use_read_only_notes
+    note = create_entry("notes", { "title" => "Note", "code" => "SYS-1" })
+
+    patch "/cp/collections/notes/entries/#{note.id}", params: { entry: { title: "Renamed", code: "HACKED", lock_version: note.lock_version } }
+
+    assert_equal [ "Renamed", "SYS-1" ], note.reload.values.values_at("title", "code")
+  end
+
   # Leaving an entry out of search is an editor's call, so it is offered on, and stays off once turned off.
   test "a searched collection's entries get a search toggle that starts on and keeps what's saved" do
     @nibble_themes.join("site_schema").mkpath

@@ -36,24 +36,18 @@ const siblings = computed(
         : container.values.value) as Record<string, unknown>),
     }) as Record<string, unknown>,
 )
-const visible = computed(() =>
-  isVisible(props.field, {
-    values: siblings.value,
-    rootValues: container.values.value,
-    path: path.value,
-    prefix: props.field.prefix,
-  }),
-)
+const conditionContext = computed(() => ({
+  values: siblings.value,
+  rootValues: container.values.value,
+  path: path.value,
+  prefix: props.field.prefix,
+}))
+const visible = computed(() => isVisible(props.field, conditionContext.value))
 const required = computed(
   () =>
     props.field.required ||
     (props.field.required_when
-      ? isVisible(props.field.required_when as Record<string, unknown>, {
-          values: siblings.value,
-          rootValues: container.values.value,
-          path: path.value,
-          prefix: props.field.prefix,
-        })
+      ? isVisible(props.field.required_when as Record<string, unknown>, conditionContext.value)
       : false),
 )
 watch(
@@ -67,7 +61,13 @@ watch(
 onBeforeUnmount(() => container.unsetHiddenField(path.value))
 
 const errors = computed(() => container.errors.value[path.value] ?? [])
-const readOnly = computed(() => props.readOnly || container.readOnly.value || props.field.read_only)
+const readOnly = computed(
+  () =>
+    props.readOnly ||
+    container.readOnly.value ||
+    props.field.read_only ||
+    (props.field.read_only_when != null && isVisible(props.field.read_only_when, conditionContext.value)),
+)
 
 const control = ref<{ fieldActions?: FieldAction[] }>()
 const actions = computed(() => (props.field.actions ? (control.value?.fieldActions ?? []) : []))
