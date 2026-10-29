@@ -66,6 +66,17 @@ class Nibble::Fieldtypes::ContentFieldtypesTest < ActiveSupport::TestCase
     assert_equal "Never had a src", images.first.dig("attrs", "alt"), "the alt text is the author's, not the asset's"
   end
 
+  test "rich text over its character limit is refused by the text it holds, not by its markup, and one at the limit passes" do
+    fields = Nibble::Fields.new([ { "handle" => "body", "field" => { "type" => "rich_text", "character_limit" => 5 } } ])
+    bold = { "type" => "paragraph", "content" => [ { "type" => "text", "text" => "ab", "marks" => [ { "type" => "bold" } ] }, { "type" => "text", "text" => "cde" } ] }
+    validate = ->(nodes) { Nibble::Validator.new(fields).validate("body" => nodes) }
+
+    assert validate.([ bold ]).valid?, "five characters of text across two marked runs fit a limit of five"
+    refused = validate.([ bold, paragraph("f") ])
+    assert_not refused.valid?
+    assert_includes refused.errors["body"].first, "5 characters"
+  end
+
   test "rich text without sets augments to sanitized HTML" do
     html = fieldtype(:rich_text).augment([ paragraph("Hello <script>x</script>") ])
 

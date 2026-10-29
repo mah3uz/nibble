@@ -184,6 +184,7 @@ validate: ["after:today", "before_or_equal:ends_on"]
 | `max_of_set` | `set,n` | a replicator or rich text field holds at most `n` blocks of the set | `max_of_set` |
 | `records_exist` | `type,key=a;b` | every item named is a record of that kind that this field may choose | `records_exist` |
 | `global_links` | — | every link to a global field in rich text names a web-address field of a global set | `global_links` |
+| `max_text` | `n` | a rich text field holds at most `n` characters of text, counting the words and not the formatting or blocks | `max_text` |
 
 ## Rules a fieldtype adds
 
@@ -208,7 +209,7 @@ message keys, and a field's `messages` can reword them.
 | `files` | `array`, `max` for `max_files`, `mimes`, `max_file_size` |
 | `grid` | `array`, `min` and `max` for `min_rows` and `max_rows` |
 | `replicator` | `array`, `max` for `max_sets`, `max_of_set` for a set's `max` |
-| `rich_text` | `global_links` |
+| `rich_text` | `global_links`, `max_text` for `character_limit` |
 | `seo` | its own checks of the title, description, canonical URL, share image, schema type and overrides |
 
 ## Changing a rule's message

@@ -60,6 +60,7 @@ module Nibble
       "max_file_size" => "Each %{attribute} file must not be larger than %{max} MB.",
       "max_of_set" => "The %{attribute} field must not have more than %{max} %{set} blocks.",
       "records_exist" => "The %{attribute} field contains items that don't exist or aren't allowed here.",
+      "max_text" => "The %{attribute} field must not be longer than %{max} characters of text.",
       "global_links" => "The %{attribute} field links to %{refs}, which isn't a web address field of a site setting."
     }.freeze
 

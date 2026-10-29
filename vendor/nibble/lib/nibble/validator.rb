@@ -121,6 +121,7 @@ module Nibble
       when "same" then message.("same", other: humanize(params.first)) unless value == lookup(root, params.first).last
       when "different" then message.("different", other: humanize(params.first)) if value == lookup(root, params.first).last
       when "records_exist" then message.("records_exist") unless records_exist?(value, params)
+      when "max_text" then message.("max_text", max: params.first) if Fieldtypes::RichText.text_length(value) > params.first.to_i
       when "global_links" then GlobalLinks.unknown(value).presence&.then { |refs| message.("global_links", refs: refs.to_sentence) }
       when "mimes" then message.("mimes", values: params.join(", ")) unless Array.wrap(value).all? { |file| Forms::Uploads.allowed?(file, params) }
       when "max_of_set"
