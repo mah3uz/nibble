@@ -9,7 +9,7 @@ order: 5
 # Forms
 
 Tidewater's "Book a demo" form is how sales hears about new customers, so it has to work, reach the right inbox,
-land in the CRM and keep bots out. This guide covers all of that.
+land in the CRM and keep bots out. This guide covers all of that. To draw a form in your theme, see [Forms in your theme](../theming/forms.md).
 
 After reading this guide, you will know:
 
@@ -349,7 +349,7 @@ form:
 ```
 
 The view receives the form's definition — its fields, where to post, the honeypot, the CAPTCHA — and
-`useNibbleForm` does the posting and error handling. See [Theme components](../theming/components.md#6-forms) for
+`useNibbleForm` does the posting and error handling. See [Forms in your theme](../theming/forms.md) for
 a complete form component.
 
 A form posted without JavaScript that fails validation sends the visitor back to the page, and the form's `result` holds

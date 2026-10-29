@@ -123,6 +123,7 @@ it, so a conflict there is harmless.
 |---|---|
 | [Views and layouts](views.md) | which view renders which page, layouts, blocks and error pages |
 | [Queries](queries.md) | the sidecar that fetches what a page needs |
-| [Theme components](components.md) | rich text, images, blocks, pagination, SEO, menus and forms |
+| [Theme components](components.md) | rich text, images, blocks, pagination, SEO and menus |
+| [Forms in your theme](forms.md) | drawing a form and every field, and everything `useNibbleForm` returns |
 | [SEO, sitemaps and feeds](seo-and-feeds.md) | what search engines and feed readers receive |
 | [The Content API](content-api.md) | reading the same content over HTTP |
