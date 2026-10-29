@@ -51,6 +51,19 @@ describe('clampHeadings', () => {
     expect(parsed.content?.[0]).toMatchObject({ type: 'heading', attrs: { level: 2 } })
     editor.destroy()
   })
+
+  it('keeps a pasted heading outside h2–h4 as a heading at the nearest level, not a paragraph', () => {
+    const editor = new Editor({
+      extensions: [...postExtensions, Markdown],
+      content: { type: 'doc', content: [{ type: 'paragraph' }] },
+    })
+    const parsed = editor.markdown!.parse('# Top\n\n##### Deep')
+    expect(parsed.content?.map((node) => [node.type, node.attrs?.level])).toEqual([
+      ['heading', 2],
+      ['heading', 4],
+    ])
+    editor.destroy()
+  })
 })
 
 describe('readingTime', () => {

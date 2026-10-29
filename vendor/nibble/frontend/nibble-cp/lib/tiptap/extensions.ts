@@ -1,3 +1,4 @@
+import Heading from '@tiptap/extension-heading'
 import Image from '@tiptap/extension-image'
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
 import { ListItem } from '@tiptap/extension-list'
@@ -27,12 +28,22 @@ export const PostImage = Image.extend({
 // item requires a leading paragraph and would push the heading out of the list.
 export const PostListItem = ListItem.extend({ content: '(paragraph | heading) block*' })
 
+// Markdown's `#` and `#####` would otherwise arrive as paragraphs, since the editor only allows h2–h4.
+export const PostHeading = Heading.extend({
+  parseMarkdown(token, helpers) {
+    const levels = this.options.levels
+    const level = Math.min(Math.max(token.depth || 1, Math.min(...levels)), Math.max(...levels))
+    return helpers.createNode('heading', { level }, helpers.parseInline(token.tokens || []))
+  },
+}).configure({ levels: [2, 3, 4] })
+
 export const postExtensions = [
   StarterKit.configure({
-    heading: { levels: [2, 3, 4] },
+    heading: false,
     listItem: false,
     link: { openOnClick: false, autolink: true, defaultProtocol: 'https' },
   }),
+  PostHeading,
   PostListItem,
   PostImage,
   Table,

@@ -12,6 +12,18 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+### What's fixed
+
+- **Pasted Markdown keeps its headings.** A `#` or `#####` heading pasted into a rich-text field became a paragraph
+  with Tiptap 3.32; it now becomes the nearest heading the editor allows, h2 or h4.
+
+### Security
+
+- **Fewer packages with known advisories.** Vite, Vitest and Tiptap need releases with their fixes, and `shadcn-vue`,
+  which only scaffolds components and pulled in most of the advisories, is no longer installed. A site's `npm audit`
+  goes from 26 findings to 2 moderate ones in `@tailwindcss/typography`, which only reads Nibble's own stylesheets at
+  build time.
+
 ## 0.21.2 — 2026-10-29 18:40 +0600
 
 ### What's new

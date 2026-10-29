@@ -7,6 +7,7 @@ import StarterKit from '@tiptap/starter-kit'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
 import type { Component } from 'vue'
 import { lowlight } from '@/lib/highlight'
+import { PostHeading } from '@/lib/tiptap/extensions'
 
 export const RichTextCodeBlock = CodeBlockLowlight.configure({ lowlight, enableTabIndentation: true, tabSize: 2 })
 
@@ -29,10 +30,11 @@ export const RichTextImage = Image.extend({
 export const baseExtensions = [
   StarterKit.configure({
     codeBlock: false,
-    heading: { levels: [2, 3, 4] },
+    heading: false,
     listItem: false,
     link: { openOnClick: false, autolink: true, defaultProtocol: 'https' },
   }),
+  PostHeading,
   RichTextCodeBlock,
   ListItem.extend({ content: '(paragraph | heading) block*' }),
   RichTextImage,
