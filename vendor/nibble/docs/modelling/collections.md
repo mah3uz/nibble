@@ -70,14 +70,13 @@ the API — Tidewater could keep testimonials that way and show them on the home
 
 ### 2.2 Changing a route
 
-An entry's URL is worked out when the entry is saved or published, and stored. So a new `route` does not move
-anything by itself: each entry takes the new pattern the next time someone saves or publishes it, and at that
-moment Nibble records a **301 redirect** from its old URL.
+An entry's URL is worked out from the `route` and stored. When the route changes, `bin/rails nibble:prepare`, which
+every deploy runs, moves each entry to its new URL and records a **301 redirect** from the old URL of each live one.
+A taxonomy's terms move the same way, including when a taxonomy that already has terms is given a `route`.
 
-> [!WARNING]
-> Until every entry has been saved again, a collection whose route changed answers at a mix of old and new URLs.
-> After changing a route on a collection with content, re-publish its entries — or plan the change for a
-> collection that is still empty.
+> [!TIP]
+> Locally, run `bin/rails nibble:prepare` yourself after changing a route. Until then, `bin/rails nibble:check`
+> names each collection and taxonomy whose records aren't at the address their route gives.
 
 ### 2.3 Nested pages and the home page
 

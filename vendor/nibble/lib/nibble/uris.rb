@@ -24,18 +24,27 @@ module Nibble
       def settle!(schema: Nibble.schema)
         return 0 unless Nibble.config.defaults_at_least?(SETTLE_SINCE)
 
-        collections = schema.collections.reject { |item| item["files"].present? }.map(&:handle)
-        taxonomies = schema.taxonomies.map(&:handle)
         moved = 0
         SETTLE_PASSES.times do
-          changed = settle(Records::Entry.kept.where(collection: collections)) + settle(Records::Term.kept.where(taxonomy: taxonomies))
+          changed = routed(schema).sum { |scope| settle(scope) }
           moved += changed
           break if changed.zero?
         end
         moved
       end
 
+      def unsettled(schema: Nibble.schema)
+        return [] unless Nibble.config.defaults_at_least?(SETTLE_SINCE)
+
+        routed(schema).flat_map { |scope| scope.find_each.reject { |record| self.for(record) == record.uri } }
+      end
+
       private
+
+      def routed(schema)
+        collections = schema.collections.reject { |item| item["files"].present? }.map(&:handle)
+        [ Records::Entry.kept.where(collection: collections), Records::Term.kept.where(taxonomy: schema.taxonomies.map(&:handle)) ]
+      end
 
       def settle(scope)
         scope.find_each.count do |record|

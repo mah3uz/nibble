@@ -25,6 +25,7 @@ After reading this guide, you will know:
 | Change | What happens to existing content |
 |---|---|
 | add a field, a blueprint, a collection | nothing; the field is empty until someone fills it, even if it has a `default` — [`set_default`](#42-set_default) fills it |
+| change a collection's or taxonomy's `route` | `nibble:prepare` moves every record to its new address, with a 301 from each live one |
 | make a field required | existing entries are fine until next saved, when they must fill it |
 | rename a field or a collection | the old values are stranded under the old name — **migrate** |
 | change a field's type | values stored as the old type may not fit — **check first** |

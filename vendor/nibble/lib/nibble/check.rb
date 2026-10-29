@@ -104,6 +104,7 @@ module Nibble
       check_captcha(schema)
       capture("site/schema/migrations") { ContentMigrations.pending } if @config.equal?(Nibble.config)
       check_drift(schema) if @config.equal?(Nibble.config)
+      check_uris(schema) if @config.equal?(Nibble.config)
     end
 
     def database_behind? = ActiveRecord::Base.connection_pool.migration_context.needs_migration?
@@ -117,6 +118,16 @@ module Nibble
         @warnings << Problem.new(source: item.path.to_s.delete_prefix("#{Rails.root}/"), level: :warning,
           message: "has captcha: true but Integrations has no CAPTCHA keys, so every submission is refused")
       end
+    rescue ActiveRecord::StatementInvalid
+      nil
+    end
+
+    def check_uris(schema)
+      Uris.unsettled(schema:).group_by { |record| record.is_a?(Records::Term) ? [ "taxonomy", record.taxonomy, "term" ] : [ "collection", record.collection, "entry" ] }
+        .each do |(kind, handle, noun), records|
+          @warnings << Problem.new(source: "#{kind} '#{handle}'", level: :warning,
+            message: "has #{records.size} #{noun.pluralize(records.size)} not at the address the route gives; bin/rails nibble:prepare moves them")
+        end
     rescue ActiveRecord::StatementInvalid
       nil
     end

@@ -37,6 +37,25 @@ class Nibble::UrisSettleTest < ActiveSupport::TestCase
     assert_equal 0, Nibble::Uris.settle!, "a settled site has nothing left to move"
   end
 
+  # Saving each term again was the only way to give it a page, and nothing said which ones were left.
+  test "terms that predate their taxonomy's route are named by nibble:check until a prepare gives them pages" do
+    tags = @nibble_themes.join("records/schema/taxonomies/tags.yml")
+    tags.write(YAML.safe_load(tags.read).except("route").to_yaml)
+    configure_nibble_records(load_defaults: "0.15.0")
+    Nibble.reset_schema!
+    term = create_term("Medical")
+    assert_nil term.uri
+
+    tags.write(YAML.safe_load(tags.read).merge("route" => "/categories/{slug}").to_yaml)
+    Nibble.reset_schema!
+    warning = Nibble::Check.run.warnings.find { |item| item.source == "taxonomy 'tags'" }
+    assert_equal "has 1 term not at the address the route gives; bin/rails nibble:prepare moves them", warning&.message
+
+    Nibble::Uris.settle!
+    assert_equal "/categories/medical", term.reload.uri
+    assert_empty Nibble::Uris.unsettled
+  end
+
   test "a site that has not raised load_defaults keeps entries where they are" do
     parent = published_doc({ "title" => "Setup", "slug" => "setup" })
 
