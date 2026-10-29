@@ -201,6 +201,26 @@ class Nibble::Cp::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal users(:editor).name, props.dig("draft", "user"), "another editor needs to know whose unpublished changes these are"
   end
 
+  test "saving changes to an entry just created and published is not mistaken for someone else's newer version" do
+    post entries_path, params: { entry: { title: "Fresh" } }
+    entry = Nibble::Records::Entry.find_by!(title: "Fresh")
+    post "#{entries_path}/#{entry.id}/publish", params: { entry: { lock_version: entry.reload.lock_version } }
+    patch "#{entries_path}/#{entry.id}", params: { entry: { title: "Edited", lock_version: entry.reload.lock_version } }
+
+    get "#{entries_path}/#{entry.id}/edit"
+    assert_equal false, props.dig("draft", "stale"), "nobody published after these changes were started, so the banner must not warn"
+  end
+
+  test "changes started before the live version was last published are flagged, so publishing them can't silently undo it" do
+    entry = publish_entry(create_entry("articles", { "title" => "Live" }))
+    patch "#{entries_path}/#{entry.id}", params: { entry: { title: "Edited", lock_version: entry.lock_version } }
+    travel 1.minute
+    Nibble::Revisions.write(entry.reload, :publish, snapshot: entry.snapshot.merge("title" => "Theirs"), actor: users(:admin))
+
+    get "#{entries_path}/#{entry.id}/edit"
+    assert_equal true, props.dig("draft", "stale")
+  end
+
   test "the live preview renders unsaved values posted as JSON, and saves nothing" do
     entry = publish_entry(create_entry("articles", { "title" => "Live" }))
 

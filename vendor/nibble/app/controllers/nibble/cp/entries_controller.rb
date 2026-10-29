@@ -249,7 +249,7 @@ module Nibble
         draft = entry.draft or return nil
 
         { updated_at: draft.updated_at.utc.iso8601, user: draft.author&.name,
-          stale: entry.updated_at > draft.updated_at }
+          stale: entry.revisions.where(kind: "publish").where.not(created_at: ..draft.created_at).exists? }
       end
 
       def urls(entry)
