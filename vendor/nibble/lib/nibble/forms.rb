@@ -1,6 +1,6 @@
 module Nibble
   module Forms
-    PUBLIC_FIELDTYPES = %w[text textarea integer toggle select radio checkboxes date files calculation].freeze
+    PUBLIC_FIELDTYPES = %w[text textarea integer decimal range rating toggle select radio checkboxes date files calculation].freeze
     CAPTCHA_PROVIDERS = %w[turnstile recaptcha].freeze
     DELIVERY_MODES = %w[sync async].freeze
     DEFAULT_HONEYPOT = "_nibble_hp".freeze
@@ -46,7 +46,7 @@ module Nibble
     DEFAULT_CLOSED_MESSAGE = "This form isn't taking submissions right now.".freeze
     LIMIT_KEYS = %w[max_submissions opens_at closes_at closed_message unique].freeze
     SCHEDULE_LIMITS = %w[max_submissions opens_at closes_at].freeze
-    UNIQUE_FIELDTYPES = %w[text textarea integer select radio date].freeze
+    UNIQUE_FIELDTYPES = %w[text textarea integer decimal select radio date].freeze
     AUTOFILL_NAMES = /name|mail|phone|tel|address|street|city|zip|postal|country|company|organi[sz]ation|website|url|homepage|user|login/i
 
     Form = Data.define(:item) do
@@ -131,7 +131,7 @@ module Nibble
       end
 
       def display_value(field, value, locale = nil)
-        return field.fieldtype.display(value) if field.type == Calculations::TYPE
+        return field.fieldtype.display(value) if field.fieldtype.respond_to?(:display)
 
         labels = field.fieldtype.respond_to?(:options) ? field.fieldtype.options(locale).to_h { |option| [ option["value"].to_s, option["label"].to_s ] } : {}
         case value

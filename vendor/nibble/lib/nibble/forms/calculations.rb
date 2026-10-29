@@ -3,7 +3,7 @@ module Nibble
     # The same walk as `calculate` in frontend/nibble/formula.ts, so a visitor sees the total the server stores.
     class Calculations
       TYPE = "calculation".freeze
-      NUMERIC_TYPES = %w[integer toggle calculation].freeze
+      NUMERIC_TYPES = %w[integer decimal range rating toggle calculation].freeze
       CHOICE_TYPES = %w[select radio].freeze
 
       def self.of(fields) = fields.all.values.select { |field| field.type == TYPE }

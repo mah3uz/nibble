@@ -93,7 +93,7 @@ module Nibble
       when "checkboxes" then "(#{option_union(field)})[]"
       when "select" then field.fieldtype.multiple? ? "(#{option_union(field)})[]" : "#{option_union(field)} | ''"
       when "radio" then "#{option_union(field)} | ''"
-      when "integer", "calculation" then "string | number | null"
+      when "integer", "decimal", "range", "rating", "calculation" then "string | number | null"
       else "string"
       end
     end

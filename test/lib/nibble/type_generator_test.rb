@@ -58,12 +58,15 @@ class Nibble::TypeGeneratorTest < ActiveSupport::TestCase
           { "handle" => "plan", "field" => { "type" => "radio", "options" => %w[free paid] } },
           { "handle" => "many", "field" => { "type" => "select", "multiple" => true, "options" => %w[x y] } },
           { "handle" => "qty", "field" => { "type" => "integer" } },
+          { "handle" => "price", "field" => { "type" => "decimal" } },
+          { "handle" => "mood", "field" => { "type" => "range" } },
+          { "handle" => "stars", "field" => { "type" => "rating" } },
           { "handle" => "total", "field" => { "type" => "calculation", "formula" => "qty * 2" } }
         ] }.to_yaml
       )
       Nibble.reset_schema!
 
-      assert_match "export type SurveyFormValues = { agree: boolean; tags: ('a' | 'it\\'s')[]; plan: 'free' | 'paid' | ''; many: ('x' | 'y')[]; qty: string | number | null; total: string | number | null }", generated
+      assert_match "export type SurveyFormValues = { agree: boolean; tags: ('a' | 'it\\'s')[]; plan: 'free' | 'paid' | ''; many: ('x' | 'y')[]; qty: string | number | null; price: string | number | null; mood: string | number | null; stars: string | number | null; total: string | number | null }", generated
     end
   end
 

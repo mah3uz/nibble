@@ -10,6 +10,10 @@ class FormCalculationsTest < ActionDispatch::IntegrationTest
     { handle: "express", field: { type: "toggle" } },
     { handle: "delivery", field: { type: "radio", options: { "0" => "Collect", "15" => "Deliver" } } },
     { handle: "postcode_fee", field: { type: "integer", if: { delivery: "15" } } },
+    { handle: "weight", field: { type: "decimal", decimals: 1 } },
+    { handle: "effort", field: { type: "range", min: 0, max: 10 } },
+    { handle: "stars", field: { type: "rating", max: 5 } },
+    { handle: "measures", field: { type: "calculation", formula: "{weight} * 10 + {effort} + {stars}" } },
     { handle: "subtotal", field: { type: "calculation", formula: "{quantity} * {size} + {express} * 20" } },
     { handle: "total", field: { type: "calculation", formula: "{subtotal} + {delivery} + {postcode_fee}", decimals: 2, prepend: "$" } }
   ] }.freeze
@@ -33,6 +37,21 @@ class FormCalculationsTest < ActionDispatch::IntegrationTest
     assert_response :created
     data = Submission.sole.data
     assert_equal [ 95, 95 ], data.values_at("subtotal", "total")
+  end
+
+  test "decimal, range and rating posts are stored as numbers, and a formula can name them" do
+    submit quantity: "1", size: "10", delivery: "0", weight: "2.25", effort: "4", stars: "3"
+
+    assert_response :created
+    data = Submission.sole.data
+    assert_equal [ 2.3, 4, 3, 30 ], data.values_at("weight", "effort", "stars", "measures")
+  end
+
+  test "a rating above its max is refused rather than stored" do
+    submit quantity: "1", size: "10", delivery: "0", stars: "6"
+
+    assert_response :unprocessable_entity
+    assert_empty Submission.all
   end
 
   test "an input hidden by its condition counts as 0, even when the browser posts it" do
