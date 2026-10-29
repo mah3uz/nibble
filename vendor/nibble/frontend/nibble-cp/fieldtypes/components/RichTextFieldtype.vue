@@ -716,10 +716,10 @@ function showBubbleMenu({
         </div>
       </div>
 
-      <div v-if="config.reading_time || config.word_count" class="nib-footer">
+      <div v-if="config.reading_time || config.word_count || (limit && !isReadOnly)" class="nib-footer">
         <div v-if="config.reading_time">{{ readTime }} min read</div>
+        <div v-if="limit && !isReadOnly" class="ms-auto" :class="counterClass">{{ characters }} / {{ limit }}</div>
       </div>
-      <p v-if="limit && !isReadOnly" class="mt-1 text-xs" :class="counterClass">{{ characters }} / {{ limit }}</p>
     </div>
   </Teleport>
 
