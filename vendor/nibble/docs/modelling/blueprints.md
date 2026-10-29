@@ -79,7 +79,7 @@ terms. The collection lists which blueprints it allows; the first is the default
 | `width` | how much of the row it takes: `25`, `33`, `50`, `66`, `75` or `100` |
 | `localizable` | the value differs per locale |
 | `listable` | `true` shows it as a column in the listing, `hidden` offers it in the column picker, `false` never |
-| `read_only` | shown but not editable |
+| `read_only` | shown but not editable, and kept as it is on every save — see below; `{ if: … }` makes it read-only while a condition passes |
 | `visibility` | `visible`, `read_only`, `hidden` or `computed` |
 | `api` | `false` leaves the field out of the generated TypeScript types — the value is still sent to pages and the API |
 
@@ -88,6 +88,28 @@ it is off. A toggle that may be left off is not required. The `accepted` rule (`
 any field, taking `true`, `1`, `"1"`, `"yes"`, `"on"` and `"true"`, and says "The Terms field must be accepted."
 `nibble:check` warns, per collection, taxonomy and global set, how many records hold a required toggle that is off, so
 they can be switched on, or the field made optional, before someone next saves them.
+
+A read-only field (`read_only: true` or `visibility: read_only`) keeps what it holds whoever saves: an editor in the
+Control Plane, a token on the management API or an app over MCP. Anything they send for it is ignored and the rest of
+the save goes through. A new entry, term, global set or row starts it from its `default`, or empty. Only Nibble itself
+changes it: package imports, content migrations and scheduled tasks. Restoring a revision leaves it as it is, the
+bulk Assign terms action refuses a read-only terms field, and replacing an asset everywhere from the media library
+replaces it in read-only fields too. In a grid or replicator, a row keeps its read-only
+values by its `id`, so moving a row moves them with it; a row sent without a stored `id` is a new row, and a removed
+row's values go with it.
+
+`read_only` can instead hold one condition, written as a [conditional field](#6-conditional-fields)'s is, which makes
+the field read-only while it passes on the values being saved:
+
+```yaml
+- handle: locked
+  field: { type: toggle }
+- handle: reference
+  field: { type: text, read_only: { if: { locked: true } } }
+```
+
+`nibble:check` refuses a `read_only` that isn't `true`, `false` or a map with exactly one of `if`, `if_any`, `unless`,
+`unless_any`, `show_when`, `show_when_any`, `hide_when` or `hide_when_any`.
 
 A failed rule says "The Phone field format is invalid." unless the field gives its own wording. `messages` is keyed by
 the name of a rule the field has (an `integer` field with a `step` also has `step`, which a form enforces), and each value is a string or a map of locale code to string:

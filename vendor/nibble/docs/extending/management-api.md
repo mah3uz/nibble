@@ -65,6 +65,10 @@ permission is `create_upload`'s, and it can only send files.
 | Assets | `list_assets`, `get_asset`, `create_upload`, `upload_asset`, `update_asset`, `transition_asset` |
 | Forms | `list_form_submissions` |
 
+`list_form_submissions` gives a form's submissions, newest first and spam left out. `since` (an ISO 8601 date or
+date-time) keeps those made at or after it, and `q` those whose values contain the text, ignoring case, as the
+Control Plane's submissions search finds them: values in encrypted fields aren't searched.
+
 A token sees only the operations it may use. There is no search operation: search belongs to a theme's
 [search page](../theming/queries.md#7-search).
 
@@ -126,6 +130,16 @@ file there with no `Authorization` header: `curl -T photo.jpg "<url>"`.
 - **`describe_schema` lists every set.** A replicator's `items` is a `oneOf` with one schema per set: `type` as a
   `const` (the set's handle) beside the set's fields. A grid's `items` lists its fields. Three levels of nesting are
   described; deeper ones are plain objects.
+- **`describe_schema` carries each field's rules**: `maxLength` from `character_limit`, `format` (`email`, `uri`,
+  `date` or `date-time`), `minimum`, `maximum` and `multipleOf` for integers, and `readOnly`. A choice's values are
+  its `enum`, and its labels, when they differ, are listed in its `description`. The `description` also says when a
+  field only applies ("Only when hero_kind is video") or is read-only on a condition; a field that only applies on a
+  condition is never in a row's `required`.
+- **Read-only fields are kept.** A value sent for a read-only field is ignored and the rest of the change is saved.
+  `create_entry`, `update_entry`, `create_term`, `update_term`, `update_global` and `update_asset` answer with an
+  `ignored` list of the fields whose value was kept, as paths such as `code` or `rows.0.checksum`; it is left out
+  when nothing was ignored. Rows in grids and replicators keep their read-only values by `id`, so send each row's
+  `id` back as `get_entry` gave it.
 - **`lock_version` is required** to change something. If someone saved it since you read it, the answer is
   `lock_conflict` with the current `lock_version`, and nothing is overwritten.
 - **`dry_run: true`** checks a change completely and saves nothing. The preview has a `warnings` list for what is
