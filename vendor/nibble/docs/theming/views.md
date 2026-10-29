@@ -1,8 +1,7 @@
 ---
 id: theming-views
 title: Views and layouts
-description: Which view renders which page, what a view receives, layouts, blocks, error pages and code
-  highlighting.
+description: Which view renders which page, what a view receives, layouts, blocks and error pages.
 order: 1
 ---
 
@@ -17,7 +16,6 @@ After reading this guide, you will know:
 - What props every view receives, and how to type them.
 - How to generate a view, and wire it to a collection.
 - How layouts, blocks and error pages work.
-- How to highlight code blocks.
 
 ## 1. Which view renders a request
 
@@ -32,12 +30,15 @@ Once a URL has been resolved, the view is the first of these that is set:
 | a taxonomy's index route | its `index_template`, then `taxonomies/index` |
 | nothing | `errors/404` |
 
+`collections/index` and `taxonomies/index` are used only by a collection or taxonomy that sets an `index_route`
+without an `index_template`; `nibble:check` reports one whose view is missing.
+
 A view name is a path under `views/` without `.vue`: `posts/show` is `site/themes/tidewater/views/posts/show.vue`.
 
 > [!IMPORTANT]
-> Every theme must have `pages/show`, `posts/show`, `posts/index`, `taxonomies/show`, `taxonomies/index`, `search`,
-> `errors/404` and `errors/500`. `nibble:check` names any that are missing. A theme generated from `crumbs` has them
-> all.
+> Every theme must have the views `pages/show`, `posts/show`, `posts/index`, `taxonomies/show`, `taxonomies/index`,
+> `search`, `errors/404` and `errors/500`, and the layout `layouts/default.vue`. `nibble:check` names any that are
+> missing. A theme generated from `crumbs` has them all.
 
 That order is why an unusual page does not need an unusual collection. Tidewater's "Book a demo" page is an
 ordinary page whose own **Template** is set to `demo`.
@@ -56,7 +57,8 @@ wrote site/themes/tidewater/views/customers/show.vue
   add template: customers/show to schema/collections/customers.yml to use it
 ```
 
-Delete the sidecar if the view needs nothing but its own page. Then restart `bin/dev`, since the view is a new file.
+Delete the sidecar if the view needs nothing but its own page. If the browser console reports
+`Page not found: theme/customers/show` while `bin/dev` is running, restart it.
 
 ## 3. What a view receives
 
@@ -67,6 +69,8 @@ Delete the sidecar if the view needs nothing but its own page. Then restart `bin
 | `site` | the locale, the URL, every global and every navigation — usually read through [composables](components.md) |
 | `seo` | the title, description, canonical URL and social tags `SeoHead` renders |
 | `layout`, `preview` | used by Nibble's own components |
+
+[Content in views](content-in-views.md) lists the keys of every record and what each fieldtype's value looks like.
 
 Types for all of it are generated from your schema:
 
@@ -90,7 +94,7 @@ const props = defineProps<ViewProps['posts/show'] & { page: PostsPost }>()
 ```
 
 `ViewProps['posts/show']` types what the sidecar returns; `PostsPost` types the page. A field that does not exist
-is a type error, caught by `npm run check` before it is a broken page.
+is a type error. Check the whole theme with `npx vue-tsc -p tsconfig.app.json --noEmit` before it is a broken page.
 
 > [!IMPORTANT]
 > A view never fetches its own content — no `fetch`, no API calls. Put what it needs in its sidecar, so Nibble
@@ -159,6 +163,9 @@ defineProps<{ heading: string; queries: { posts: PostsPost[] } }>()
 ```
 
 A block whose set has no view renders nothing, so adding a set to a blueprint before its view exists is safe. `nibble:check` warns about it so the missing view is not forgotten.
+
+A set's sidecar may declare `params` too. They are added to the parameters of every page, so a block can read a URL
+parameter the page's own view never mentions.
 Tidewater's pricing block is built end to end in
 [Getting Started](../getting-started/tutorial.md#42-a-block-of-your-own-pricing).
 
@@ -174,16 +181,7 @@ page when they can be loaded, and empty props when loading them fails, so a layo
 > in the dashboard's **Top missing pages** widget. It is the quickest way to find a link that broke. See
 > [Redirects and SEO](../editing/redirects-and-seo.md).
 
-## 7. Highlighting code
+## 7. What's next
 
-Nibble renders a fenced code block as `<pre><code class="language-ruby">`, the shape Prism, highlight.js and Shiki
-all look for, and stops there. **Highlighting is the theme's decision** — a site that publishes no code carries no
-highlighter.
-
-Tidewater's help centre shows code for its API, so its theme highlights in the browser, loading only the languages a
-page uses. The theme copied from `crumbs` already does this in `lib/highlight.ts`, with highlight.js as the theme's
-own dependency.
-
-> [!NOTE]
-> Nibble does not highlight on the server on purpose: server-side highlighting writes inline colours in a theme of
-> its own choosing, which no stylesheet of yours could override.
+- [Content in views](content-in-views.md) — what `page` and the other props hold.
+- [Styling and the page shell](styling-and-shell.md) — `theme.css`, links, head tags and code highlighting.

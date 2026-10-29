@@ -37,8 +37,7 @@ output depends only on parameters Nibble knows about.
 You rarely read `site`, `seo` or `preview` directly. The [composables](components.md#7-shared-props) read `site`,
 `SeoHead` reads `seo`, and `PreviewBar` reads `preview`.
 
-`page` for a term is the term, with `taxonomy` in place of `collection`. A page written as a file has the record fields
-that make sense for it. The 404 view's `page` is `{ title: "Page not found" }`.
+`page` for a term is the term, with `taxonomy` in place of `collection`. The 404 view's `page` is `{ title: "Page not found" }`.
 
 ## 2. The shape of a record
 
@@ -56,7 +55,7 @@ Every `page`, and every item of every query, carries these keys:
 | `slug` | the last part of its address |
 | `uri` | its path on this site, such as `/blog/hello`, or `null` if it has no page |
 | `url` | the absolute address: the site's URL plus `uri` |
-| `status` | the entry's status; `null` for a term |
+| `status` | the entry's status; `null` where the record has none |
 | `published_at` | an ISO 8601 UTC time, or `null` |
 | `updated_at` | an ISO 8601 UTC time |
 | `author` | `{ id, name }` of the entry's author, or `null` |
@@ -152,8 +151,7 @@ A menu is a list of items, and `useNavigation('footer')` returns it:
 | `url` | the address as typed for `url`; the record's path for a record link |
 | `children` | the same items, nested |
 
-A link to a record that has been unpublished or deleted is left out of the menu, so a theme never renders a dead
-link.
+A link to a record that no longer exists is left out of the menu.
 
 ## 6. The generated types
 
