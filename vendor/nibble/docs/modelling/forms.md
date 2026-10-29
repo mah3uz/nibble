@@ -280,6 +280,14 @@ personal details for years. `store: false` keeps nothing at all — the email an
 
 Spam goes sooner: after `spam.retention_days`, 30 by default, or after `retention_days` when that is shorter.
 
+A form removed from the schema keeps its stored submissions only for a while. The daily purge remembers each form's
+last `retention_days` and keeps applying it to the submissions left behind; a form that had none loses them 30 days
+after the purge first finds the form missing. `bin/rails nibble:check` warns while such submissions are stored.
+
+An administrator can find, export or erase everything held about one email address, across every form, from
+**Forms → Personal data** in the Control Plane; the audit log records each export, erasure and submission delete
+without storing the address. Visitors' IP addresses are never stored, only a keyed hash of them.
+
 > [!NOTE]
 > Ninety days suits a demo form: long enough for sales to follow up, short enough that the site does not become a
 > second, forgotten CRM.

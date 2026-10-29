@@ -13,6 +13,7 @@ is for whoever answers them.
 After reading this guide, you will know:
 
 - Where submissions are, and how to find one.
+- How to mark one handled, keep it unread, and leave notes for your team.
 - How to export them for a spreadsheet.
 - Where notification emails come from, and what to check when they stop.
 - How long submissions are kept.
@@ -31,10 +32,22 @@ form sends to.
 
 A submission can be deleted from its **…** menu once it has been dealt with.
 
+### Handling
+
+Every submission starts as **New**. Press **Mark handled** on its page, or select several in the list and choose
+**Mark handled**, when someone has dealt with it; **Mark new** puts it back. The **Handling** filter shows only the
+New or only the Handled ones, and a handled submission says who handled it and when. Opening a submission marks it
+read; **Mark unread** brings it back to the unread count so you remember to return to it.
+
+**Notes** on the submission page are for your team: who wrote each one and when is kept beside it, and visitors never
+see them. Handling, unread and notes need permission to edit the form's submissions.
+
 ## 2. Exporting
 
 **Export Submissions** downloads the lot as a CSV file for a spreadsheet — for an event's sign-ups, or a month of
 demo requests for someone who does not use the Control Plane.
+
+Exports and deletes are recorded in the audit log with who did them, which form and how many submissions.
 
 > [!CAUTION]
 > An export is people's names and email addresses on your laptop. Keep it only as long as you need it, and do not
@@ -63,3 +76,13 @@ for.
 
 Submissions are deleted on a schedule the site sets, so a contact form does not quietly collect people's details for
 years. Tidewater's demo requests are kept for 90 days. Export anything you need to keep before then.
+
+Submissions of a form the site no longer has are deleted too, after the retention that form last had or, if it had
+none, 30 days after it was removed.
+
+### Requests about one person
+
+When someone asks what the site holds about them, or asks to be erased, an administrator opens **Forms → Personal
+data**, confirms their password and enters the email address. The page counts the matching submissions in every form,
+including forms the site no longer has. **Export JSON** or **Export CSV** gives the person their data; **Erase**
+deletes those submissions and their uploaded files for good. Both are recorded in the audit log.
