@@ -180,6 +180,7 @@ const demo = useNibbleForm(props.form)
 | `describedBy(field)` | the `aria-describedby` for its input: the help id when the field has instructions or file limits, and the error id when it has an error |
 | `summaryEl`, `messageEl` | refs for the error summary and the success message; each is focused when it appears, so give it `tabindex="-1"` |
 | `setFiles`, `accept`, `fileLimits(field)` | for `files` fields; `fileLimits` describes the allowed types, size and count, such as "PDF or JPG, up to 5 MB each, at most 3 files." |
+| `calculated(field)`, `calculatedText(field)` | for `calculation` fields: the current figure, or `null` while it's blank, and the figure as text in the site's locale with its `decimals`, `prepend` and `append`, such as "$1,350.00" (`""` while blank) |
 
 Each field carries its settings, such as `placeholder`, `options`, and `prepend` and `append` to draw beside the
 input, and an `integer` field's `min`, `max` and `step`. Text fields carry `autocomplete`, textareas `rows`, toggles `inline_label`,
@@ -193,6 +194,18 @@ the plain values the visitor typed, by field handle; `values` starts from them. 
 its `fields`; it is `null` for a form with one list. `form.captcha` has a `null` provider when the form asks for a
 CAPTCHA the site hasn't set up. See [Forms](../modelling/forms.md).
 
+A `calculation` field carries its `formula`, and its `decimals`, `prepend` and `append` when it has them.
+`calculated(field)` runs the formula in the browser with the same rules as the server, over the current `values`, so it
+changes as the visitor types; a field `isVisible` hides counts as 0. Draw it as read-only output, not an input, and let
+screen readers hear it change:
+
+```vue
+<output :id="demo.inputId(field)" aria-live="polite">{{ demo.calculatedText(field) }}</output>
+```
+
+The form posts nothing for it: the server calculates the stored value itself (see
+[Calculations](../modelling/forms.md#11-calculations)).
+
 `NibbleFormField` is a union on `type`, so a template that checks `field.type === 'select'` reads `field.options`
 without a cast.
 
@@ -200,7 +213,7 @@ without a cast.
 > This short example renders every field as a text input and leaves out the CAPTCHA widget, so it only works for a
 > form without `captcha: true`. The theme you copied from `crumbs` has `components/ContactForm.vue`, which draws
 > every public fieldtype with its own control (a checkbox for a toggle, a fieldset of radios or checkboxes for
-> choices, a date or date-and-time input), sends hidden fields, applies conditions, links help and errors to their
+> choices, a date or date-and-time input, a live `<output>` for a calculation), sends hidden fields, applies conditions, links help and errors to their
 > inputs, and handles file uploads, the honeypot and the CAPTCHA. Start from it rather than from scratch.
 
 ## 7. Shared props

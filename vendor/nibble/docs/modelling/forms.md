@@ -45,7 +45,8 @@ success:
 ```
 
 Fields are declared exactly as in a [blueprint](blueprints.md), but a public form may only use `text`, `textarea`,
-`integer`, `toggle`, `select`, `radio`, `checkboxes`, `date` and `files`. `nibble:check` refuses anything else.
+`integer`, `toggle`, `select`, `radio`, `checkboxes`, `date`, `files` and [`calculation`](#11-calculations).
+`nibble:check` refuses anything else.
 
 A consent box is a `required` toggle. A submission with it unticked is refused with "The Consent field is required.",
 or the field's `messages.required`:
@@ -154,6 +155,60 @@ success:
 > [!TIP]
 > A `files` field takes uploads — a brief, a logo — with `max_files`, `max_file_size` (in MB) and `extensions` to
 > limit them. Uploaded files are kept with the submission.
+
+### 1.1 Calculations
+
+A `calculation` field shows a figure worked out from the visitor's other answers, such as the total of a quote:
+
+```yaml
+fields:
+  - handle: seats
+    field: { type: integer, display: Seats, min: 1 }
+  - handle: seat_price
+    field: { type: integer, hidden: true, value: 400 }
+  - handle: support
+    field:
+      type: radio
+      display: Support
+      options: { 0: Standard, 150: Priority }
+  - handle: onboarding
+    field: { type: toggle, display: Add onboarding ($500) }
+  - handle: total
+    field:
+      type: calculation
+      display: Total
+      formula: "{seats} * {seat_price} + {support} + {onboarding} * 500"
+      decimals: 2
+      prepend: $
+```
+
+The theme works the figure out again whenever the visitor changes an answer, so three seats with priority support show
+"Total: $1,350.00". When the form is sent, Nibble calculates it from the submitted values, and that is the value it
+stores, emails, exports and delivers; a value posted for a calculation is ignored.
+
+A formula has:
+
+- numbers, such as `12` and `0.5`;
+- `{handle}` for another field of the form;
+- `+`, `-`, `*` and `/`, with `*` and `/` first, and parentheses to group;
+- a leading `-` to negate;
+- `round(x)` to a whole number, `round(x, places)` to up to 15 decimal places, `min(a, b)` and `max(a, b)`.
+
+Nothing else is read: there are no other functions, no text and no variables. A formula may name an `integer`, a
+`toggle` (1 when ticked, 0 when not), a single-choice `select` or `radio` whose option values are all numbers, or
+another calculation. A blank answer, and a field its [conditions](#1-declaring-a-form) hide, count as 0. Dividing by
+zero leaves the calculation blank, and a blank calculation isn't stored.
+
+`decimals` rounds the result, a half away from zero, and the figure is shown with exactly that many places. Without
+`decimals` the value is kept as calculated. Both the browser and the server count in binary fractions, so `0.1 + 0.2`
+is 0.30000000000000004 until `decimals: 2` rounds it to 0.3: give money a `decimals`. `prepend` and `append` frame the
+figure wherever it's shown, so emails, the Control Plane and exports read "$1,350.00".
+
+A calculation can have conditions of its own; while they hide it, it's blank and counts as 0. A condition can't read a
+calculation, because a calculation isn't an answer the visitor posts. A calculation can't be `required` or `hidden`,
+and only a form can have one. `nibble:check` refuses a formula that doesn't parse, one that names a field the form
+doesn't have or one that doesn't hold a number, a calculation that depends on itself (directly or through other
+calculations), `decimals` outside 0–15, and a calculation in a blueprint or global set.
 
 ## 2. Putting it on a page
 
@@ -511,6 +566,7 @@ the visitor submitted from: the form title, field labels and option labels in it
 | `spam` | `{ honeypot, rate_limit: { requests, per_minutes }, captcha, min_seconds, max_links, retention_days }` |
 | `store`, `cp_notify` | true / false |
 | a field's `encrypt` | true stores its value encrypted; not on `files`, nor with `store: false` |
+| a `calculation` field's `formula`, `decimals`, `prepend`, `append` | the formula, **required**; places to round to, 0–15; text before and after the figure ([Calculations](#11-calculations)) |
 | `retention_days` | a positive number |
 | `limits` | `{ opens_at, closes_at, max_submissions, unique, closed_message }` |
 | `handler` | the name of a registered Ruby handler |
