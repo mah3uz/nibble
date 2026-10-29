@@ -121,6 +121,35 @@ notify:
 Each entry sends one email per submission. `reply_to` names a field, so pressing Reply answers the person who
 filled the form in. `fields` limits what that email includes.
 
+An entry can also set who it goes to and what it says without code:
+
+```yaml
+notify:
+  - to: "{global.contact.email}"
+    subject: "{form.title} from {field.name}"
+    message: "{field.name} asked about {field.topic}."
+    if: { topic: support }
+  - to: "{field.email}"
+    subject: "We got your message, {field.name}"
+    message: "Thanks for writing. We reply within a working day."
+    fields: [message]
+```
+
+- `subject` and `message` (text shown above the fields) merge `{field.<handle>}` (the value as the submission shows
+  it), `{form.title}` and `{global.<set>.<field>}`. Values are escaped in the email.
+- `to`, `cc` and `bcc` take an address, `{field.<handle>}` or `{global.<set>.<field>}`. A field reference is the
+  visitor's own address, so the entry is a confirmation; it needs a single valid email address, and an entry whose
+  recipients are all invalid is skipped and logged on the submission. A global reference lets an editor change the
+  recipient under **Globals** without a deploy.
+- `if` sends the entry only when the submission matches, with the same conditions fields use (`if`, `if_any`,
+  `unless`, `unless_any`), so `if: { topic: support }` routes support questions to one inbox and `if: { topic: sales }`
+  to another.
+
+Emails to staff link to the submission in the Control Plane; a confirmation to the visitor does not. Each attempt is
+recorded on the submission (who it went to, when, sent, skipped or failed and the error), and **Send notifications
+again** on a submission sends them again for anyone who can edit the form. `bin/rails nibble:check` flags a
+reference to a field or global that doesn't exist.
+
 > [!IMPORTANT]
 > The address mail is sent *from* is a site setting: **Globals → Integrations**. Set it, and the SMTP settings in
 > [configuration](../running/configuration.md#6-environment-and-credentials), before relying on email.
@@ -298,8 +327,8 @@ without storing the address. Visitors' IP addresses are never stored, only a key
 |---|---|
 | `title` | **required** |
 | `fields`, `sections` | **one is required**; `sections` is a list of `{ display, instructions, fields }` |
-| `success` | `{ message }` or `{ redirect }` |
-| `notify` | a list of `{ to, reply_to, fields }` |
+| `success` | `{ message }` or `{ redirect }`; the message may be `{global.<set>.<field>}` |
+| `notify` | a list of `{ to, cc, bcc, subject, message, reply_to, fields, if }` |
 | `api` | a list of `{ url or use, path, method, format, body, mode, errors, error_fields, retry }`; `errors` is `{ status, path, field, message }`, and a connection in `site/schema/apis/` takes `base_url`, `headers`, `timeout`, `errors` and `retry` |
 | `spam` | `{ honeypot, rate_limit: { requests, per_minutes }, captcha, retention_days }` |
 | `store`, `cp_notify` | true / false |

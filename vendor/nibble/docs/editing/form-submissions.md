@@ -62,7 +62,8 @@ site setting under **Globals → Integrations**.
 If emails stop arriving:
 
 1. Check the submission is in the list. If it is, the form is working.
-2. Open it: it shows whether its emails were sent.
+2. Open it: it lists each email with who it went to and whether it was sent, skipped or failed. **Send notifications
+   again** sends them again.
 3. Look in the spam folder — mail from a new domain often lands there for a while.
 4. Ask whoever runs the site to check the mail settings.
 
