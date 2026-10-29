@@ -17,6 +17,7 @@ class Nibble::Cp::ListingFieldsTest < ActiveSupport::TestCase
       { "handle" => "tags", "field" => { "type" => "checkboxes", "options" => { "a" => "Alpha", "b" => "Beta" }, "listable" => true } },
       { "handle" => "free", "field" => { "type" => "toggle", "listable" => true } },
       { "handle" => "stages", "field" => { "type" => "select", "multiple" => true, "options" => { "a" => "Alpha", "b" => "Beta" }, "listable" => true } },
+      { "handle" => "labels", "field" => { "type" => "terms", "taxonomies" => [ "tags" ], "listable" => true } },
       { "handle" => "price", "field" => { "type" => "decimal", "prepend" => "$", "decimals" => 2, "listable" => true } },
       { "handle" => "hidden_mood", "field" => { "type" => "select", "options" => %w[x y], "listable" => true, "filterable" => false } },
       { "handle" => "unlisted", "field" => { "type" => "select", "options" => %w[x y], "listable" => false } },
@@ -139,6 +140,14 @@ class Nibble::Cp::ListingFieldsTest < ActiveSupport::TestCase
     assert_equal "$52.50", row.("Gig")["price"]
     assert_nil row.("Quiet")["price"]
     assert_equal %w[list list], [ column("mood")["type"], column("stages")["type"] ]
+  end
+
+  test "a taxonomy filter appears only once its taxonomy has terms to choose from" do
+    assert_not listing.props["filters"].any? { |filter| filter["handle"] == "term_labels" }, "an empty heading offers nothing to pick"
+
+    create_term("Rock")
+    filter = listing.props["filters"].find { |item| item["handle"] == "term_labels" }
+    assert_equal [ "Rock" ], filter["options"].map { |option| option["label"] }
   end
 
   test "filters are offered in plain words, only for filterable fields" do

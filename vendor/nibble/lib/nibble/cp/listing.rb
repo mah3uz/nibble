@@ -232,7 +232,7 @@ module Nibble
       def taxonomy_filters
         taxonomy_fields.filter_map do |field|
           handles = Array(field.get("taxonomies")).presence or next
-          terms = Records::Term.kept.where(taxonomy: handles).order(:title)
+          terms = Records::Term.kept.where(taxonomy: handles).order(:title).to_a.presence or next
           { "handle" => "term_#{field.handle}", "label" => field.display, "type" => "multi_select",
             "value" => Array(params[:"term_#{field.handle}"]),
             "options" => terms.map { |term| { "value" => term.id.to_s, "label" => term.title } } }
