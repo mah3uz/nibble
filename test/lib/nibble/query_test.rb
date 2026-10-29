@@ -52,6 +52,38 @@ class Nibble::QueryTest < ActiveSupport::TestCase
     assert_equal({ "current_page" => 2, "per_page" => 3, "total" => 4, "last_page" => 2 }, result.pagination)
   end
 
+  test "offset starts a paginated listing after what a featured slot already shows, so no post repeats or goes missing" do
+    all = titles({ from: "entries:posts" })
+    spec = { from: "entries:posts", offset: 1, paginate: { per_page: 2 } }
+    first = run_query(spec, params: { "page" => "1" })
+    second = run_query(spec, params: { "page" => "2" })
+
+    assert_equal all.drop(1), first.records.map(&:title) + second.records.map(&:title)
+    assert_equal({ "current_page" => 1, "per_page" => 2, "total" => 3, "last_page" => 2 }, first.pagination)
+    assert_equal 3, second.pagination["total"]
+  end
+
+  test "offset past the end of a paginated listing leaves nothing and one empty page" do
+    result = run_query({ from: "entries:posts", offset: 10, paginate: { per_page: 2 } })
+    assert_empty result.records
+    assert_equal({ "current_page" => 1, "per_page" => 2, "total" => 0, "last_page" => 1 }, result.pagination)
+  end
+
+  test "counts gives each term its published entries, none for a term without any, and tags the counted collection" do
+    lonely = term("Lonely")
+    result, tags = Nibble::Dependencies.track { run_query({ from: "terms:topics", counts: "posts" }) }
+
+    assert_equal({ @design.id => 3, @culture.id => 2, lonely.id => 0 }, result.counts)
+    assert_includes tags, "collection:posts"
+  end
+
+  test "counts leaves out drafts for the public and trashed entries always" do
+    ok Nibble::Lifecycle.call(@posts[0], :unpublish, actor: Nibble::Principal.system)
+    ok Nibble::Lifecycle.call(@posts[1], :trash, actor: Nibble::Principal.system)
+
+    assert_equal({ @design.id => 1, @culture.id => 2 }, run_query({ from: "terms:topics", counts: "posts" }).counts)
+  end
+
   test "column-only field lists don't load the data column, the expensive part of a listing" do
     record = run_query({ from: "entries:posts", fields: %w[title uri], limit: 1 }).records.first
     assert_not record.has_attribute?(:data)
@@ -77,6 +109,8 @@ class Nibble::QueryTest < ActiveSupport::TestCase
       { from: "entries:posts", include: [ "excerpt" ] } => "include",
       { from: "entries:posts", fields: [ "nope" ] } => "fields",
       { from: "entries:posts", limit: 5, paginate: { per_page: 5 } } => "paginate",
+      { from: "entries:posts", counts: "posts" } => "counts",
+      { from: "terms:topics", counts: "nope" } => "counts",
       { from: "entries:posts", order: "x" } => "order"
     }.each do |spec, key|
       error = assert_raises(Nibble::Query::Invalid, spec.inspect) { Nibble::Query::Spec.parse(spec) }

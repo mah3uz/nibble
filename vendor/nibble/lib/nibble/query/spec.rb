@@ -1,7 +1,7 @@
 module Nibble
   class Query
     class Spec
-      KEYS = %w[from where not q locale sort paginate limit offset include fields].freeze
+      KEYS = %w[from where not q locale sort paginate limit offset include fields counts].freeze
       COLUMN_OPERATORS = %w[eq ne in lt lte gt gte null prefix].freeze
       RELATION_OPERATORS = %w[in all none].freeze
       MAX_PER_PAGE = 100
@@ -9,7 +9,7 @@ module Nibble
       Condition = Data.define(:field, :operator, :value, :relation)
       Sort = Data.define(:column, :direction, :field)
 
-      attr_reader :source, :conditions, :exclusions, :q, :locale, :sorts, :paginate, :limit, :offset, :include, :fields, :raw
+      attr_reader :source, :conditions, :exclusions, :q, :locale, :sorts, :paginate, :limit, :offset, :include, :fields, :counts, :raw
 
       VARIABLE = /\A\$(set|entry)\.\w+\z/
 
@@ -39,7 +39,8 @@ module Nibble
         @paginate = parse_paginate
         @limit = bounded("limit", @raw["limit"])
         @offset = @raw["offset"].nil? ? nil : Integer(@raw["offset"], exception: false) || raise(Invalid.new("offset", "must be a number"))
-        raise Invalid.new("paginate", "can't be combined with limit/offset") if @paginate && (@limit || @offset || (!@context && variable?(@raw["limit"])))
+        raise Invalid.new("paginate", "can't be combined with limit") if @paginate && (@limit || (!@context && variable?(@raw["limit"])))
+        @counts = parse_counts
         @include = @raw["include"].nil? ? [] : parse_list("include") { |handle| @relation_fields.key?(handle) || raise(Invalid.new("include", "'#{handle}' isn't a relationship field")) }
         @fields = @raw.key?("fields") ? parse_list("fields") { |handle| valid_field?(handle) || raise(Invalid.new("fields", "unknown field '#{handle}'")) } : nil
       end
@@ -82,6 +83,14 @@ module Nibble
 
           Sort.new(column:, direction: (direction || "asc").to_sym, field:)
         end
+      end
+
+      def parse_counts
+        return nil unless @raw.key?("counts")
+        raise Invalid.new("counts", "is only for terms sources") unless source.kind == "terms"
+
+        handle = @raw["counts"].to_s
+        @schema.collection(handle) ? handle : raise(Invalid.new("counts", "no collection '#{handle}'"))
       end
 
       def parse_paginate

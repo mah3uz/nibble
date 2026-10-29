@@ -60,6 +60,7 @@ module Nibble
 
         result = Query.build(spec, context).result
         data = presenter.present(result.records, fields: result.spec.fields, include: result.spec.include)
+        data.each { |item| item["entries_count"] = result.counts[item["id"]] } if result.counts.any?
         data.each { |item| item["search_snippet"] = result.snippets["#{item['type']}:#{item['id']}"] } if result.snippets.any?
         [ name, result.pagination ? paginated(result, data) : data ]
       end

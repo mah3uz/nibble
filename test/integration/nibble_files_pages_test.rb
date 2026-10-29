@@ -29,6 +29,17 @@ class NibbleFilesPagesTest < ActionDispatch::IntegrationTest
     "---\nid: #{id}\ntitle: #{title}\n---\n\n#{body}\n"
   end
 
+  test "offset skips folder pages before they are paged, so the total counts only what remains" do
+    write({ "docs/index.md" => page("docs-home", "Docs"),
+            "docs/a.md" => page("a", "Alpha"), "docs/b.md" => page("b", "Beta"), "docs/c.md" => page("c", "Gamma") })
+    spec = { from: "entries:docs", sort: "title:asc", offset: 1, paginate: { per_page: 2 } }
+    first = Nibble::Query.build(spec, Nibble::Query::Context.public).result
+    second = Nibble::Query.build(spec, Nibble::Query::Context.public(params: { "page" => "2" })).result
+
+    assert_equal %w[Beta Docs Gamma], first.records.map(&:title) + second.records.map(&:title)
+    assert_equal 3, first.pagination["total"]
+  end
+
   # A filter that is quietly dropped is worse than one that fails: the page looks narrowed and is not.
   test "where and not narrow a folder the way they narrow records" do
     write({ "docs/index.md" => page("docs-home", "Docs"),

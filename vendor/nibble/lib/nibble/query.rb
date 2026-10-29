@@ -1,6 +1,8 @@
 module Nibble
   class Query
-    Result = Data.define(:records, :pagination, :spec, :snippets)
+    Result = Data.define(:records, :pagination, :spec, :snippets, :counts) do
+      def initialize(counts: {}, **) = super
+    end
 
     PRESENTER_COLUMNS = %w[id uuid collection taxonomy blueprint locale title slug uri status published_at updated_at author_id].freeze
 
@@ -24,13 +26,26 @@ module Nibble
         per_page = spec.paginate["per_page"]
         total = scope.count(:all)
         page = [ Integer(context.params[spec.paginate["param"]].to_s, exception: false) || 1, 1 ].max
-        scope = scope.offset((page - 1) * per_page).limit(per_page)
+        skipped = spec.offset.to_i
+        total = [ total - skipped, 0 ].max
+        scope = scope.offset(skipped + (page - 1) * per_page).limit(per_page)
         pagination = { "current_page" => page, "per_page" => per_page, "total" => total, "last_page" => [ (total / per_page.to_f).ceil, 1 ].max }
       else
         scope = scope.limit(spec.limit) if spec.limit
         scope = scope.offset(spec.offset) if spec.offset
       end
-      Result.new(records: scope.to_a, pagination:, spec:, snippets: {})
+      records = scope.to_a
+      Result.new(records:, pagination:, spec:, snippets: {}, counts: spec.counts ? entry_counts(records) : {})
+    end
+
+    def entry_counts(terms)
+      collection = spec.counts
+      Dependencies.add("collection:#{collection}")
+      entries = Records::Entry.where(collection:, deleted_at: nil, locale: context.resolve(spec.locale || "$locale"))
+      entries = entries.where(status: "published") if context.public?
+      counted = entries.joins("INNER JOIN relations ON relations.source_id = entries.id AND relations.source_type = 'entry' AND relations.target_type = 'term'")
+        .where(relations: { target_id: terms.map(&:id) }).group("relations.target_id").distinct.count(:id)
+      terms.to_h { |term| [ term.id, counted.fetch(term.id, 0) ] }
     end
 
     def relation
@@ -59,6 +74,7 @@ module Nibble
         pages = pages.sort_by { |page| sort_key(value_for(page, sort.column)) }
         pages = pages.reverse if sort.direction.to_s == "desc"
       end
+      pages = pages.drop(spec.offset.to_i) if spec.paginate
       total = pages.size
       pagination = nil
       if spec.paginate
@@ -115,7 +131,7 @@ module Nibble
     def search_result
       per_page = spec.paginate&.dig("per_page") || spec.limit || 20
       page = spec.paginate ? [ Integer(context.params[spec.paginate["param"]].to_s, exception: false) || 1, 1 ].max : 1
-      offset = spec.paginate ? (page - 1) * per_page : spec.offset.to_i
+      offset = spec.offset.to_i + (spec.paginate ? (page - 1) * per_page : 0)
       locale = context.resolve(spec.locale || "$locale")
       collections = spec.conditions.flat_map { |condition| Array(context.resolve(condition.value)) }.compact_blank.presence
       found = Nibble::Search.search(spec.source.handle, context.resolve(spec.q), locale:, limit: per_page, offset:, collections:)
@@ -127,7 +143,8 @@ module Nibble
         scope.to_a
       end.index_by { |record| [ record.record_type, record.id.to_s ] }
       hits = found.hits.select { |hit| loaded.key?([ hit.record_type, hit.record_id.to_s ]) }
-      pagination = spec.paginate && { "current_page" => page, "per_page" => per_page, "total" => found.total, "last_page" => [ (found.total / per_page.to_f).ceil, 1 ].max }
+      total = [ found.total - spec.offset.to_i, 0 ].max
+      pagination = spec.paginate && { "current_page" => page, "per_page" => per_page, "total" => total, "last_page" => [ (total / per_page.to_f).ceil, 1 ].max }
       Result.new(records: hits.map { |hit| loaded[[ hit.record_type, hit.record_id.to_s ]] }, pagination:, spec:,
         snippets: hits.to_h { |hit| [ "#{hit.record_type}:#{hit.record_id}", hit.snippet ] })
     end

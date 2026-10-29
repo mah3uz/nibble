@@ -64,12 +64,24 @@ Only published content is ever returned to a public page.
 | `sort` | `field:asc` or `field:desc`, or a list of them — a column or any field of the blueprint |
 | `limit`, `offset` | a fixed slice |
 | `paginate` | `{ per_page, param }` — pages, driven by a URL parameter |
+| `counts` | on a `terms:` source, a collection handle; each term gets `entries_count`, the entries of that collection related to it |
 | `include` | relationship fields to load in full rather than as references |
 | `fields` | only these fields — smaller pages, fewer queries; `parent` adds the title and address of the page above |
 | `locale` | a locale other than the page's |
 | `q` | the search terms, for a `search:` source |
 
-`paginate` and `limit` cannot be combined. `limit` and `per_page` are between 1 and 100; a longer list paginates.
+`paginate` and `limit` cannot be combined; `offset` can. `limit` and `per_page` are between 1 and 100; a longer list paginates.
+
+`counts` is for a list of terms that shows how many entries each holds, without a query per term. Only published,
+untrashed entries in the query's locale are counted for a public page.
+
+```yaml
+topics:
+  from: terms:topics
+  counts: posts
+```
+
+Each term arrives with `entries_count`.
 
 ## 4. Conditions
 
@@ -150,6 +162,19 @@ posts:
 A paginated prop arrives as `{ data, meta }`: the records, and `meta` with `current_page`, `per_page`, `total` and
 `last_page`. The `Pagination` component takes `meta` and draws the links — see
 [Theme components](components.md#5-pagination).
+
+`offset` skips that many records before the pages begin, and `total` counts only what remains. A blog index that
+shows a featured post above its grid takes the post with one query and starts the grid after it with another:
+
+```yaml
+featured:
+  from: entries:posts
+  limit: 1
+posts:
+  from: entries:posts
+  offset: 1
+  paginate: { per_page: 12 }
+```
 
 Add `scroll: true` and the next page appends to the one already shown instead of replacing it, which is what
 Inertia's `InfiniteScroll` needs to load more as a reader nears the end:
