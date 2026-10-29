@@ -38,7 +38,8 @@ module Nibble
       end
 
       def config_problems
-        MODES.include?(config("mode")) ? [] : [ "has mode #{config('mode').inspect}, which isn't one of #{MODES.join(', ')}" ]
+        modes = self.class::MODES
+        modes.include?(config("mode")) ? [] : [ "has mode #{config('mode').inspect}, which isn't one of #{modes.join(', ')}" ]
       end
 
       def pre_process_index(value) = find(value).map { |item| item.slice("id", "title", "edit_url", "status") }

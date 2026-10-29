@@ -1,6 +1,7 @@
 module Nibble
   module Fieldtypes
     class Assets < Relationship
+      MODES = %w[grid list].freeze
       ALT_MODES = %w[optional required none].freeze
 
       self.selectable = true
@@ -12,7 +13,7 @@ module Nibble
           "folder" => { "type" => "text", "width" => 50 },
           "restrict" => { "type" => "toggle", "default" => false, "width" => 50 },
           "allow_uploads" => { "type" => "toggle", "default" => true, "width" => 50 },
-          "mode" => { "type" => "select", "default" => "grid", "options" => %w[grid list], "width" => 50 },
+          "mode" => { "type" => "select", "default" => "grid", "options" => MODES, "width" => 50 },
           "alt" => { "type" => "select", "default" => "optional", "options" => ALT_MODES, "width" => 50 },
           "preset" => { "type" => "text", "width" => 50 }
         } },
