@@ -12,10 +12,10 @@ module Nibble
 
       def digest = Records::FormSubmission.hash_ip(email)
 
-      def self.csv(submissions)
+      def self.csv(submissions, partials = [])
         CSV.generate do |csv|
           csv << %w[form id created_at status field value]
-          submissions.each do |submission|
+          (submissions.to_a + partials.to_a).each do |submission|
             rows(submission).each { |field, value| csv << Cp::CsvCells.row([ submission.form, submission.id, submission.created_at.utc.iso8601, submission.status, field, value ]) }
           end
         end
@@ -33,8 +33,8 @@ module Nibble
         end
       end
 
-      def self.json(submissions)
-        submissions.map do |submission|
+      def self.json(submissions, partials = [])
+        (submissions.to_a + partials.to_a).map do |submission|
           { form: submission.form, id: submission.id, created_at: submission.created_at.utc.iso8601, status: submission.status,
             values: submission.data }
         end

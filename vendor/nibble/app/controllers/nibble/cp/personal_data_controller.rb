@@ -16,12 +16,13 @@ module Nibble
 
       def export
         matches = @person.submissions
-        audit("form.person_exported", matches)
+        partials = @person.partials
+        audit("form.person_exported", matches, saved: partials.size)
         stamp = Date.current.iso8601
         if params[:format] == "csv"
-          send_data(Nibble::Forms::Person.csv(matches), filename: "personal-data-#{stamp}.csv", type: "text/csv")
+          send_data(Nibble::Forms::Person.csv(matches, partials), filename: "personal-data-#{stamp}.csv", type: "text/csv")
         else
-          send_data(JSON.pretty_generate(Nibble::Forms::Person.json(matches)), filename: "personal-data-#{stamp}.json", type: "application/json")
+          send_data(JSON.pretty_generate(Nibble::Forms::Person.json(matches, partials)), filename: "personal-data-#{stamp}.json", type: "application/json")
         end
       end
 

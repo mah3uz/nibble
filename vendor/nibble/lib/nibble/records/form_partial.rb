@@ -33,6 +33,8 @@ module Nibble
         stored.merge(encrypted_data.to_h { |handle, ciphertext| [ handle, reveal(handle, ciphertext) ] })
       end
 
+      def status = "saved"
+
       def purpose(handle) = "nibble/form_partial:#{token_digest}:#{handle}"
 
       private
