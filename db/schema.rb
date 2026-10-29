@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_29_101700) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -173,11 +173,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_101700) do
     t.index ["dispatched_at"], name: "index_events_outbox_on_dispatched_at"
   end
 
+  create_table "form_retentions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "form", null: false
+    t.datetime "missing_since"
+    t.integer "retention_days"
+    t.integer "spam_retention_days"
+    t.datetime "updated_at", null: false
+    t.index ["form"], name: "index_form_retentions_on_form", unique: true
+  end
+
+  create_table "form_submission_notes", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.integer "form_submission_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id"
+    t.index ["form_submission_id"], name: "index_form_submission_notes_on_form_submission_id"
+  end
+
   create_table "form_submissions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.json "data", default: {}, null: false
     t.json "deliveries", default: [], null: false
     t.string "form", null: false
+    t.datetime "handled_at"
+    t.integer "handled_by_id"
     t.string "ip_hash"
     t.string "locale"
     t.datetime "read_at"
@@ -605,6 +626,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_101700) do
   add_foreign_key "entries", "nibble_users", column: "author_id"
   add_foreign_key "entries", "nibble_users", column: "created_by_id"
   add_foreign_key "entries", "nibble_users", column: "updated_by_id"
+  add_foreign_key "form_submission_notes", "form_submissions", on_delete: :cascade
   add_foreign_key "global_sets", "global_sets", column: "origin_id"
   add_foreign_key "nibble_api_tokens", "nibble_users", column: "created_by_id", on_delete: :nullify
   add_foreign_key "nibble_sessions", "nibble_users", column: "user_id"

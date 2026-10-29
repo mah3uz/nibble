@@ -94,6 +94,7 @@ function open(row: ListingRow) {
         <span :class="row.unread ? 'font-semibold' : ''">{{
           new Date(value as string).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
         }}</span>
+        <span v-if="row.handled" class="ms-2 text-xs text-gray-500">Handled</span>
       </template>
     </CpListing>
 

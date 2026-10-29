@@ -121,12 +121,23 @@ module Nibble
 
       check_roles(schema)
       check_captcha(schema)
+      check_removed_forms(schema)
       capture("site/schema/migrations") { ContentMigrations.pending } if @config.equal?(Nibble.config)
       check_drift(schema) if @config.equal?(Nibble.config)
       check_uris(schema) if @config.equal?(Nibble.config)
     end
 
     def database_behind? = ActiveRecord::Base.connection_pool.migration_context.needs_migration?
+
+    def check_removed_forms(schema)
+      Records::FormSubmission.group(:form).count.except(*schema.forms.map(&:handle)).each do |handle, count|
+        @warnings << Problem.new(source: "form '#{handle}'", level: :warning,
+          message: "has #{count} stored #{'submission'.pluralize(count)} but isn't in the schema; the daily purge deletes them " \
+                   "#{Jobs::PurgeSubmissions::REMOVED_FORM_DAYS} days after the form disappears, or after its last retention_days if it had one")
+      end
+    rescue ActiveRecord::StatementInvalid
+      nil
+    end
 
     def check_captcha(schema)
       return if Integrations.captcha

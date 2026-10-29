@@ -49,6 +49,8 @@ module Nibble
       def relation
         scope = Records::FormSubmission.where(form: form.handle)
         scope = params[:status].present? ? scope.where(status: params[:status]) : scope.kept
+        scope = scope.handled if params[:handling] == "handled"
+        scope = scope.unhandled if params[:handling] == "new"
         if params[:q].present?
           text = Arel::Nodes::NamedFunction.new("CAST", [ Records::FormSubmission.arel_table[:data].as("TEXT") ])
           scope = scope.where(Arel::Nodes::NamedFunction.new("LOWER", [ text ]).matches("%#{Records::FormSubmission.sanitize_sql_like(params[:q].to_s.downcase)}%"))
@@ -75,13 +77,15 @@ module Nibble
         options = Records::FormSubmission::STATUSES.map do |status|
           { "value" => status, "label" => status == "spam" ? "Spam (#{spam_count})" : status.humanize }
         end
-        [ { "handle" => "status", "label" => "Status", "type" => "select", "value" => params[:status], "all_label" => "All but spam", "options" => options } ]
+        [ { "handle" => "status", "label" => "Status", "type" => "select", "value" => params[:status], "all_label" => "All but spam", "options" => options },
+          { "handle" => "handling", "label" => "Handling", "type" => "select", "value" => params[:handling], "all_label" => "New and handled",
+            "options" => [ { "value" => "new", "label" => "New" }, { "value" => "handled", "label" => "Handled" } ] } ]
       end
 
       def row(record)
         cells = columns.to_h { |column| [ column["handle"], cell(record, column["handle"]) ] }
         cells.merge("id" => record.id, "actions" => row_actions, "edit_url" => "/cp/forms/#{form.handle}/submissions/#{record.id}",
-                    "unread" => !record.read?)
+                    "unread" => !record.read?, "handled" => record.handled?)
       end
 
       def cell(record, handle)
@@ -96,14 +100,19 @@ module Nibble
 
       def csv_value(value) = value.is_a?(Array) ? value.join(", ") : value
 
-      def row_actions = can_delete? ? [ "delete" ] : []
+      def row_actions = (can_edit? ? %w[mark_handled mark_new mark_unread] : []) + (can_delete? ? [ "delete" ] : [])
+
+      def can_edit? = Access.can?(user, "forms.#{form.handle}.edit")
 
       def can_delete? = Access.can?(user, "forms.#{form.handle}.delete")
 
       def actions
-        return [] unless can_delete?
+        handling = can_edit? ? [ { "handle" => "mark_handled", "label" => "Mark handled", "bulk" => true, "fields" => [] },
+                                 { "handle" => "mark_new", "label" => "Mark new", "bulk" => true, "fields" => [] },
+                                 { "handle" => "mark_unread", "label" => "Mark unread", "bulk" => true, "fields" => [] } ] : []
+        return handling unless can_delete?
 
-        [ { "handle" => "delete", "label" => "Delete", "confirm" => "Delete {count} submissions and their files?", "dangerous" => true,
+        handling + [ { "handle" => "delete", "label" => "Delete", "confirm" => "Delete {count} submissions and their files?", "dangerous" => true,
             "bulk" => true, "fields" => [] } ]
       end
 

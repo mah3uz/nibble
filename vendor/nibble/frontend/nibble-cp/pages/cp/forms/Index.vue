@@ -3,11 +3,12 @@ import { Link, router } from '@inertiajs/vue3'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
 import DataTablePanel from '@/components/cp/page/DataTablePanel.vue'
 import PageHeader from '@/components/cp/page/PageHeader.vue'
+import { Button } from '@/components/ui/button'
 import { useBreadcrumbs } from '@/lib/breadcrumbs'
 
 type FormRow = { handle: string; title: string; submissions: number; unread: number; store: boolean; url: string }
 
-defineProps<{ forms: FormRow[] }>()
+defineProps<{ forms: FormRow[]; can_manage_personal_data: boolean }>()
 
 useBreadcrumbs([{ label: 'Forms' }])
 </script>
@@ -47,7 +48,11 @@ useBreadcrumbs([{ label: 'Forms' }])
     </div>
 
     <template v-else>
-      <PageHeader title="Forms" icon="forms" />
+      <PageHeader title="Forms" icon="forms">
+        <template v-if="can_manage_personal_data" #actions>
+          <Button variant="outline" as-child><Link href="/cp/personal-data">Personal data</Link></Button>
+        </template>
+      </PageHeader>
       <DataTablePanel>
         <thead>
           <tr>

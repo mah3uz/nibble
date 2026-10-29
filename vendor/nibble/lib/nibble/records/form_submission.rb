@@ -11,16 +11,20 @@ module Nibble
 
       has_many_attached :files
       has_many :outbound_requests, as: :owner, dependent: :delete_all
+      has_many :notes, -> { order(:created_at, :id) }, class_name: "Nibble::Records::FormSubmissionNote", dependent: :delete_all
 
       validates :form, presence: true
       validates :status, inclusion: { in: STATUSES }
 
       scope :kept, -> { where.not(status: "spam") }
       scope :unread, -> { where(read_at: nil) }
+      scope :handled, -> { where.not(handled_at: nil) }
+      scope :unhandled, -> { where(handled_at: nil) }
 
       def record_type = self.class.record_type
       def definition = Forms.find(form)
       def read? = read_at.present?
+      def handled? = handled_at.present?
 
       def delivery(key) = deliveries.find { |item| item["key"] == key }
 

@@ -4,7 +4,7 @@ module Nibble
       ACTIONS = { "publish" => :publish, "unpublish" => :unpublish, "trash" => :trash, "move" => :move }.freeze
 
       def run
-        return delete_submissions if params[:resource].to_s.start_with?("forms.")
+        return submission_action if params[:resource].to_s.start_with?("forms.")
         return delete_redirects if params[:resource] == "redirects"
 
         model, item = resource
@@ -20,13 +20,27 @@ module Nibble
 
       private
 
-      def delete_submissions
-        raise ActiveRecord::RecordNotFound unless params[:handle] == "delete"
+      SUBMISSION_ACTIONS = {
+        "mark_handled" => { handled_at: -> { Time.current }, handled_by_id: -> { Nibble::Current.user.id } },
+        "mark_new" => { handled_at: -> { nil }, handled_by_id: -> { nil } },
+        "mark_unread" => { read_at: -> { nil } }
+      }.freeze
 
+      def submission_action
         form = Nibble::Forms.find(params[:resource].delete_prefix("forms.")) or raise ActiveRecord::RecordNotFound
-        authorize!("forms.#{form.handle}.delete")
         records = Nibble::Records::FormSubmission.where(form: form.handle, id: Array(params[:ids])).to_a
+        return delete_submissions(form, records) if params[:handle] == "delete"
+
+        changes = SUBMISSION_ACTIONS.fetch(params[:handle]) { raise ActiveRecord::RecordNotFound }
+        authorize!("forms.#{form.handle}.edit")
+        Nibble::Records::FormSubmission.where(id: records.map(&:id)).update_all(changes.transform_values(&:call).merge(updated_at: Time.current))
+        redirect_back_or_to "/cp/forms/#{form.handle}", notice: "#{records.size} #{'submission'.pluralize(records.size)} updated."
+      end
+
+      def delete_submissions(form, records)
+        authorize!("forms.#{form.handle}.delete")
         records.each(&:destroy!)
+        Nibble::Forms::Audit.record("form.submission_deleted", user: Nibble::Current.user, ip: request.remote_ip, form: form.handle, count: records.size)
         redirect_back_or_to "/cp/forms/#{form.handle}", notice: "#{records.size} #{'submission'.pluralize(records.size)} deleted."
       end
 

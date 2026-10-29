@@ -11,7 +11,7 @@ module Nibble
           { handle: form.handle, title: form.title || form.handle.humanize, submissions: counts.fetch(form.handle, 0),
             unread: unread.fetch(form.handle, 0), store: form.store?, url: "/cp/forms/#{form.handle}" }
         end
-        render inertia: "cp/forms/Index", props: { forms: forms.sort_by { |form| form[:title].downcase } }
+        render inertia: "cp/forms/Index", props: { forms: forms.sort_by { |form| form[:title].downcase }, can_manage_personal_data: Nibble::Current.user.admin? }
       end
 
       def show
@@ -20,6 +20,8 @@ module Nibble
         listing = Nibble::Cp::SubmissionListing.new(form, user: Nibble::Current.user, params:)
         if request.format.csv?
           authorize!("forms.#{form.handle}.export")
+          Nibble::Forms::Audit.record("form.exported", user: Nibble::Current.user, ip: request.remote_ip, form: form.handle,
+            count: listing.relation.count, scope: params.permit(:status, :handling, :q).to_h.compact_blank.presence || "all")
           return send_data(listing.to_csv, filename: "#{form.handle}-submissions-#{Date.current.iso8601}.csv", type: "text/csv")
         end
 

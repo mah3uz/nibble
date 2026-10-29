@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { Link, router } from '@inertiajs/vue3'
+import { Link, router, useForm } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import SubmissionFilesField from '@/components/cp/forms/SubmissionFilesField.vue'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
 import StatusCell from '@/components/cp/listing/cells/StatusCell.vue'
 import PageHeader from '@/components/cp/page/PageHeader.vue'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import { useConfirm } from '@/lib/confirm'
 import { registerCoreFieldtypes } from '@nibble-cp/fieldtypes/core'
 import { registerFieldtype } from '@nibble-cp/fieldtypes/registry'
@@ -28,19 +29,33 @@ type Delivery = {
   can_retry: boolean
 }
 
+type Note = { id: number; body: string; author: string | null; created_at: string }
+
 const props = defineProps<{
   form: { handle: string; title: string }
-  submission: { id: number; status: string; created_at: string; deliveries: Delivery[]; values_kept: boolean }
+  submission: {
+    id: number
+    status: string
+    created_at: string
+    deliveries: Delivery[]
+    values_kept: boolean
+    handled: boolean
+    handled_at: string | null
+    handled_by: string | null
+    notes: Note[]
+  }
   blueprint: PublishBlueprint
   values: Record<string, unknown>
   meta: Record<string, unknown>
   can_delete: boolean
+  can_edit: boolean
   can_mark_not_spam: boolean
   spam_days: number | null
 }>()
 
 const confirm = useConfirm()
 const values = ref(props.values)
+const note = useForm({ body: '' })
 const listUrl = computed(() => `/cp/forms/${props.form.handle}`)
 const base = computed(() => `${listUrl.value}/submissions/${props.submission.id}`)
 const spamNote = computed(() => {
@@ -54,6 +69,18 @@ const date = (value: string) => new Date(value).toLocaleString(undefined, { date
 
 function retry(delivery: Delivery) {
   router.post(`${base.value}/deliveries/${encodeURIComponent(delivery.key)}/retry`, {}, { preserveScroll: true })
+}
+
+function setHandled(handled: boolean) {
+  router.post(`${base.value}/handled`, { handled }, { preserveScroll: true })
+}
+
+function markUnread() {
+  router.post(`${base.value}/unread`)
+}
+
+function addNote() {
+  note.post(`${base.value}/notes`, { preserveScroll: true, onSuccess: () => note.reset() })
 }
 
 async function markNotSpam() {
@@ -96,6 +123,10 @@ async function destroy() {
     >
       <template #meta><StatusCell :value="submission.status" /></template>
       <template #actions>
+        <Button v-if="can_edit" variant="outline" @click="setHandled(!submission.handled)">{{
+          submission.handled ? 'Mark new' : 'Mark handled'
+        }}</Button>
+        <Button v-if="can_edit" variant="outline" @click="markUnread">Mark unread</Button>
         <Button v-if="can_mark_not_spam && submission.values_kept" variant="outline" @click="markNotSpam"
           >Not spam</Button
         >
@@ -103,11 +134,43 @@ async function destroy() {
       </template>
     </PageHeader>
 
+    <p v-if="submission.handled" class="mb-6 text-sm text-gray-600 dark:text-gray-400">
+      Handled<template v-if="submission.handled_by"> by {{ submission.handled_by }}</template
+      ><template v-if="submission.handled_at"> on {{ date(submission.handled_at) }}</template
+      >.
+    </p>
+
     <p v-if="spamNote" class="mb-6 text-sm text-gray-600 dark:text-gray-400">{{ spamNote }}</p>
 
     <PublishContainer v-model="values" :blueprint="blueprint" :meta="meta" read-only name="submission">
       <PublishSections :sections="blueprint.tabs[0].sections" />
     </PublishContainer>
+
+    <section
+      v-if="can_edit || submission.notes.length"
+      class="relative mb-6 w-full rounded-2xl bg-gray-150 p-1.75 pt-0 dark:bg-gray-950/35 dark:inset-shadow-2xs dark:inset-shadow-black"
+    >
+      <header class="px-4.5 py-3">
+        <h3 class="text-sm font-medium tracking-tight text-gray-700 dark:text-white">Notes</h3>
+      </header>
+      <div
+        class="space-y-4 rounded-xl bg-white p-4.5 text-sm shadow-ui-md ring ring-gray-200 dark:bg-gray-850 dark:ring-gray-700/80"
+      >
+        <ul v-if="submission.notes.length" class="space-y-3">
+          <li v-for="item in submission.notes" :key="item.id">
+            <p class="text-xs text-gray-600 dark:text-gray-400">
+              {{ item.author ?? 'Someone' }} · {{ date(item.created_at) }}
+            </p>
+            <p class="whitespace-pre-wrap">{{ item.body }}</p>
+          </li>
+        </ul>
+        <p v-else class="text-gray-600 dark:text-gray-400">No notes yet.</p>
+        <form v-if="can_edit" class="space-y-2" @submit.prevent="addNote">
+          <Textarea v-model="note.body" aria-label="Note" placeholder="Add a note for your team…" maxlength="5000" />
+          <Button type="submit" size="sm" :disabled="note.processing || !note.body.trim()">Add note</Button>
+        </form>
+      </div>
+    </section>
 
     <section
       v-if="submission.deliveries.length"

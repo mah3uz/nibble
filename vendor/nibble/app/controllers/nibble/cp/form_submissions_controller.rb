@@ -11,9 +11,12 @@ module Nibble
         render inertia: "cp/forms/Submission", props: {
           form: { handle: @form.handle, title: @form.title || @form.handle.humanize },
           submission: { id: @submission.id, status: @submission.status, created_at: @submission.created_at.utc.iso8601,
+                        handled: @submission.handled?, handled_at: @submission.handled_at&.utc&.iso8601,
+                        handled_by: handler_name, notes: @submission.notes.includes(:user).map { |note| note_row(note) },
                         deliveries: @submission.deliveries.map { |delivery| delivery_row(delivery) }, values_kept: @submission.data.present? },
           spam_days: spam_days,
-          can_mark_not_spam: @submission.status == "spam" && Nibble::Access.can?(Nibble::Current.user, "forms.#{@form.handle}.edit"),
+          can_edit: can_edit?,
+          can_mark_not_spam: @submission.status == "spam" && can_edit?,
           blueprint: { handle: @form.handle, title: @form.title, tabs: [ { handle: "main", display: "Main",
                                                                           sections: [ { fields: fields.to_publish_a } ] } ] },
           values: fields.pre_process.values,
@@ -22,9 +25,38 @@ module Nibble
         }
       end
 
+      def handled
+        authorize!("forms.#{@form.handle}.edit")
+        if ActiveModel::Type::Boolean.new.cast(params[:handled])
+          @submission.update!(handled_at: Time.current, handled_by_id: Nibble::Current.user.id)
+        else
+          @submission.update!(handled_at: nil, handled_by_id: nil)
+        end
+        redirect_to submission_path, notice: @submission.handled? ? "Marked as handled." : "Marked as new."
+      end
+
+      def unread
+        authorize!("forms.#{@form.handle}.edit")
+        @submission.update_column(:read_at, nil)
+        redirect_to "/cp/forms/#{@form.handle}", notice: "Marked as unread."
+      end
+
+      def add_note
+        authorize!("forms.#{@form.handle}.edit")
+        note = @submission.notes.build(body: params[:body].to_s.strip, user: Nibble::Current.user)
+        if note.save
+          Nibble::Forms::Audit.record("form.note_added", user: Nibble::Current.user, ip: request.remote_ip, subject: @submission,
+            form: @form.handle, note_id: note.id)
+          redirect_to submission_path, notice: "Note added."
+        else
+          redirect_to submission_path, alert: "The note can't be added: #{note.errors.full_messages.to_sentence}."
+        end
+      end
+
       def destroy
         authorize!("forms.#{@form.handle}.delete")
         @submission.destroy!
+        Nibble::Forms::Audit.record("form.submission_deleted", user: Nibble::Current.user, ip: request.remote_ip, form: @form.handle, count: 1)
         redirect_to "/cp/forms/#{@form.handle}", notice: "Submission deleted."
       end
 
@@ -56,6 +88,14 @@ module Nibble
         @form = Nibble::Forms.find(params[:handle]) or raise ActiveRecord::RecordNotFound
         @submission = Nibble::Records::FormSubmission.where(form: @form.handle).find(params[:id])
       end
+
+      def can_edit? = Nibble::Access.can?(Nibble::Current.user, "forms.#{@form.handle}.edit")
+
+      def submission_path = "/cp/forms/#{@form.handle}/submissions/#{@submission.id}"
+
+      def handler_name = @submission.handled_by_id && Nibble::User.find_by(id: @submission.handled_by_id)&.name
+
+      def note_row(note) = { id: note.id, body: note.body, author: note.user&.name, created_at: note.created_at.utc.iso8601 }
 
       def spam_days = [ @form.spam_retention_days, @form.retention_days ].filter_map { |days| days.to_i if days.to_i.positive? }.min
 

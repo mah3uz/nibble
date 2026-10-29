@@ -80,10 +80,16 @@ Rails.application.routes.draw do
         post "deliveries/:delivery_id/resend", action: :resend, as: :resend_delivery
       end
     end
+    get "personal-data", to: "personal_data#show", as: :personal_data
+    get "personal-data/export", to: "personal_data#export", as: :export_personal_data
+    delete "personal-data", to: "personal_data#destroy"
     get "forms", to: "forms#index", as: :forms
     get "forms/:handle", to: "forms#show", as: :form
     get "forms/:handle/submissions/:id", to: "form_submissions#show", as: :form_submission
     delete "forms/:handle/submissions/:id", to: "form_submissions#destroy"
+    post "forms/:handle/submissions/:id/handled", to: "form_submissions#handled", as: :handled_form_submission
+    post "forms/:handle/submissions/:id/unread", to: "form_submissions#unread", as: :unread_form_submission
+    post "forms/:handle/submissions/:id/notes", to: "form_submissions#add_note", as: :form_submission_notes
     post "forms/:handle/submissions/:id/not_spam", to: "form_submissions#not_spam", as: :not_spam_form_submission
     post "forms/:handle/submissions/:id/deliveries/:key/retry", to: "form_submissions#retry", as: :retry_form_submission_delivery,
       constraints: { key: %r{[^/]+} }
