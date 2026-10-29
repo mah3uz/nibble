@@ -32,6 +32,8 @@ module Nibble
         config = field.fieldtype.config.slice(*FIELD_CONFIG).compact
         config["options"] = field.fieldtype.options if OPTION_TYPES.include?(field.type)
         config["default"] = field.default_value if config.key?("default")
+        conditions = Conditions.describe(field.config, prefix: field.prefix)
+        config["conditions"] = conditions if conditions
         { "handle" => field.handle, "type" => field.type, "display" => field.display, "instructions" => field.instructions,
           "required" => field.required? }.merge(config)
       end

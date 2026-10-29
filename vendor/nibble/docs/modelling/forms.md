@@ -78,6 +78,30 @@ A field's other settings reach the theme too: a `text` field's `autocomplete`, a
 `select`'s `max_items` and `clearable`. A field's `default` arrives resolved, so `default: computed:today` is today's
 date.
 
+A form field takes the same [conditions](blueprints.md#6-conditional-fields) as a blueprint field. Nibble skips a hidden
+field's rules when a submission arrives, and it sends the theme each field's condition as `conditions`:
+
+```json
+{ "show": true, "match": "all", "rules": [{ "field": "kind", "operator": "equals", "value": "business" }] }
+```
+
+`show` is `true` for `if` and `show_when`, and `false` for `unless` and `hide_when`; `match` is `any` for the `_any`
+forms and `all` otherwise. A field with no condition has no `conditions`. A theme draws the field when the rules pass
+(`show: true`) or fail (`show: false`), and takes `match` to mean every rule or at least one. Each rule reads the
+current value of `field`, and `value` is the text written in the schema:
+
+| `operator` | Passes when |
+|---|---|
+| `equals`, `not` | the value is, or isn't, equal: `true`, `false` and `null` stand for those values, `empty` for a blank value (`null`, `""`, `[]`), and two numbers compare as numbers |
+| `===`, `!==` | the same, without converting types |
+| `>`, `>=`, `<`, `<=` | both sides are numbers and the comparison holds |
+| `contains` | a list includes `value`, or a string contains it |
+| `contains_any` | a list includes one of the comma-separated items in `value`, or a string contains one |
+| `custom` | a condition written in Ruby; its `field` can be `null` |
+
+A theme can't run `custom`, so it draws that field and leaves the decision to the server. The server is always the
+authority: it applies the same conditions to every submission, whatever the theme drew.
+
 A long form can be split into sections instead of one `fields` list. Each section has a `display`, optional
 `instructions` and its own `fields`, declared the same way:
 

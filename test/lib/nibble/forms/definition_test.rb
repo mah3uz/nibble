@@ -52,6 +52,18 @@ class Nibble::Forms::DefinitionTest < ActiveSupport::TestCase
     assert_equal [ 2, true ], fields["topics"].values_at("max_items", "clearable")
   end
 
+  test "a field's condition reaches the theme as rules it can evaluate, and an unconditional field has none" do
+    fields = definition("conditional")["fields"].index_by { |field| field["handle"] }
+
+    assert_not fields["kind"].key?("conditions")
+    assert_equal({ "show" => true, "match" => "all", "rules" => [ { "field" => "kind", "operator" => "equals", "value" => "business" } ] }, fields["company"]["conditions"])
+    assert_equal({ "show" => true, "match" => "any", "rules" => [ { "field" => "kind", "operator" => "equals", "value" => "business" },
+                                                                    { "field" => "company", "operator" => "contains", "value" => "Ltd" } ] }, fields["seats"]["conditions"])
+    assert_equal({ "show" => false, "match" => "all", "rules" => [ { "field" => "kind", "operator" => "not", "value" => "personal" },
+                                                                     { "field" => "kind", "operator" => "equals", "value" => "empty" } ] }, fields["note"]["conditions"])
+    assert_equal({ "show" => true, "match" => "all", "rules" => [ { "field" => nil, "operator" => "custom", "value" => "custom vip_only:gold" } ] }, fields["vip"]["conditions"])
+  end
+
   test "a field with no default sends none" do
     assert_not definition("settings")["fields"].find { |field| field["handle"] == "message" }.key?("default")
   end

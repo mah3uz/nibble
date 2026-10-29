@@ -32,6 +32,18 @@ module Nibble
         key.start_with?("unless", "hide_when") ? !passed : passed
       end
 
+      def describe(field_config, prefix: nil)
+        config = field_config.to_h.stringify_keys
+        key = KEYS.find { |candidate| js_truthy?(config[candidate]) } or return
+        conditions = config[key]
+        rules = if conditions.is_a?(String)
+          [ { "field" => nil, "operator" => "custom", "value" => conditions } ]
+        else
+          parse(conditions, prefix).map { |condition| { "field" => condition.field, "operator" => condition.operator, "value" => condition.value } }
+        end
+        { "show" => !key.start_with?("unless", "hide_when"), "match" => key.include?("any") ? "any" : "all", "rules" => rules }
+      end
+
       def parse(conditions, prefix = nil)
         conditions.to_h.flat_map do |handle, rhs|
           Array.wrap(rhs).map { |value| split_rhs(handle.to_s, value, prefix) }

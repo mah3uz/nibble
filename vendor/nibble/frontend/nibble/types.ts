@@ -33,6 +33,15 @@ export type SeoProps = {
   image?: string | null
 }
 
+export type NibbleFormConditionOperator =
+  | 'equals' | 'not' | 'contains' | 'contains_any' | '===' | '!==' | '>' | '>=' | '<' | '<=' | 'custom'
+
+export type NibbleFormConditions = {
+  show: boolean
+  match: 'all' | 'any'
+  rules: { field: string | null; operator: NibbleFormConditionOperator; value: string }[]
+}
+
 export type NibbleFormField = {
   handle: string
   type: string
@@ -63,6 +72,7 @@ export type NibbleFormField = {
   latest_date?: string
   max_items?: number
   clearable?: boolean
+  conditions?: NibbleFormConditions
 }
 
 export type NibbleFormSection = {

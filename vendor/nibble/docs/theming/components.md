@@ -163,7 +163,9 @@ const demo = useNibbleForm(props.form)
 Each field carries its settings, such as `placeholder`, `options`, and `prepend` and `append` to draw beside the
 input, and an `integer` field's `min`, `max` and `step`. Text fields carry `autocomplete`, textareas `rows`, toggles `inline_label`,
 dates `time_enabled`, `earliest_date` and `latest_date`, and selects `max_items` and `clearable`; `default` is already
-resolved, so a computed default is a date, not a name. A form split into sections also has `form.sections`, each with a `display`, `instructions` and the handles of
+resolved, so a computed default is a date, not a name. A field with a condition carries `conditions`, the rules for
+when to draw it (see [Forms](../modelling/forms.md#1-declaring-a-form)); the server applies them again to what is
+posted. A form split into sections also has `form.sections`, each with a `display`, `instructions` and the handles of
 its `fields`; it is `null` for a form with one list. `form.captcha` has a `null` provider when the form asks for a
 CAPTCHA the site hasn't set up. See [Forms](../modelling/forms.md).
 
