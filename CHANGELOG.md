@@ -12,6 +12,8 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+## 0.22.1 — 2026-10-30 05:00 +0600
+
 ### What's new
 
 - **`bin/rails nibble:dev:setup --remove` undoes the setup.** It takes out the developer tools server, the `vendor/nibble/`
