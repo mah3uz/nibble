@@ -55,7 +55,7 @@ the option has no default and is simply off.
 | `if`, `if_any`, `unless`, `unless_any`, `show_when`, `show_when_any`, `hide_when`, `hide_when_any` | a [condition](conditions.md) | — | shows or hides the field while the condition passes. A field takes at most one |
 | `sortable` | `true`, `false` | `true` | lets editors sort the entry listing by this field's column, in the order the value naturally has: numbers by size, dates by moment, text alphabetically, empty values last. Only `text`, `textarea`, `slug`, `integer`, `decimal`, `range`, `rating`, `date`, `time`, `toggle`, `color` and a `select`, `radio` or `button_group` that holds one choice offer it |
 | `filterable` | `true`, `false` | the same as `listable` | adds a filter for this field to the entry listing: one or more options for `select`, `radio`, `button_group` and `checkboxes`, yes or no for `toggle`, and a from and to date for `date`. Other types have no filter |
-| `duplicate` | `true`, `false` | — | accepted and kept in the schema; Nibble doesn't act on it |
+| `duplicate` | `true`, `false` | `true`, but `false` for a `slug` field or one with a `unique` validation rule | whether [Duplicate](../editing/entries.md#duplicate-an-entry) copies this field's value. A field that isn't copied starts from its `default` in the new entry. The exceptions default to `false` because a copied slug or unique value would clash with the original; set `duplicate: true` to copy it anyway |
 
 `hidden`, `prefill`, `value` and `encrypt` are written the same way in any blueprint but only a public form acts on
 them. [Forms](../modelling/forms.md) explains each in use.

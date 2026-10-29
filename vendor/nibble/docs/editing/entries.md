@@ -96,6 +96,17 @@ to add one, and fill it in.
 > **Saving does not publish.** Save as often as you like; the site does not change until you publish. See
 > [Save, preview and publish](publishing.md) — it is the one thing most worth understanding on your first day.
 
+### Duplicate an entry
+
+**Duplicate**, beside **Trash** in the editor and in a row's menu in the listing, makes a copy to start from. The copy is a
+new draft in the same collection and language, titled "Title (copy)", with its own address. It is not published and
+has no history or schedule, and you land on it straight away.
+
+Fields are copied as they are, including blocks and rows, and the same images and linked entries. Read-only fields, and
+fields set not to be copied, start empty or at their default. A field whose value must be different in every entry,
+such as a unique code, is not copied. Duplicate appears only if you can create entries in the collection, and never for
+a collection kept in the site's files.
+
 ## 3. URLs
 
 An entry's address comes from two things: the pattern its collection uses — Tidewater's blog addresses look like
