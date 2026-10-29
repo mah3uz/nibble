@@ -12,7 +12,8 @@ module Nibble
 
         text = Arel::Nodes::NamedFunction.new("CAST", [ Records::FormSubmission.arel_table[:data].as("TEXT") ])
         like = Arel::Nodes::NamedFunction.new("LOWER", [ text ]).matches("%#{Records::FormSubmission.sanitize_sql_like(email)}%", nil, true)
-        Records::FormSubmission.where(like).order(:created_at, :id).select { |submission| mentions?(submission.data) }
+        scope = Records::FormSubmission.where(like).or(Records::FormSubmission.where.not(encrypted_data: nil))
+        scope.order(:created_at, :id).select { |submission| mentions?(submission.data) }
       end
 
       def digest = Records::FormSubmission.hash_ip(email)

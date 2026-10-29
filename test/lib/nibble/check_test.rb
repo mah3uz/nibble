@@ -176,6 +176,19 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     ].each { |message| assert_includes problems, message }
   end
 
+  test "only a stored form's values can be encrypted, and never a files field, whose files live outside the submission" do
+    theme_file("forms/vault.yml", title: "Vault", fields: [
+      { handle: "phone", field: { type: "text", encrypt: true } },
+      { handle: "cv", field: { type: "files", encrypt: true } }
+    ])
+    theme_file("forms/passing.yml", title: "Passing", store: false, fields: [ { handle: "phone", field: { type: "text", encrypt: true } } ])
+
+    problems = check.problems.map(&:to_s).join("\n")
+    assert_includes problems, "forms/vault.yml: field 'cv' can't be encrypted: a files field keeps its files in storage, not in the submission"
+    assert_includes problems, "forms/passing.yml: field 'phone' has `encrypt: true` but the form has `store: false`, so nothing is stored to encrypt"
+    assert_not_includes problems, "field 'phone' can't be encrypted"
+  end
+
   test "a complete form passes, with safe defaults for the honeypot, rate limit and delivery mode" do
     theme_file("apis/crm.yml", base_url: "https://crm.example.test")
     theme_file("forms/contact.yml", title: "Contact", fields: [ { handle: "email", field: { type: "text", input_type: "email" } } ],

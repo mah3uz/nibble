@@ -38,6 +38,7 @@ module Nibble
       end
 
       def store? = item["store"] != false
+      def encrypted_handles = fields.all.values.select { |field| field.get("encrypt") == true }.map(&:handle)
       def spam = item["spam"].to_h
       def honeypot = spam["honeypot"] == false ? nil : spam["honeypot"].presence || DEFAULT_HONEYPOT
       def rate_limit = DEFAULT_RATE_LIMIT.merge(spam["rate_limit"].to_h)
@@ -93,6 +94,7 @@ module Nibble
           problems << "field '#{field.handle}' uses '#{field.type}', which can't be used on a public form" unless PUBLIC_FIELDTYPES.include?(field.type)
           problems << "field handle '#{field.handle}' clashes with the honeypot" if field.handle == form.honeypot
           problems.concat(hidden_problems(field))
+          problems.concat(encrypt_problems(form, field))
         end
         problems.concat(Uploads.problems(form, schema:))
         problems.concat(spam_problems(form))
@@ -135,6 +137,14 @@ module Nibble
         problems << "field '#{field.handle}' has `value` but isn't `hidden: true`" if field.config.key?("value") && !hidden
         problems << "field '#{field.handle}' is hidden, which a files field can't be" if hidden && field.type == "files"
         problems
+      end
+
+      def encrypt_problems(form, field)
+        return [] unless field.get("encrypt") == true
+        return [ "field '#{field.handle}' can't be encrypted: a files field keeps its files in storage, not in the submission" ] if field.type == "files"
+        return [ "field '#{field.handle}' has `encrypt: true` but the form has `store: false`, so nothing is stored to encrypt" ] unless form.store?
+
+        []
       end
 
       def section_problems(form)

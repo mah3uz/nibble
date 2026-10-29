@@ -4,10 +4,10 @@ module Nibble
 
     module_function
 
-    def encrypt(plain) = encryptor.encrypt_and_sign(plain.to_s, purpose: PURPOSE)
+    def encrypt(plain, purpose: PURPOSE) = encryptor.encrypt_and_sign(plain.to_s, purpose:)
 
-    def decrypt(ciphertext)
-      ciphertext.presence && encryptor.decrypt_and_verify(ciphertext, purpose: PURPOSE)
+    def decrypt(ciphertext, purpose: PURPOSE)
+      ciphertext.presence && encryptor.decrypt_and_verify(ciphertext, purpose:)
     rescue ActiveSupport::MessageEncryptor::InvalidMessage
       nil
     end

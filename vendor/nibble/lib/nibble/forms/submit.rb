@@ -140,8 +140,12 @@ module Nibble
         fields = @form.fields
         files = fields.all.values.select { |field| field.type == "files" }.map(&:handle)
         data = @params.slice(*fields.handles).except(*files).select { |_, value| plain?(value) }
-        submission = Records::FormSubmission.create!(form: @form.handle, status: "spam", data:, ip_hash: @ip_hash, user_agent: @user_agent, locale: @locale)
-        result(:ok, submission:)
+        result(:ok, submission: receive(data, status: "spam"))
+      end
+
+      def receive(data, **attributes)
+        Records::FormSubmission.receive!(data, encrypt: @form.encrypted_handles, form: @form.handle, ip_hash: @ip_hash, user_agent: @user_agent,
+          locale: @locale, **attributes)
       end
 
       def plain?(value) = Array.wrap(value).all? { |item| SPAM_VALUE.any? { |type| item.is_a?(type) } }
@@ -162,7 +166,7 @@ module Nibble
         return deliver(nil, data) unless @form.store?
 
         submission = Records::FormSubmission.transaction do
-          Records::FormSubmission.create!(form: @form.handle, data:, ip_hash: @ip_hash, user_agent: @user_agent, locale: @locale, deliveries:).tap do |record|
+          receive(data, deliveries:).tap do |record|
             record.files.attach(ActiveStorage::Blob.where(id: blob_ids).to_a) if blob_ids.any?
             announce(record)
           end
@@ -174,7 +178,7 @@ module Nibble
         Records::FormSubmission.transaction do
           next false if Records::FormSubmission.where(id: submission.id, status: "spam").update_all(status: "received").zero?
 
-          submission.reload.update!(data:, deliveries:)
+          submission.reload.keep!(data, encrypt: @form.encrypted_handles, deliveries:)
           announce(submission)
           Records::AuditEntry.create!(action: "form.not_spam", actor_type: "user", actor_id: user.id, subject_type: submission.record_type,
             subject_id: submission.id, changeset: { "form" => @form.handle, "status" => %w[spam received] }, ip:, created_at: Time.current)

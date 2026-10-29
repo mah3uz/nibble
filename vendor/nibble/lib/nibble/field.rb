@@ -30,6 +30,7 @@ module Nibble
       "actions" => BOOLEAN,
       "api" => BOOLEAN,
       "hidden" => BOOLEAN,
+      "encrypt" => BOOLEAN,
       "prefill" => ->(value) { value.is_a?(Hash) && value.keys == [ "query" ] && value["query"].is_a?(String) && value["query"].match?(/\A[\w\-.]+\z/) },
       "value" => ->(value) { [ String, Numeric, TrueClass, FalseClass ].any? { |type| value.is_a?(type) } },
       **CONDITION_KEYS.to_h { |key| [ key, ->(value) { value.is_a?(Hash) || value.is_a?(String) } ] }

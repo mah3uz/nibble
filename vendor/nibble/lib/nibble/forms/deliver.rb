@@ -33,6 +33,7 @@ module Nibble
 
       def call
         template = Outbound::Template.new(fields: @data)
+        template.secrets_used.concat(encrypted_texts)
         options = { purpose: "form:#{@form.handle}", owner: @submission, format: @delivery["format"] || "json",
                     body: @delivery["body"] || @data }
         method = @delivery["method"] || "post"
@@ -47,6 +48,12 @@ module Nibble
       end
 
       private
+
+      # The request log keeps the body, so an encrypted value is redacted there as it is written, in each way it can be encoded.
+      def encrypted_texts
+        texts = @data.values_at(*@form.encrypted_handles).flatten.compact.map(&:to_s).compact_blank
+        texts.flat_map { |text| [ text, text.to_json[1..-2], URI.encode_www_form_component(text) ] }.uniq
+      end
 
       def mapping = (@connection&.error_mapping || {}).merge(@delivery["errors"].to_h)
 

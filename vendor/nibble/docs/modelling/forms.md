@@ -390,6 +390,20 @@ An administrator can find, export or erase everything held about one email addre
 **Forms → Personal data** in the Control Plane; the audit log records each export, erasure and submission delete
 without storing the address. Visitors' IP addresses are never stored, only a keyed hash of them.
 
+A field with `encrypt: true` is stored encrypted, with a key derived from the site's `secret_key_base` and bound to
+its submission and field, so the database, a snapshot or a backup alone never shows it:
+
+```yaml
+  - handle: phone
+    field: { type: text, display: Phone, encrypt: true }
+```
+
+Nibble decrypts it wherever it reads the submission: the Control Plane, CSV exports, emails, API deliveries and
+handlers. The log of each API request shows `[secret]` in its place. A `files` field can't be encrypted, and neither
+can a field on a form with `store: false`; `nibble:check` refuses both. The submissions screen's search doesn't look
+inside encrypted values. **Personal data** does: it decrypts every submission that has encrypted values as it scans, so
+it slows as those submissions grow. If `secret_key_base` changes, encrypted values can no longer be read.
+
 > [!NOTE]
 > Ninety days suits a demo form: long enough for sales to follow up, short enough that the site does not become a
 > second, forgotten CRM.
@@ -452,5 +466,6 @@ the visitor submitted from: the form title, field labels and option labels in it
 | `api` | a list of `{ url or use, path, method, format, body, mode, errors, error_fields, retry }`; `errors` is `{ status, path, field, message }`, and a connection in `site/schema/apis/` takes `base_url`, `headers`, `timeout`, `errors` and `retry` |
 | `spam` | `{ honeypot, rate_limit: { requests, per_minutes }, captcha, retention_days }` |
 | `store`, `cp_notify` | true / false |
+| a field's `encrypt` | true stores its value encrypted; not on `files`, nor with `store: false` |
 | `retention_days` | a positive number |
 | `handler` | the name of a registered Ruby handler |

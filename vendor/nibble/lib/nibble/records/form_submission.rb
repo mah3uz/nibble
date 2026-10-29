@@ -7,6 +7,12 @@ module Nibble
 
       def self.record_type = "form_submission"
       def self.polymorphic_name = record_type
+      def self.receive!(values, encrypt: [], **attributes)
+        transaction do
+          create!(data: values.except(*encrypt), **attributes).tap { |record| record.keep!(values, encrypt:) if values.slice(*encrypt).compact.any? }
+        end
+      end
+
       def self.hash_ip(ip) = ip.presence && OpenSSL::HMAC.hexdigest("SHA256", Rails.application.secret_key_base, ip)[0, 32]
 
       has_many_attached :files
@@ -26,6 +32,19 @@ module Nibble
       def read? = read_at.present?
       def handled? = handled_at.present?
 
+      def data
+        stored = super
+        return stored if encrypted_data.blank?
+
+        stored.merge(encrypted_data.to_h { |handle, ciphertext| [ handle, reveal(handle, ciphertext) ] })
+      end
+
+      def keep!(values, encrypt: [], **attributes)
+        secret = values.slice(*encrypt).compact
+        sealed = secret.to_h { |handle, value| [ handle, Secrets.encrypt(value.to_json, purpose: purpose(handle)) ] }
+        update!(data: values.except(*secret.keys), encrypted_data: sealed.presence, **attributes)
+      end
+
       def delivery(key) = deliveries.find { |item| item["key"] == key }
 
       def update_delivery!(key, **changes)
@@ -44,6 +63,13 @@ module Nibble
       end
 
       private
+
+      def purpose(handle) = "nibble/form_submission:#{id}:#{handle}"
+
+      def reveal(handle, ciphertext)
+        plain = Secrets.decrypt(ciphertext, purpose: purpose(handle))
+        plain && JSON.parse(plain)
+      end
 
       def overall_status(list)
         list = list.select { |item| item["key"].to_s.start_with?("api.") }
