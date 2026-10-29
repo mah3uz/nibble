@@ -216,3 +216,153 @@ describe('useNibbleForm values and body', () => {
     expect(contact.fileLimits(field({ type: 'files' }))).toBe('One file.')
   })
 })
+
+describe('useNibbleForm steps and saving for later', () => {
+  const email = field({ handle: 'email', required: true })
+  const kind = field({ handle: 'kind', type: 'radio', options: [] })
+  const company = field({
+    handle: 'company',
+    conditions: { show: true, match: 'all', rules: [{ field: 'kind', operator: 'equals', value: 'business' }] },
+  })
+  const cv = field({ handle: 'cv', type: 'files' })
+  const note = field({ handle: 'note' })
+  const stepped = (extra: Partial<NibbleForm> = {}) =>
+    form([email, kind, company, cv, note], {
+      steps: true,
+      sections: [
+        { display: 'You', instructions: null, fields: ['email', 'kind'] },
+        { display: 'Business', instructions: null, fields: ['company'] },
+        { display: 'Files', instructions: null, fields: ['cv'] },
+        { display: 'Anything else', instructions: null, fields: ['note'] },
+      ],
+      ...extra,
+    })
+
+  type Answer = { status: number; body?: Record<string, unknown> }
+  const calls: { url: string; body: Record<string, FormDataEntryValue> }[] = []
+
+  async function start(definition: NibbleForm, answers: Answer[] = []) {
+    calls.length = 0
+    vi.stubGlobal('HTMLFormElement', class {})
+    vi.stubGlobal('window', { location: { pathname: '/apply' } })
+    vi.stubGlobal('fetch', async (url: string, init: { body: FormData }) => {
+      calls.push({ url, body: Object.fromEntries(init.body.entries()) })
+      const answer = answers.shift() ?? { status: 200 }
+      return { ok: answer.status < 300, status: answer.status, json: async () => answer.body ?? { ok: true } }
+    })
+    const { useNibbleForm } = await import('../useNibbleForm')
+    const contact = useNibbleForm(definition)
+    mounted.splice(0).forEach((fn) => fn())
+    return contact
+  }
+
+  it('checks only the current step with the server before moving on, and stays on it with its errors', async () => {
+    const contact = await start(stepped(), [{ status: 422, body: { errors: { email: ['Required.'] } } }])
+
+    await contact.next()
+    expect(calls.map((call) => call.url)).toEqual(['/forms/contact/steps/0'])
+    expect(contact.step.value).toBe(0)
+    expect(contact.errors.value).toEqual({ email: 'Required.' })
+
+    await contact.next()
+    expect(contact.step.value).toBe(1)
+    expect(contact.errors.value).toEqual({})
+  })
+
+  it("skips a step whose fields its conditions hide, so a visitor isn't shown an empty page", async () => {
+    const contact = await start(stepped())
+
+    expect(contact.steps.value.map((step) => step.display)).toEqual(['You', 'Files', 'Anything else'])
+    contact.values.kind = 'business'
+    expect(contact.steps.value.map((step) => step.display)).toEqual(['You', 'Business', 'Files', 'Anything else'])
+  })
+
+  it('reports progress, goes back without a check, and shows only the current step', async () => {
+    const contact = await start(stepped())
+
+    expect(contact.progress.value).toBeCloseTo(1 / 3)
+    await contact.next()
+    await contact.next()
+    expect([contact.step.value, contact.isLastStep.value, contact.progress.value]).toEqual([2, true, 1])
+    expect([0, 2, 3].map((index) => contact.isCurrentStep(index))).toEqual([false, false, true])
+
+    contact.back()
+    expect(contact.step.value).toBe(1)
+    expect(calls).toHaveLength(2)
+  })
+
+  it('sends a step only the files it asks for, so a later step check never uploads them again', async () => {
+    const contact = await start(stepped())
+    contact.values.cv = [new File(['%PDF'], 'cv.pdf')]
+
+    await contact.next()
+    await contact.next()
+
+    expect(calls[0]!.body).not.toHaveProperty(['cv[]'])
+    expect(calls[1]!.body).toHaveProperty(['cv[]'])
+  })
+
+  it('pressing Enter before the last step checks the step instead of sending the form', async () => {
+    const contact = await start(stepped())
+
+    await contact.submit()
+
+    expect(calls.map((call) => call.url)).toEqual(['/forms/contact/steps/0'])
+    expect(contact.step.value).toBe(1)
+  })
+
+  it('opens the step with the first error when the final send is refused', async () => {
+    const contact = await start(stepped(), [
+      { status: 200 },
+      { status: 200 },
+      { status: 422, body: { errors: { email: ['Taken.'] } } },
+    ])
+
+    await contact.next()
+    await contact.next()
+    await contact.submit()
+
+    expect(calls.at(-1)!.url).toBe('/forms/contact')
+    expect(contact.step.value).toBe(0)
+  })
+
+  it('without JavaScript nothing is split into steps, so the whole form is there to fill in', async () => {
+    const { useNibbleForm } = await import('../useNibbleForm')
+    const contact = useNibbleForm(stepped())
+
+    expect(contact.stepping.value).toBe(false)
+    expect([0, 1, 2, 3].every((index) => contact.isCurrentStep(index))).toBe(true)
+    expect(contact.isLastStep.value).toBe(true)
+    mounted.length = 0
+  })
+
+  it('saves for later without files, and the final send tells the server which save to delete', async () => {
+    const resume = { email: 'email', days: 7, token: null }
+    const contact = await start(stepped({ resume }), [
+      { status: 200, body: { ok: true, message: 'Check your email.', token: 'new-token' } },
+    ])
+    Object.assign(contact.values, { email: 'ada@example.test', cv: [new File(['%PDF'], 'cv.pdf')] })
+
+    await contact.saveForLater()
+    expect(calls[0]!.url).toBe('/forms/contact/resume')
+    expect(calls[0]!.body).toMatchObject({ email: 'ada@example.test', _nibble_page: '/apply' })
+    expect(calls[0]!.body).not.toHaveProperty(['cv[]'])
+    expect(contact.saved.value).toBe('Check your email.')
+
+    contact.step.value = 2
+    await contact.submit()
+    expect(calls.at(-1)!.body).toMatchObject({ _nibble_resume: 'new-token' })
+  })
+
+  it('starts from what was saved when the visitor follows the link', async () => {
+    const contact = await start(
+      stepped({
+        resume: { email: 'email', days: 7, token: 'saved' },
+        result: { handle: 'contact', status: 'resumed', values: { email: 'ada@example.test', kind: 'person' } },
+      }),
+    )
+
+    expect(contact.values).toMatchObject({ email: 'ada@example.test', kind: 'person' })
+    expect(contact.errors.value).toEqual({})
+  })
+})

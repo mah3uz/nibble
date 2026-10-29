@@ -73,8 +73,8 @@ async function erase() {
           </tbody>
         </DataTablePanel>
         <p v-if="saved" class="text-sm">
-          {{ saved }} saved, unfinished {{ saved === 1 ? 'form contains' : 'forms contain' }} it, waiting for the visitor to
-          come back. Erase deletes {{ saved === 1 ? 'it' : 'them' }} too.
+          {{ saved }} saved, unfinished {{ saved === 1 ? 'form contains' : 'forms contain' }} it, waiting for the
+          visitor to come back. Erase deletes {{ saved === 1 ? 'it' : 'them' }} too.
         </p>
         <div class="flex gap-2">
           <Button variant="outline" @click="download('json')">Export JSON</Button>

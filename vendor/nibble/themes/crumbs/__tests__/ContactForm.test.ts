@@ -68,6 +68,49 @@ describe('crumbs ContactForm', () => {
     expect(fieldsets[1]!.match(/<label/g)).toHaveLength(1)
   })
 
+  it('draws a form with steps whole on the server, so without JavaScript it is one long form that sends as usual', async () => {
+    const html = await render(
+      form({
+        steps: true,
+        resume: { email: 'name', days: 7, token: null },
+        sections: [
+          { display: 'Your details', instructions: null, fields: ['name', 'budget'] },
+          { display: 'The visit', instructions: null, fields: ['note'] },
+        ],
+      }),
+    )
+
+    expect(html.match(/<fieldset[^>]*>/g)).toHaveLength(2)
+    expect(html).not.toContain('display:none')
+    expect(html).not.toContain('Step 1 of 2')
+    expect(html).toMatch(/<button type="submit"[^>]*>\s*Send message/)
+    expect(html).not.toMatch(/>\s*(Back|Next|Save and finish later)\s*</)
+  })
+
+  it('carries a resumed form’s token, so sending it without JavaScript deletes what was saved', async () => {
+    const html = await render(
+      form({
+        resume: { email: 'name', days: 7, token: 'saved-token' },
+        result: { handle: 'visit', status: 'resumed', values: { name: 'Ada' } },
+      }),
+    )
+
+    expect(html).toMatch(/<input type="hidden" name="_nibble_resume" value="saved-token">/)
+    expect(tag(html, 'visit-name')).toContain('value="Ada"')
+    expect(html).not.toContain('role="alert"')
+  })
+
+  it('says so when a resume link has expired', async () => {
+    const html = await render(
+      form({
+        resume: { email: 'name', days: 7, token: null },
+        result: { handle: 'visit', status: 'expired', message: 'This link has expired.' },
+      }),
+    )
+
+    expect(html).toMatch(/<p role="status"[^>]*>\s*This link has expired./)
+  })
+
   it('draws a flat form with no fieldset, and prepend and append beside the input', async () => {
     const html = await render(form({}))
 

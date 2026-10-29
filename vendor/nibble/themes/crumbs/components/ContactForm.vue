@@ -16,6 +16,10 @@ const groups = computed(() => {
 
 const hasRequired = computed(() => props.form.fields.some((field) => field.required && !field.hidden))
 const hasErrors = computed(() => Object.keys(contact.errors.value).length > 0)
+const submitLabel = computed(() => {
+  if (!contact.isLastStep.value) return contact.processing.value ? 'Checking…' : 'Next'
+  return contact.processing.value ? 'Sending…' : 'Send message'
+})
 
 const help = (field: NibbleFormField) => [field.instructions, contact.fileLimits(field)].filter(Boolean).join(' ')
 const invalid = (field: NibbleFormField) => (contact.errors.value[field.handle] ? 'true' : undefined)
@@ -67,13 +71,29 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
         </li>
       </ul>
     </div>
+    <p v-if="form.result?.status === 'expired'" role="status" class="border-l-2 border-current/40 pl-4">
+      {{ form.result.message }}
+    </p>
     <p v-if="hasRequired" class="-mb-4 text-sm text-gray-600 dark:text-gray-300">
       Fields marked <span class="text-accent">*</span> are required.
     </p>
+    <div v-if="contact.stepping.value" class="grid gap-2">
+      <p
+        :ref="(el) => (contact.stepEl.value = el as HTMLElement | null)"
+        tabindex="-1"
+        class="text-sm text-gray-600 dark:text-gray-300"
+      >
+        Step {{ contact.step.value + 1 }} of {{ contact.steps.value.length }}
+      </p>
+      <div class="h-1 bg-current/15" aria-hidden="true">
+        <div class="h-1 bg-accent" :style="{ width: `${contact.progress.value * 100}%` }" />
+      </div>
+    </div>
 
     <component
       :is="form.sections ? 'fieldset' : 'div'"
       v-for="(group, index) in groups"
+      v-show="contact.isCurrentStep(index)"
       :key="index"
       class="grid gap-8"
     >
@@ -261,16 +281,36 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
       aria-hidden="true"
       class="absolute -left-[9999px] h-px w-px overflow-hidden"
     />
+    <input v-if="form.resume?.token" type="hidden" name="_nibble_resume" :value="form.resume.token" />
     <div :ref="(el) => (contact.captchaEl.value = el as HTMLElement | null)" />
 
-    <div>
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
+      <button
+        v-if="contact.stepping.value && contact.step.value > 0"
+        type="button"
+        class="min-h-14 border border-current/40 px-6 py-3 hover:text-accent"
+        :disabled="contact.processing.value"
+        @click="contact.back"
+      >
+        Back
+      </button>
       <button
         type="submit"
         class="min-h-14 border border-current px-6 py-3 hover:text-accent"
         :disabled="contact.processing.value"
       >
-        {{ contact.processing.value ? 'Sending…' : 'Send message' }}
+        {{ submitLabel }}
+      </button>
+      <button
+        v-if="form.resume && contact.enhanced.value"
+        type="button"
+        class="min-h-14 underline underline-offset-4 hover:text-accent"
+        :disabled="contact.processing.value"
+        @click="contact.saveForLater"
+      >
+        Save and finish later
       </button>
     </div>
+    <p v-if="form.resume" role="status" class="text-sm empty:hidden">{{ contact.saved.value }}</p>
   </form>
 </template>

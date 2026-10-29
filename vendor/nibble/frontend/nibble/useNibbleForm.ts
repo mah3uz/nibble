@@ -57,7 +57,8 @@ function initialValue(field: NibbleFormField): NibbleFormValue {
 }
 
 function refilled(field: NibbleFormField, result: NibbleFormResult | null): NibbleFormValue | undefined {
-  if (result?.status !== 'invalid' || field.type === 'files' || field.hidden) return undefined
+  if ((result?.status !== 'invalid' && result?.status !== 'resumed') || field.type === 'files' || field.hidden)
+    return undefined
   const value = result.values?.[field.handle]
   if (value === undefined || value === null) return undefined
   if (field.type === 'toggle') return !['', '0', 'false', false, 0].includes(value as string)
@@ -124,7 +125,13 @@ export function useNibbleForm(definition: NibbleForm) {
   const captchaEl = ref<HTMLElement | null>(null)
   const summaryEl = ref<HTMLElement | null>(null)
   const messageEl = ref<HTMLElement | null>(null)
+  const stepEl = ref<HTMLElement | null>(null)
+  const saved = ref<string | null>(null)
+  const enhanced = ref(false)
+  const step = ref(0)
   const byHandle = new Map(definition.fields.map((field) => [field.handle, field]))
+  const base = definition.action.split('?')[0]
+  let resumeToken = definition.resume?.token ?? null
 
   let widgetId: string | null = null
   let pendingToken: ((token: string | null) => void) | null = null
@@ -137,6 +144,22 @@ export function useNibbleForm(definition: NibbleForm) {
   const calculations = computed(() => calculate(definition.fields, values, isVisible))
   const calculated = (field: NibbleFormField) => calculations.value.get(field.handle) ?? null
   const calculatedText = (field: NibbleFormField) => formatCalculation(field, calculated(field), locale.value)
+  const drawn = (handle: string) => {
+    const field = byHandle.get(handle)
+    return Boolean(field && !field.hidden && isVisible(field))
+  }
+  const steps = computed(() =>
+    definition.steps && definition.sections
+      ? definition.sections
+          .map((section, index) => ({ ...section, index }))
+          .filter((section) => section.fields.some(drawn))
+      : [],
+  )
+  const stepping = computed(() => enhanced.value && steps.value.length > 1)
+  const currentStep = computed(() => steps.value[Math.min(step.value, steps.value.length - 1)])
+  const isLastStep = computed(() => !stepping.value || step.value >= steps.value.length - 1)
+  const progress = computed(() => (stepping.value ? (step.value + 1) / steps.value.length : 1))
+  const isCurrentStep = (index: number) => !stepping.value || currentStep.value?.index === index
   const inputId = (field: NibbleFormField) => `${definition.handle}-${field.handle}`
   const helpId = (field: NibbleFormField) => `${inputId(field)}-help`
   const errorId = (field: NibbleFormField) => `${inputId(field)}-error`
@@ -210,7 +233,15 @@ export function useNibbleForm(definition: NibbleForm) {
       ? { provider: definition.captcha.provider, site_key: definition.captcha.site_key }
       : null
 
+  function showErrorStep() {
+    const handles = Object.keys(errors.value).map((key) => key.split('.')[0]!)
+    const found = steps.value.findIndex((section) => section.fields.some((handle) => handles.includes(handle)))
+    if (stepping.value && found >= 0) step.value = found
+  }
+
   onMounted(() => {
+    enhanced.value = true
+    showErrorStep()
     if (definition.result?.status === 'invalid') void focus(summaryEl)
     else if (sent.value) void focus(messageEl)
     if (captcha?.provider === 'turnstile') void renderTurnstile(captcha)
@@ -224,51 +255,121 @@ export function useNibbleForm(definition: NibbleForm) {
   function reset() {
     definition.fields.forEach((field) => (values[field.handle] = initialValue(field)))
     trap.value = ''
+    step.value = 0
+  }
+
+  function formBody(include: (field: NibbleFormField) => boolean = () => true) {
+    const body = new FormData()
+    definition.fields
+      .filter((field) => isVisible(field) && include(field))
+      .forEach((field) => append(body, field.handle, values[field.handle]))
+    body.append('_locale', locale.value)
+    return body
+  }
+
+  async function guard(body: FormData) {
+    if (definition.honeypot) body.append(definition.honeypot, trap.value)
+    if (definition.timestamp) body.append('_nibble_t', definition.timestamp)
+    if (resumeToken) body.append('_nibble_resume', resumeToken)
+    if (captcha) {
+      const token = await captchaToken(captcha)
+      if (token) body.append('_captcha', token)
+    }
+  }
+
+  async function post(url: string, body: FormData) {
+    const response = await fetch(url, { method: 'POST', body, headers: { Accept: 'application/json' } })
+    return { response, payload: await response.json().catch(() => ({})) }
+  }
+
+  function refused(response: Response, payload: { errors?: Record<string, string[] | string> }) {
+    if (response.status === 413) {
+      errors.value = { base: text('too_large') }
+      return
+    }
+    errors.value = firstMessages(payload.errors)
+    if (!Object.keys(errors.value).length) errors.value = { base: text('generic') }
+  }
+
+  async function run(work: () => Promise<unknown>) {
+    if (processing.value) return
+    processing.value = true
+    errors.value = {}
+    try {
+      await work()
+    } catch {
+      errors.value = { base: text('network') }
+    } finally {
+      processing.value = false
+      if (Object.keys(errors.value).length) {
+        showErrorStep()
+        void focus(summaryEl)
+      }
+    }
+  }
+
+  function next() {
+    const current = currentStep.value
+    if (!stepping.value || isLastStep.value || !current) return Promise.resolve()
+    return run(async () => {
+      const files = (field: NibbleFormField) => field.type !== 'files' || current.fields.includes(field.handle)
+      const { response, payload } = await post(`${base}/steps/${current.index}`, formBody(files))
+      if (!response.ok) return refused(response, payload)
+      step.value += 1
+      void focus(stepEl)
+    })
+  }
+
+  function back() {
+    if (!stepping.value || step.value === 0) return
+    errors.value = {}
+    step.value -= 1
+    void focus(stepEl)
+  }
+
+  function saveForLater() {
+    if (!definition.resume) return Promise.resolve()
+    saved.value = null
+    return run(async () => {
+      const body = formBody((field) => field.type !== 'files')
+      body.append('_nibble_page', window.location.pathname)
+      try {
+        await guard(body)
+        const { response, payload } = await post(`${base}/resume`, body)
+        if (!response.ok) return refused(response, payload)
+        resumeToken = payload.token ?? resumeToken
+        saved.value = payload.message ?? null
+      } finally {
+        if (widgetId) (window as CaptchaWindow).turnstile?.reset(widgetId)
+      }
+    })
   }
 
   async function submit(event?: Event) {
     event?.preventDefault()
+    if (!isLastStep.value) return next()
     const formEl = event?.target instanceof HTMLFormElement ? event.target : null
-    if (processing.value) return
-    processing.value = true
-    errors.value = {}
-    sent.value = false
-    message.value = null
 
-    try {
-      const body = new FormData()
-      definition.fields.filter(isVisible).forEach((field) => append(body, field.handle, values[field.handle]))
-      if (definition.honeypot) body.append(definition.honeypot, trap.value)
-      if (definition.timestamp) body.append('_nibble_t', definition.timestamp)
-      body.append('_locale', locale.value)
-      if (captcha) {
-        const token = await captchaToken(captcha)
-        if (token) body.append('_captcha', token)
-      }
-
-      const response = await fetch(definition.action, { method: 'POST', body, headers: { Accept: 'application/json' } })
-      const payload = await response.json().catch(() => ({}))
-      if (response.ok) {
+    return run(async () => {
+      sent.value = false
+      message.value = null
+      const body = formBody()
+      try {
+        await guard(body)
+        const { response, payload } = await post(definition.action, body)
+        if (!response.ok) return refused(response, payload)
         formEl?.reset()
         reset()
+        resumeToken = null
         const redirect = payload.redirect as string | undefined
         if (redirect) return redirect.startsWith('/') ? router.visit(redirect) : window.location.assign(redirect)
         sent.value = true
         message.value = payload.message ?? null
         void focus(messageEl)
-      } else if (response.status === 413) {
-        errors.value = { base: text('too_large') }
-      } else {
-        errors.value = firstMessages(payload.errors)
-        if (!Object.keys(errors.value).length) errors.value = { base: text('generic') }
+      } finally {
+        if (widgetId) (window as CaptchaWindow).turnstile?.reset(widgetId)
       }
-    } catch {
-      errors.value = { base: text('network') }
-    } finally {
-      processing.value = false
-      if (Object.keys(errors.value).length) void focus(summaryEl)
-      if (widgetId) (window as CaptchaWindow).turnstile?.reset(widgetId)
-    }
+    })
   }
 
   return {
@@ -282,6 +383,18 @@ export function useNibbleForm(definition: NibbleForm) {
     captchaEl,
     summaryEl,
     messageEl,
+    stepEl,
+    enhanced,
+    step,
+    steps,
+    stepping,
+    isCurrentStep,
+    isLastStep,
+    progress,
+    next,
+    back,
+    saved,
+    saveForLater,
     fieldName,
     accept,
     setFiles,

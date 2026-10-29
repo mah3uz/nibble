@@ -105,7 +105,7 @@ export type NibbleFormSection = {
 
 export type NibbleFormResult = {
   handle: string
-  status: 'sent' | 'invalid'
+  status: 'sent' | 'invalid' | 'resumed' | 'expired'
   message?: string | null
   errors?: Record<string, string>
   values?: Record<string, string | number | boolean | (string | number)[]>
@@ -119,6 +119,8 @@ export type NibbleForm = {
   captcha: { provider: 'turnstile' | 'recaptcha' | null; site_key: string | null } | null
   fields: NibbleFormField[]
   sections: NibbleFormSection[] | null
+  steps?: boolean
+  resume?: { email: string; days: number; token: string | null } | null
   success: { message?: string; redirect?: string }
   messages?: { too_large: string; generic: string; network: string }
   closed?: boolean

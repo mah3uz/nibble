@@ -25,7 +25,7 @@ class FormsController < ActionController::Base
     return head(:not_found) unless form&.resume?
 
     result = Nibble::Forms::Resume.call(form, request.request_parameters, page:, ip: request.remote_ip, user_agent: request.user_agent, locale:)
-    respond_check(result, ok: true, message: Nibble::Forms.message("resume.saved", locale, count: form.resume_days))
+    respond_check(result, ok: true, message: Nibble::Forms.message("resume.saved", locale, count: form.resume_days), token: result.values["token"])
   end
 
   private

@@ -57,7 +57,7 @@ module Nibble
           return result(:invalid, errors: { "base" => [ Forms.message("resume.failed", @locale) ] })
         end
         self.class.complete(@form, @params[TOKEN_FIELD])
-        result(:ok)
+        result(:ok, values: { "token" => token })
       end
 
       private

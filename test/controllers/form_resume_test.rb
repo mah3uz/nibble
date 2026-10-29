@@ -54,6 +54,7 @@ class FormResumeTest < ActionDispatch::IntegrationTest
     mail = ActionMailer::Base.deliveries.sole
     assert_equal [ "ada@example.test" ], mail.to
     assert_includes mail.text_part.body.to_s, "https://example.com/apply?resume=#{token}"
+    assert_equal token, response.parsed_body["token"], "the page keeps it, so sending the form there deletes the save"
     assert_not_includes stored_text, "0412 345 678"
     assert_not_includes stored_text, token, "only the token's digest is stored, so the database alone can't open a saved form"
   end
