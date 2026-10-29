@@ -3,6 +3,7 @@ import { SlidersHorizontal } from '@lucide/vue'
 import { computed } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -39,8 +40,15 @@ function toggleMulti(filter: ListingFilter, value: string, checked: boolean) {
     <PopoverContent align="start" class="w-80 space-y-5 p-4">
       <div v-for="filter in filters" :key="filter.handle" class="flex flex-col gap-2">
         <Label :for="`filter-${filter.handle}`">{{ filter.label }}</Label>
+        <Input
+          v-if="filter.type === 'date'"
+          :id="`filter-${filter.handle}`"
+          type="date"
+          :model-value="(filter.value as string) || ''"
+          @update:model-value="(v) => emit('change', filter.handle, v ? String(v) : null)"
+        />
         <Select
-          v-if="filter.type !== 'multi_select'"
+          v-else-if="filter.type !== 'multi_select'"
           :model-value="(filter.value as string) || ALL"
           @update:model-value="(v) => emit('change', filter.handle, v === ALL ? null : String(v))"
         >

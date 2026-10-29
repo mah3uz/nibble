@@ -13,7 +13,7 @@ export type ListingColumn = {
 export type ListingFilter = {
   handle: string
   label: string
-  type: 'select' | 'multi_select' | 'boolean'
+  type: 'select' | 'multi_select' | 'boolean' | 'date'
   options: { value: string; label: string }[]
   value: string | string[] | null
   all_label?: string

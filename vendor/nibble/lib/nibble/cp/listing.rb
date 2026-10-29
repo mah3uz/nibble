@@ -8,6 +8,9 @@ module Nibble
         "assets" => "image", "entries" => "list", "terms" => "list", "link" => "text", "rich_text" => "text"
       }.freeze
 
+      SORTABLE_TYPES = %w[text textarea slug integer decimal range rating date time toggle select radio button_group color].freeze
+      CHOICE_TYPES = %w[select radio button_group checkboxes].freeze
+
       attr_reader :item, :user, :params
 
       def initialize(item, user:, params: {})
@@ -60,14 +63,28 @@ module Nibble
 
       def blueprints = schema.blueprints_for(item).map { |blueprint| Blueprint.new(blueprint, schema:) }
 
-      def listable_fields
-        blueprints.flat_map { |blueprint| blueprint.fields.all.values }.uniq(&:handle).select(&:listable?)
+      def all_fields
+        @all_fields ||= blueprints.flat_map { |blueprint| blueprint.fields.all.values }.uniq(&:handle)
+      end
+
+      def listable_fields = all_fields.select(&:listable?)
+
+      def sortable_field?(field)
+        return false if files? || model.column_names.include?(field.handle) || !field.sortable? || SORTABLE_TYPES.exclude?(field.type)
+
+        !field.fieldtype.try(:multiple?)
+      end
+
+      def filterable_fields
+        return [] if files?
+
+        all_fields.select { |field| field.filterable? && !model.column_names.include?(field.handle) && (CHOICE_TYPES.include?(field.type) || %w[toggle date].include?(field.type)) }
       end
 
       def columns
         base = [ { "handle" => "title", "label" => "Title", "sortable" => true, "visible" => true, "type" => "title" } ]
         fields = listable_fields.reject { |field| field.handle == "title" }.map do |field|
-          { "handle" => field.handle, "label" => field.display, "sortable" => false,
+          { "handle" => field.handle, "label" => field.display, "sortable" => sortable_field?(field),
             "visible" => field.visible_on_listing?, "type" => TYPES.fetch(field.type, "text") }
         end
         tail = if entries?
@@ -105,7 +122,65 @@ module Nibble
           list << { "handle" => "locale", "label" => "Language", "type" => "select", "value" => params[:locale],
                     "options" => Nibble.config.locales.map { |locale| { "value" => locale.code, "label" => locale.code } } }
         end
-        files? ? list : list + taxonomy_filters
+        files? ? list : list + taxonomy_filters + field_filters
+      end
+
+      def field_filters
+        filterable_fields.flat_map do |field|
+          key = "field_#{field.handle}"
+          case field.type
+          when "toggle"
+            [ { "handle" => key, "label" => field.display, "type" => "select", "value" => params[key], "all_label" => "Any",
+                "options" => [ { "value" => "1", "label" => "Yes" }, { "value" => "0", "label" => "No" } ] } ]
+          when "date"
+            [ { "handle" => "#{key}_from", "label" => "#{field.display} from", "type" => "date", "value" => params["#{key}_from"], "options" => [] },
+              { "handle" => "#{key}_to", "label" => "#{field.display} to", "type" => "date", "value" => params["#{key}_to"], "options" => [] } ]
+          else
+            options = field.fieldtype.options.map { |option| { "value" => option["value"].to_s, "label" => option["label"].to_s } }
+            next [] if options.empty?
+
+            [ { "handle" => key, "label" => field.display, "type" => "multi_select", "value" => Array(params[key]), "options" => options } ]
+          end
+        end
+      end
+
+      def field_filtered(scope)
+        active = filterable_fields.select do |field|
+          key = "field_#{field.handle}"
+          [ key, "#{key}_from", "#{key}_to" ].any? { |name| Array(params[name]).compact_blank.any? }
+        end
+        return scope if active.empty?
+
+        ids = scope.pluck(:id, :data).filter_map do |id, data|
+          id if active.all? { |field| field_matches?(field, (data || {})[field.handle]) }
+        end
+        scope.where(id: ids)
+      end
+
+      def field_matches?(field, value)
+        key = "field_#{field.handle}"
+        case field.type
+        when "toggle"
+          wanted = params[key].to_s
+          wanted.blank? || (!Fieldtypes::Toggle::OFF.include?(value) == (wanted == "1"))
+        when "date"
+          from, to = %w[from to].map { |edge| day(params["#{key}_#{edge}"]) }
+          return true unless from || to
+
+          time = parse_time(value)
+          time.present? && (from.nil? || time >= from.beginning_of_day) && (to.nil? || time <= to.end_of_day)
+        else
+          wanted = Array(params[key]).compact_blank.map(&:to_s)
+          wanted.empty? || (Array.wrap(value).map(&:to_s) & wanted).any?
+        end
+      end
+
+      def day(text) = parse_time(text)
+
+      def parse_time(text)
+        ::Time.zone.parse(text.to_s) if text.present?
+      rescue ArgumentError
+        nil
       end
 
       def taxonomy_fields
@@ -135,7 +210,22 @@ module Nibble
 
           scope = scope.where(id: Records::Relation.where(source_type: model.record_type, field: field.handle, target_id: ids).select(:source_id))
         end
-        scope.order(sort_column => sort_direction.to_sym, id: :asc)
+        scope = field_filtered(scope)
+        field_sort? ? scope.order(*field_order, default_order, id: :asc) : scope.order(sort_column => sort_direction.to_sym, id: :asc)
+      end
+
+      def field_sort? = !model.column_names.include?(sort_column)
+
+      def field_order
+        path = Arel::Nodes::InfixOperation.new("->>", model.arel_table[:data], Arel::Nodes.build_quoted(sort_column))
+        missing = Arel::Nodes::Case.new.when(path.eq(nil)).then(1).else(0)
+        [ missing.asc, sort_direction == "desc" ? path.desc : path.asc ]
+      end
+
+      def default_order
+        column = item["sort"].to_s.split(":").first
+        column = "updated_at" unless model.column_names.include?(column)
+        { column => item["sort"].to_s.split(":").last == "asc" ? :asc : :desc }
       end
 
       def only_own? = entries? && !Access.can?(user, ability("view")) && Access.can?(user, ability("edit_own"))
