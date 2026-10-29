@@ -72,7 +72,7 @@ class Nibble::Cp::CpScreensTest < ActionDispatch::IntegrationTest
     article = create_entry("articles", { "title" => "Not allowed here" })
 
     patch "/cp/navigation/docs_menu", params: { tree: [ { title: "Nope", link: { type: "entry", id: article.id }, children: [] } ] }
-    assert_match "doesn't allow", session[:inertia_errors].with_indifferent_access[:tree]
+    assert_match "can't link to", session[:inertia_errors].with_indifferent_access[:tree]
   end
 
   test "trash lists deleted records, restores them and purges for good" do
