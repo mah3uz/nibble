@@ -166,7 +166,8 @@ dates `time_enabled`, `earliest_date` and `latest_date`, and selects `max_items`
 resolved, so a computed default is a date, not a name. A field with a condition carries `conditions`, the rules for
 when to draw it (see [Forms](../modelling/forms.md#1-declaring-a-form)); the server applies them again to what is
 posted. A field with `hidden: true` is not drawn: it carries the `value` resolved for the current request (its `default`
-is the same), and `form.action` already carries the prefilled query, so posting the form records it. A form split into sections also has `form.sections`, each with a `display`, `instructions` and the handles of
+is the same), and `form.action` already carries the prefilled query, so posting the form records it. After a failed post without JavaScript, `form.result` is `{ status: 'invalid', errors, values }`, where `values` are
+the plain values the visitor typed, by field handle; start the inputs from them. A form split into sections also has `form.sections`, each with a `display`, `instructions` and the handles of
 its `fields`; it is `null` for a form with one list. `form.captcha` has a `null` provider when the form asks for a
 CAPTCHA the site hasn't set up. See [Forms](../modelling/forms.md).
 

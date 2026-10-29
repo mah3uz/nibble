@@ -166,6 +166,11 @@ The view receives the form's definition — its fields, where to post, the honey
 `useNibbleForm` does the posting and error handling. See [Theme components](../theming/components.md#6-forms) for
 a complete form component.
 
+A form posted without JavaScript that fails validation sends the visitor back to the page, and the form's `result` holds
+their `errors` and the `values` they typed, so the theme can fill the form again. `values` leaves out files, hidden
+fields, password inputs and the honeypot, and drops what wouldn't fit in the session cookie (about 2 KB in all). It is
+there only for the one page load after the post.
+
 The form posts to `POST /forms/demo`. Submissions are stored and listed under **Forms** in the Control Plane.
 
 ![Submissions to the Book a demo form](../../images/cp/form-submissions.png)

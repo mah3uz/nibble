@@ -88,6 +88,7 @@ export type NibbleFormResult = {
   status: 'sent' | 'invalid'
   message?: string | null
   errors?: Record<string, string>
+  values?: Record<string, string | number | boolean | (string | number)[]>
 }
 
 export type NibbleForm = {

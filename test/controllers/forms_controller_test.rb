@@ -118,6 +118,21 @@ class FormsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 5, Submission.count
   end
 
+  test "without JavaScript a failed post hands back what the visitor typed, except hidden fields, and only while it fits the cookie" do
+    referer = { "Referer" => "http://www.example.com/contact" }
+    post "/forms/contact", params: VALID.except(:email).merge(_nibble_hp: ""), headers: referer
+    assert_equal({ "name" => "Ada", "topic" => "sales", "message" => "Hello there" }, flash[:nibble_form]["values"])
+
+    post "/forms/contact", params: VALID.except(:email).merge(message: "x" * 3000), headers: referer
+    assert_equal %w[name topic], flash[:nibble_form]["values"].keys, "a value that would overflow the cookie is dropped, not the redirect"
+
+    post "/forms/tracked?utm_source=news", params: { source: "typed", channel: "typed" }, headers: referer
+    assert_equal({}, flash[:nibble_form]["values"])
+
+    post "/forms/contact", params: VALID, headers: referer
+    assert_nil flash[:nibble_form]["values"]
+  end
+
   test "a form that doesn't store keeps nothing" do
     captcha(provider: "turnstile")
     stub_request(:post, TURNSTILE).to_return(body: { success: true }.to_json)
