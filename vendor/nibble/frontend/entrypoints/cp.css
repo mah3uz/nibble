@@ -611,6 +611,10 @@ tr.sortable-ghost-placeholder > td {
   background-color: var(--gray-800);
 }
 
+.dark :is(input, textarea, select) {
+  color-scheme: dark;
+}
+
 .nib {
   position: relative;
   border: 1px solid var(--gray-300);
