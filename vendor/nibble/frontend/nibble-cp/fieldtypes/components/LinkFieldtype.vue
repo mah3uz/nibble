@@ -60,7 +60,7 @@ const scope = computed(() =>
       :disabled="isReadOnly"
       placeholder="https:// or /path"
       class="flex-1"
-      @update:model-value="(text) => updateDebounced((url = String(text)))"
+      @update:model-value="(text: string | number) => updateDebounced((url = String(text)))"
     />
     <div v-else-if="option" class="flex flex-1 flex-col gap-1">
       <RecordSearch

@@ -37,16 +37,15 @@ async function validate() {
   status.value = Object.keys(body.errors).length ? 'invalid' : 'valid'
   result.value = status.value === 'valid' ? { processed: body.processed, augmented: body.augmented } : null
 }
+
+const choose = (key: unknown) => router.get('/cp/nibble/playground', { blueprint: String(key) })
 </script>
 
 <template>
   <div class="space-y-6">
     <PageHeader title="Fieldtype playground">
       <template #actions>
-        <Select
-          :model-value="current"
-          @update:model-value="(key) => router.get('/cp/nibble/playground', { blueprint: String(key) })"
-        >
+        <Select :model-value="current" @update:model-value="choose">
           <SelectTrigger class="w-72" aria-label="Blueprint"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem v-for="option in blueprints" :key="option.key" :value="option.key">{{

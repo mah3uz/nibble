@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3'
 import { CalendarClock, CircleAlert, Info } from '@lucide/vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import ExternalLinkIcon from '@/components/cp/icons/ExternalLinkIcon.vue'
 import StatusCell from '@/components/cp/listing/cells/StatusCell.vue'
 import CpPanel from '@/components/cp/page/CpPanel.vue'
@@ -39,6 +39,8 @@ const when = (iso: string) =>
     hour: 'numeric',
     minute: '2-digit',
   })
+
+const zoneName = computed(() => props.time_zone.replace(/^Etc\//, '').replaceAll('_', ' '))
 
 const lastRanAt = (run: Run) => run.finished_at ?? run.started_at ?? run.scheduled_for
 
@@ -79,12 +81,7 @@ useBreadcrumbs([{ label: 'Utilities', url: '/cp/utilities' }, { label: 'Schedule
       </EmptyState>
     </CpPanel>
 
-    <CpPanel
-      v-else
-      title="Tasks"
-      :description="`Times are in ${time_zone.replace(/^Etc\//, '').replaceAll('_', ' ')}.`"
-      flush
-    >
+    <CpPanel v-else title="Tasks" :description="`Times are in ${zoneName}.`" flush>
       <ul class="text-sm" role="list">
         <li
           v-for="task in tasks"
