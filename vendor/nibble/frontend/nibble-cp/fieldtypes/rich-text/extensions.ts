@@ -1,8 +1,9 @@
-import { Node, mergeAttributes } from '@tiptap/core'
+import { Extension, Node, mergeAttributes } from '@tiptap/core'
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import Image from '@tiptap/extension-image'
 import { ListItem } from '@tiptap/extension-list'
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
+import Typography from '@tiptap/extension-typography'
 import { CharacterCount, Placeholder } from '@tiptap/extensions'
 import StarterKit from '@tiptap/starter-kit'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
@@ -74,3 +75,27 @@ export function hintExtensions(config: Record<string, unknown>) {
     ...(limit ? [CharacterCount.configure({ limit })] : []),
   ]
 }
+
+const InlineHardBreaks = Extension.create({
+  name: 'inlineHardBreaks',
+  priority: 1000,
+  addKeyboardShortcuts() {
+    return { Enter: ({ editor }) => editor.commands.setHardBreak() }
+  },
+})
+
+export function behaviourExtensions(config: Record<string, unknown>) {
+  return [
+    ...(config.smart_typography === true ? [Typography] : []),
+    ...(config.inline === true && config.inline_hard_breaks === true ? [InlineHardBreaks] : []),
+  ]
+}
+
+export function ruleOptions(config: Record<string, unknown>) {
+  return {
+    enableInputRules: config.enable_input_rules !== false,
+    enablePasteRules: config.enable_paste_rules !== false,
+  }
+}
+
+export const isFloatingToolbar = (config: Record<string, unknown>) => config.toolbar_mode === 'floating'

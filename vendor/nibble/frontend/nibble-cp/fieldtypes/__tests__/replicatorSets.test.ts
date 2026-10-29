@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { activeCount, addableGroups, expandSet, setPreview } from '../replicatorSets'
+import { activeCount, addableGroups, collapsedPreview, expandSet, setPreview } from '../replicatorSets'
 import type { PublishField, PublishSet, PublishSetGroup } from '../types'
 
 const set = (handle: string, max: number | null = null): PublishSet => ({
@@ -63,6 +63,15 @@ describe('setPreview', () => {
   it('skips empty values and cuts long previews short', () => {
     expect(setPreview(fields, { name: '', placement: 'head' })).toBe('In the head')
     expect(setPreview(fields, { name: 'x'.repeat(70) }, 60)).toBe(`${'x'.repeat(60)}…`)
+  })
+})
+
+describe('collapsedPreview', () => {
+  const fields = [{ handle: 'name', type: 'text', replicator_preview: true, config: {} } as PublishField]
+
+  it('shows only the block name when previews are off', () => {
+    expect(collapsedPreview(fields, { name: 'Chat widget' }, true)).toBe('Chat widget')
+    expect(collapsedPreview(fields, { name: 'Chat widget' }, false)).toBe('')
   })
 })
 

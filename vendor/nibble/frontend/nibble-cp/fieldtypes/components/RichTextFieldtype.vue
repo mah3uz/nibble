@@ -22,8 +22,18 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { MarkdownPaste } from '@/lib/tiptap/markdownPaste'
 import { readingTime } from '@/lib/tiptap/readingTime'
 import { clone } from '../../lib/clone'
+import type { ItemSummary } from '../../lib/relationships'
 import { rowId } from '../../lib/rowId'
-import { RichTextCodeBlock, RichTextImage, baseExtensions, hintExtensions, setNode } from '../rich-text/extensions'
+import {
+  RichTextCodeBlock,
+  RichTextImage,
+  baseExtensions,
+  behaviourExtensions,
+  hintExtensions,
+  isFloatingToolbar,
+  ruleOptions,
+  setNode,
+} from '../rich-text/extensions'
 import {
   fetchGlobalLinks,
   findGlobalField,
@@ -36,6 +46,7 @@ import {
 import SetNodeView, { type SetNodeStorage } from '../rich-text/SetNodeView.vue'
 import type { PublishSetGroup } from '../types'
 import { fieldtypeEmits, fieldtypeProps, useFieldtype } from '../useFieldtype'
+import RecordSearch from './RecordSearch.vue'
 import SetPicker from './SetPicker.vue'
 
 const props = defineProps(fieldtypeProps)
@@ -63,6 +74,7 @@ const storage: SetNodeStorage = {
   fieldPathPrefix: props.fieldPathPrefix ?? props.handle,
   metaPathPrefix: props.metaPathPrefix ?? props.fieldPathPrefix ?? props.handle,
   readOnly: isReadOnly.value,
+  previews: props.config.previews !== false,
   canAdd: () => !isReadOnly.value,
   duplicate: (id) => duplicateSet(id),
   insertAfter: (pos, handle) => insertSet(handle, pos),
@@ -71,6 +83,7 @@ const storage: SetNodeStorage = {
 const editor = useEditor({
   content: doc(nodes()),
   editable: !isReadOnly.value,
+  ...ruleOptions(props.config),
   extensions: [
     ...baseExtensions.map((extension) => {
       if (extension === RichTextImage)
@@ -84,6 +97,7 @@ const editor = useEditor({
     MarkdownPaste,
     FindAndReplace.configure({ injectCSS: false, searchDebounceMs: 150 }),
     ...hintExtensions(props.config),
+    ...behaviourExtensions(props.config),
   ],
   editorProps: {
     attributes: { class: 'nib-content prose prose-nibble' },
@@ -232,6 +246,7 @@ defineFieldActions(
       ],
 )
 
+const floating = isFloatingToolbar(props.config)
 const toolbarTarget = `nib-${useId()}`
 const linkButton = ref<HTMLElement>()
 type LinkAnchor = HTMLElement | { getBoundingClientRect: () => DOMRect }
@@ -239,7 +254,9 @@ const linkAnchor = ref<LinkAnchor | null>(null)
 const linkOpen = ref(false)
 const linkHref = ref('')
 const linkNewWindow = ref(false)
-const linkMode = ref<LinkDialog['mode']>('url')
+const linkMode = ref<LinkDialog['mode'] | 'entry'>('url')
+const linkCollections = computed(() => (props.config.link_collections as string[]) ?? [])
+const linkEntry = ref<ItemSummary | null>(null)
 const globalChoice = ref<GlobalLinkChoice>({ set: '', field: '' })
 const globalSets = ref<GlobalLinkSet[]>([])
 const globalFields = computed(() => globalSets.value.find((set) => set.handle === globalChoice.value.set)?.fields ?? [])
@@ -249,6 +266,7 @@ function openLink(anchor: LinkAnchor | null = null) {
   const attrs = editor.value?.getAttributes('link') ?? {}
   const choice = parseGlobalRef(attrs.ref)
   linkHref.value = attrs.href ?? ''
+  linkEntry.value = null
   linkMode.value = choice ? 'global' : 'url'
   globalChoice.value = choice ?? { set: '', field: '' }
   linkNewWindow.value = attrs.target === '_blank' || props.config.target_blank === true
@@ -259,9 +277,10 @@ function chooseGlobalSet(set: string) {
   globalChoice.value = { set, field: globalSets.value.find((item) => item.handle === set)?.fields[0]?.handle ?? '' }
 }
 function applyLink() {
+  const entry = linkMode.value === 'entry'
   const dialog = {
-    mode: linkMode.value,
-    href: linkHref.value,
+    mode: linkMode.value === 'global' ? ('global' as const) : ('url' as const),
+    href: entry ? (linkEntry.value?.url ?? '') : linkHref.value,
     choice: globalChoice.value,
     newWindow: linkNewWindow.value,
   }
@@ -549,7 +568,7 @@ function showBubbleMenu({
         </div>
       </header>
 
-      <Teleport defer :to="`#${toolbarTarget}`" :disabled="!fullscreen">
+      <Teleport v-if="!floating" defer :to="`#${toolbarTarget}`" :disabled="!fullscreen">
         <div
           v-if="!isReadOnly"
           :class="['nib-toolbar', { 'border-0': fullscreen }]"
@@ -605,6 +624,16 @@ function showBubbleMenu({
         </div>
       </Teleport>
 
+      <Teleport v-if="floating && !isReadOnly" defer :to="`#${toolbarTarget}-find`" :disabled="!fullscreen">
+        <FindReplaceBar
+          v-if="findOpen && editor"
+          ref="findBar"
+          :editor="editor"
+          :class="{ 'nib-find-floating': fullscreen }"
+          @close="closeFind"
+        />
+      </Teleport>
+
       <div :class="['nib-editor', { 'focus-within:focus-outline': !fullscreen }]">
         <BubbleMenu
           v-if="editor"
@@ -615,7 +644,7 @@ function showBubbleMenu({
         >
           <div v-show="!linkOpen" class="nib-bubble-menu" role="toolbar" aria-label="Text formatting">
             <Button
-              v-for="button in bubbleButtons"
+              v-for="button in floating ? visibleButtons() : bubbleButtons"
               :key="button.name"
               type="button"
               variant="ghost"
@@ -660,6 +689,13 @@ function showBubbleMenu({
           </div>
         </FloatingMenu>
         <EditorContent :editor="editor" />
+        <div v-if="config.always_show_set_button === true && hasSets && !isReadOnly && editor" class="mt-2">
+          <SetPicker
+            :groups="groups"
+            label="Add block"
+            @pick="(handle) => insertSet(handle, editor!.state.doc.content.size)"
+          />
+        </div>
       </div>
 
       <div v-if="config.reading_time || config.word_count" class="nib-footer">
@@ -678,12 +714,24 @@ function showBubbleMenu({
         size="sm"
         :model-value="linkMode"
         aria-label="Link to"
-        @update:model-value="(value) => value && (linkMode = value as LinkDialog['mode'])"
+        @update:model-value="(value) => value && (linkMode = value as typeof linkMode)"
       >
         <ToggleGroupItem value="url">URL</ToggleGroupItem>
+        <ToggleGroupItem v-if="linkCollections.length" value="entry">Page</ToggleGroupItem>
         <ToggleGroupItem value="global">Site setting</ToggleGroupItem>
       </ToggleGroup>
-      <div v-if="linkMode === 'url'" class="space-y-2">
+      <div v-if="linkMode === 'entry'" class="space-y-2">
+        <Label>Page</Label>
+        <RecordSearch
+          type="entry"
+          :scope="{ collections: linkCollections }"
+          :selected-ids="linkEntry ? [linkEntry.id] : []"
+          :label="linkEntry?.title ?? 'Choose a page…'"
+          @pick="(item) => (linkEntry = item)"
+        />
+        <p v-if="linkEntry && !linkEntry.url" class="text-sm text-gray-500">This page has no address to link to.</p>
+      </div>
+      <div v-else-if="linkMode === 'url'" class="space-y-2">
         <Label :for="`${toolbarTarget}-href`">URL</Label>
         <LinkUrlInput :id="`${toolbarTarget}-href`" v-model="linkHref" @submit="applyLink" />
       </div>
@@ -728,7 +776,12 @@ function showBubbleMenu({
       <div class="flex justify-end gap-2">
         <Button type="button" variant="ghost" size="sm" @click="linkOpen = false">Cancel</Button>
         <Button type="button" variant="outline" size="sm" @click="removeLink">Remove Link</Button>
-        <Button type="button" size="sm" :disabled="linkMode === 'global' && !globalField" @click="applyLink">
+        <Button
+          type="button"
+          size="sm"
+          :disabled="(linkMode === 'global' && !globalField) || (linkMode === 'entry' && !linkEntry?.url)"
+          @click="applyLink"
+        >
           Apply Link
         </Button>
       </div>

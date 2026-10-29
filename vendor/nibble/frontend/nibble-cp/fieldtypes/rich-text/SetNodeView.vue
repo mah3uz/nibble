@@ -9,6 +9,7 @@ export type SetNodeStorage = {
   fieldPathPrefix: string
   metaPathPrefix: string
   readOnly: boolean
+  previews: boolean
   canAdd: () => boolean
   duplicate: (id: string) => void
   insertAfter: (pos: number, handle: string) => void
@@ -30,6 +31,7 @@ const collapsed = ref(false)
       :groups="storage.groups"
       :collapsed="collapsed"
       :read-only="storage.readOnly"
+      :previews="storage.previews"
       :can-add="storage.canAdd()"
       :can-duplicate="storage.canAdd()"
       :field-path-prefix="`${storage.fieldPathPrefix}.${index}.attrs.values`"
