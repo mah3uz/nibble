@@ -151,18 +151,60 @@ module Nibble
         end
         return scope if active.empty?
 
-        ids = scope.pluck(:id, :data).filter_map do |id, data|
-          id if active.all? { |field| field_matches?(field, (data || {})[field.handle]) }
+        active.each { |field| scope = sql_filtered(scope, field) }
+        exact = active.select { |field| exact_filter?(field) }
+        return scope if exact.empty?
+
+        paths = exact.map { |field| json_path(field.handle) }
+        ids = scope.pluck(:id, *paths).filter_map do |id, *values|
+          id if exact.zip(values).all? { |field, value| field_matches?(field, exact_value(field, value)) }
         end
         scope.where(id: ids)
+      end
+
+      def exact_filter?(field) = field.type == "date" || multiple_choice?(field)
+
+      def multiple_choice?(field) = field.type == "checkboxes" || field.fieldtype.try(:multiple?)
+
+      def json_path(handle) = Arel::Nodes::InfixOperation.new("->>", model.arel_table[:data], Arel::Nodes.build_quoted(handle))
+
+      def text_path(handle) = Arel::Nodes::NamedFunction.new("CAST", [ json_path(handle).as("TEXT") ])
+
+      def exact_value(field, value)
+        return value unless multiple_choice?(field) && value.is_a?(String)
+
+        JSON.parse(value)
+      rescue JSON::ParserError
+        value
+      end
+
+      def sql_filtered(scope, field)
+        key = "field_#{field.handle}"
+        case field.type
+        when "toggle"
+          wanted = params[key].to_s
+          return scope if wanted.blank?
+
+          path = text_path(field.handle)
+          off = path.eq(nil).or(path.in(%w[0 false] + [ "" ]))
+          scope.where(wanted == "1" ? off.not : off)
+        when "date"
+          from, to = %w[from to].map { |edge| day(params["#{key}_#{edge}"]) }
+          path = json_path(field.handle)
+          scope = scope.where(path.gteq((from.beginning_of_day.utc.to_date - 1).iso8601)) if from
+          scope = scope.where(path.lt((to.end_of_day.utc.to_date + 2).iso8601)) if to
+          scope
+        else
+          return scope if multiple_choice?(field)
+
+          wanted = Array(params[key]).compact_blank.map(&:to_s)
+          wanted.empty? ? scope : scope.where(text_path(field.handle).in(wanted))
+        end
       end
 
       def field_matches?(field, value)
         key = "field_#{field.handle}"
         case field.type
-        when "toggle"
-          wanted = params[key].to_s
-          wanted.blank? || (!Fieldtypes::Toggle::OFF.include?(value) == (wanted == "1"))
         when "date"
           from, to = %w[from to].map { |edge| day(params["#{key}_#{edge}"]) }
           return true unless from || to

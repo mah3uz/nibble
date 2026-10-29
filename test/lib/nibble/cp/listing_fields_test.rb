@@ -103,6 +103,28 @@ class Nibble::Cp::ListingFieldsTest < ActiveSupport::TestCase
     assert_equal [ "Before" ], titles(field_starts_to: "2026-02-28")
   end
 
+  test "a filtered listing narrows in SQL and never loads unrelated rows' data" do
+    40.times { |i| event("Row #{i}", "mood" => i.zero? ? "calm" : "loud", "free" => i.even?, "starts" => "2026-0#{1 + i % 2}-15T10:00:00Z") }
+    sql = []
+    subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") { |*, payload| sql << payload[:sql] }
+    result = titles(field_mood: [ "calm" ], field_free: "1", field_starts_from: "2026-01-01", field_starts_to: "2026-01-31")
+    ActiveSupport::Notifications.unsubscribe(subscriber)
+
+    assert_equal [ "Row 0" ], result
+    loads = sql.select { |query| query.match?(/SELECT "entries"\.\* FROM "entries"/) && query.exclude?("LIMIT") == false }
+    assert loads.any? && loads.all? { |query| query.include?("CAST(") }, "only the filtered rows are loaded"
+    assert sql.none? { |query| query.match?(/SELECT "entries"\."id", "entries"\."data" FROM/) }, "no query reads every row's whole data"
+    assert sql.any? { |query| query.include?("CAST(") && query.include?("'calm'") }, "the choice is filtered by the database"
+  end
+
+  test "many rows filter exactly, array choices included" do
+    60.times { |i| event("Row #{i}", "mood" => %w[calm loud][i % 2], "tags" => i % 3 == 0 ? %w[a b] : %w[b], "free" => i % 5 == 0) }
+
+    assert_equal 30, listing(field_mood: [ "calm" ], per_page: 100).props["pagination"]["total"]
+    assert_equal 20, listing(field_tags: [ "a" ], per_page: 100).props["pagination"]["total"]
+    assert_equal 8, listing(field_tags: [ "a" ], field_mood: [ "calm" ], field_free: "0", per_page: 100).props["pagination"]["total"]
+  end
+
   test "filters are offered in plain words, only for filterable fields" do
     filters = listing.props["filters"].to_h { |filter| [ filter["handle"], filter ] }
 
