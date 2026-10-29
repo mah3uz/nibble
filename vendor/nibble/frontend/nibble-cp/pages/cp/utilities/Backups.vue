@@ -54,7 +54,14 @@ useBreadcrumbs([{ label: 'Utilities', url: '/cp/utilities' }, { label: 'Backups'
     </div>
 
     <p class="text-sm text-gray-600 dark:text-gray-400">
-      Restoring one, and what to check afterwards: <code class="text-xs">docs/runbooks/restore.md</code>.
+      How to restore one, and what to check afterwards:
+      <a
+        href="https://nibble.ink/docs/running/backups#3-restoring-on-a-running-server"
+        class="underline"
+        target="_blank"
+        rel="noopener"
+        >Restoring on a running server</a
+      >.
     </p>
   </div>
 </template>
