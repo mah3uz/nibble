@@ -72,7 +72,7 @@ terms. The collection lists which blueprints it allows; the first is the default
 |---|---|
 | `display` | the label; defaults to the handle, humanised |
 | `instructions` | help text, shown below the label — `instructions_position: below` moves it under the input |
-| `required` | a value is needed to save; a `toggle` must be switched on |
+| `required` | a value is needed to save; a `toggle` must be switched on. Takes `true`, `false`, or [a condition](#6-conditional-fields) that says when |
 | `validate` | extra rules, such as `[max:200]` or `["required_with:{this}.button_label"]` |
 | `messages` | what to say when a rule fails, keyed by rule name — see below |
 | `default` | the value a new entry, term, global or row starts with; entries that already exist keep what they have, and [`set_default`](changing-schema.md#42-set_default) fills them |
@@ -272,6 +272,37 @@ A field can appear only when another has a certain value. Tidewater's page hero 
 The form shows and hides them as the editor works, and validation follows: a hidden field is never required. The
 keys are `if`, `unless`, `show_when` and `hide_when`, and each has an `_any` form — `if_any` — that passes when any
 one condition matches rather than all of them.
+
+### Required only sometimes
+
+`required` takes a condition in place of `true`: exactly one of those keys, with the rules a field uses to show itself.
+The field is required while the condition passes against the values being saved, and optional while it fails:
+
+```yaml
+- handle: contact_by
+  field: { type: radio, options: { phone: Phone, email: Email }, default: email }
+- handle: phone
+  field: { type: text, required: { if: { contact_by: phone } } }
+```
+
+The Control Plane draws the `*` beside Phone only while Contact by is Phone. A field its own conditions hide is never
+required, whatever its `required` says. A conditionally required `toggle` must be switched on once the condition passes.
+`nibble:check` refuses a `required` condition with no key or several, and one naming a field that isn't beside it. Its
+warning about saved records with a required toggle switched off covers only `required: true`.
+
+### What a hidden field keeps
+
+A condition decides whether a field is validated; it never removes the value. When a condition hides a field, Nibble
+skips that field's rules, so nothing in it is required or checked, and the value already saved with the record stays:
+
+- Saving an entry, term or global set from the Control Plane sends the values of hidden fields along with the rest, and
+  stores them as sent. Hiding a field does not clear it, and showing it again brings back what was there.
+- The API and agents write whatever values they are given; a hidden field's value is stored and not checked.
+- A public form submission is the same: the hidden field's rules are skipped and a posted value is stored, emailed and
+  delivered as posted. Only [calculations](forms.md#11-calculations) ignore a hidden field, counting it as 0.
+- `always_save: true` on a field keeps its rules running while a condition hides it, so a hidden `required` field is still
+  required and its other rules still apply. It makes no difference to what is stored, because values are stored either
+  way.
 
 ## 7. Generated types
 

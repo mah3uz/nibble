@@ -198,6 +198,7 @@ arrays or `null` and narrows them as before.
 | `submit`, `reset` | send it; clear it |
 | `fieldName(field)` | the input `name` Nibble expects |
 | `isVisible(field)` | whether the field's conditions hold for the current values |
+| `isRequired(field)` | whether the field is required for the current values: its `required`, or the condition it holds |
 | `inputId(field)`, `helpId(field)`, `errorId(field)` | the ids for a field's input, its help and its error, unique to the form |
 | `describedBy(field)` | the `aria-describedby` for its input: the help id when the field has instructions or file limits, and the error id when it has an error |
 | `summaryEl`, `messageEl` | refs for the error summary and the success message; each is focused when it appears, so give it `tabindex="-1"` |

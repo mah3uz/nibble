@@ -101,6 +101,18 @@ current value of `field`, and `value` is the text written in the schema:
 | `contains_any` | a list includes one of the comma-separated items in `value`, or a string contains one |
 | `custom` | a condition written in Ruby; its `field` can be `null` |
 
+A hidden field's rules are skipped, but its value is not discarded: a value posted for a field its condition hides is
+stored, emailed and delivered as posted, and `always_save: true` keeps the field's rules running while it is hidden. A
+theme that wants the value gone leaves the field out of what it posts, as `useNibbleForm` does.
+
+A field's `required` takes a condition too, with exactly one of the keys above: `required: { if: { contact_by: phone } }`
+makes the field required while the condition passes and optional while it fails. A field its own conditions hide is never
+required. The definition carries `required` as `true` or `false`, or, for a conditional one, as an object in the shape of
+`conditions` (`show`, `match` and `rules`), where `show: true` means required while the rules pass. `useNibbleForm`'s
+`isRequired(field)` answers it for the current answers, and `crumbs`' contact form uses it for the `*` marker, the
+`required` attribute and the "Fields marked * are required" line. A theme can't run a `custom` rule, so it treats that
+field as optional and the server decides.
+
 A theme can't run `custom`, so it draws that field and leaves the decision to the server. `useNibbleForm`'s
 `isVisible(field)` evaluates the rest as the server does, and the form leaves a field they hide out of what it posts;
 `crumbs`' contact form draws only the fields whose conditions hold. The server is always the authority: it applies the
