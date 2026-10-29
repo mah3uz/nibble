@@ -1,9 +1,29 @@
 <script setup lang="ts">
-import { AlertCircle, ChevronDown, ChevronRight, Copy, Eye, EyeOff, GripVertical, Trash2 } from '@lucide/vue'
+import {
+  AlertCircle,
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  ChevronRight,
+  ClipboardCopy,
+  Copy,
+  Eye,
+  EyeOff,
+  GripVertical,
+  MoreHorizontal,
+  Trash2,
+} from '@lucide/vue'
 import { computed } from 'vue'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import PublishFields from '../../publish/PublishFields.vue'
 import { useContainer } from '../../publish/context'
 import { setPreview } from '../replicatorSets'
@@ -18,6 +38,9 @@ const props = defineProps<{
   readOnly: boolean
   canAdd: boolean
   canDuplicate: boolean
+  menu?: boolean
+  canMoveUp?: boolean
+  canMoveDown?: boolean
   fieldPathPrefix: string
   metaPathPrefix: string
 }>()
@@ -25,12 +48,17 @@ const emit = defineEmits<{
   toggle: []
   duplicate: []
   remove: []
+  move: [delta: -1 | 1]
+  copy: []
   enable: [enabled: boolean]
   addBelow: [handle: string]
+  pasteBelow: []
 }>()
 const { errors } = useContainer()
 
 const preview = computed(() => setPreview(props.set?.fields ?? [], props.row))
+const name = computed(() => props.set?.display ?? props.row.type)
+const toggleLabel = computed(() => (props.collapsed && preview.value ? `${name.value}: ${preview.value}` : name.value))
 const hasError = computed(() => Object.keys(errors.value).some((path) => path.startsWith(`${props.fieldPathPrefix}.`)))
 </script>
 
@@ -42,10 +70,16 @@ const hasError = computed(() => Object.keys(errors.value).some((path) => path.st
   >
     <div class="flex items-center gap-2 rounded-t-lg bg-gray-50 px-2 py-1.5 dark:bg-gray-850">
       <GripVertical v-if="!readOnly" class="drag-handle size-4 shrink-0 cursor-grab text-muted-foreground" />
-      <button type="button" class="flex flex-1 items-center gap-1.5 text-left text-sm" @click="emit('toggle')">
+      <button
+        type="button"
+        class="flex min-w-0 flex-1 items-center gap-1.5 text-left text-sm"
+        :aria-expanded="!collapsed"
+        :aria-label="toggleLabel"
+        @click="emit('toggle')"
+      >
         <ChevronDown v-if="!collapsed" class="size-4 shrink-0" /><ChevronRight v-else class="size-4 shrink-0" />
         <CpIcon v-if="set?.icon" :name="set.icon" class="size-4 text-muted-foreground" />
-        <span class="font-medium">{{ set?.display ?? row.type }}</span>
+        <span class="font-medium">{{ name }}</span>
         <span v-if="collapsed && preview" class="truncate text-muted-foreground">— {{ preview }}</span>
       </button>
       <Badge v-if="set?.badge" variant="secondary">{{ set.badge }}</Badge>
@@ -55,8 +89,10 @@ const hasError = computed(() => Object.keys(errors.value).some((path) => path.st
         :groups="groups"
         :disabled="readOnly"
         icon-only
+        :can-paste="menu"
         label="Add set below"
         @pick="(handle) => emit('addBelow', handle)"
+        @paste="emit('pasteBelow')"
       />
       <Button
         type="button"
@@ -86,6 +122,19 @@ const hasError = computed(() => Object.keys(errors.value).some((path) => path.st
         @click="emit('remove')"
         ><Trash2
       /></Button>
+      <DropdownMenu v-if="menu">
+        <DropdownMenuTrigger as-child>
+          <Button type="button" size="icon-sm" variant="ghost" :aria-label="`Actions for ${name}`"
+            ><MoreHorizontal
+          /></Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" class="min-w-44">
+          <DropdownMenuItem :disabled="!canMoveUp" @select="emit('move', -1)"><ArrowUp />Move up</DropdownMenuItem>
+          <DropdownMenuItem :disabled="!canMoveDown" @select="emit('move', 1)"><ArrowDown />Move down</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem @select="emit('copy')"><ClipboardCopy />Copy block</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
     <div v-if="!collapsed" class="border-t p-4">
       <PublishFields

@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { useSortable } from '@vueuse/integrations/useSortable'
 import { computed, ref, useTemplateRef, watch } from 'vue'
+import { toast } from 'vue-sonner'
 import { clone } from '../../lib/clone'
 import { rowId } from '../../lib/rowId'
 import { useSectionActions } from '../../publish/context'
-import { addableGroups, hasRoom } from '../replicatorSets'
+import { addableGroups, expandSet, hasRoom } from '../replicatorSets'
+import { moveRow, restoreRow, useUndoToast } from '../rows'
+import { copySet, pastedContent, pasteTarget, useCopiedSet } from '../setClipboard'
 import type { PublishSetGroup } from '../types'
 import { fieldtypeEmits, fieldtypeProps, useFieldtype } from '../useFieldtype'
 import ReplicatorSet from './ReplicatorSet.vue'
@@ -32,6 +35,9 @@ const showAdd = computed(() => canAdd.value && addable.value.length > 0)
 const sectionActions = useSectionActions()
 const addInHeader = computed(() => props.config.button_position === 'header' && !!sectionActions)
 const collapsed = ref(new Set<string>((props.meta.collapsed as string[]) ?? []))
+const accordion = computed(() => props.config.collapse === 'accordion')
+const copied = useCopiedSet()
+const offerUndo = useUndoToast()
 
 const listRef = useTemplateRef<HTMLElement>('list')
 useSortable(listRef, rows, {
@@ -46,33 +52,73 @@ function withMeta(id: string, meta: unknown) {
   updateMeta({ ...props.meta, existing: { ...((props.meta.existing as object) ?? {}), [id]: meta } })
 }
 
-function addSet(handle: string, at = rows.value.length) {
+function existingMeta(id: string) {
+  return ((props.meta.existing as Record<string, Record<string, unknown>>) ?? {})[id] ?? {}
+}
+
+function newMeta(handle: string) {
+  return ((props.meta.new as Record<string, Record<string, unknown>>) ?? {})[handle] ?? {}
+}
+
+function insert(at: number, row: Omit<Row, '_id' | 'type'> & { type: string }, meta: unknown) {
   const id = rowId()
-  const defaults = ((props.meta.defaults as Record<string, object>) ?? {})[handle] ?? {}
-  withMeta(id, ((props.meta.new as Record<string, unknown>) ?? {})[handle] ?? {})
+  withMeta(id, meta)
   const next = [...rows.value]
-  next.splice(at, 0, { ...clone(defaults), type: handle, _id: id, enabled: true })
+  next.splice(at, 0, { ...row, _id: id })
   update(next)
+  expand(id)
+}
+
+function addSet(handle: string, at = rows.value.length) {
+  const defaults = ((props.meta.defaults as Record<string, object>) ?? {})[handle] ?? {}
+  insert(at, { ...clone(defaults), type: handle, enabled: true }, newMeta(handle))
+}
+
+function paste(at = rows.value.length) {
+  const source = copied.value
+  const set = pasteTarget(addable.value, source)
+  if (!set || !source) return
+  const { values, meta } = pastedContent(set, clone(source))
+  insert(at, { ...values, type: set.handle, enabled: true }, { ...newMeta(set.handle), ...meta })
 }
 
 function duplicate(index: number) {
   const source = rows.value[index]!
-  const id = rowId()
-  withMeta(id, clone(((props.meta.existing as Record<string, unknown>) ?? {})[source._id] ?? {}))
-  const next = [...rows.value]
-  next.splice(index + 1, 0, { ...clone(source), _id: id })
-  update(next)
+  insert(index + 1, clone(source), clone(existingMeta(source._id)))
+}
+
+function remove(index: number) {
+  const row = rows.value[index]!
+  update(rows.value.filter((_, position) => position !== index))
+  offerUndo('Block removed', () => update(restoreRow(rows.value, row, index)))
+}
+
+function move(index: number, to: number) {
+  update(moveRow(rows.value, index, to))
+}
+
+function copy(row: Row) {
+  const { _id, ...values } = row
+  copySet({ type: row.type, values: clone(values), meta: clone(existingMeta(_id)) })
+  toast.success('Block copied')
 }
 
 function setEnabled(index: number, enabled: boolean) {
   update(rows.value.map((row, position) => (position === index ? { ...row, enabled } : row)))
 }
 
+function expand(id: string) {
+  collapsed.value = expandSet(
+    collapsed.value,
+    rows.value.map((row) => row._id),
+    id,
+    accordion.value,
+  )
+}
+
 function toggle(id: string) {
-  const next = new Set(collapsed.value)
-  if (next.has(id)) next.delete(id)
-  else next.add(id)
-  collapsed.value = next
+  if (collapsed.value.has(id)) return expand(id)
+  collapsed.value = new Set(collapsed.value).add(id)
 }
 </script>
 
@@ -87,6 +133,7 @@ function toggle(id: string) {
         Collapse all
       </button>
       <button
+        v-if="!accordion"
         type="button"
         class="text-muted-foreground underline underline-offset-2 hover:text-foreground"
         @click="collapsed = new Set()"
@@ -105,28 +152,38 @@ function toggle(id: string) {
         :read-only="isReadOnly"
         :can-add="showAdd && config.insert_below !== false"
         :can-duplicate="canAdd && sets.some((set) => set.handle === row.type && hasRoom(set, rows))"
+        menu
+        :can-move-up="!isReadOnly && index > 0"
+        :can-move-down="!isReadOnly && index < rows.length - 1"
         :field-path-prefix="`${fieldPathPrefix}.${index}`"
         :meta-path-prefix="`${metaPathPrefix}.existing.${row._id}`"
         @toggle="toggle(row._id)"
         @duplicate="duplicate(index)"
-        @remove="update(rows.filter((_, position) => position !== index))"
+        @remove="remove(index)"
+        @move="(delta) => move(index, index + delta)"
+        @copy="copy(row)"
         @enable="(enabled) => setEnabled(index, enabled)"
         @add-below="(handle) => addSet(handle, index + 1)"
+        @paste-below="paste(index + 1)"
       />
     </div>
     <p v-if="addInHeader && !rows.length" class="text-sm text-muted-foreground">Nothing added yet.</p>
     <Teleport v-if="showAdd && addInHeader" defer :to="`#${sectionActions}`">
       <SetPicker
         :groups="addable"
+        can-paste
         :label="(config.button_label as string) || undefined"
         @pick="(handle) => addSet(handle)"
+        @paste="paste()"
       />
     </Teleport>
     <SetPicker
       v-else-if="showAdd"
       :groups="addable"
+      can-paste
       :label="(config.button_label as string) || undefined"
       @pick="(handle) => addSet(handle)"
+      @paste="paste()"
     />
   </div>
 </template>

@@ -13,6 +13,13 @@ export function addableGroups(groups: PublishSetGroup[], rows: SetRow[]) {
     .filter((group) => group.sets.length > 0)
 }
 
+export function expandSet(collapsed: Set<string>, ids: string[], id: string, accordion: boolean) {
+  if (accordion) return new Set(ids.filter((other) => other !== id))
+  const next = new Set(collapsed)
+  next.delete(id)
+  return next
+}
+
 export function activeCount(rows: SetRow[] | null | undefined) {
   return (rows ?? []).filter((row) => row.enabled !== false).length
 }

@@ -72,6 +72,10 @@ Some fields worth knowing by name:
 | **Entries** / **Terms** | a picker for other entries or terms — an author, a topic, related posts |
 | **Page blocks** | build a page from blocks in any order: text, quote, call to action, image, gallery, pricing |
 
+Each block's **⋯** menu has **Move up** and **Move down**, for ordering without dragging, and **Copy block**. A copied
+block can be pasted into any entry whose blocks field has the same kind of block: **Add block** then offers
+**Paste**. Removing a block, or a row of a table such as opening hours, shows **Undo** for a few seconds.
+
 > [!IMPORTANT]
 > **Saving does not publish.** Save as often as you like; the site does not change until you publish. See
 > [Drafts and publishing](publishing.md) — it is the one thing most worth understanding on your first day.

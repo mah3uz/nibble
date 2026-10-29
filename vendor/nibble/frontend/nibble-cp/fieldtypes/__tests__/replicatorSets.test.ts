@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { activeCount, addableGroups, setPreview } from '../replicatorSets'
+import { activeCount, addableGroups, expandSet, setPreview } from '../replicatorSets'
 import type { PublishField, PublishSet, PublishSetGroup } from '../types'
 
 const set = (handle: string, max: number | null = null): PublishSet => ({
@@ -63,5 +63,17 @@ describe('setPreview', () => {
   it('skips empty values and cuts long previews short', () => {
     expect(setPreview(fields, { name: '', placement: 'head' })).toBe('In the head')
     expect(setPreview(fields, { name: 'x'.repeat(70) }, 60)).toBe(`${'x'.repeat(60)}…`)
+  })
+})
+
+describe('expandSet', () => {
+  const ids = ['a', 'b', 'c']
+
+  it('opens one set and leaves the others as they were', () => {
+    expect([...expandSet(new Set(['a', 'b']), ids, 'a', false)]).toEqual(['b'])
+  })
+
+  it('closes every other set in an accordion, so only one is open at a time', () => {
+    expect([...expandSet(new Set(['a']), ids, 'a', true)].sort()).toEqual(['b', 'c'])
   })
 })

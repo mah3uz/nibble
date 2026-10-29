@@ -1,24 +1,46 @@
 <script setup lang="ts">
-import { Plus } from '@lucide/vue'
+import { ClipboardPaste, Plus } from '@lucide/vue'
 import { computed, ref } from 'vue'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
 import { Button } from '@/components/ui/button'
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { pasteTarget, useCopiedSet } from '../setClipboard'
 import type { PublishSetGroup } from '../types'
 
 const SEARCH_FROM = 9
 
-const props = defineProps<{ groups: PublishSetGroup[]; disabled?: boolean; label?: string; iconOnly?: boolean }>()
-const emit = defineEmits<{ pick: [handle: string] }>()
+const props = defineProps<{
+  groups: PublishSetGroup[]
+  disabled?: boolean
+  label?: string
+  iconOnly?: boolean
+  canPaste?: boolean
+}>()
+const emit = defineEmits<{ pick: [handle: string]; paste: [] }>()
 
 const open = ref(false)
+const copied = useCopiedSet()
+const pasteable = computed(() => (props.canPaste ? pasteTarget(props.groups, copied.value) : null))
 const sets = computed(() => props.groups.flatMap((group) => group.sets))
-const only = computed(() => (sets.value.length === 1 ? sets.value[0] : null))
+const only = computed(() => (sets.value.length === 1 && !pasteable.value ? sets.value[0] : null))
 
 function pick(handle: string) {
   open.value = false
   emit('pick', handle)
+}
+
+function paste() {
+  open.value = false
+  emit('paste')
 }
 </script>
 
@@ -51,6 +73,15 @@ function pick(handle: string) {
         <CommandInput v-if="sets.length >= SEARCH_FROM" placeholder="Search…" />
         <CommandList class="max-h-96">
           <CommandEmpty>Nothing matches.</CommandEmpty>
+          <template v-if="pasteable">
+            <CommandGroup>
+              <CommandItem :value="`Paste ${pasteable.display}`" @select="paste">
+                <ClipboardPaste class="size-4 text-muted-foreground" />
+                <span class="min-w-0 flex-1 truncate">Paste {{ pasteable.display }}</span>
+              </CommandItem>
+            </CommandGroup>
+            <CommandSeparator />
+          </template>
           <CommandGroup v-for="group in groups" :key="group.handle" :heading="group.display ?? undefined">
             <CommandItem v-for="set in group.sets" :key="set.handle" :value="set.display" @select="pick(set.handle)">
               <CpIcon v-if="set.icon" :name="set.icon" class="size-4 text-muted-foreground" />
