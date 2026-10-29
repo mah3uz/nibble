@@ -9,7 +9,8 @@ order: 5
 # Running a site
 
 This section is for you if you keep the site alive. At Tidewater that is the developer who also builds it — at a
-bigger company it might be someone else entirely. It assumes a terminal and a server; it does not assume Ruby.
+bigger company it might be someone else entirely. It assumes a terminal and a server; it does not assume Ruby. An
+administrator with only the Control Plane should start at [Administering from the Control Plane](administering.md).
 
 After reading this section, you will know how to configure a site, let people in, deploy it, back it up, take new
 releases, and move its content around.
@@ -20,6 +21,10 @@ releases, and move its content around.
 |---|---|
 | [Configuration](configuration.md) | `config/nibble.yml`, environment variables, credentials, and which setting goes where |
 | [Users and roles](users-and-roles.md) | adding people, what each role may do, and roles of your own |
+| [Administering from the Control Plane](administering.md) | what an administrator without a terminal can do, and what to ask a developer for |
+| [Utilities](utilities.md) | the Control Plane's maintenance screens: cache, search, jobs, health, backups and the audit log |
+| [Webhooks](webhooks.md) | telling another application when content changes, and how deliveries are signed and retried |
+| [Check messages](check-messages.md) | every message `nibble:check` prints, and how to fix it |
 | [Deploying](deploying.md) | Kamal, secrets, the first deploy, seeding a database, and what each deploy checks |
 | [Backups](backups.md) | what is backed up, where, and how to restore it |
 | [Upgrading](upgrading.md) | taking a release, what it asks, and how to undo it |
