@@ -289,10 +289,8 @@ bin/kamal dbc        # the database console
 
 **Health.** `/up` answers 200 when the application has booted; Kamal's proxy uses it.
 
-**CDNs.** A proxying CDN in front of the site works with no rules to write. Asset URLs are versioned by content and
-cached for a long time; HTML is sent `Cache-Control: private`, because caching a whole page at the edge could share
-one visitor's session with another. Nibble's own page cache sits inside the application, where it knows who is
-asking.
+**CDNs.** A proxying CDN in front of the site works with no rules to write; [the page cache and CDNs](#6-the-page-cache-and-cdns)
+says why, and what to do if you want it to cache pages.
 
 **Scheduled tasks.** **Utilities → Scheduled tasks** lists each task with its next run and last result, and can run
 one now, pause it, resume it and show its history. A task that starts failing notifies the site's administrators once.
@@ -300,3 +298,30 @@ one now, pause it, resume it and show its history. A task that starts failing no
 
 **Backups.** A nightly job copies the database and, with `DB_SNAPSHOT_BUCKET` set, uploads it. See
 [Backups](backups.md).
+
+## 6. The page cache and CDNs
+
+Nibble keeps a copy of each public page it has rendered, so the next visitor is served without the query and render
+work. The copy lives in the Rails cache (Solid Cache, in the site's database), and the site manages it for you.
+
+**What is cached.** A `GET` or `HEAD` for a themed page, from a visitor with no session cookie and no flash message,
+once it rendered with a 200. Pages with a form whose content differs per visitor, such as one that resumes a saved draft, are
+never stored. In development nothing is cached unless caching is switched on.
+
+**How a copy is found.** Its key is the host, path, the query parameters the view declares, the visitor's chosen
+theme register, the schema, the theme and the release: a deploy (`KAMAL_VERSION`) or a schema change starts the cache
+afresh.
+
+**When it is replaced.** Every page remembers the things it showed: `entry:12`, `term:5`, `collection:posts`,
+`taxonomy:topics`, `global:company`, `navigation:main`. Saving, publishing, unpublishing or trashing any of those
+retires the pages tagged with it; a draft save changes nothing, because visitors cannot see it. **Utilities → Cache**
+clears every page, or the pages for tags you name. See [Utilities](utilities.md#1-cache).
+
+**The `Surrogate-Key` header.** Each page response lists its tags, separated by spaces, in `Surrogate-Key`; a copy from
+the page cache also carries `X-Nibble-Cache: hit`. A CDN that understands surrogate keys (Fastly does) can purge by the
+same tags. Nibble does not call a CDN for you.
+
+**What a CDN may cache.** Asset URLs are versioned by content and cached for a long time. HTML is sent
+`Cache-Control: private`, because caching a whole page at the edge could share one visitor's session with another;
+leave it so unless the CDN is told to ignore cookies and purge by tag. The feeds (`/feed.xml`, `/feed-<handle>.xml`)
+and the sitemaps are public and cached for an hour.
