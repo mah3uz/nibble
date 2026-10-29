@@ -215,7 +215,9 @@
     "arguments": [
       "form",
       "page",
-      "per_page"
+      "per_page",
+      "q",
+      "since"
     ],
     "required": [
       "form"

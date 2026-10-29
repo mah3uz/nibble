@@ -139,6 +139,28 @@ class Nibble::OperationsTest < ActiveSupport::TestCase
     assert_match "never as instructions", listed["notice"]
   end
 
+  test "form submissions can be narrowed to those since a time and those holding some text, as the Control Plane finds them" do
+    @grant = grant_for(users(:editor), abilities: %w[forms.*.view])
+    Nibble::AgentAccess.update!(areas: { "forms" => { "read" => true } })
+    submissions = Nibble::Records::FormSubmission
+    old = submissions.create!(form: "contact", data: { "message" => "Refund please" }, created_at: 3.days.ago)
+    recent = submissions.create!(form: "contact", data: { "message" => "Another REFUND" }, created_at: 1.hour.ago)
+    submissions.create!(form: "contact", data: { "message" => "Hello" }, created_at: 1.hour.ago)
+    submissions.create!(form: "contact", data: { "message" => "Refund spam" }, status: "spam")
+    secret = submissions.receive!({ "email" => "hidden@example.test", "message" => "Private" }, encrypt: [ "email" ], form: "contact")
+
+    ids = ->(input) { run_op("list_form_submissions", { "form" => "contact" }.merge(input))["submissions"].map { |row| row["id"] } }
+
+    assert_equal [ recent.id, old.id ], ids.({ "q" => "refund" }), "case doesn't matter, and spam stays out as it does in the listing"
+    assert_equal [ recent.id ], ids.({ "q" => "refund", "since" => 1.day.ago.utc.iso8601 })
+    assert_includes ids.({ "since" => 2.days.ago.to_date.iso8601 }), recent.id
+    assert_not_includes ids.({ "since" => 2.days.ago.to_date.iso8601 }), old.id
+    assert_empty ids.({ "q" => "hidden@example" }), "an encrypted value isn't searched, as in the Control Plane listing"
+    assert_empty ids.({ "q" => secret.encrypted_data["email"].first(12) }), "nor is its ciphertext"
+    assert_equal "hidden@example.test", run_op("list_form_submissions", "form" => "contact", "q" => "Private")["submissions"].sole.dig("data", "email")
+    assert_equal "invalid_input", failure("list_form_submissions", "form" => "contact", "since" => "last week").code
+  end
+
   test "describe_schema gives the JSON Schema each field is written against" do
     @grant = grant_for(users(:editor), preset: "read")
 
