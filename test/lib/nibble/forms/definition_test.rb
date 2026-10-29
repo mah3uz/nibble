@@ -157,4 +157,18 @@ class Nibble::Forms::DefinitionTest < ActiveSupport::TestCase
     assert_includes problems(title: "X", resume: true, resume_email: "email", store: false, sections:),
       "resume needs the form to store submissions, since it keeps what was entered until the visitor comes back"
   end
+
+  test "a form's submit_label is localized text that reaches the definition, and a malformed one is a check problem" do
+    field = { handle: "email", field: { type: "text" } }
+    item = Nibble::Schema::Item.new(kind: :forms, handle: "x", parent: nil, path: "x.yml", layer: :site,
+      data: { "title" => "X", "fields" => [ field.deep_stringify_keys ], "submit_label" => { "en" => "Book", "fr" => "Réserver" } })
+    form = Nibble::Forms::Form.new(item:)
+
+    assert_equal "Réserver", Nibble::Forms::Definition.call(form, locale: "fr")["submit_label"]
+    assert_equal "Book", Nibble::Forms::Definition.call(form, locale: "en")["submit_label"]
+    assert_nil definition("contact")["submit_label"]
+    assert_empty problems(title: "X", submit_label: "Book", fields: [ field ])
+    assert_includes problems(title: "X", submit_label: 3, fields: [ field ]), "submit_label must be text, or text per locale"
+    assert_equal "Send message", definition("contact")["messages"]["send"]
+  end
 end

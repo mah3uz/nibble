@@ -1,7 +1,4 @@
-<h1>Finish filling in <%= @title %></h1>
-<p>You saved <strong><%= @title %></strong> on <%= site_name %> to finish later. Open this link to carry on where you left off.</p>
-<p><%= link_to "Finish the form", @link, class: "button" %></p>
-<p class="note">
-  The link works until <%= l(@expires_at, format: :long) %>. Files you attached aren't kept, so attach them again before
-  you send the form. If you didn't ask for this, ignore this email and what was saved is deleted when the link expires.
-</p>
+<h1><%= mail_text("resume.heading", title: @title) %></h1>
+<p><%= mail_html("resume.intro", title: tag.strong(@title), site: site_name) %></p>
+<p><%= link_to mail_text("resume.button"), @link, class: "button" %></p>
+<p class="note"><%= mail_text("resume.note", expires: l(@expires_at, format: :long, locale: Nibble::Localized.i18n_locale(@mail_locale))) %></p>

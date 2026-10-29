@@ -111,6 +111,19 @@ export type NibbleFormResult = {
   values?: Record<string, string | number | boolean | (string | number)[]>
 }
 
+export type NibbleFormMessageKey =
+  | 'choose'
+  | 'send'
+  | 'sending'
+  | 'next'
+  | 'checking'
+  | 'back'
+  | 'save_later'
+  | 'step'
+  | 'check_answers'
+  | 'required_note'
+  | 'required'
+
 export type NibbleForm<Values extends Record<string, unknown> = Record<string, NibbleFormValue>> = {
   readonly __values?: Values
   handle: string
@@ -123,7 +136,8 @@ export type NibbleForm<Values extends Record<string, unknown> = Record<string, N
   steps?: boolean
   resume?: { email: string; days: number; token: string | null } | null
   success: { message?: string; redirect?: string }
-  messages?: { too_large: string; generic: string; network: string }
+  messages?: { too_large: string; generic: string; network: string } & Partial<Record<NibbleFormMessageKey, string>>
+  submit_label?: string | null
   closed?: boolean
   closed_message?: string | null
   timestamp?: string | null

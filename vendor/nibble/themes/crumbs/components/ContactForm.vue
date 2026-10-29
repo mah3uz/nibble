@@ -1,8 +1,24 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useNibbleForm, type NibbleForm, type NibbleFormField } from '@nibble'
+import { useNibbleForm, type NibbleForm, type NibbleFormField, type NibbleFormMessageKey } from '@nibble'
 
 const props = defineProps<{ form: NibbleForm }>()
+
+const FALLBACK: Record<NibbleFormMessageKey, string> = {
+  choose: 'Choose one…',
+  send: 'Send message',
+  sending: 'Sending…',
+  next: 'Next',
+  checking: 'Checking…',
+  back: 'Back',
+  save_later: 'Save and finish later',
+  step: 'Step %{step} of %{total}',
+  check_answers: 'Please check these answers:',
+  required_note: 'Fields marked * are required.',
+  required: '(required)',
+}
+const t = (key: NibbleFormMessageKey) => props.form.messages?.[key] ?? FALLBACK[key]
+const requiredNote = computed(() => t('required_note').split('*'))
 const contact = useNibbleForm(props.form)
 
 const groups = computed(() => {
@@ -17,8 +33,8 @@ const groups = computed(() => {
 const hasRequired = computed(() => props.form.fields.some((field) => field.required && !field.hidden))
 const hasErrors = computed(() => Object.keys(contact.errors.value).length > 0)
 const submitLabel = computed(() => {
-  if (!contact.isLastStep.value) return contact.processing.value ? 'Checking…' : 'Next'
-  return contact.processing.value ? 'Sending…' : 'Send message'
+  if (!contact.isLastStep.value) return t(contact.processing.value ? 'checking' : 'next')
+  return contact.processing.value ? t('sending') : props.form.submit_label || t('send')
 })
 
 const help = (field: NibbleFormField) => [field.instructions, contact.fileLimits(field)].filter(Boolean).join(' ')
@@ -38,7 +54,9 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
 </script>
 
 <template>
+  <p v-if="form.closed" role="status">{{ form.closed_message }}</p>
   <form
+    v-else
     :action="form.action"
     method="post"
     enctype="multipart/form-data"
@@ -62,7 +80,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
       tabindex="-1"
       class="border-l-2 border-red-600 pl-4 text-red-700 dark:text-red-400"
     >
-      <p>{{ contact.errors.value.base ?? 'Please check these answers:' }}</p>
+      <p>{{ contact.errors.value.base ?? t('check_answers') }}</p>
       <ul v-if="contact.errorList.value.length" class="mt-2 grid gap-1 text-sm">
         <li v-for="error in contact.errorList.value" :key="error.handle">
           <a :href="error.href" class="underline underline-offset-4 hover:text-accent"
@@ -75,7 +93,8 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
       {{ form.result.message }}
     </p>
     <p v-if="hasRequired" class="-mb-4 text-sm text-gray-600 dark:text-gray-300">
-      Fields marked <span class="text-accent">*</span> are required.
+      {{ requiredNote[0] }}<span v-if="requiredNote.length > 1" class="text-accent">*</span
+      >{{ requiredNote.slice(1).join('*') }}
     </p>
     <div v-if="contact.stepping.value" class="grid gap-2">
       <p
@@ -83,7 +102,11 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
         tabindex="-1"
         class="text-sm text-gray-600 dark:text-gray-300"
       >
-        Step {{ contact.step.value + 1 }} of {{ contact.steps.value.length }}
+        {{
+          t('step')
+            .replace('%{step}', String(contact.step.value + 1))
+            .replace('%{total}', String(contact.steps.value.length))
+        }}
       </p>
       <div class="h-1 bg-current/15" aria-hidden="true">
         <div class="h-1 bg-accent" :style="{ width: `${contact.progress.value * 100}%` }" />
@@ -118,7 +141,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
               {{ field.display
               }}<template v-if="field.required"
                 ><span class="text-accent" aria-hidden="true"> *</span
-                ><span class="sr-only"> (required)</span></template
+                ><span class="sr-only">{{ ` ${t('required')}` }}</span></template
               >
             </legend>
             <div :class="field.inline ? 'flex flex-wrap gap-x-6 gap-y-3' : 'grid gap-3'">
@@ -190,7 +213,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
                 :disabled="field.required"
                 :selected="!contact.values[field.handle]"
               >
-                {{ field.placeholder || 'Choose one…' }}
+                {{ field.placeholder || t('choose') }}
               </option>
               <option
                 v-for="option in field.options"
@@ -292,7 +315,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
         :disabled="contact.processing.value"
         @click="contact.back"
       >
-        Back
+        {{ t('back') }}
       </button>
       <button
         type="submit"
@@ -308,7 +331,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
         :disabled="contact.processing.value"
         @click="contact.saveForLater"
       >
-        Save and finish later
+        {{ t('save_later') }}
       </button>
     </div>
     <p v-if="form.resume" role="status" class="text-sm empty:hidden">{{ contact.saved.value }}</p>

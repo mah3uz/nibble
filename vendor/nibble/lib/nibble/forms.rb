@@ -14,6 +14,29 @@ module Nibble
       "client.too_large" => "The files are too large to send.",
       "client.generic" => "Something went wrong. Please try again.",
       "client.network" => "Something went wrong. Please check your connection and try again.",
+      "client.choose" => "Choose one…",
+      "client.send" => "Send message",
+      "client.sending" => "Sending…",
+      "client.next" => "Next",
+      "client.checking" => "Checking…",
+      "client.back" => "Back",
+      "client.save_later" => "Save and finish later",
+      "client.step" => "Step %{step} of %{total}",
+      "client.check_answers" => "Please check these answers:",
+      "client.required_note" => "Fields marked * are required.",
+      "client.required" => "(required)",
+      "mail.submission.visitor_heading" => "Your submission",
+      "mail.submission.staff_heading" => "New submission",
+      "mail.submission.visitor_intro" => "Thanks for filling in %{title} on %{site}. Here's what you sent.",
+      "mail.submission.staff_intro" => "Someone filled in %{title} on %{site}. Here's what they sent.",
+      "mail.submission.reply_to" => "Reply to this email to answer them at %{email}.",
+      "mail.submission.open" => "Open this submission in the Control Plane",
+      "mail.submission.subject" => "New submission: %{title}",
+      "mail.resume.heading" => "Finish filling in %{title}",
+      "mail.resume.intro" => "You saved %{title} on %{site} to finish later. Open this link to carry on where you left off.",
+      "mail.resume.intro_text" => "You saved %{title} on %{site} to finish later. Open this link to carry on where you left off:",
+      "mail.resume.button" => "Finish the form",
+      "mail.resume.note" => "The link works until %{expires}. Files you attached aren't kept, so attach them again before you send the form. If you didn't ask for this, ignore this email and what was saved is deleted when the link expires.",
       "resume.saved" => { one: "We've emailed you a link to finish this form. It works for %{count} day.", other: "We've emailed you a link to finish this form. It works for %{count} days." },
       "resume.email" => "Enter your email address so we can send you a link to finish later.",
       "resume.failed" => "We couldn't send the email. Please try again.",
@@ -145,12 +168,13 @@ module Nibble
         problems << "success needs a message or a redirect" unless form.item["success"].blank? || form.item["success"]["message"].present? || redirect?(form.success["redirect"])
         problems.concat(template_problems(form.item["success"]["message"], "success.message", [])) if form.item["success"].is_a?(Hash) && form.item["success"]["message"].is_a?(String)
         problems << "handler '#{form.handler}' isn't registered" if form.handler && !handlers.key?(form.handler)
+        problems << "submit_label must be text, or text per locale" unless form.item["submit_label"].nil? || Schema::Rules::TEXT.(form.item["submit_label"])
         problems << "retention_days must be a positive number of days" unless form.retention_days.nil? || form.retention_days.to_i.positive?
         problems
       end
 
       def locale_problems(form, schema:, locales:)
-        texts = { "title" => form.item["title"], "success.message" => form.item["success"].to_h["message"], "limits.closed_message" => form.item["limits"].to_h["closed_message"] }
+        texts = { "title" => form.item["title"], "submit_label" => form.item["submit_label"], "success.message" => form.item["success"].to_h["message"], "limits.closed_message" => form.item["limits"].to_h["closed_message"] }
         form.section_items.each_with_index do |section, index|
           texts.merge!("sections.#{index}.display" => section["display"], "sections.#{index}.instructions" => section["instructions"])
         end

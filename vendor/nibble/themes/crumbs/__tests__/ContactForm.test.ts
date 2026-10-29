@@ -259,4 +259,31 @@ describe('crumbs ContactForm', () => {
     expect(trap).toContain('aria-hidden="true"')
     expect(trap).toContain('-left-[9999px]')
   })
+
+  it('shows a closed form’s message in place of the form', async () => {
+    const html = await render(form({ closed: true, closed_message: 'Registration has closed.' }))
+
+    expect(html).toMatch(/<p role="status">Registration has closed.<\/p>/)
+    expect(html).not.toContain('<form')
+  })
+
+  it('words its own labels from the definition’s messages and submit_label, so they follow the page locale', async () => {
+    const messages = {
+      too_large: '',
+      generic: '',
+      network: '',
+      send: 'Envoyer',
+      required_note: 'Les champs * sont requis.',
+    }
+    const html = await render(form({ messages }))
+    const labelled = await render(
+      form({ messages, submit_label: 'Réserver', fields: [field('a', { required: true })] }),
+    )
+
+    expect(await render(form({ messages }))).toContain('Envoyer')
+    expect(html).not.toContain('Send message')
+    expect(labelled).toContain('Réserver')
+    expect(labelled).toContain('Les champs')
+    expect(labelled).not.toContain('Fields marked')
+  })
 })

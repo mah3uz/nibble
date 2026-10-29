@@ -5,7 +5,7 @@ module Nibble
         autocomplete rows inline_label time_enabled earliest_date latest_date max_items clearable formula decimals].freeze
       OPTION_TYPES = %w[select radio checkboxes].freeze
       LOCALIZED_CONFIG = %w[placeholder inline_label].freeze
-      CLIENT_MESSAGES = %w[too_large generic network].freeze
+      CLIENT_MESSAGES = %w[too_large generic network choose send sending next checking back save_later step check_answers required_note required].freeze
       TIMESTAMP_FIELD = "_nibble_t".freeze
 
       module_function
@@ -29,6 +29,7 @@ module Nibble
           "resume" => resume.definition,
           "success" => form.success(locale).slice("message", "redirect"),
           "messages" => CLIENT_MESSAGES.to_h { |key| [ key, Forms.message("client.#{key}", locale) ] },
+          "submit_label" => Localized.resolve(form.item["submit_label"], locale),
           "closed" => closed,
           "closed_message" => (Localized.resolve(form.closed_message, locale) if closed),
           "timestamp" => (verifier.generate(Time.current.to_f, purpose: purpose(form)) if form.min_seconds),

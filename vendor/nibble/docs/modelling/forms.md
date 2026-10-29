@@ -598,6 +598,8 @@ site's `config/locales/<locale>.yml`:
 | `nibble.forms.client.too_large` | the browser can't send the files |
 | `nibble.forms.client.generic` | the answer had no message to show |
 | `nibble.forms.client.network` | the request didn't reach the site |
+| `nibble.forms.client.choose`, `send`, `sending`, `next`, `checking`, `back`, `save_later` | the labels crumbs' form shows: the empty choice of a select, the submit button (and while it works), Next (and while it checks), Back, and Save and finish later |
+| `nibble.forms.client.step`, `check_answers`, `required_note`, `required` | "Step %{step} of %{total}", the line above a list of errors, "Fields marked * are required." (the first `*` is drawn as the marker), and the hidden "(required)" read to screen readers |
 | `nibble.forms.resume.saved` | a form was saved to finish later; takes `one` and `other` forms with `%{count}` days |
 | `nibble.forms.resume.email` | a save has no valid address in the `resume_email` field |
 | `nibble.forms.resume.failed` | the email with the link couldn't be sent |
@@ -606,10 +608,18 @@ site's `config/locales/<locale>.yml`:
 
 A field's failed rules say "The Courriel field is required." in the field's `display` for the visitor's language; the
 sentence itself is translated through `nibble.validation.*`, or by the field's own [`messages`](#1-declaring-a-form).
-The client messages reach the theme as the definition's `messages`, which `useNibbleForm` shows.
+The client messages reach the theme as the definition's `messages`, which `useNibbleForm` shows; a theme draws its own
+labels from them too.
+
+A form's `submit_label` sets the text of its send button, per locale like other form text, in place of the theme's
+"Send message".
 
 Emails to staff are in the site's default locale. An email to the visitor, with `to: "{field.email}"`, uses the locale
-the visitor submitted from: the form title, field labels and option labels in it follow that language.
+the visitor submitted from: the form title, field labels and option labels in it follow that language. The wording
+Nibble adds around them, and the email with a link to a saved form, is translated under `nibble.forms.mail.submission.*`
+(`visitor_heading`, `staff_heading`, `visitor_intro`, `staff_intro`, `reply_to`, `open`, `subject`) and
+`nibble.forms.mail.resume.*` (`heading`, `intro`, `intro_text`, `button`, `note`), with `%{title}`, `%{site}`,
+`%{email}` and `%{expires}` where the text uses them.
 
 ## 8. Every key
 
@@ -626,6 +636,7 @@ the visitor submitted from: the form title, field labels and option labels in it
 | a `calculation` field's `formula`, `decimals`, `prepend`, `append` | the formula, **required**; places to round to, 0–15; text before and after the figure ([Calculations](#11-calculations)) |
 | `retention_days` | a positive number |
 | `steps` | true makes each section a step; needs `sections` |
+| `submit_label` | the send button's text, per locale if the site has several |
 | `resume`, `resume_email`, `resume_days` | true adds Save and finish later; `resume_email` names the text field with the visitor's address; `resume_days` is how long the link works, 7 unless set |
 | `limits` | `{ opens_at, closes_at, max_submissions, unique, closed_message }` |
 | `handler` | the name of a registered Ruby handler |

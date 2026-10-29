@@ -1,10 +1,10 @@
-<h1><%= @visitor ? "Your submission" : "New submission" %></h1>
+<h1><%= mail_text(@visitor ? "submission.visitor_heading" : "submission.staff_heading") %></h1>
 <% if @message %>
   <%= simple_format(h(@message), {}, sanitize: false) %>
 <% elsif @visitor %>
-  <p>Thanks for filling in <strong><%= @form.title(@locale) || @form.handle %></strong> on <%= site_name %>. Here's what you sent.</p>
+  <p><%= mail_html("submission.visitor_intro", title: tag.strong(@form.title(@locale) || @form.handle), site: site_name) %></p>
 <% else %>
-  <p>Someone filled in <strong><%= @form.title(@locale) || @form.handle %></strong> on <%= site_name %>. Here's what they sent.</p>
+  <p><%= mail_html("submission.staff_intro", title: tag.strong(@form.title(@locale) || @form.handle), site: site_name) %></p>
 <% end %>
 <table role="presentation" cellpadding="0" cellspacing="0">
   <% @rows.each do |label, value| %>
@@ -15,8 +15,8 @@
   <% end %>
 </table>
 <% if @reply_to %>
-  <p class="note">Reply to this email to answer them at <%= @reply_to %>.</p>
+  <p class="note"><%= mail_text("submission.reply_to", email: @reply_to) %></p>
 <% end %>
 <% if @link %>
-  <p class="note"><%= link_to "Open this submission in the Control Plane", @link %></p>
+  <p class="note"><%= link_to mail_text("submission.open"), @link %></p>
 <% end %>

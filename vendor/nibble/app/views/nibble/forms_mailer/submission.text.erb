@@ -1,11 +1,11 @@
-<%= @visitor ? "Your submission" : "New submission" %>
+<%= mail_text(@visitor ? "submission.visitor_heading" : "submission.staff_heading") %>
 
 <% if @message -%>
 <%= @message %>
 <% elsif @visitor -%>
-Thanks for filling in <%= @form.title(@locale) || @form.handle %> on <%= site_name %>. Here's what you sent.
+<%= mail_text("submission.visitor_intro", title: @form.title(@locale) || @form.handle, site: site_name) %>
 <% else -%>
-Someone filled in <%= @form.title(@locale) || @form.handle %> on <%= site_name %>. Here's what they sent.
+<%= mail_text("submission.staff_intro", title: @form.title(@locale) || @form.handle, site: site_name) %>
 <% end -%>
 <% @rows.each do |label, value| %>
 
@@ -14,9 +14,9 @@ Someone filled in <%= @form.title(@locale) || @form.handle %> on <%= site_name %
 <% end %>
 <% if @reply_to %>
 
-Reply to this email to answer them at <%= @reply_to %>.
+<%= mail_text("submission.reply_to", email: @reply_to) %>
 <% end %>
 <% if @link %>
 
-Open this submission in the Control Plane: <%= @link %>
+<%= mail_text("submission.open") %>: <%= @link %>
 <% end %>

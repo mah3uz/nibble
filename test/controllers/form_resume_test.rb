@@ -192,6 +192,41 @@ class FormResumeTest < ActionDispatch::IntegrationTest
     assert_equal 1, Nibble::Records::AuditEntry.where(action: "form.person_erased").sole.changeset["saved"]
   end
 
+  test "saving never keeps a calculation's posted value, which the server works out when the form is sent" do
+    @nibble_themes.join("records/schema/forms/quote.yml").write({
+      "title" => "Quote", "resume" => true, "resume_email" => "email",
+      "fields" => [
+        { "handle" => "email", "field" => { "type" => "text", "input_type" => "email" } },
+        { "handle" => "qty", "field" => { "type" => "integer" } },
+        { "handle" => "total", "field" => { "type" => "calculation", "formula" => "{qty} * 2" } }
+      ]
+    }.to_yaml)
+    Nibble.reset_schema!
+
+    post "/forms/quote/resume", params: { email: "ada@example.test", qty: "3", total: "999", _nibble_page: "/quote" }
+
+    assert_equal({ "email" => "ada@example.test", "qty" => "3" }, Partial.sole.data)
+  end
+
+  test "the personal data export carries saved forms matching the email, never their token" do
+    save
+    save SAVED.merge(email: "grace@example.test")
+    token_digest = Partial.find_by!(form: "apply", expires_at: Partial.minimum(:expires_at)).token_digest
+
+    sign_in_as users(:admin)
+    get "/cp/personal-data/export.json", params: { email: "ada@example.test" }
+    rows = JSON.parse(response.body)
+
+    assert_equal [ [ "apply", "saved" ] ], rows.map { |row| row.values_at("form", "status") }
+    assert_equal "ada@example.test", rows.sole["values"]["email"]
+    assert_not_includes response.body, token_digest
+    assert_equal 1, Nibble::Records::AuditEntry.where(action: "form.person_exported").sole.changeset["saved"]
+
+    get "/cp/personal-data/export.csv", params: { email: "ada@example.test" }
+    assert_includes CSV.parse(response.body).map { |row| row[3] }, "saved"
+    assert_not_includes response.body, "grace@"
+  end
+
   test "a form without resume has no saving, and the definition carries no resume" do
     post "/forms/contact/resume", params: SAVED
     assert_response :not_found
