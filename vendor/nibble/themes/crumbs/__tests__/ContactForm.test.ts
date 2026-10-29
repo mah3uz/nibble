@@ -301,4 +301,35 @@ describe('crumbs ContactForm', () => {
     expect(labelled).toContain('Les champs')
     expect(labelled).not.toContain('Fields marked')
   })
+
+  it('draws a decimal as a number input stepping by its scale, so the browser accepts the cents the server keeps', async () => {
+    const html = await render(form({ fields: [field('price', { type: 'decimal', decimals: 2, min: 0 })] }))
+
+    expect(tag(html, 'visit-price')).toMatch(/type="number"(?=[^>]*inputmode="decimal")(?=[^>]*step="0.01")/)
+    expect(await render(form({ fields: [field('w', { type: 'decimal', decimals: 1, step: 0.5 })] }))).toContain(
+      'step="0.5"',
+    )
+  })
+
+  it('draws a range as a slider that starts at its minimum and shows its value beside it', async () => {
+    const html = await render(
+      form({ fields: [field('mood', { type: 'range', min: 10, max: 50, step: 5, append: '%' })] }),
+    )
+
+    expect(tag(html, 'visit-mood')).toMatch(/type="range"(?=[^>]*min="10")(?=[^>]*max="50")(?=[^>]*step="5")/)
+    expect(html).toMatch(/<output for="visit-mood"[^>]*>10<\/output>/)
+  })
+
+  it('draws a rating as a radio group of stars each named for a screen reader, with the chosen ones lit', async () => {
+    const html = await render(
+      form({ fields: [field('stars', { type: 'rating', max: 4, display: 'Rate us', default: 2 })] }),
+    )
+    const group = html.match(/<fieldset[\s\S]*?<\/fieldset>/)![0]
+
+    expect(group).toMatch(/<legend[^>]*>\s*Rate us/)
+    expect(group.match(/type="radio"[^>]*name="stars"/g)).toHaveLength(4)
+    expect(group).toContain('3 of 4')
+    expect(group.match(/text-accent/g)).toHaveLength(2)
+    expect(group).toMatch(/type="radio"(?=[^>]*value="2")[^>]*checked/)
+  })
 })

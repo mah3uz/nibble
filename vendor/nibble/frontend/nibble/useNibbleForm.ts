@@ -53,6 +53,7 @@ function many(field: NibbleFormField) {
 function initialValue(field: NibbleFormField): NibbleFormValue {
   if (field.default !== undefined && field.default !== null) return field.default as NibbleFormValue
   if (many(field)) return []
+  if (field.type === 'range') return field.min ?? 0
   return field.type === 'toggle' ? false : ''
 }
 

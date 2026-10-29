@@ -13,9 +13,9 @@ module Nibble
         } },
         { "display" => "Data & Format", "fields" => {
           "decimals" => { "type" => "integer", "default" => 2, "min" => 0, "max" => 10, "width" => 25 },
-          "min" => { "type" => "text", "width" => 25 },
-          "max" => { "type" => "text", "width" => 25 },
-          "step" => { "type" => "text", "width" => 25, "instructions" => "Defaults to the smallest step the decimals allow." }
+          "min" => { "type" => "text", "input_type" => "number", "width" => 25 },
+          "max" => { "type" => "text", "input_type" => "number", "width" => 25 },
+          "step" => { "type" => "text", "input_type" => "number", "width" => 25, "instructions" => "Defaults to the smallest step the decimals allow." }
         } }
       ]
 

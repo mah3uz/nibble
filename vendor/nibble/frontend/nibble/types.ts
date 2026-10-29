@@ -67,6 +67,17 @@ type NibbleFormFieldTypes = {
   }
   textarea: { placeholder?: string; character_limit?: number; rows?: number }
   integer: { placeholder?: string; min?: number; max?: number; step?: number; prepend?: string; append?: string }
+  decimal: {
+    placeholder?: string
+    decimals?: number
+    min?: number
+    max?: number
+    step?: number
+    prepend?: string
+    append?: string
+  }
+  range: { min?: number; max?: number; step?: number; prepend?: string; append?: string }
+  rating: { max?: number }
   toggle: { inline_label?: string }
   select: {
     placeholder?: string

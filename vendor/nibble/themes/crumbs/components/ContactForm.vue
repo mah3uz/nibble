@@ -161,6 +161,36 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
               </label>
             </div>
           </fieldset>
+          <fieldset v-else-if="field.type === 'rating'" :aria-describedby="contact.describedBy(field)">
+            <legend class="mb-3">
+              {{ field.display
+              }}<template v-if="contact.isRequired(field)"
+                ><span class="text-accent" aria-hidden="true"> *</span
+                ><span class="sr-only">{{ ` ${t('required')}` }}</span></template
+              >
+            </legend>
+            <div class="flex gap-1">
+              <label
+                v-for="n in field.max ?? 5"
+                :key="n"
+                class="relative cursor-pointer text-3xl leading-none has-focus-visible:outline-2 has-focus-visible:outline-offset-2"
+                :class="n <= Number(contact.values[field.handle]) ? 'text-accent' : 'text-current/30'"
+              >
+                <input
+                  :id="optionId(field, n - 1)"
+                  v-model="contact.values[field.handle]"
+                  type="radio"
+                  :name="contact.fieldName(field)"
+                  :value="n"
+                  :required="contact.isRequired(field)"
+                  :aria-invalid="invalid(field)"
+                  class="absolute inset-0 size-full cursor-pointer opacity-0"
+                />
+                <span aria-hidden="true">&#9733;</span>
+                <span class="sr-only">{{ n }} of {{ field.max ?? 5 }}</span>
+              </label>
+            </div>
+          </fieldset>
           <div v-else-if="field.type === 'toggle'">
             <p v-if="field.inline_label" class="mb-3">{{ field.display }}</p>
             <div class="flex items-start gap-3">
@@ -252,6 +282,25 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
               :aria-invalid="invalid(field)"
               class="w-full border-b border-current bg-transparent px-1 py-3"
             />
+            <div v-else-if="field.type === 'range'" class="flex items-center gap-3 border-b border-current px-1 py-3">
+              <span v-if="field.prepend">{{ field.prepend }}</span>
+              <input
+                :id="contact.inputId(field)"
+                v-model="contact.values[field.handle]"
+                type="range"
+                :name="contact.fieldName(field)"
+                :min="field.min ?? 0"
+                :max="field.max ?? 100"
+                :step="field.step ?? 1"
+                :aria-describedby="contact.describedBy(field)"
+                :aria-invalid="invalid(field)"
+                class="min-w-0 flex-1 accent-accent"
+              />
+              <output :for="contact.inputId(field)" class="min-w-8 text-right tabular-nums">{{
+                contact.values[field.handle]
+              }}</output>
+              <span v-if="field.append">{{ field.append }}</span>
+            </div>
             <output
               v-else-if="field.type === 'calculation'"
               :id="contact.inputId(field)"
@@ -265,11 +314,11 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
               <input
                 :id="contact.inputId(field)"
                 v-model="contact.values[field.handle] as string"
-                :type="field.type === 'integer' ? 'number' : (field.input_type ?? 'text')"
-                :inputmode="field.type === 'integer' ? 'numeric' : undefined"
+                :type="field.type === 'integer' || field.type === 'decimal' ? 'number' : (field.input_type ?? 'text')"
+                :inputmode="field.type === 'integer' ? 'numeric' : field.type === 'decimal' ? 'decimal' : undefined"
                 :min="field.min"
                 :max="field.max"
-                :step="field.step"
+                :step="field.type === 'decimal' ? (field.step ?? 10 ** -(field.decimals ?? 2)) : field.step"
                 :name="contact.fieldName(field)"
                 :maxlength="field.character_limit"
                 :placeholder="field.placeholder"

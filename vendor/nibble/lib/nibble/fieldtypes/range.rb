@@ -11,9 +11,9 @@ module Nibble
           "append" => { "type" => "text", "width" => 50 }
         } },
         { "display" => "Data & Format", "fields" => {
-          "min" => { "type" => "text", "default" => 0, "width" => 33 },
-          "max" => { "type" => "text", "default" => 100, "width" => 33 },
-          "step" => { "type" => "text", "default" => 1, "width" => 33 }
+          "min" => { "type" => "text", "input_type" => "number", "default" => 0, "width" => 33 },
+          "max" => { "type" => "text", "input_type" => "number", "default" => 100, "width" => 33 },
+          "step" => { "type" => "text", "input_type" => "number", "default" => 1, "width" => 33 }
         } }
       ]
 
