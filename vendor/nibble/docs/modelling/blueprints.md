@@ -136,7 +136,7 @@ and a locale the site doesn't have.
 | Group | Types |
 |---|---|
 | Text | `text`, `textarea`, `code`, `rich_text`, `markdown`, `slug`, `secret` |
-| Numbers and dates | `integer`, `date` |
+| Numbers and dates | `integer`, `decimal`, `range`, `rating`, `date` |
 | Choice | `select`, `radio`, `checkboxes`, `toggle`, `list` |
 | Relationships | `entries`, `terms`, `relationship`, `link` |
 | Files | `assets`, `files` |
@@ -158,6 +158,25 @@ and `preset: hero` names the [image size](../running/configuration.md#5-image-pr
 
 **`entries`** and **`terms`** open a picker and store a reference, not a copy — rename or move the target and the
 reference still finds it. `max_items: 1` makes a single choice.
+
+**`integer`** is a whole number. It takes `min`, `max`, `step`, `placeholder`, and `prepend` and `append`, text the input
+shows before and after the number.
+
+**`decimal`** is a number with a fixed number of places, such as a price. `decimals` (0 to 10, default 2) is how many
+places it keeps: a value is rounded half away from zero to that many places when it is saved, so `2.675` is stored as
+`2.68` and `-2.675` as `-2.68`. It is always stored as a number, never a string. `min` and `max` refuse a value outside
+them. `step` is what the input moves by (default the smallest step `decimals` allows, such as `0.01`); it is a hint to the
+input, not a rule. `placeholder`, `prepend` and `append` work as they do on `integer`. A form's submission list, emails and export show
+the value with exactly `decimals` places.
+
+**`range`** is a slider that stores a number, shown beside the slider as it moves. `min` (default 0), `max` (default 100)
+and `step` (default 1) set the scale, `prepend` and `append` are drawn around the value, and `default` is where it starts.
+The value is stored as a whole number when `min`, `max` and `step` are all whole, and as a decimal otherwise. A value
+outside `min` and `max` is refused.
+
+**`rating`** is a row of stars. `max` (2 to 10, default 5) is how many. It stores a whole number from 1 to `max`, or nothing
+when it has not been rated; an editor clears it by choosing the same star again. A value outside 1 to `max` is refused.
+Arrow keys move between the stars, and each star is named for a screen reader, such as "3 of 5".
 
 **`select`**, **`radio`** and **`checkboxes`** hold a fixed list written in the blueprint. For a list your editors
 manage themselves, use a taxonomy with a `terms` field, or an `entries` field with `mode: select`, instead of

@@ -184,7 +184,7 @@ const contact = useNibbleForm(props.form)
 Name the type yourself where the form comes from somewhere else: `useNibbleForm<ContactFormValues>(form)`, with
 `ContactFormValues` from `@site/types`. `FormValues['contact']` is the same type by form handle. A select or radio
 field is its option values, and `''` until something is chosen; checkboxes and a multiple select are arrays of them;
-a toggle is a `boolean`, a `files` field is `File[]`, and an `integer` or `calculation` field is a string, a number or
+a toggle is a `boolean`, a `files` field is `File[]`, and an `integer`, `decimal`, `range`, `rating` or `calculation` field is a string, a number or
 `null`. A component that handles any form, taking a plain `NibbleForm`, gets values of `string`, `number`, `boolean`,
 arrays or `null` and narrows them as before.
 
@@ -212,7 +212,9 @@ arrays or `null` and narrows them as before.
 | `saveForLater`, `saved` | save what was entered and email the visitor a link, for a form with `resume`; the message to show once it has |
 
 Each field carries its settings, such as `placeholder`, `options`, and `prepend` and `append` to draw beside the
-input, and an `integer` field's `min`, `max` and `step`. Text fields carry `autocomplete`, textareas `rows`, toggles `inline_label`,
+input, and an `integer` field's `min`, `max` and `step`. A `decimal` field carries `decimals` (0 to 10, default 2), `min`, `max`, `step`
+and `placeholder`; a `range` field carries `min` (default 0), `max` (default 100), `step` (default 1), and its `default`
+starts the slider; a `rating` field carries `max` (2 to 10, default 5), and its values are 1 to `max`. Text fields carry `autocomplete`, textareas `rows`, toggles `inline_label`,
 dates `time_enabled`, `earliest_date` and `latest_date`, and selects `max_items` and `clearable`; `default` is already
 resolved, so a computed default is a date, not a name. A field with a condition carries `conditions`, the rules for
 when to draw it (see [Forms](../modelling/forms.md#1-declaring-a-form)). `isVisible(field)` evaluates them as the
@@ -222,6 +224,12 @@ is the same), and `form.action` already carries the prefilled query, so posting 
 the plain values the visitor typed, by field handle; `values` starts from them. A form split into sections also has `form.sections`, each with a `display`, `instructions` and the handles of
 its `fields`; it is `null` for a form with one list. `form.captcha` has a `null` provider when the form asks for a
 CAPTCHA the site hasn't set up. See [Forms](../modelling/forms.md).
+
+Draw a `decimal` as `<input type="number">` with `step` set to the field's `step`, or `10 ** -decimals` when it has none, so the
+browser accepts the places the server keeps. Draw a `range` as `<input type="range">` with its `min`, `max` and `step`, and an
+`<output>` beside it showing the value; without a `default` the value starts at `min`, so a range always posts a number.
+Draw a `rating` as a `fieldset` with a `legend` holding one radio input for each number from 1 to `max`, each with a label
+a screen reader hears as "3 of 5", and style the labels as stars. The visitor leaves it unrated by choosing none.
 
 A `calculation` field carries its `formula`, and its `decimals`, `prepend` and `append` when it has them.
 `calculated(field)` runs the formula in the browser with the same rules as the server, over the current `values`, so it
@@ -254,7 +262,7 @@ without a cast.
 > [!WARNING]
 > This short example renders every field as a text input and leaves out the CAPTCHA widget, so it only works for a
 > form without `captcha: true`. The theme you copied from `crumbs` has `components/ContactForm.vue`, which draws
-> every public fieldtype with its own control (a checkbox for a toggle, a fieldset of radios or checkboxes for
+> every public fieldtype with its own control (a slider with its value for a range, stars for a rating, a checkbox for a toggle, a fieldset of radios or checkboxes for
 > choices, a date or date-and-time input, a live `<output>` for a calculation), sends hidden fields, applies conditions,
 > links help and errors to their inputs, handles file uploads, the honeypot and the CAPTCHA, and draws steps and Save
 > and finish later. Start from it rather than from scratch.

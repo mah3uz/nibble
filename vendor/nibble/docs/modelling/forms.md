@@ -46,7 +46,8 @@ success:
 ```
 
 Fields are declared exactly as in a [blueprint](blueprints.md), but a public form may only use `text`, `textarea`,
-`integer`, `toggle`, `select`, `radio`, `checkboxes`, `date`, `files` and [`calculation`](#11-calculations).
+`integer`, `decimal`, `range`, `rating`, `toggle`, `select`, `radio`, `checkboxes`, `date`, `files` and
+[`calculation`](#11-calculations).
 `nibble:check` refuses anything else.
 
 A consent box is a `required` toggle. A submission with it unticked is refused with "The Consent field is required.",
@@ -68,12 +69,28 @@ or the field's `messages.required`:
 A field's `messages` set the text a visitor sees when one of its rules fails, per locale if the site has several; see
 [Options every field takes](blueprints.md#2-options-every-field-takes).
 
-`text` and `integer` fields take `prepend` and `append`, short text a theme draws before and after the input
+`text`, `integer`, `decimal` and `range` fields take `prepend` and `append`, short text a theme draws before and after the input
 (`prepend: $`, `append: per month`).
 
 An `integer` field's `min`, `max` and `step` reach the theme, which draws a number input with them. On a public form
 Nibble also refuses a value that is off the step, counted from `min` (or 0): with `min: 2000` and `step: 500`, 2250 is
 refused and 2500 is accepted. The field's `messages.step` sets the wording, with `%{attribute}`, `%{step}` and `%{min}`. In a blueprint, `step` is only a hint to the input.
+
+A `decimal` field keeps `decimals` places (0 to 10, default 2), rounding half away from zero, and stores a number; its
+`min`, `max`, `step`, `decimals` and `placeholder` reach the theme, which draws a number input that steps by `step`, or by
+the smallest step `decimals` allows. A `range` field is a slider with `min` (default 0), `max` (default 100), `step`
+(default 1) and `default`, and a value outside `min` and `max` is refused. A `rating` field is a row of stars, `max` of them
+(2 to 10, default 5); it stores a number from 1 to `max`, or nothing when the visitor leaves it unrated, and refuses
+anything else:
+
+```yaml
+  - handle: budget
+    field: { type: decimal, display: Budget, prepend: $, decimals: 2, min: 0 }
+  - handle: urgency
+    field: { type: range, display: How soon, min: 0, max: 10, append: " / 10" }
+  - handle: service
+    field: { type: rating, display: How was the service?, max: 5 }
+```
 
 A field's other settings reach the theme too: a `text` field's `autocomplete`, a `textarea`'s `rows`, a `toggle`'s
 `inline_label` (the text beside a consent box), a `date`'s `time_enabled`, `earliest_date` and `latest_date`, and a
@@ -207,7 +224,7 @@ A formula has:
 - a leading `-` to negate;
 - `round(x)` to a whole number, `round(x, places)` to up to 15 decimal places, `min(a, b)` and `max(a, b)`.
 
-Nothing else is read: there are no other functions, no text and no variables. A formula may name an `integer`, a
+Nothing else is read: there are no other functions, no text and no variables. A formula may name an `integer`, a `decimal`, a `range`, a `rating`, a
 `toggle` (1 when ticked, 0 when not), a single-choice `select` or `radio` whose option values are all numbers, or
 another calculation. A blank answer, and a field its [conditions](#1-declaring-a-form) hide, count as 0. Dividing by
 zero leaves the calculation blank, and a blank calculation isn't stored.
@@ -566,7 +583,7 @@ on that field, "The Email has already been used.", or the field's `messages.uniq
 address matches whatever its case. Nibble keeps a keyed digest of each value, never the value, from when a submission
 is accepted, so `unique` covers submissions accepted after it is added. Deleting a submission frees its values; spam
 never holds one, and neither does a submission the form's API turned back. **Not spam** refuses a submission whose
-value has been used since. A `unique` field is a `text`, `textarea`, `integer`, `select`, `radio` or `date` field.
+value has been used since. A `unique` field is a `text`, `textarea`, `integer`, `decimal`, `select`, `radio` or `date` field.
 
 `max_submissions` and `unique` need the form to store submissions. A page showing a form with `opens_at`, `closes_at`
 or `max_submissions` is rendered for each visit rather than kept in the page cache, so it opens and closes on time.
@@ -647,6 +664,9 @@ Nibble adds around them, and the email with a link to a saved form, is translate
 | `store`, `cp_notify` | true / false |
 | a field's `encrypt` | true stores its value encrypted; not on `files`, nor with `store: false` |
 | a `calculation` field's `formula`, `decimals`, `prepend`, `append` | the formula, **required**; places to round to, 0–15; text before and after the figure ([Calculations](#11-calculations)) |
+| a `decimal` field's `decimals`, `min`, `max`, `step`, `placeholder`, `prepend`, `append` | places kept, 0–10 (default 2); bounds; the input's step; text in and around the input |
+| a `range` field's `min`, `max`, `step`, `default`, `prepend`, `append` | the scale (0, 100, 1 by default), where it starts, and text around the value |
+| a `rating` field's `max` | the number of stars, 2–10 (default 5) |
 | `retention_days` | a positive number |
 | `steps` | true makes each section a step; needs `sections` |
 | `submit_label` | the send button's text, per locale if the site has several |
