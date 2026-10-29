@@ -61,7 +61,7 @@ module Nibble
           "existing" => existing,
           "new" => sets_config.keys.index_with { |handle| set_fields(handle).add_values(defaults[handle]).meta },
           "defaults" => defaults,
-          "collapsed" => config("collapse") == true ? existing.keys : []
+          "collapsed" => [ true, "accordion" ].include?(config("collapse")) ? existing.keys : []
         }
       end
 

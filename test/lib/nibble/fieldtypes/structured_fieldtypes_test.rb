@@ -68,6 +68,14 @@ class Nibble::Fieldtypes::StructuredFieldtypesTest < ActiveSupport::TestCase
     assert_equal %w[r1], grid.preload["existing"].keys
   end
 
+  test "replicator opens with its sets collapsed when collapse is true or accordion, so an accordion starts closed" do
+    value = [ { "_id" => "b1", "type" => "hero" }, { "_id" => "b2", "type" => "hero" } ]
+
+    assert_equal %w[b1 b2], fieldtype(:replicator, { sets: HERO, collapse: true }, value:).preload["collapsed"]
+    assert_equal %w[b1 b2], fieldtype(:replicator, { sets: HERO, collapse: "accordion" }, value:).preload["collapsed"]
+    assert_empty fieldtype(:replicator, { sets: HERO, collapse: false }, value:).preload["collapsed"]
+  end
+
   test "replicator stores type and id, keeps enabled only when a set is switched off" do
     blocks = fieldtype(:replicator, sets: HERO)
 
