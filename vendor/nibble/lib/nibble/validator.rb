@@ -97,7 +97,8 @@ module Nibble
         sized.("between", min: params[0], max: params[1]) unless size(value, names).between?(params[0].to_f, params[1].to_f)
       when "size" then sized.("size", size: params.first) unless size(value, names) == params.first.to_f
       when "email" then message.("email") unless value.to_s.match?(/\A#{Validation::EMAIL}\z/)
-      when "url" then message.("url") unless url?(value)
+      when "url" then message.("url") unless params.first == "web" ? web_url?(value) : url?(value)
+      when "phone" then message.("phone") unless phone?(value)
       when "safe_link" then message.("safe_link") unless LinkTypes.parse(value) || SafeUrl.safe?(value)
       when "alpha" then message.("alpha") unless value.to_s.match?(/\A\p{L}+\z/)
       when "alpha_num" then message.("alpha_num") unless value.to_s.match?(/\A[\p{L}\p{N}]+\z/)
@@ -191,6 +192,15 @@ module Nibble
     rescue URI::InvalidURIError
       false
     end
+
+    def web_url?(value)
+      uri = URI.parse(value.to_s)
+      uri.is_a?(URI::HTTP) && uri.host.present? && SafeUrl.safe?(value)
+    rescue URI::InvalidURIError
+      false
+    end
+
+    def phone?(value) = value.to_s.match?(/\A[\d\s+().-]+\z/) && value.to_s.count("0-9") >= 3
 
     def regex(pattern)
       match = pattern.to_s.match(%r{\A(.)(.*)\1([imxsu]*)\z}m) or raise Error, "invalid regex rule '#{pattern}'"

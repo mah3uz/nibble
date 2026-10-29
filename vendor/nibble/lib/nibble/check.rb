@@ -86,6 +86,7 @@ module Nibble
         end
         check_messages(field, rule_names, source)
         check_required_condition(field, fields, source)
+        problem(source, "field '#{field.path}' is a note, which only displays text: it can't be required, hidden, encrypted or have a default") if note_with_storage_options?(field)
         problem(source, "field '#{field.path}' is a calculation, which only a form can have") if field.type == Forms::Calculations::TYPE && !calculations
         if field.computed_default? && !Defaults.registered?(name = field.get("default").delete_prefix(Field::COMPUTED_DEFAULT_PREFIX))
           problem(source, "field '#{field.path}' has computed default '#{name}', which isn't registered")
@@ -96,6 +97,10 @@ module Nibble
         end
         field.fieldtype.nested_fields.each { |nested| check_fields(nested, source, calculations:) }
       end
+    end
+
+    def note_with_storage_options?(field)
+      field.display_only? && (field.config.key?("default") || field.required_condition || %w[required hidden encrypt].any? { |key| field.get(key) == true } || field.validation_rules.include?("required"))
     end
 
     def check_messages(field, rule_names, source)
@@ -150,6 +155,7 @@ module Nibble
       check_drift(schema) if @config.equal?(Nibble.config)
       check_uris(schema) if @config.equal?(Nibble.config)
       check_required_toggles(schema) if @config.equal?(Nibble.config)
+      check_text_formats(schema) if @config.equal?(Nibble.config)
     end
 
     def database_behind? = ActiveRecord::Base.connection_pool.migration_context.needs_migration?
@@ -188,22 +194,52 @@ module Nibble
     end
 
     def check_required_toggles(schema)
+      each_saved_set(schema) { |source, records, noun, action, blueprint| warn_required_toggles_off(source, records, noun, action, &blueprint) }
+    end
+
+    def each_saved_set(schema)
       schema.collections.each do |parent|
         schema.blueprints_for(parent).each do |item|
-          records = Records::Entry.kept.where(collection: parent.handle, blueprint: item.handle)
-          warn_required_toggles_off("collection '#{parent.handle}'", records, "entry", "published") { Blueprint.new(item, schema:) }
+          yield "collection '#{parent.handle}'", Records::Entry.kept.where(collection: parent.handle, blueprint: item.handle), "entry", "published", -> { Blueprint.new(item, schema:) }
         end
       end
       schema.taxonomies.each do |parent|
         schema.blueprints_for(parent).each do |item|
-          records = Records::Term.kept.where(taxonomy: parent.handle, blueprint: item.handle)
-          warn_required_toggles_off("taxonomy '#{parent.handle}'", records, "term", "saved") { Blueprint.new(item, schema:) }
+          yield "taxonomy '#{parent.handle}'", Records::Term.kept.where(taxonomy: parent.handle, blueprint: item.handle), "term", "saved", -> { Blueprint.new(item, schema:) }
         end
       end
       schema.globals.each do |item|
-        warn_required_toggles_off("global '#{item.handle}'", Records::GlobalSet.where(handle: item.handle), "record", "saved") { global_blueprint(item, schema) }
+        yield "global '#{item.handle}'", Records::GlobalSet.where(handle: item.handle), "record", "saved", -> { global_blueprint(item, schema) }
       end
     rescue ActiveRecord::StatementInvalid
+      nil
+    end
+
+    def check_text_formats(schema)
+      each_saved_set(schema) { |source, records, noun, _action, blueprint| warn_text_formats(source, records, noun, blueprint) }
+    end
+
+    def warn_text_formats(source, records, noun, blueprint)
+      checks = blueprint.call.fields.all.values.select { |field| field.type == "text" && %w[email url tel].include?(field.get("input_type")) }.to_h do |field|
+        rules = field.validation_rules.select { |rule| rule.to_s.start_with?("regex:") }
+        config = { "type" => "text", "input_type" => field.get("input_type") }.merge(rules.any? ? { "validate" => rules } : {})
+        [ field.handle, [ field.get("input_type"), Validator.new(Fields.new([ { "handle" => field.handle, "field" => config } ])) ] ]
+      end
+      return if checks.empty?
+
+      failing = Hash.new { |hash, key| hash[key] = [] }
+      records.select(:id, :data).find_each do |record|
+        checks.each do |handle, (_, validator)|
+          value = record.data.to_h[handle]
+          failing[handle] << record.id if value.is_a?(String) && value != "" && !validator.validate(handle => value).valid?
+        end
+      end
+      failing.each do |handle, ids|
+        @warnings << Problem.new(source:, level: :warning,
+          message: "#{ids.size} #{noun.pluralize(ids.size)} (#{ids.first(5).join(', ')}#{', …' if ids.size > 5}) #{ids.size == 1 ? 'has' : 'have'} a value in the " \
+                   "#{checks[handle].first} field '#{handle}' that fails its format check, so #{ids.size == 1 ? 'it' : 'they'} can't be saved until it is corrected")
+      end
+    rescue SchemaError, Error
       nil
     end
 

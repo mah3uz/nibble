@@ -32,7 +32,8 @@ module Nibble
 
       def rules
         [
-          *({ "email" => "email", "url" => "url", "number" => "numeric" }[config("input_type")]),
+          *({ "email" => "email", "url" => "url:web", "number" => "numeric" }[config("input_type")]),
+          *("phone" if config("input_type") == "tel" && Array(field&.validation_rules).none? { |rule| rule.to_s.start_with?("regex:") }),
           *("max:#{config('character_limit')}" if config("character_limit").to_i.positive?)
         ]
       end
