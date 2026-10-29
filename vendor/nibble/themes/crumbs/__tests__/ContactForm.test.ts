@@ -84,4 +84,14 @@ describe('crumbs ContactForm', () => {
       /<input(?=[^>]*type="number")(?=[^>]*inputmode="numeric")(?=[^>]*min="2000")(?=[^>]*max="10000")(?=[^>]*step="500")[^>]*>/,
     )
   })
+
+  it('keeps the honeypot out of reach of keyboards, screen readers and autofill, so a real enquiry is not caught as spam', async () => {
+    const html = await render(form({ honeypot: '_nibble_hp' }))
+    const trap = html.match(/<input[^>]*name="_nibble_hp"[^>]*>/)?.[0] ?? ''
+
+    expect(trap).toContain('tabindex="-1"')
+    expect(trap).toContain('autocomplete="off"')
+    expect(trap).toContain('aria-hidden="true"')
+    expect(trap).toContain('-left-[9999px]')
+  })
 })
