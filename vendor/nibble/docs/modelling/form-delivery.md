@@ -3,7 +3,7 @@ id: modelling-form-delivery
 title: Form delivery
 description: Email a form's submissions to the right people, pass them to another system's API or a Ruby handler, and
   see what was delivered.
-order: 6
+order: 7
 ---
 
 # Form delivery

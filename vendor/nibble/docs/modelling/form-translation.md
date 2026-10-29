@@ -2,7 +2,7 @@
 id: modelling-form-translation
 title: Translating a form
 description: Write a form's text per locale, and translate the wording Nibble itself shows a visitor.
-order: 8
+order: 9
 ---
 
 # Translating a form

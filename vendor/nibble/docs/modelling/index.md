@@ -143,8 +143,21 @@ hold values for it.
 It runs before every deploy, and a deploy it refuses never goes live. Run it whenever you change anything under
 `site/schema/`.
 
-## 7. What's next
+## 7. The guides in this section
 
-- [Collections](collections.md) — declaring Tidewater's blog and help centre.
-- [Blueprints and fields](blueprints.md) — the landing page's blocks, and every fieldtype.
-- [Scheduled tasks](scheduled-tasks.md) — keeping the home page's figures and the careers page up to date.
+| Page | Look here for |
+|---|---|
+| [Collections](collections.md) | kinds of content, and the URLs they live at |
+| [Blueprints and fields](blueprints.md) | the form an editor fills in, and how fields are laid out |
+| [Taxonomies](taxonomies.md) | authors, topics and other terms entries relate to |
+| [Globals and navigation](globals-and-navigation.md) | site-wide settings and menus |
+| [Forms](forms.md) | declaring a form, calculations, steps, and putting it on a page |
+| [Content as files](content-as-files.md) | serving a folder of Markdown as a collection |
+| [Form delivery](form-delivery.md) | emailing submissions and sending them to another system |
+| [Form spam and privacy](form-spam-and-privacy.md) | keeping bots out, retention, encryption, limits and schedules |
+| [Translating a form](form-translation.md) | a form's text per locale |
+| [Every form key](form-keys.md) | each key a form file accepts |
+| [Changing the schema](changing-schema.md) | renaming and removing fields once content exists |
+| [Scheduled tasks](scheduled-tasks.md) | figures from an API, a feed of jobs, and your own Ruby, on a schedule |
+
+Every fieldtype, validation rule and condition is looked up in [Reference](../reference/index.md).

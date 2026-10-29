@@ -90,7 +90,7 @@ change your mind, and publish or discard it. Going back is never itself a risky 
 
 **Unpublish** takes an entry off the site and keeps everything about it. It is not deletion: nothing is thrown away,
 and it can be published again at any time. A visitor who follows an old link finds a missing page, which is
-counted — see [Redirects and SEO](redirects-and-seo.md).
+counted — see [Fix search results, share cards and broken links](redirects-and-seo.md).
 
 > [!WARNING]
 > Unpublishing a page that is in a menu, or that other pages link to, leaves those links pointing at nothing until

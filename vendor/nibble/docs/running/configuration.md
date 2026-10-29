@@ -214,7 +214,7 @@ They take effect as soon as they are saved.
 
 In production, a wrong setting **stops the boot and names every problem at once**, rather than failing later on
 some unlucky request: a missing or non-`https` `SITE_URL`, credentials that will not decrypt, S3 storage without its
-region or keys, a theme that is named but absent.
+bucket, region or access key ID, a theme that is named but absent.
 
 Two more are reported as warnings, and the site starts anyway: no mail login, so password resets and notifications
 will not send; and no `DB_SNAPSHOT_BUCKET`, so backups stay on the server.

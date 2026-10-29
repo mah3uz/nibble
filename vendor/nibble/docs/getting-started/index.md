@@ -9,6 +9,10 @@ order: 1
 
 This page introduces Nibble, the Tidewater site that runs through every guide, and the way the guides are laid out.
 
+> [!TIP]
+> **If you only write content, you need nothing technical.** You sign in to the Control Plane in a browser and
+> never open a terminal. Go straight to [Editing content](../editing/index.md).
+
 After reading this guide, you will know:
 
 - What Nibble is, and what makes it different from a CMS you sign up for.
@@ -32,8 +36,8 @@ visitors get finished HTML. Content, cache and job queue all live in SQLite, whi
 and one database file.
 
 > [!NOTE]
-> You do not need to know Rails to run a Nibble site. You will edit YAML, write Vue components for your theme, and
-> run commands. The [Contributing](../contributing/index.md) guides are the only ones that assume Ruby.
+> You do not need to know Rails to run a Nibble site. To build one you will edit YAML, write Vue components for your
+> theme, and run commands; to write its content you will do none of that. The [Contributing to Nibble](../contributing/index.md) guides are the only ones that assume Ruby.
 
 ## 2. Is Nibble for you?
 
@@ -73,17 +77,19 @@ role it is written for.
 
 ## 4. How these guides are organised
 
-Each section is written for a different kind of work. You do not have to read them in order.
+Each section is written for a different kind of work. You do not have to read them in order. Pick your route:
 
-| Section | For | Start with |
-|---|---|---|
-| Start here | everyone, once | [Getting Started with Nibble](tutorial.md) |
-| [Modelling content](../modelling/index.md) | you, as the developer | [Modelling content](../modelling/index.md) |
-| [Building a theme](../theming/index.md) | you, as the developer | [Building a theme](../theming/index.md) |
-| [Editing content](../editing/index.md) | you, writing in marketing | [Editing content](../editing/index.md) |
-| [Running a site](../running/index.md) | you, keeping the site running | [Configuration](../running/configuration.md) |
-| [Extending Nibble](../extending/index.md) | adding behaviour Nibble lacks | [Extending Nibble](../extending/index.md) |
-| [Contributing](../contributing/index.md) | working on Nibble itself | [Contributing](../contributing/index.md) |
+| If you | Read, in order |
+|---|---|
+| write content | [Editing content](../editing/index.md), [Write and organise pages and posts](../editing/entries.md), [Save, preview and publish](../editing/publishing.md) |
+| administer the site without a terminal | [Administering from the Control Plane](../running/administering.md), [Users and roles](../running/users-and-roles.md) |
+| run the server | [Installing Nibble](installing.md), [Configuration](../running/configuration.md), [Deploying](../running/deploying.md), [Backups](../running/backups.md), [Upgrading](../running/upgrading.md) |
+| build the site | [Getting Started with Nibble](tutorial.md), [Modelling content](../modelling/index.md) |
+| build the theme | [Building a theme](../theming/index.md), [Views and layouts](../theming/views.md), [Content in views](../theming/content-in-views.md), [Queries](../theming/queries.md), [Forms in your theme](../theming/forms.md) |
+| add behaviour Nibble lacks | [Extending Nibble](../extending/index.md) |
+| work on Nibble itself | [Contributing to Nibble](../contributing/index.md) |
+
+Look-up pages for every fieldtype, validation rule and condition are in [Reference](../reference/index.md).
 
 Every guide opens with what you will know after reading it, like this one, and uses callouts for the things worth
 stopping on:

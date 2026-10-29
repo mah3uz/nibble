@@ -266,10 +266,12 @@ bin/kamal deploy
 Before the new container accepts a request, `bin/docker-entrypoint` runs `bin/rails nibble:prepare`, which:
 
 1. Refuses a theme built for a different theme API.
-2. Runs database migrations, then [content migrations](../modelling/changing-schema.md).
+2. Runs database migrations.
 3. Runs `nibble:check`, which refuses a schema change that would strand stored content.
-4. Indexes pages written as files for search, and builds the whole index when it is empty.
-5. Records the schema it is serving.
+4. Runs [content migrations](../modelling/changing-schema.md), then runs `nibble:check` again.
+5. Moves the address of any page whose route changed, recording a redirect from the old one (when `load_defaults` is `"0.15.0"` or later).
+6. Indexes pages written as files for search, and builds the whole index when it is empty.
+7. Records the schema it is serving.
 
 **If anything refuses, the new container never becomes healthy.** Kamal keeps the old one serving, and the container's
 log says exactly why. A bad deploy is a non-event rather than an outage.

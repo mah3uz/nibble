@@ -33,7 +33,7 @@ entries changed most recently.
 ![Tidewater's dashboard](../../images/cp/dashboard.png)
 
 Choose **Customize** to add, remove and rearrange widgets. **Top missing pages** is worth adding: it lists the
-addresses visitors asked for and did not find. See [Redirects and SEO](redirects-and-seo.md).
+addresses visitors asked for and did not find. See [Fix search results, share cards and broken links](redirects-and-seo.md).
 
 ## 2. The sidebar
 

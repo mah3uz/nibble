@@ -36,10 +36,10 @@ links:
   text: Views, layouts, query sidecars and the components every theme uses.
 - title: Editing content
   link: /docs/editing
-  text: Writing, publishing, assets, menus, forms and redirects in the Control Plane.
+  text: Writing, publishing, assets, menus, forms, redirects, settings and your account in the Control Plane.
 - title: Running a site
   link: /docs/running
-  text: Configuration, people, deployment, backups and upgrades.
+  text: Configuration, people, deployment, backups, upgrades and the Control Plane's maintenance screens.
 ---
 
 # Nibble Guides
@@ -62,6 +62,23 @@ the next.
 
 ## Start here
 
+Pick the route that matches your job. Each is a short list, in reading order.
+
+- **I write content.** You need nothing technical. [Editing content](editing/index.md), then
+  [Write and organise pages and posts](editing/entries.md), then [Save, preview and publish](editing/publishing.md).
+- **I administer the site from the Control Plane, without a terminal.**
+  [Administering from the Control Plane](running/administering.md), then [Users and roles](running/users-and-roles.md).
+- **I run the server.** [Installing Nibble](getting-started/installing.md), then
+  [Configuration](running/configuration.md), [Deploying](running/deploying.md), [Backups](running/backups.md) and
+  [Upgrading](running/upgrading.md).
+- **I build the site.** [Getting Started with Nibble](getting-started/tutorial.md), then
+  [Modelling content](modelling/index.md).
+- **I build the theme.** [Building a theme](theming/index.md), then [Views and layouts](theming/views.md),
+  [Content in views](theming/content-in-views.md), [Queries](theming/queries.md) and
+  [Forms in your theme](theming/forms.md).
+
+## Getting started
+
 - [Start here](getting-started/index.md) — what Nibble is, who it suits, and how these guides are organised.
 - [Getting Started with Nibble](getting-started/tutorial.md) — build Tidewater's site end to end.
 - [Installing Nibble](getting-started/installing.md) — what your machine needs and every question the installer asks.
@@ -70,11 +87,15 @@ the next.
 
 - [Modelling content](modelling/index.md) — the three layers of schema, and the commands that write and check them.
 - [Collections](modelling/collections.md) — kinds of content, and the URLs they live at.
-- [Blueprints and fields](modelling/blueprints.md) — the form an editor fills in, and every fieldtype.
+- [Blueprints and fields](modelling/blueprints.md) — the form an editor fills in, and how fields are laid out.
 - [Taxonomies](modelling/taxonomies.md) — authors, topics and other terms entries relate to.
 - [Globals and navigation](modelling/globals-and-navigation.md) — site-wide settings and menus.
-- [Forms](modelling/forms.md) — the demo request form, from YAML to inbox and CRM.
+- [Forms](modelling/forms.md) — the demo request form, from YAML to a page.
 - [Content as files](modelling/content-as-files.md) — Tidewater's help centre, written as Markdown.
+- [Form delivery](modelling/form-delivery.md) — emailing submissions and sending them to another system.
+- [Form spam and privacy](modelling/form-spam-and-privacy.md) — bots, retention, encryption, limits and schedules.
+- [Translating a form](modelling/form-translation.md) — a form's text per locale.
+- [Every form key](modelling/form-keys.md) — each key a form file accepts.
 - [Changing the schema](modelling/changing-schema.md) — renaming and removing fields once content exists.
 - [Scheduled tasks](modelling/scheduled-tasks.md) — figures from an API, a feed of jobs, and your own Ruby, on a schedule.
 
@@ -84,25 +105,65 @@ the next.
 - [Views and layouts](theming/views.md) — which view renders which page, and the frame around it.
 - [Content in views](theming/content-in-views.md) — what a page receives, and what each field looks like.
 - [Queries](theming/queries.md) — asking for the content a page needs.
-- [Theme components](theming/components.md) — rich text, images, blocks, pagination, SEO and forms.
+- [Theme components](theming/components.md) — rich text, images, blocks, pagination, SEO and menus.
+- [Forms in your theme](theming/forms.md) — drawing a form and every field.
 - [Styling and the page shell](theming/styling-and-shell.md) — `theme.css`, Tailwind, dark mode, links and head tags.
 - [SEO, sitemaps and feeds](theming/seo-and-feeds.md) — what search engines and feed readers receive.
-- [The Content API](extending/content-api.md) — reading the same content from somewhere else.
 
 ## Editing content
 
 - [Editing content](editing/index.md) — finding your way around.
-- [Entries](editing/entries.md) · [Drafts and publishing](editing/publishing.md) · [Assets](editing/assets.md) ·
-  [Navigation](editing/navigation.md) · [Form submissions](editing/form-submissions.md) ·
-  [Redirects and SEO](editing/redirects-and-seo.md)
+- [Write and organise pages and posts](editing/entries.md)
+- [Save, preview and publish](editing/publishing.md)
+- [Add and edit categories and tags](editing/categories-and-tags.md)
+- [Upload and manage images and files](editing/assets.md)
+- [Restore something you deleted](editing/trash.md)
+- [Build and arrange the site's menus](editing/navigation.md)
+- [Change the site's settings](editing/site-settings.md)
+- [Find and handle form submissions](editing/form-submissions.md)
+- [Fix search results, share cards and broken links](editing/redirects-and-seo.md)
+- [Add analytics and custom code](editing/analytics.md)
+- [Connect an AI app and approve its changes](editing/ai-apps.md)
+- [Set up your account and sign in safely](editing/your-account.md)
 
 ## Running a site
 
-- [Configuration](running/configuration.md) · [Users and roles](running/users-and-roles.md) ·
-  [Deploying](running/deploying.md) · [Backups](running/backups.md) · [Upgrading](running/upgrading.md) ·
-  [Content packages](running/content-packages.md) · [Commands](running/commands.md)
+- [Running a site](running/index.md) — the guides, and a site's first week.
+- [Configuration](running/configuration.md) — `config/nibble.yml`, environment variables and credentials.
+- [Users and roles](running/users-and-roles.md) — adding people and deciding what each may do.
+- [Administering from the Control Plane](running/administering.md) — what an administrator without a terminal can do.
+- [Utilities](running/utilities.md) — cache, search, jobs, health, backups and the audit log.
+- [Webhooks](running/webhooks.md) — telling another application when content changes.
+- [Check messages](running/check-messages.md) — every message `nibble:check` prints, and how to fix it.
+- [Deploying](running/deploying.md) — Kamal, secrets, the first deploy and what each deploy checks.
+- [Backups](running/backups.md) — what is backed up, where, and how to restore it.
+- [Upgrading](running/upgrading.md) — taking a release, and how to undo it.
+- [Content packages](running/content-packages.md) — keeping content as YAML, and importing it.
+- [Commands](running/commands.md) — every command in one place.
+- [Agent access](running/agent-access.md) — deciding what connected AI apps may touch.
+- [The nibble command](running/cli.md) — starting a site and working on content from a terminal.
 
-## Extending and contributing
+## Extending Nibble
 
 - [Extending Nibble](extending/index.md) — the seams a site adds its own behaviour through.
+- [Ruby hooks and events](extending/hooks.md)
+- [Customising the Control Plane](extending/control-plane.md)
+- [Emails](extending/emails.md)
+- [The management API and MCP](extending/management-api.md)
+- [Building with an agent](extending/building-with-agents.md)
+- [The Content API](extending/content-api.md) — reading the same content from somewhere else.
+
+## Reference
+
+- [Reference](reference/index.md) — look-up pages for blueprints and forms.
+- [Fieldtypes and field options](reference/fieldtypes.md)
+- [Validation rules](reference/validation.md)
+- [Conditions](reference/conditions.md)
+
+## Contributing
+
 - [Contributing to Nibble](contributing/index.md) — working on Nibble itself.
+- [Architecture](contributing/architecture.md)
+- [Invariants](contributing/invariants.md)
+- [Tests and checks](contributing/testing.md)
+- [Releases](contributing/releases.md)

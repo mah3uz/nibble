@@ -22,8 +22,8 @@ After reading this guide, you will know:
 
 ## 1. Installing it
 
-It is released on its own, from [mah3uz/nibble-cli](https://github.com/mah3uz/nibble-cli), for Linux on Intel and
-ARM, and for Windows:
+It is released on its own, from [mah3uz/nibble-cli](https://github.com/mah3uz/nibble-cli), for macOS and Linux on
+Intel and ARM, and for Windows:
 
 ```sh
 curl -LsSf https://github.com/mah3uz/nibble-cli/releases/latest/download/nibble-cli-installer.sh | sh

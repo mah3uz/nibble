@@ -92,7 +92,7 @@ it has already handled. `data` says what changed and who did it, not the content
 `type` (`entry`, `term`, `global` or `navigation`), its `id` and `locale`, its `collection`, `taxonomy` or
 `handle`, and the `actor` who made the change (absent for changes the system makes, with the app's `grant_id` when a
 connected app made it); some events add more, such as the `changes` of a draft save. For `form.submitted` it is the
-`form` handle and the submission's `id`. Fetch the record from the [content API](../theming/content-api.md) if you
+`form` handle and the submission's `id`. Fetch the record from the [content API](../extending/content-api.md) if you
 need its fields. The sender's IP address is never included.
 
 ## 4. Checking the signature

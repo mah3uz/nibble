@@ -143,7 +143,7 @@ revisions:
 
 - `workflow: simple` (the default) lets anyone who may publish, publish.
 - `workflow: review` means an entry is **submitted for review** and approved by someone with the right role before
-  it goes live. See [Drafts and publishing](../editing/publishing.md).
+  it goes live. See [Save, preview and publish](../editing/publishing.md).
 - `revisions.keep` is how many past versions each entry keeps.
 
 > [!TIP]

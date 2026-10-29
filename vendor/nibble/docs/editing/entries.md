@@ -54,7 +54,7 @@ Tidewater's posts have:
 | Where | Holds |
 |---|---|
 | **Content** tab | the title, an excerpt and the body |
-| **SEO** tab | how the post looks in search results and when shared — see [Redirects and SEO](redirects-and-seo.md) |
+| **SEO** tab | how the post looks in search results and when shared — see [Fix search results, share cards and broken links](redirects-and-seo.md) |
 | the column on the right | the slug, the publish date, the author, topics, featured image and template — and the parent page in a structured collection |
 
 On a narrow screen the right-hand column folds into a tab of its own, called **Details**.
@@ -72,7 +72,7 @@ Some fields worth knowing by name:
 | **Rich text** | a full editor: headings, lists, links, images, tables, code and find-and-replace |
 | **Markdown** | plain text with simple symbols for headings and bold (Markdown), with a Preview button that shows exactly what the site will render |
 | **Assets** | opens the media library, so you choose an image rather than upload another copy |
-| **Entries**, or a label list such as **Topics** | a picker for other entries or labels — an author, a topic, related posts. To make a new label, see [Categories and tags](categories-and-tags.md) |
+| **Entries**, or a label list such as **Topics** | a picker for other entries or labels — an author, a topic, related posts. To make a new label, see [Add and edit categories and tags](categories-and-tags.md) |
 | **Page blocks** | build a page from blocks in any order: text, quote, call to action, image, gallery, pricing |
 
 ### Working with blocks

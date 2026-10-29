@@ -179,7 +179,7 @@ page when they can be loaded, and empty props when loading them fails, so a layo
 > [!TIP]
 > Every 404 is counted, most-requested first, on the Control Plane's **Missing pages** screen at `/cp/404s`, and
 > in the dashboard's **Top missing pages** widget. It is the quickest way to find a link that broke. See
-> [Redirects and SEO](../editing/redirects-and-seo.md).
+> [Fix search results, share cards and broken links](../editing/redirects-and-seo.md).
 
 ## 7. What's next
 

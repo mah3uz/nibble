@@ -127,5 +127,5 @@ summary. `feed: true` uses the collection's title and the newest 50 entries.
 ## 6. Redirects and missing pages
 
 Moving pages without losing their search ranking is covered from the editor's side in
-[Redirects and SEO](../editing/redirects-and-seo.md): changing a live entry's slug records a 301 automatically,
+[Fix search results, share cards and broken links](../editing/redirects-and-seo.md): changing a live entry's slug records a 301 automatically,
 chains are collapsed to a single hop, and every 404 is counted so it can be redirected.

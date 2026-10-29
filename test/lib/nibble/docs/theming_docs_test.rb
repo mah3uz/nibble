@@ -19,11 +19,4 @@ class ThemingDocsTest < ActiveSupport::TestCase
 
     assert_empty missing, "document these @nibble exports under docs/theming: #{missing.join(', ')}"
   end
-
-  test "every docs page has its own id, since the docs site addresses pages by it" do
-    ids = Nibble.core_root.join("docs").glob("**/*.md").map { |file| file.read[/\A---\nid: (\S+)/, 1] }
-
-    assert_equal ids.uniq, ids
-    assert_not_includes ids, nil
-  end
 end

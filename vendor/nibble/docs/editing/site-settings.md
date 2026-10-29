@@ -23,8 +23,8 @@ Choose **Site settings** in the sidebar, under **Structure**. You see a short li
 | Group | Holds |
 |---|---|
 | **Site** | the name, tagline, logo, favicon (the small icon in the browser tab), contact email and social links |
-| **SEO** | how pages look in search results by default. See [Redirects and SEO](redirects-and-seo.md) |
-| **Integrations** | analytics tools and snippets of your own. See [Analytics and custom code](analytics.md) |
+| **SEO** | how pages look in search results by default. See [Fix search results, share cards and broken links](redirects-and-seo.md) |
+| **Integrations** | analytics tools and snippets of your own. See [Add analytics and custom code](analytics.md) |
 
 Whoever built your site may have added more groups. You only see the groups your role allows.
 

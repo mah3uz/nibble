@@ -3,7 +3,7 @@ id: modelling-form-spam-and-privacy
 title: Form spam and privacy
 description: Keep bots out of a form, close it on a schedule, and decide how long submissions are kept, encrypted and
   erased.
-order: 7
+order: 8
 ---
 
 # Form spam and privacy

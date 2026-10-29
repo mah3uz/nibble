@@ -8,7 +8,7 @@ order: 6
 
 # Extending Nibble
 
-Nibble has no plugin API yet. What it has is a set of **seams**: places a site can add behaviour of its own where
+Nibble adds behaviour through **seams**: places a site can add behaviour of its own where
 Nibble will keep finding it, so an upgrade never conflicts with what you added.
 
 After reading this guide, you will know:
@@ -63,10 +63,16 @@ None of those needs a seam, and all of them are easier to live with. Reach for a
 | `site/agents/*.md` | telling agents your site's editorial rules | [The management API and MCP](management-api.md#7-telling-agents-about-the-site) |
 | `bin/rails nibble:dev:mcp` | an agent building your theme or code | [Building with an agent](building-with-agents.md) |
 
-## 4. What does not exist yet
+## 4. The guides in this section
 
-A plugin API: something installable that registers fieldtypes, screens and widgets together, with its own version.
-`bin/rails nibble:generate:plugin` refuses today, and says why.
+| Page | Look here for |
+|---|---|
+| [Ruby hooks and events](hooks.md) | your own code, load hooks, event subscribers, form and task handlers, webhooks |
+| [Customising the Control Plane](control-plane.md) | replacing a screen, and the logo, sidebar and scripts |
+| [Emails](emails.md) | the look and wording of the emails Nibble sends |
+| [The management API and MCP](management-api.md) | changing content from another program or an AI agent |
+| [Building with an agent](building-with-agents.md) | an agent building your theme or code |
+| [The Content API](content-api.md) | reading published content from another website or app |
 
-The fieldtype contract and the form handler seam are the likely shape of it. If you are building something that wants
-it, say so in an issue — the shape should come from a real case rather than a guess.
+Nibble has no installable plugin package: behaviour is added through the seams above. `bin/rails nibble:generate:plugin`
+explains this and does nothing.

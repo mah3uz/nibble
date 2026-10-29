@@ -3,7 +3,7 @@ id: modelling-scheduled-tasks
 title: Scheduled tasks
 description: Keep a global's figures fresh from an API, import a feed into a collection, call a URL, or run your own
   Ruby, on a schedule declared in schema.
-order: 8
+order: 12
 ---
 
 # Scheduled tasks

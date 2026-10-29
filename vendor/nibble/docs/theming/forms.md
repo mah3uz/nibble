@@ -195,7 +195,7 @@ without JavaScript needs it as a hidden input of that name:
 <input v-if="form.timestamp" type="hidden" name="_nibble_t" :value="form.timestamp" />
 ```
 
-See [Spam](../modelling/forms.md#4-spam) for the checks themselves.
+See [Spam](../modelling/form-spam-and-privacy.md#1-spam) for the checks themselves.
 
 ## 5. Conditions and conditional required
 
@@ -456,7 +456,7 @@ form anyway.
 On a multilingual site, the definition arrives already in the page's locale: `title`, `display`, `instructions`,
 `placeholder`, `inline_label`, option labels, section text, the success message and `submit_label` are text for that
 locale (the default's where one is missing). You draw them as they are. See
-[Translating a form](../modelling/forms.md#7-translating-a-form).
+[Translating a form](../modelling/form-translation.md).
 
 The wording a theme draws that isn't in the schema comes from `form.messages`, which the site can translate under
 `nibble.forms.client.*`. `useNibbleForm` uses `too_large`, `generic` and `network` itself. A theme draws the others:

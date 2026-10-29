@@ -3,7 +3,7 @@ id: modelling-changing-schema
 title: Changing the schema
 description: Add, rename and remove fields and collections once content exists — what nibble:check refuses, and
   how content migrations move the data safely.
-order: 7
+order: 11
 ---
 
 # Changing the schema
