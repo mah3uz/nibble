@@ -3,7 +3,7 @@ id: theming-seo-and-feeds
 title: SEO, sitemaps and feeds
 description: What search engines, social networks and feed readers receive from a Nibble site, and the settings that
   shape it.
-order: 4
+order: 7
 ---
 
 # SEO, sitemaps and feeds

@@ -82,8 +82,10 @@ the next.
 
 - [Building a theme](theming/index.md) — what a theme holds and how a page is rendered.
 - [Views and layouts](theming/views.md) — which view renders which page, and the frame around it.
+- [Content in views](theming/content-in-views.md) — what a page receives, and what each field looks like.
 - [Queries](theming/queries.md) — asking for the content a page needs.
 - [Theme components](theming/components.md) — rich text, images, blocks, pagination, SEO and forms.
+- [Styling and the page shell](theming/styling-and-shell.md) — `theme.css`, Tailwind, dark mode, links and head tags.
 - [SEO, sitemaps and feeds](theming/seo-and-feeds.md) — what search engines and feed readers receive.
 - [The Content API](extending/content-api.md) — reading the same content from somewhere else.
 

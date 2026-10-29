@@ -3,7 +3,7 @@ id: theming-queries
 title: Queries
 description: The YAML sidecar beside a view that fetches everything the page needs — sources, conditions, sorting,
   pagination, search and forms.
-order: 2
+order: 3
 ---
 
 # Queries
@@ -61,14 +61,19 @@ Only published content is ever returned to a public page.
 |---|---|
 | `where` | conditions a record must match |
 | `not` | conditions that exclude a record |
-| `sort` | `field:asc` or `field:desc`, or a list of them — a column or any field of the blueprint |
+| `sort` | `field:asc` or `field:desc`, or a list of them — a column or any field of the blueprint. Without it, the collection's or taxonomy's own `sort`, then `id` |
 | `limit`, `offset` | a fixed slice |
-| `paginate` | `{ per_page, param }` — pages, driven by a URL parameter |
+| `paginate` | `{ per_page, param }` — pages, driven by a URL parameter; a bare number, `paginate: 12`, is `per_page` alone |
 | `counts` | on a `terms:` source, a collection handle; each term gets `entries_count`, the entries of that collection related to it |
 | `include` | relationship fields to load in full rather than as references |
-| `fields` | only these fields — smaller pages, fewer queries; `parent` adds the title and address of the page above |
+| `fields` | only these fields of the blueprint — smaller pages, fewer queries. The keys every record has (`id`, `uri`, `url`, `title`…) always come too; `parent` adds the title and address of the page above |
 | `locale` | a locale other than the page's |
 | `q` | the search terms, for a `search:` source |
+
+The columns a `where` or `sort` can name besides blueprint fields: for entries `id`, `uuid`, `blueprint`, `locale`,
+`title`, `slug`, `uri`, `status`, `published_at`, `unpublish_at`, `parent_id`, `position`, `template`, `author_id`,
+`created_at` and `updated_at`; for terms `id`, `uuid`, `blueprint`, `locale`, `title`, `slug`, `uri`, `created_at` and
+`updated_at`. What comes back is described in [Content in views](content-in-views.md#2-the-shape-of-a-record).
 
 `paginate` and `limit` cannot be combined; `offset` can. `limit` and `per_page` are between 1 and 100; a longer list paginates.
 

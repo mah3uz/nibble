@@ -4,7 +4,7 @@ title: Styling and the page shell
 description: The stylesheet a theme owns, Tailwind, dark mode, fonts, the HTML shell Nibble writes around every page,
   links and head tags, code that runs under server rendering, code highlighting, and the Pagination and PreviewBar
   slots.
-order: 3
+order: 6
 ---
 
 # Styling and the page shell

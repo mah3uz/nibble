@@ -180,7 +180,9 @@ defineProps<ViewProps['posts/show'] & { page: PostsPost }>()
 ```
 
 `@nibble` exports a few types of its own for the shared props: `SiteProps`, `Link` (a menu item), `RecordSummary`,
-`SetBlock`, `RichTextValue`, `ImageValue`, `PaginationMeta`, `SeoProps` and the `NibbleForm…` family. Where `@site/types`
+`SetBlock`, `RichTextValue`, `ImageValue`, `PaginationMeta`, `SeoProps`, and the form types `NibbleForm`,
+`NibbleFormField`, `NibbleFormFieldType`, `NibbleFormValue`, `NibbleFormSection`, `NibbleFormResult`,
+`NibbleFormMessageKey`, `NibbleFormConditions` and `NibbleFormConditionOperator`, which [Forms](forms.md) explains. Where `@site/types`
 has the same idea, such as `EntrySummary` for `RecordSummary` or `AssetValue` for `ImageValue`, use `@site/types`: it is
 the one generated from your schema. `Link` as a type is a menu item; it is unrelated to Inertia's `Link` component, so
 import the component under that name and rename the type if you need both.

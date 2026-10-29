@@ -3,7 +3,7 @@ id: theming-components
 title: Theme components
 description: The components and composables @nibble gives every theme — rich text, images, blocks, pagination, SEO,
   shared props and forms.
-order: 3
+order: 4
 ---
 
 # Theme components
@@ -98,7 +98,8 @@ fields, falling back to its title, excerpt and featured image, and to the **SEO*
 
 `PreviewBar` shows only when an editor is previewing a draft: a ribbon across the top corner, so nobody mistakes a
 draft for the live page. It is also what lets Live Preview update the page in place as the editor types, keeping its
-scroll position; a layout without it is reloaded on each change instead.
+scroll position; a layout without it is reloaded on each change instead. Its `preview` slot replaces the ribbon's
+markup; see [Styling and the page shell](styling-and-shell.md#7-pagination-and-previewbar-slots).
 
 ## 5. Pagination
 
@@ -118,7 +119,8 @@ defineProps<ViewProps['posts/index']>()
 ```
 
 `Pagination` takes the `meta` of a [paginated query](queries.md#6-pagination) and links each page with the URL
-parameter it declares — `param` if it is not `page`.
+parameter it declares — `param` if it is not `page`. It also takes `label`, the `aria-label` of its `<nav>`, and a
+default slot for your own markup; see [Styling and the page shell](styling-and-shell.md#7-pagination-and-previewbar-slots).
 
 ## 6. Forms
 
@@ -141,9 +143,9 @@ const footer = useNavigation('footer')
 
 | Composable | Returns |
 |---|---|
-| `useSite()` | the locale, the page's URL, its declared parameters, every global and every menu |
+| `useSite()` | the locale, the page's URL, its declared parameters (a sidecar's `params:`; anything else on the query string is dropped), every global and every menu |
 | `useGlobals(handle)` | one global's fields |
-| `useNavigation(handle)` | one menu's links: `title`, `url`, `children` |
+| `useNavigation(handle)` | one menu's items: `title`, `url`, `children`, and `type` and `id` for a record link; see [Content in views](content-in-views.md#5-globals-and-menus) |
 | `useLocale()` | the page's locale code |
 
 All four return computed refs, so they stay current as a visitor navigates.
