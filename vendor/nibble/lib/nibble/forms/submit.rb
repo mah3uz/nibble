@@ -30,7 +30,7 @@ module Nibble
       def call
         if (wait = rate_limited)
           minutes = [ (wait / 60.0).ceil, 1 ].max
-          return result(:rate_limited, errors: { "base" => [ "Too many submissions. Please try again in #{minutes} #{'minute'.pluralize(minutes)}." ] })
+          return result(:rate_limited, errors: { "base" => [ Forms.message("rate_limited", @locale, count: minutes) ] })
         end
 
         outcome = process
@@ -77,7 +77,7 @@ module Nibble
           from = field.get("min").to_i
           next if (values[field.handle].to_i - from) % step.to_i == 0
 
-          found[field.handle] = [ Validation.message("step", attribute: field.display, override: field.get("messages", {})["step"], locale: @locale,
+          found[field.handle] = [ Validation.message("step", attribute: field.display(@locale), override: field.get("messages", {})["step"], locale: @locale,
             default: "The %{attribute} field must go up in steps of %{step} (from %{from}).", step:, min: from, from:) ]
         end
       end
@@ -131,7 +131,7 @@ module Nibble
       end
 
       def captcha_message
-        @captcha_unavailable ? "This form can't take submissions right now. Please try again later." : "Please confirm you're not a robot."
+        Forms.message(@captcha_unavailable ? "captcha_unavailable" : "captcha_failed", @locale)
       end
 
       def spam!
@@ -206,7 +206,7 @@ module Nibble
 
       def follow_up(submission, data)
         options = { submission_id: submission&.id, data: submission ? nil : data }
-        Jobs::NotifySubmission.perform_later(@form.handle, **options) if @form.notify.any? || @form.cp_notify?
+        Jobs::NotifySubmission.perform_later(@form.handle, **options, locale: @locale) if @form.notify.any? || @form.cp_notify?
         Jobs::HandleSubmission.perform_later(@form.handle, **options) if @form.handler
       end
 

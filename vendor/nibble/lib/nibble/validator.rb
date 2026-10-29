@@ -11,7 +11,7 @@ module Nibble
     ACCEPTED = [ "yes", "on", "1", 1, true, "true" ].freeze
     BOOLEANS = [ true, false, 0, 1, "0", "1" ].freeze
 
-    def self.collect_rules(fields, values, root_values:, prefix: "", replacements: {})
+    def self.collect_rules(fields, values, root_values:, prefix: "", replacements: {}, locale: nil)
       values = values.to_h.stringify_keys
       fields.each_with_object({}) do |field, rules|
         next if field.computed?
@@ -21,7 +21,7 @@ module Nibble
 
         list = [ *("required" if field.get("required") == true), *field.validation_rules, *Validation.explode(field.fieldtype.rules) ]
         parsed = list.uniq.map { |rule| Validation.parse(rule, prefix:, replacements:) }
-        rules[path] = Entry.new(rules: parsed, attribute: field.display, messages: field.get("messages", {}), toggle: field.type == "toggle")
+        rules[path] = Entry.new(rules: parsed, attribute: field.display(locale), messages: field.get("messages", {}), toggle: field.type == "toggle")
         field.with_value(values[field.handle]).fieldtype.extra_rules(root_values:, prefix: "#{path}.", replacements:).each do |nested_path, entry|
           rules[nested_path] = entry
         end
@@ -37,7 +37,7 @@ module Nibble
 
     def validate(values)
       validatable = @fields.add_values(values.to_h.stringify_keys).pre_process_validatable.values
-      rules = self.class.collect_rules(@fields, validatable, root_values: validatable, replacements: @replacements)
+      rules = self.class.collect_rules(@fields, validatable, root_values: validatable, replacements: @replacements, locale: @locale)
       errors = rules.each_with_object({}) do |(path, entry), found|
         messages = check(path, entry, validatable)
         found[path] = messages if messages.any?

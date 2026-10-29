@@ -64,8 +64,15 @@ function firstMessages(errors: Record<string, string[] | string> = {}) {
   )
 }
 
+const FALLBACK_MESSAGES = {
+  too_large: 'The files are too large to send.',
+  generic: 'Something went wrong. Please try again.',
+  network: 'Something went wrong. Please check your connection and try again.',
+}
+
 export function useNibbleForm(definition: NibbleForm) {
   const locale = useLocale()
+  const text = (key: keyof typeof FALLBACK_MESSAGES) => definition.messages?.[key] ?? FALLBACK_MESSAGES[key]
   const values = reactive<Record<string, unknown>>(
     Object.fromEntries(definition.fields.map((field) => [field.handle, initialValue(field)])),
   )
@@ -171,13 +178,13 @@ export function useNibbleForm(definition: NibbleForm) {
         sent.value = true
         message.value = payload.message ?? null
       } else if (response.status === 413) {
-        errors.value = { base: 'The files are too large to send.' }
+        errors.value = { base: text('too_large') }
       } else {
         errors.value = firstMessages(payload.errors)
-        if (!Object.keys(errors.value).length) errors.value = { base: 'Something went wrong. Please try again.' }
+        if (!Object.keys(errors.value).length) errors.value = { base: text('generic') }
       }
     } catch {
-      errors.value = { base: 'Something went wrong. Please check your connection and try again.' }
+      errors.value = { base: text('network') }
     } finally {
       processing.value = false
       if (widgetId) (window as CaptchaWindow).turnstile?.reset(widgetId)

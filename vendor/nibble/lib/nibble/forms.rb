@@ -6,11 +6,19 @@ module Nibble
     DEFAULT_HONEYPOT = "_nibble_hp".freeze
     DEFAULT_RATE_LIMIT = { "requests" => 5, "per_minutes" => 1 }.freeze
     DEFAULT_SPAM_RETENTION_DAYS = 30
+    MESSAGES = {
+      "rate_limited" => { one: "Too many submissions. Please try again in %{count} minute.", other: "Too many submissions. Please try again in %{count} minutes." },
+      "captcha_failed" => "Please confirm you're not a robot.",
+      "captcha_unavailable" => "This form can't take submissions right now. Please try again later.",
+      "client.too_large" => "The files are too large to send.",
+      "client.generic" => "Something went wrong. Please try again.",
+      "client.network" => "Something went wrong. Please check your connection and try again."
+    }.freeze
     AUTOFILL_NAMES = /name|mail|phone|tel|address|street|city|zip|postal|country|company|organi[sz]ation|website|url|homepage|user|login/i
 
     Form = Data.define(:item) do
       def handle = item.handle
-      def title = item["title"]
+      def title(locale = nil) = Localized.resolve(item["title"], locale)
       def sectioned? = item["sections"].present? && item["fields"].nil?
       def section_items = Array(item["sections"]).map { |section| section.is_a?(Hash) ? section : {} }
 
@@ -20,11 +28,12 @@ module Nibble
         Fields.new(section_items.flat_map { |section| Array(section["fields"]) }, schema:, source: item.path, key: "sections")
       end
 
-      def sections(schema: Nibble.schema)
+      def sections(schema: Nibble.schema, locale: nil)
         return unless sectioned?
 
         section_items.map do |section|
-          section.slice("display", "instructions").merge("fields" => Fields.new(section["fields"], schema:, source: item.path, key: "sections"))
+          { "display" => Localized.resolve(section["display"], locale), "instructions" => Localized.resolve(section["instructions"], locale),
+            "fields" => Fields.new(section["fields"], schema:, source: item.path, key: "sections") }
         end
       end
 
@@ -38,11 +47,12 @@ module Nibble
       def deliveries = Array(item["api"]).map { |delivery| { "mode" => "async" }.merge(delivery) }
       def cp_notify? = item["cp_notify"] == true
       def handler = item["handler"].presence
-      def success
+      def success(locale = nil)
         success = item["success"].to_h
-        return success unless success["message"].is_a?(String)
+        message = Localized.resolve(success["message"], locale)
+        return success unless message.is_a?(String)
 
-        success.merge("message" => Notify::Template.new(form: self).render(success["message"]).to_s)
+        success.merge("message" => Notify::Template.new(form: self, locale:).render(message).to_s)
       end
       def retention_days = item["retention_days"]
     end
@@ -55,8 +65,13 @@ module Nibble
       def find(handle, schema: Nibble.schema) = (item = schema.find(:forms, handle)) && Form.new(item:)
       def all(schema: Nibble.schema) = schema.forms.map { |item| Form.new(item:) }
 
-      def display_value(field, value)
-        labels = field.fieldtype.respond_to?(:options) ? field.fieldtype.options.to_h { |option| [ option["value"].to_s, option["label"].to_s ] } : {}
+      def message(key, locale, **values)
+        default = MESSAGES.fetch(key)
+        I18n.t("nibble.forms.#{key}", locale: Localized.i18n_locale(locale), default:, **values)
+      end
+
+      def display_value(field, value, locale = nil)
+        labels = field.fieldtype.respond_to?(:options) ? field.fieldtype.options(locale).to_h { |option| [ option["value"].to_s, option["label"].to_s ] } : {}
         case value
         when Array then value.map { |item| item.is_a?(Hash) ? item["filename"].to_s : labels.fetch(item.to_s, item.to_s) }
         when true then "Yes"
@@ -91,7 +106,27 @@ module Nibble
         problems
       end
 
+      def locale_problems(form, schema:, locales:)
+        texts = { "title" => form.item["title"], "success.message" => form.item["success"].to_h["message"] }
+        form.section_items.each_with_index do |section, index|
+          texts.merge!("sections.#{index}.display" => section["display"], "sections.#{index}.instructions" => section["instructions"])
+        end
+        form.fields(schema:).all.each_value do |field|
+          (%w[display instructions] + Definition::LOCALIZED_CONFIG).each { |key| texts["field '#{field.handle}' #{key}"] = field.get(key) }
+          next unless Definition::OPTION_TYPES.include?(field.type)
+
+          option_labels(field.fieldtype.config("options")).each { |value, label| texts["field '#{field.handle}' option '#{value}'"] = label }
+        end
+        texts.flat_map { |label, text| Localized.problems(text, locales, label) }
+      end
+
       private
+
+      def option_labels(raw)
+        return raw.to_a if raw.is_a?(Hash)
+
+        Array(raw).filter_map { |item| [ item["key"] || item["value"], item["label"] ] if item.is_a?(Hash) }
+      end
 
       def hidden_problems(field)
         hidden = field.get("hidden") == true

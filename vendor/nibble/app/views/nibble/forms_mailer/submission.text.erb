@@ -3,9 +3,9 @@
 <% if @message -%>
 <%= @message %>
 <% elsif @visitor -%>
-Thanks for filling in <%= @form.title || @form.handle %> on <%= site_name %>. Here's what you sent.
+Thanks for filling in <%= @form.title(@locale) || @form.handle %> on <%= site_name %>. Here's what you sent.
 <% else -%>
-Someone filled in <%= @form.title || @form.handle %> on <%= site_name %>. Here's what they sent.
+Someone filled in <%= @form.title(@locale) || @form.handle %> on <%= site_name %>. Here's what they sent.
 <% end -%>
 <% @rows.each do |label, value| %>
 

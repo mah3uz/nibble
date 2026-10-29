@@ -98,6 +98,15 @@ module NibbleRecordsHelper
     "forms/worded_pledge.yml" => { title: "Worded pledge", fields: [
       { handle: "amount", field: { type: "integer", min: 2000, step: 500, messages: { step: { en: "Steps of $%{step} from $%{min}", fr: "Par tranches de %{step}" } } } }
     ] },
+    "forms/greeting.yml" => { title: { en: "Say hello", fr: "Dites bonjour" }, success: { message: { en: "Thanks for writing to {form.title}", fr: "Merci, {form.title}" } },
+                              notify: [ { to: "{field.email}", subject: "{form.title}", message: "{field.topic}" } ],
+                              sections: [ { display: { en: "You", fr: "Vous" }, instructions: { en: "Who is writing", fr: "Qui écrit" }, fields: [
+                                { handle: "email", field: { type: "text", input_type: "email", required: true, display: { en: "Email", fr: "Courriel" },
+                                                            instructions: { fr: "Une adresse valide" }, placeholder: { en: "you@example.test", fr: "vous@exemple.test" } } },
+                                { handle: "topic", field: { type: "select", display: "Topic", options: [ { value: "sales", label: { en: "Sales", fr: "Ventes" } },
+                                                                                                         { value: "other", label: "Other" } ] } },
+                                { handle: "agree", field: { type: "toggle", inline_label: { en: "I agree", fr: "J'accepte" } } }
+                              ] } ] },
     "navigation/docs_menu.yml" => { title: "Docs menu", max_depth: 2, collections: [ "docs" ] }
   }.freeze
 

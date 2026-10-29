@@ -92,7 +92,7 @@ module Nibble
         custom = custom_message(override, locale)
         return I18n.interpolate(custom, **values) if custom
 
-        I18n.t("nibble.validation.#{key}", default: default || MESSAGES.fetch(key), **values)
+        I18n.t("nibble.validation.#{key}", locale: Localized.i18n_locale(locale), default: default || MESSAGES.fetch(key), **values)
       end
 
       private

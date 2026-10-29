@@ -3,7 +3,7 @@ module Nibble
     module HasSelectOptions
       def multiple? = config("multiple") == true
 
-      def options
+      def options(locale = nil)
         raw = config("options") || []
         pairs = case raw
         when Hash then raw.map { |value, label| [ value, label ] }
@@ -12,7 +12,7 @@ module Nibble
             item.is_a?(Hash) ? [ item["key"] || item["value"], item["label"] || item["value"] ] : [ item, item ]
           end
         end
-        pairs.map { |value, label| { "value" => value, "label" => label.nil? ? value : label } }
+        pairs.map { |value, label| { "value" => value, "label" => label.nil? ? value : Localized.resolve(label, locale) } }
       end
 
       def preload = { "options" => options }

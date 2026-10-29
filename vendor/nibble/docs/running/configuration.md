@@ -88,7 +88,7 @@ In production, a missing job or a passkey setting that no longer allows the site
 |---|---|
 | `theme` | the active theme's handle, a directory under `site/themes/`, or one Nibble ships such as `crumbs` |
 | `url` | the public site URL; canonical links, sitemaps, feeds and mail are built from it |
-| `locales` | the site's languages: `code`, `default`, `url_prefix`, and `search_tokenizer` (`porter` or `trigram`) |
+| `locales` | the site's languages: `code`, `default`, `url_prefix`, and `search_tokenizer` (`porter` or `trigram`); [forms](../modelling/forms.md#7-translating-a-form) take text per locale |
 | `reserved_paths` | paths content may never claim, on top of Nibble's own |
 | `disable` | schema from Nibble or the theme to switch off, as `kind/handle` — `navigation/footer` |
 | `trash.retention_days` | how long trashed content is kept; 30 by default |

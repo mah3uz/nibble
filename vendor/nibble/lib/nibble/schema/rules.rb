@@ -2,6 +2,7 @@ module Nibble
   class Schema
     module Rules
       STRING = ->(value) { value.is_a?(String) && value.present? }
+      TEXT = ->(value) { STRING.(value) || (value.is_a?(Hash) && value.present? && value.values.all? { |item| STRING.(item) }) }
       OPTIONAL_STRING = ->(value) { value.nil? || STRING.(value) }
       BOOLEAN = ->(value) { value == true || value == false }
       INTEGER = ->(value) { value.is_a?(Integer) && value >= 0 }
@@ -48,7 +49,7 @@ module Nibble
         "forms" => {
           required: %w[title],
           keys: {
-            "title" => STRING, "fields" => ARRAY, "sections" => ARRAY, "store" => BOOLEAN, "spam" => HASH, "notify" => ARRAY, "api" => ARRAY,
+            "title" => TEXT, "fields" => ARRAY, "sections" => ARRAY, "store" => BOOLEAN, "spam" => HASH, "notify" => ARRAY, "api" => ARRAY,
             "handler" => STRING, "cp_notify" => BOOLEAN, "success" => HASH, "retention_days" => INTEGER
           }
         },

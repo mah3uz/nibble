@@ -391,11 +391,58 @@ without storing the address. Visitors' IP addresses are never stored, only a key
 > Ninety days suits a demo form: long enough for sales to follow up, short enough that the site does not become a
 > second, forgotten CRM.
 
-## 7. Every key
+## 7. Translating a form
+
+On a site with several [locales](../running/configuration.md), any of a form's visitor-facing text may be a map of
+locale to text instead of a string:
+
+```yaml
+title: { en: Say hello, fr: Dites bonjour }
+success:
+  message: { en: Thanks, fr: Merci }
+sections:
+  - display: { en: You, fr: Vous }
+    fields:
+      - handle: topic
+        field:
+          type: select
+          display: { en: Topic, fr: Sujet }
+          placeholder: { en: Choose one, fr: Choisissez }
+          options:
+            - value: sales
+              label: { en: Sales, fr: Ventes }
+```
+
+This works for the form's `title` and `success.message`, a section's `display` and `instructions`, and a field's
+`display`, `instructions`, `placeholder`, `inline_label` and option `label`s. The theme receives the text for the
+page's locale, or the default locale's where a language is missing, or the first given. Option `value`s are the same in
+every language, so stored submissions are too. `bin/rails nibble:check` refuses a map that names a locale the site
+doesn't have.
+
+The text Nibble itself shows a visitor is translated through Rails I18n, with English as the default. Add keys to the
+site's `config/locales/<locale>.yml`:
+
+| Key | Shown when |
+|---|---|
+| `nibble.forms.rate_limited` | a visitor submits too often; takes `one` and `other` forms with `%{count}` minutes |
+| `nibble.forms.captcha_failed` | the CAPTCHA wasn't passed |
+| `nibble.forms.captcha_unavailable` | the form needs a CAPTCHA the site hasn't set up |
+| `nibble.forms.client.too_large` | the browser can't send the files |
+| `nibble.forms.client.generic` | the answer had no message to show |
+| `nibble.forms.client.network` | the request didn't reach the site |
+
+A field's failed rules say "The Courriel field is required." in the field's `display` for the visitor's language; the
+sentence itself is translated through `nibble.validation.*`, or by the field's own [`messages`](#1-declaring-a-form).
+The client messages reach the theme as the definition's `messages`, which `useNibbleForm` shows.
+
+Emails to staff are in the site's default locale. An email to the visitor, with `to: "{field.email}"`, uses the locale
+the visitor submitted from: the form title, field labels and option labels in it follow that language.
+
+## 8. Every key
 
 | Key | Notes |
 |---|---|
-| `title` | **required** |
+| `title` | **required**; a string or a map of locale to text |
 | `fields`, `sections` | **one is required**; `sections` is a list of `{ display, instructions, fields }` |
 | `success` | `{ message }` or `{ redirect }`; the message may be `{global.<set>.<field>}` |
 | `notify` | a list of `{ to, cc, bcc, subject, message, reply_to, fields, if }` |

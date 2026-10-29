@@ -2,9 +2,9 @@
 <% if @message %>
   <%= simple_format(h(@message), {}, sanitize: false) %>
 <% elsif @visitor %>
-  <p>Thanks for filling in <strong><%= @form.title || @form.handle %></strong> on <%= site_name %>. Here's what you sent.</p>
+  <p>Thanks for filling in <strong><%= @form.title(@locale) || @form.handle %></strong> on <%= site_name %>. Here's what you sent.</p>
 <% else %>
-  <p>Someone filled in <strong><%= @form.title || @form.handle %></strong> on <%= site_name %>. Here's what they sent.</p>
+  <p>Someone filled in <strong><%= @form.title(@locale) || @form.handle %></strong> on <%= site_name %>. Here's what they sent.</p>
 <% end %>
 <table role="presentation" cellpadding="0" cellspacing="0">
   <% @rows.each do |label, value| %>

@@ -100,5 +100,6 @@ export type NibbleForm = {
   fields: NibbleFormField[]
   sections: NibbleFormSection[] | null
   success: { message?: string; redirect?: string }
+  messages?: { too_large: string; generic: string; network: string }
   result: NibbleFormResult | null
 }

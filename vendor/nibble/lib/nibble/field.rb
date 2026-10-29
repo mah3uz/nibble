@@ -5,10 +5,12 @@ module Nibble
     CONDITION_KEYS = %w[if if_any unless unless_any show_when show_when_any hide_when hide_when_any].freeze
     BOOLEAN = ->(value) { value == true || value == false }
 
+    TEXT = ->(value) { value.is_a?(String) || (value.is_a?(Hash) && value.values.all?(String)) }
+
     COMMON_OPTIONS = {
       "type" => ->(value) { value.is_a?(String) },
-      "display" => ->(value) { value.is_a?(String) },
-      "instructions" => ->(value) { value.is_a?(String) },
+      "display" => TEXT,
+      "instructions" => TEXT,
       "instructions_position" => ->(value) { %w[above below].include?(value) },
       "width" => ->(value) { WIDTHS.include?(value) },
       "required" => BOOLEAN,
@@ -64,8 +66,8 @@ module Nibble
       value.nil? ? fallback : value
     end
 
-    def display = get("display", handle.humanize)
-    def instructions = get("instructions")
+    def display(locale = nil) = Localized.resolve(get("display", handle.humanize), locale)
+    def instructions(locale = nil) = Localized.resolve(get("instructions"), locale)
 
     def visibility
       return get("visibility") if get("visibility")

@@ -4,29 +4,26 @@ module Nibble
       FIELD_CONFIG = %w[placeholder input_type character_limit default width multiple inline max_files max_file_size extensions prepend append min max step
         autocomplete rows inline_label time_enabled earliest_date latest_date max_items clearable].freeze
       OPTION_TYPES = %w[select radio checkboxes].freeze
+      LOCALIZED_CONFIG = %w[placeholder inline_label].freeze
+      CLIENT_MESSAGES = %w[too_large generic network].freeze
 
       module_function
 
-      def call(form, result: nil, params: {})
+      def call(form, result: nil, params: {}, locale: nil)
         captcha = ({ "provider" => nil, "site_key" => nil }.merge(Integrations.captcha.to_h.slice("provider", "site_key"))) if form.captcha?
         fields = form.fields
         {
           "handle" => form.handle,
-          "title" => form.title,
+          "title" => form.title(locale),
           "action" => action(form, fields, params),
           "honeypot" => form.honeypot,
           "captcha" => captcha,
-          "fields" => fields.all.values.map { |field| field_definition(field, params) },
-          "sections" => sections(form),
-          "success" => form.success.slice("message", "redirect"),
+          "fields" => fields.all.values.map { |field| field_definition(field, params, locale) },
+          "sections" => form.sections(locale:)&.map { |section| section.merge("fields" => section["fields"].handles) },
+          "success" => form.success(locale).slice("message", "redirect"),
+          "messages" => CLIENT_MESSAGES.to_h { |key| [ key, Forms.message("client.#{key}", locale) ] },
           "result" => (result if result.is_a?(Hash) && result["handle"] == form.handle)
         }
-      end
-
-      def sections(form)
-        form.sections&.map do |section|
-          { "display" => section["display"], "instructions" => section["instructions"], "fields" => section["fields"].handles }
-        end
       end
 
       def prefill_params(form) = form.fields.all.values.filter_map { |field| prefill_name(field) }.uniq
@@ -54,9 +51,10 @@ module Nibble
         nil
       end
 
-      def field_definition(field, params = {})
+      def field_definition(field, params = {}, locale = nil)
         config = field.fieldtype.config.slice(*FIELD_CONFIG).compact
-        config["options"] = field.fieldtype.options if OPTION_TYPES.include?(field.type)
+        LOCALIZED_CONFIG.each { |key| config[key] = Localized.resolve(config[key], locale) if config.key?(key) }
+        config["options"] = field.fieldtype.options(locale) if OPTION_TYPES.include?(field.type)
         config["default"] = public_default(field) if config.key?("default")
         if field.get("hidden") == true
           config["hidden"] = true
@@ -65,7 +63,7 @@ module Nibble
         end
         conditions = Conditions.describe(field.config, prefix: field.prefix)
         config["conditions"] = conditions if conditions
-        { "handle" => field.handle, "type" => field.type, "display" => field.display, "instructions" => field.instructions,
+        { "handle" => field.handle, "type" => field.type, "display" => field.display(locale), "instructions" => field.instructions(locale),
           "required" => field.required? }.merge(config)
       end
     end
