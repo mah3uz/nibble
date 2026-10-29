@@ -61,9 +61,10 @@ module Nibble
     end
 
     def hidden(fields)
-      return [] unless @api && Nibble.config.defaults_at_least?(API_HIDES_FIELDS_SINCE)
+      display_only = fields.all.values.select(&:display_only?).map(&:handle)
+      return display_only unless @api && Nibble.config.defaults_at_least?(API_HIDES_FIELDS_SINCE)
 
-      fields.all.values.reject(&:api?).map(&:handle)
+      display_only + fields.all.values.reject(&:api?).map(&:handle)
     end
 
     def expand(record, handle, depth:, seen:)

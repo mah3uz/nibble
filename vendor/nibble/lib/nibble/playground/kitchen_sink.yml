@@ -12,6 +12,7 @@ tabs:
           - { handle: embed, field: { type: code, placeholder: "<iframe src=\"https://…\"></iframe>", instructions: "HTML, with line numbers and highlighting." } }
           - { handle: count, field: { type: integer, min: 1, max: 10, width: 50 } }
           - { handle: featured, field: { type: toggle, inline_label: Feature on the home page, width: 50 } }
+          - { handle: editing_note, field: { type: note, text: "Keep it **short**. See the [style guide](/style)." } }
           - { handle: category, field: { type: select, options: { news: News, guides: Guides }, clearable: true, width: 50 } }
           - { handle: tags, field: { type: select, multiple: true, taggable: true, options: [design, culture], width: 50 } }
           - { handle: layout, field: { type: radio, options: [narrow, wide], inline: true, width: 50 } }

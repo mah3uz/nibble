@@ -90,7 +90,7 @@ module Nibble
       end
 
       def display_values(locale)
-        @form.fields.all.values.to_h { |field| [ field.handle, Array(Forms.display_value(field, @data[field.handle], locale)).join(", ") ] }
+        @form.fields.all.values.reject(&:display_only?).to_h { |field| [ field.handle, Array(Forms.display_value(field, @data[field.handle], locale)).join(", ") ] }
       end
 
       def link

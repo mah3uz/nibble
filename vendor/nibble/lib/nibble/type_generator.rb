@@ -76,7 +76,7 @@ module Nibble
     def form_values
       forms = Forms.all(schema: @schema)
       types = forms.map do |form|
-        members = form.fields(schema: @schema).all.values.map { |field| "#{field.handle}: #{form_value_type(field)}" }
+        members = form.fields(schema: @schema).all.values.reject(&:display_only?).map { |field| "#{field.handle}: #{form_value_type(field)}" }
         "export type #{form_values_name(form.handle)} = {#{members.map { |member| " #{member}" }.join(';')} }\n"
       end
       map = forms.map { |form| "  '#{form.handle}': #{form_values_name(form.handle)}" }

@@ -22,6 +22,7 @@ const PUBLIC_FIELDTYPES = [
   'date',
   'files',
   'calculation',
+  'note',
 ]
 
 const field = (handle: string, extra: Record<string, unknown> = {}) =>
@@ -143,6 +144,7 @@ describe('crumbs ContactForm', () => {
       field('arrival', { type: 'date', time_enabled: true, earliest_date: '2026-11-01' }),
       field('files', { type: 'files', extensions: ['pdf', 'jpg'], max_file_size: 5, max_files: 3 }),
       field('total', { type: 'calculation', formula: '{guests} * 10' }),
+      field('notice', { type: 'note', text_html: '<p>We reply within a day.</p>' }),
     ]
     const html = await render(form({ fields }))
 
@@ -151,7 +153,7 @@ describe('crumbs ContactForm', () => {
     expect(tag(html, 'visit-message')).toMatch(/^<textarea[^>]*rows="3"/)
     expect(tag(html, 'visit-guests')).toContain('type="number"')
     expect(tag(html, 'visit-consent')).toMatch(/type="checkbox"[^>]*value="true"/)
-    expect(html).toMatch(/<label for="visit-consent">\s*I agree to be contacted/)
+    expect(html).toMatch(/<label for="visit-consent">(<!--\[-->)?\s*I agree to be contacted/)
     expect(tag(html, 'visit-size')).toMatch(/^<select(?=[^>]*required)/)
     expect(html).toMatch(/<option value disabled selected>\s*Choose one…/)
     expect(tag(html, 'visit-extras')).toMatch(/^<select(?=[^>]*multiple)(?=[^>]*name="extras\[\]")/)
@@ -170,6 +172,28 @@ describe('crumbs ContactForm', () => {
     expect(tag(html, 'visit-files-help')).toBeTruthy()
     expect(html).toContain('PDF or JPG, up to 5 MB each, at most 3 files.')
     expect(tag(html, 'visit-total')).toMatch(/^<output/)
+    expect(html).toContain('<p>We reply within a day.</p>')
+  })
+
+  it('draws a consent link inside the checkbox label, and a note as text with no control or name', async () => {
+    const html = await render(
+      form({
+        fields: [
+          field('consent', {
+            type: 'toggle',
+            required: true,
+            inline_label: 'I agree to the privacy policy',
+            inline_label_html: 'I agree to the <a href="/privacy" rel="noopener">privacy policy</a>',
+          }),
+          field('notice', { type: 'note', text_html: '<p>Replies take a day.</p>' }),
+        ],
+      }),
+    )
+
+    expect(html).toMatch(/<label for="visit-consent">[\s\S]*<a href="\/privacy" rel="noopener">privacy policy<\/a>/)
+    expect(html).toContain('<p>Replies take a day.</p>')
+    expect(html).not.toContain('name="notice"')
+    expect(html).not.toContain('for="visit-notice"')
   })
 
   it('shows a calculation as read-only output that screen readers hear change, and posts nothing for it', async () => {

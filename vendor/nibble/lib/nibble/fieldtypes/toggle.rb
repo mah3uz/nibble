@@ -14,6 +14,11 @@ module Nibble
         } }
       ]
 
+      def publish_config(config)
+        label = Localized.resolve(config["inline_label"])
+        SafeMarkdown.link?(label) ? config.merge("inline_label" => SafeMarkdown.label_text(label), "inline_label_html" => SafeMarkdown.label_html(label)) : config
+      end
+
       def default_value = false
       def pre_process(value) = truthy?(value)
       def process(value) = value.nil? ? nil : truthy?(value)

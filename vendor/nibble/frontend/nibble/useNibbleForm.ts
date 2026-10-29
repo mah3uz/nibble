@@ -274,7 +274,7 @@ export function useNibbleForm<Values extends Record<string, unknown> = Record<st
   function formBody(include: (field: NibbleFormField) => boolean = () => true) {
     const body = new FormData()
     definition.fields
-      .filter((field) => isVisible(field) && include(field))
+      .filter((field) => field.type !== 'note' && isVisible(field) && include(field))
       .forEach((field) => append(body, field.handle, state[field.handle]))
     body.append('_locale', locale.value)
     return body

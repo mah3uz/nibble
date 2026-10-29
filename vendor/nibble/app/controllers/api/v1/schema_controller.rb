@@ -23,7 +23,7 @@ module Api
       end
 
       def blueprint_props(item, schema)
-        fields = Nibble::Blueprint.new(item, schema:).fields.all.values
+        fields = Nibble::Blueprint.new(item, schema:).fields.all.values.reject(&:display_only?)
         { "handle" => item.handle, "title" => item["title"],
           "fields" => fields.map { |field| { "handle" => field.handle, "type" => field.type, "display" => field.display } } }
       end

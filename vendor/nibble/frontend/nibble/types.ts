@@ -78,7 +78,7 @@ type NibbleFormFieldTypes = {
   }
   range: { min?: number; max?: number; step?: number; prepend?: string; append?: string }
   rating: { max?: number }
-  toggle: { inline_label?: string }
+  toggle: { inline_label?: string; inline_label_html?: string }
   select: {
     placeholder?: string
     options: NibbleFormOption[]
@@ -91,6 +91,7 @@ type NibbleFormFieldTypes = {
   date: { inline?: boolean; time_enabled?: boolean; earliest_date?: string; latest_date?: string }
   files: { max_files?: number; max_file_size?: number; extensions?: string[] }
   calculation: { formula: string; decimals?: number; prepend?: string; append?: string }
+  note: { text_html?: string }
 }
 
 type NibbleFormFieldKey = {

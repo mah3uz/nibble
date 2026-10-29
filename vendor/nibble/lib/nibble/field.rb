@@ -97,12 +97,13 @@ module Nibble
 
     def always_save? = get("always_save", false)
     def localizable? = get("localizable", false)
-    def api? = get("api", true)
+    def display_only? = fieldtype_class.display_only
+    def api? = !display_only? && get("api", true)
     def duplicate? = get("duplicate", true)
     def computed? = visibility == "computed"
 
-    def listable? = get("listable", "hidden") != false
-    def visible_on_listing? = get("listable", "hidden") == true
+    def listable? = !display_only? && get("listable", "hidden") != false
+    def visible_on_listing? = !display_only? && get("listable", "hidden") == true
 
     def sortable?
       return false if computed?

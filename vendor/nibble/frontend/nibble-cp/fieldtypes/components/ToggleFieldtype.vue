@@ -16,6 +16,14 @@ const label = computed(() =>
 <template>
   <div class="flex items-center gap-2">
     <Switch :id="id" :model-value="value === true" :disabled="isReadOnly" @update:model-value="update" />
-    <label v-if="label" :for="id" class="text-sm text-gray-700 dark:text-gray-300">{{ label }}</label>
+    <!-- eslint-disable vue/no-v-html -->
+    <label
+      v-if="config.inline_label_html && !(value && config.inline_label_when_true)"
+      :for="id"
+      class="text-sm text-gray-700 dark:text-gray-300 [&_a]:underline"
+      v-html="config.inline_label_html"
+    />
+    <!-- eslint-enable vue/no-v-html -->
+    <label v-else-if="label" :for="id" class="text-sm text-gray-700 dark:text-gray-300">{{ label }}</label>
   </div>
 </template>

@@ -60,7 +60,7 @@ module Nibble
 
       private
 
-      def fields = @fields ||= form.fields.all.values
+      def fields = @fields ||= form.fields.all.values.reject(&:display_only?)
 
       def columns
         field_columns = fields.each_with_index.map do |field, index|

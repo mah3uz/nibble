@@ -11,6 +11,7 @@ module Nibble
     class_attribute :localizable, instance_writer: false, default: true
     class_attribute :validatable, instance_writer: false, default: true
     class_attribute :defaultable, instance_writer: false, default: true
+    class_attribute :display_only, instance_writer: false, default: false
     class_attribute :relationship, instance_writer: false, default: false
     class_attribute :config_field_items, instance_writer: false, default: {}
     class_attribute :extra_config_field_items, instance_writer: false, default: {}

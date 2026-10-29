@@ -5,7 +5,7 @@ module Nibble
     def submission(form_handle, index, data, plan)
       @form = Nibble::Forms.find(form_handle) or return
       notify = @form.notify[index] or return
-      fields = @form.fields.all.values
+      fields = @form.fields.all.values.reject(&:display_only?)
       fields = fields.select { |field| notify["fields"].include?(field.handle) } if notify["fields"]
       @rows = fields.map { |field| [ field.display(plan.locale), Array(Nibble::Forms.display_value(field, data[field.handle], plan.locale)).join(", ") ] }
       @message = plan.message

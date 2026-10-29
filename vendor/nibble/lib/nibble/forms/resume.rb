@@ -64,7 +64,7 @@ module Nibble
 
       def kept_values
         fields = @form.fields
-        skipped = fields.all.values.select { |field| field.type == "files" || field.type == Calculations::TYPE }.map(&:handle)
+        skipped = fields.all.values.select { |field| field.type == "files" || field.type == Calculations::TYPE || field.display_only? }.map(&:handle)
         @params.slice(*fields.handles).except(*skipped).select { |_, value| plain?(value) }.merge(hidden_values(fields))
       end
 

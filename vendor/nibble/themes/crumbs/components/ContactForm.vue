@@ -205,12 +205,25 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
                 :aria-invalid="invalid(field)"
                 class="mt-1 size-5 shrink-0 accent-accent"
               />
+              <!-- eslint-disable vue/no-v-html -->
               <label :for="contact.inputId(field)">
-                {{ field.inline_label || field.display
-                }}<span v-if="contact.isRequired(field)" class="text-accent" aria-hidden="true"> *</span>
+                <span
+                  v-if="field.inline_label_html"
+                  class="[&_a]:underline"
+                  v-html="field.inline_label_html"
+                /><template v-else>{{ field.inline_label || field.display }}</template
+                ><span v-if="contact.isRequired(field)" class="text-accent" aria-hidden="true"> *</span>
               </label>
+              <!-- eslint-enable vue/no-v-html -->
             </div>
           </div>
+          <!-- eslint-disable vue/no-v-html -->
+          <div
+            v-else-if="field.type === 'note'"
+            class="[&_a]:underline [&_ul]:list-disc [&_ul]:pl-6"
+            v-html="field.text_html"
+          />
+          <!-- eslint-enable vue/no-v-html -->
           <template v-else>
             <label :for="contact.inputId(field)" class="mb-3 block">
               {{ field.display }}<span v-if="contact.isRequired(field)" class="text-accent" aria-hidden="true"> *</span>

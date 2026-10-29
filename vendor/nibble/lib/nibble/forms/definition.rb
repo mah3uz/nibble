@@ -69,9 +69,18 @@ module Nibble
         nil
       end
 
+      def label_markup(config)
+        return unless SafeMarkdown.link?(config["inline_label"])
+
+        config["inline_label_html"] = SafeMarkdown.label_html(config["inline_label"])
+        config["inline_label"] = SafeMarkdown.label_text(config["inline_label"])
+      end
+
       def field_definition(field, params = {}, locale = nil)
         config = field.fieldtype.config.slice(*FIELD_CONFIG).compact
         LOCALIZED_CONFIG.each { |key| config[key] = Localized.resolve(config[key], locale) if config.key?(key) }
+        label_markup(config)
+        config["text_html"] = field.fieldtype.html(locale) if field.display_only?
         config["options"] = field.fieldtype.options(locale) if OPTION_TYPES.include?(field.type)
         config["default"] = public_default(field) if config.key?("default")
         if field.get("hidden") == true

@@ -163,7 +163,7 @@ module Nibble
         return result(:ok) unless @form.store?
 
         fields = @form.fields
-        kept = fields.all.values.reject { |field| %w[files calculation].include?(field.type) }.map(&:handle)
+        kept = fields.all.values.reject { |field| %w[files calculation].include?(field.type) || field.display_only? }.map(&:handle)
         data = @params.slice(*kept).select { |_, value| plain?(value) }
         result(:ok, submission: receive(data, status: "spam"))
       end

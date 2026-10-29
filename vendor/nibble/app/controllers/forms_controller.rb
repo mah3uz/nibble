@@ -73,7 +73,7 @@ class FormsController < ActionController::Base
   def refill(form, values)
     left = REFILL_BYTES
     form.fields.all.values.each_with_object({}) do |field, kept|
-      next if field.type == "files" || field.get("hidden") == true || field.get("input_type") == "password"
+      next if field.type == "files" || field.display_only? || field.get("hidden") == true || field.get("input_type") == "password"
 
       value = values[field.handle]
       next if value.nil?

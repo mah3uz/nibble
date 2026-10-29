@@ -9,6 +9,7 @@ const components = {
   entries: () => import('./components/EntriesFieldtype.vue'),
   grid: () => import('./components/GridFieldtype.vue'),
   integer: () => import('./components/IntegerFieldtype.vue'),
+  note: () => import('./components/NoteFieldtype.vue'),
   link: () => import('./components/LinkFieldtype.vue'),
   list: () => import('./components/ListFieldtype.vue'),
   markdown: () => import('./components/MarkdownFieldtype.vue'),

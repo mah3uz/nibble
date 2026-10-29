@@ -1,6 +1,6 @@
 module Nibble
   module Forms
-    PUBLIC_FIELDTYPES = %w[text textarea integer decimal range rating toggle select radio checkboxes date files calculation].freeze
+    PUBLIC_FIELDTYPES = %w[text textarea integer decimal range rating toggle select radio checkboxes date files calculation note].freeze
     CAPTCHA_PROVIDERS = %w[turnstile recaptcha].freeze
     DELIVERY_MODES = %w[sync async].freeze
     DEFAULT_HONEYPOT = "_nibble_hp".freeze
