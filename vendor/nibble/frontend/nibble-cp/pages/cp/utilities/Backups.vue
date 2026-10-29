@@ -44,11 +44,11 @@ useBreadcrumbs([{ label: 'Utilities', url: '/cp/utilities' }, { label: 'Backups'
           {{
             backups.configured
               ? 'Each nightly backup is also uploaded to S3, so the database survives losing this server.'
-              : 'Backups stay on this server only. Set DB_SNAPSHOT_BUCKET to keep a copy in S3 as well.'
+              : 'Backups stay on this server only. Set DB_SNAPSHOT_BUCKET to keep a copy in S3 as well (see Backups in the docs).'
           }}
         </p>
         <div class="flex flex-wrap gap-2 pt-1">
-          <PanelFact label="S3" :value="backups.configured ? 'Configured' : 'Not configured'" />
+          <PanelFact label="Off-site copy" :value="backups.configured ? 'Configured' : 'Not configured'" />
         </div>
       </CpPanel>
     </div>

@@ -327,7 +327,7 @@ useBreadcrumbs([{ label: 'Connected apps' }])
         <DialogHeader>
           <DialogTitle>Create token for a script</DialogTitle>
           <DialogDescription>
-            For CI and scripts that can't sign in with a browser. It acts as you and is shown once.
+            For automated scripts and build servers that can't sign in with a browser. It acts as you and is shown once.
           </DialogDescription>
         </DialogHeader>
         <form id="app-token-form" class="space-y-4" @submit.prevent="create">

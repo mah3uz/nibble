@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useBreadcrumbs } from '@/lib/breadcrumbs'
 
-type Change = { field: string; before: unknown; after: unknown }
+type Change = { field: string; label?: string; before: unknown; after: unknown }
 
 const props = defineProps<{
   id: string
@@ -36,7 +36,22 @@ const STATUS: Record<string, string> = {
   expired: 'Expired',
 }
 const upload = computed(() => (typeof props.input.upload === 'string' ? props.input.upload : null))
-const details = computed(() => Object.fromEntries(Object.entries(props.input).filter(([key]) => key !== 'upload')))
+const HIDDEN = ['upload', 'id', 'lock_version', 'idempotency_key', 'dry_run']
+const KEY_LABELS: Record<string, string> = {
+  title: 'Title',
+  status: 'Status',
+  url: 'Address',
+  collection: 'Collection',
+  taxonomy: 'Taxonomy',
+  handle: 'Name',
+  filename: 'File name',
+  action: 'Action',
+  locale: 'Language',
+}
+const keyLabel = (key: string) => KEY_LABELS[key] ?? key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')
+const details = computed(() =>
+  Object.fromEntries(Object.entries(props.input).filter(([key]) => !HIDDEN.includes(key))),
+)
 const previewFailed = ref(false)
 const outcome = computed(() => {
   const result = props.result
@@ -106,7 +121,7 @@ useBreadcrumbs([{ label: 'Connected apps', url: '/cp/account/apps' }, { label: '
     <CpPanel title="What happens" :description="operation.description ?? undefined">
       <dl class="grid gap-2 rounded-xl bg-white p-5 text-sm shadow-ui-sm sm:grid-cols-[10rem_1fr] dark:bg-gray-900">
         <template v-for="(value, key) in summary" :key="key">
-          <dt class="text-gray-600 dark:text-gray-400">{{ key }}</dt>
+          <dt class="text-gray-600 dark:text-gray-400">{{ keyLabel(String(key)) }}</dt>
           <dd class="break-all">
             <a v-if="key === 'url' && value" :href="value" target="_blank" rel="noopener" class="underline">{{
               value
@@ -115,7 +130,7 @@ useBreadcrumbs([{ label: 'Connected apps', url: '/cp/account/apps' }, { label: '
           </dd>
         </template>
         <template v-if="upload">
-          <dt class="text-gray-600 dark:text-gray-400">file</dt>
+          <dt class="text-gray-600 dark:text-gray-400">File</dt>
           <dd>
             <img
               v-if="!previewFailed"
@@ -128,7 +143,7 @@ useBreadcrumbs([{ label: 'Connected apps', url: '/cp/account/apps' }, { label: '
           </dd>
         </template>
         <template v-for="(value, key) in details" :key="key">
-          <dt class="text-gray-600 dark:text-gray-400">{{ key }}</dt>
+          <dt class="text-gray-600 dark:text-gray-400">{{ keyLabel(String(key)) }}</dt>
           <dd class="break-all">{{ show(value) }}</dd>
         </template>
       </dl>
@@ -137,7 +152,7 @@ useBreadcrumbs([{ label: 'Connected apps', url: '/cp/account/apps' }, { label: '
     <CpPanel v-if="changes.length" title="What changes">
       <div class="space-y-3 rounded-xl bg-white p-5 shadow-ui-sm dark:bg-gray-900">
         <div v-for="change in changes" :key="change.field" class="grid gap-2 text-sm sm:grid-cols-[10rem_1fr_1fr]">
-          <p class="font-medium">{{ change.field }}</p>
+          <p class="font-medium">{{ change.label ?? change.field }}</p>
           <pre class="overflow-x-auto rounded-lg bg-red-50 p-2 text-xs whitespace-pre-wrap dark:bg-red-500/10">{{
             show(change.before)
           }}</pre>

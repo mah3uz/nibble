@@ -292,5 +292,6 @@ class Nibble::Cp::ApprovalsControllerTest < ActionDispatch::IntegrationTest
     props = JSON.parse(Nokogiri::HTML(response.body).at_css("script[data-page]").text)["props"]
     assert_equal [ "evil.example" ], props["other_sites"]
     assert_equal "tree", props["changes"].first["field"]
+    assert_equal "Menu links", props["changes"].first["label"]
   end
 end

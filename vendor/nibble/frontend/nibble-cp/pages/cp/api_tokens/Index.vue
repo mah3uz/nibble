@@ -121,7 +121,7 @@ useBreadcrumbs([{ label: 'API tokens' }])
           <tr>
             <th>Name</th>
             <th>Token</th>
-            <th>Scopes</th>
+            <th>Access</th>
             <th>Expires</th>
             <th>Last used</th>
             <th class="w-24"></th>
@@ -163,7 +163,7 @@ useBreadcrumbs([{ label: 'API tokens' }])
             <p v-if="form.errors.name" class="text-sm text-red-600">{{ form.errors.name }}</p>
           </div>
           <fieldset class="space-y-2">
-            <legend class="text-sm font-medium">Scopes</legend>
+            <legend class="text-sm font-medium">Access</legend>
             <label v-for="scope in scopes" :key="scope.value" class="flex items-center gap-2.5 text-sm">
               <Checkbox
                 :model-value="form.scopes.includes(scope.value)"

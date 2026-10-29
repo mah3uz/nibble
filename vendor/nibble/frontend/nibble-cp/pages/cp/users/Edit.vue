@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useConfirm } from '@/lib/confirm'
+import { deviceName } from '@/lib/device'
 
 type RoleOption = { id: number; title: string; superuser: boolean }
 type SessionRow = {
@@ -57,9 +58,9 @@ async function destroy() {
 
 async function revoke(session: SessionRow) {
   const ok = await confirm({
-    title: 'Revoke this session?',
+    title: 'Sign this device out?',
     description: 'That browser is signed out immediately.',
-    confirmText: 'Revoke',
+    confirmText: 'Sign out',
     dangerous: true,
   })
   if (ok) router.delete(`/cp/users/${props.user.id}/sessions/${session.id}`)
@@ -130,23 +131,23 @@ async function revoke(session: SessionRow) {
     </form>
 
     <div class="rounded-2xl bg-gray-150 p-1.75 dark:bg-gray-950/35">
-      <p class="px-3 pt-1.5 pb-2.5 text-sm font-medium text-gray-700 dark:text-gray-300">Sessions</p>
+      <p class="px-3 pt-1.5 pb-2.5 text-sm font-medium text-gray-700 dark:text-gray-300">Signed-in devices</p>
       <div class="rounded-xl bg-white px-4 py-2 shadow-ui-md ring ring-gray-200 dark:bg-gray-850 dark:ring-gray-700/80">
         <ul v-if="sessions.length" class="divide-y divide-gray-200 dark:divide-gray-700/80">
           <li v-for="session in sessions" :key="session.id" class="flex items-center justify-between gap-3 py-3">
             <div class="min-w-0">
               <p class="truncate text-sm font-medium">
-                {{ session.user_agent || 'Unknown device' }}
+                {{ deviceName(session.user_agent) }}
                 <span v-if="session.current" class="text-gray-500">(this session)</span>
               </p>
               <p class="text-xs text-gray-500">
-                {{ session.ip_address || 'Unknown IP' }} · Signed in {{ date(session.created_at) }}
+                {{ session.ip_address || 'Unknown location' }} · Signed in {{ date(session.created_at) }}
               </p>
             </div>
-            <Button variant="outline" size="sm" @click="revoke(session)">Revoke</Button>
+            <Button variant="outline" size="sm" @click="revoke(session)">Sign out</Button>
           </li>
         </ul>
-        <p v-else class="py-3 text-sm text-gray-500">No active sessions.</p>
+        <p v-else class="py-3 text-sm text-gray-500">No signed-in devices.</p>
       </div>
     </div>
   </div>

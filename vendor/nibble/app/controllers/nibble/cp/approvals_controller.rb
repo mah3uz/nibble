@@ -77,11 +77,25 @@ module Nibble
       def changes
         after = @approval.preview["data"] || (@approval.preview.key?("tree") ? { "tree" => @approval.preview["tree"] } : {})
         before = current.to_h
+        labels = field_labels
         (after.keys | before.keys).filter_map do |key|
           next if before[key] == after[key]
 
-          { field: key, before: before[key], after: after[key] }
+          { field: key, label: labels[key] || key.to_s.humanize, before: before[key], after: after[key] }
         end
+      end
+
+      def field_labels
+        input = @approval.input
+        record = case @approval.operation
+        when "transition_entry", "update_entry" then Nibble::Records::Entry.find_by(id: input["id"])
+        when "update_term", "transition_term" then Nibble::Records::Term.find_by(id: input["id"])
+        when "update_global" then Nibble::Records::GlobalSet.find_by(handle: input["handle"])
+        when "update_navigation" then return { "tree" => "Menu links" }
+        end
+        return {} unless record.respond_to?(:blueprint_fields)
+
+        record.blueprint_fields.all.transform_values(&:display)
       end
 
       def current

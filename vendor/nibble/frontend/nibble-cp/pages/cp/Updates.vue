@@ -170,7 +170,7 @@ function copy(release: Release) {
         <DialogHeader>
           <DialogTitle>Update to {{ asking?.version }}</DialogTitle>
           <DialogDescription>
-            Run this on your own machine, not on the server. It stops if anything is uncommitted.
+            Run this on your own machine, not on the server. It stops if there are changes not yet saved in git.
           </DialogDescription>
         </DialogHeader>
         <button
