@@ -9,6 +9,7 @@ class Nibble::ValidatorTest < ActiveSupport::TestCase
   teardown do
     unregister_fake_fieldtypes
     Nibble::Validation.reset!
+    Nibble.boot!
   end
 
   def fields(*definitions) = Nibble::Fields.new(definitions, source: "test")
