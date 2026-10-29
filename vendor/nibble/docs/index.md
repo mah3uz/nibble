@@ -75,7 +75,7 @@ Pick the route that matches your job. Each is a short list, in reading order.
   [Modelling content](modelling/index.md).
 - **I build the theme.** [Building a theme](theming/index.md), then [Views and layouts](theming/views.md),
   [Content in views](theming/content-in-views.md), [Queries](theming/queries.md) and
-  [Forms in your theme](theming/forms.md).
+  [Forms in your theme](theming/forms-in-your-theme.md).
 
 ## Getting started
 
@@ -106,7 +106,7 @@ Pick the route that matches your job. Each is a short list, in reading order.
 - [Content in views](theming/content-in-views.md) — what a page receives, and what each field looks like.
 - [Queries](theming/queries.md) — asking for the content a page needs.
 - [Theme components](theming/components.md) — rich text, images, blocks, pagination, SEO and menus.
-- [Forms in your theme](theming/forms.md) — drawing a form and every field.
+- [Forms in your theme](theming/forms-in-your-theme.md) — drawing a form and every field.
 - [Styling and the page shell](theming/styling-and-shell.md) — `theme.css`, Tailwind, dark mode, links and head tags.
 - [SEO, sitemaps and feeds](theming/seo-and-feeds.md) — what search engines and feed readers receive.
 

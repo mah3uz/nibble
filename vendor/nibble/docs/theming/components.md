@@ -125,7 +125,7 @@ default slot for your own markup; see [Styling and the page shell](styling-and-s
 ## 6. Forms
 
 A form's definition comes from the view's sidecar (`from: form:demo`), and `useNibbleForm` does the rest. [Forms in your
-theme](forms.md) walks through drawing every field and lists everything the composable returns.
+theme](forms-in-your-theme.md) walks through drawing every field and lists everything the composable returns.
 
 ## 7. Shared props
 

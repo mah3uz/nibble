@@ -27,7 +27,7 @@ After reading this guide, you will know:
 | know what is in `page`, or what a field's value looks like | [Content in views](content-in-views.md) |
 | choose which view renders a URL, or wrap pages in a layout | [Views and layouts](views.md) |
 | draw rich text, an image, a block or a menu | [Theme components](components.md) |
-| draw a form, or handle its errors and steps | [Forms](forms.md) |
+| draw a form, or handle its errors and steps | [Forms](forms-in-your-theme.md) |
 | style the site, support dark mode, add a font | [Styling and the page shell](styling-and-shell.md) |
 | link between pages, add a tag to `<head>`, or run code only in the browser | [Styling and the page shell](styling-and-shell.md#4-links) |
 | highlight code | [Styling and the page shell](styling-and-shell.md#6-highlighting-code) |
@@ -234,7 +234,7 @@ it, so a conflict there is harmless.
 | [Content in views](content-in-views.md) | the props a view receives, a record's shape, fieldtype values, generated types |
 | [Queries](queries.md) | the sidecar that fetches what a page needs |
 | [Theme components](components.md) | rich text, images, blocks, pagination, SEO and menus |
-| [Forms in your theme](forms.md) | drawing a form and every field, and everything `useNibbleForm` returns |
+| [Forms in your theme](forms-in-your-theme.md) | drawing a form and every field, and everything `useNibbleForm` returns |
 | [Styling and the page shell](styling-and-shell.md) | `theme.css`, Tailwind, dark mode, links, head tags, server rendering, code highlighting |
 | [SEO, sitemaps and feeds](seo-and-feeds.md) | what search engines and feed readers receive |
 

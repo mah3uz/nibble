@@ -85,7 +85,7 @@ Each section is written for a different kind of work. You do not have to read th
 | administer the site without a terminal | [Administering from the Control Plane](../running/administering.md), [Users and roles](../running/users-and-roles.md) |
 | run the server | [Installing Nibble](installing.md), [Configuration](../running/configuration.md), [Deploying](../running/deploying.md), [Backups](../running/backups.md), [Upgrading](../running/upgrading.md) |
 | build the site | [Getting Started with Nibble](tutorial.md), [Modelling content](../modelling/index.md) |
-| build the theme | [Building a theme](../theming/index.md), [Views and layouts](../theming/views.md), [Content in views](../theming/content-in-views.md), [Queries](../theming/queries.md), [Forms in your theme](../theming/forms.md) |
+| build the theme | [Building a theme](../theming/index.md), [Views and layouts](../theming/views.md), [Content in views](../theming/content-in-views.md), [Queries](../theming/queries.md), [Forms in your theme](../theming/forms-in-your-theme.md) |
 | add behaviour Nibble lacks | [Extending Nibble](../extending/index.md) |
 | work on Nibble itself | [Contributing to Nibble](../contributing/index.md) |
 

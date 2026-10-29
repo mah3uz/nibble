@@ -474,7 +474,7 @@ defineProps<{ page: { title: string }; form: NibbleForm }>()
 ```
 
 `ContactForm` came with the theme you copied. It draws every public field type, handles steps and errors, and shows
-the success message, so it serves any form as it is; [Forms in your theme](../theming/forms.md) explains how it is
+the success message, so it serves any form as it is; [Forms in your theme](../theming/forms-in-your-theme.md) explains how it is
 built, for when you want your own markup. Its button says "Send message" — change that in `site/themes/tidewater/components/ContactForm.vue` if you like.
 
 Restart `bin/dev` for the new view, then create a page titled **Book a demo** with the slug `demo`, set its

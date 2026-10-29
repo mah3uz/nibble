@@ -48,7 +48,7 @@ Which view renders a request: the entry's own template, then its blueprint's, th
    `<Blocks :blocks="page.blocks" />` — all from `@nibble`.
 8. **Forms** come from a `form:<handle>` sidecar prop and are drawn with `useNibbleForm(props.form)`, which posts
    them, applies conditions and steps, and gives each input its ids, errors and ARIA wiring. Start from crumbs'
-   `components/ContactForm.vue`; keep its honeypot input. `theming/forms.md` has every key and member.
+   `components/ContactForm.vue`; keep its honeypot input. `theming/forms-in-your-theme.md` has every key and member.
 
 ## A sidecar
 
@@ -75,4 +75,4 @@ Sources: `entries:<collection>`, `terms:<taxonomy>`, `search:<index>`, `form:<ha
 
 `search_docs` answers anything else from the docs for the installed version; the theming guides are
 `theming/views.md`, `theming/content-in-views.md` (what each prop and field value looks like), `theming/queries.md`,
-`theming/components.md`, `theming/forms.md` and `theming/styling-and-shell.md`.
+`theming/components.md`, `theming/forms-in-your-theme.md` and `theming/styling-and-shell.md`.

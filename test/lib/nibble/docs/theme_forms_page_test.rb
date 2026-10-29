@@ -1,7 +1,7 @@
 require "test_helper"
 
 class ThemeFormsPageTest < ActiveSupport::TestCase
-  PAGE = Nibble::Engine.root.join("docs/theming/forms.md").read
+  PAGE = Nibble::Engine.root.join("docs/theming/forms-in-your-theme.md").read
   HOOK = Nibble::Engine.root.join("frontend/nibble/useNibbleForm.ts").read
 
   CONFIG = {

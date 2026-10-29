@@ -169,7 +169,7 @@ Import from `@site/types`.
 | `ViewProps['posts/index']` | the props one view's sidecar produces, keyed by view name |
 | `ViewProps['sets/pricing']` | the same for a set's sidecar, as its `queries` prop |
 | `SiteGlobals`, `<Handle>Globals` | a global's fields |
-| `FormValues['demo']`, `DemoFormValues` | the values a form collects; see [Forms](forms.md) |
+| `FormValues['demo']`, `DemoFormValues` | the values a form collects; see [Forms](forms-in-your-theme.md) |
 
 ```vue
 <script setup lang="ts">
@@ -182,7 +182,7 @@ defineProps<ViewProps['posts/show'] & { page: PostsPost }>()
 `@nibble` exports a few types of its own for the shared props: `SiteProps`, `Link` (a menu item), `RecordSummary`,
 `SetBlock`, `RichTextValue`, `ImageValue`, `PaginationMeta`, `SeoProps`, and the form types `NibbleForm`,
 `NibbleFormField`, `NibbleFormFieldType`, `NibbleFormValue`, `NibbleFormSection`, `NibbleFormResult`,
-`NibbleFormMessageKey`, `NibbleFormConditions` and `NibbleFormConditionOperator`, which [Forms](forms.md) explains. Where `@site/types`
+`NibbleFormMessageKey`, `NibbleFormConditions` and `NibbleFormConditionOperator`, which [Forms](forms-in-your-theme.md) explains. Where `@site/types`
 has the same idea, such as `EntrySummary` for `RecordSummary` or `AssetValue` for `ImageValue`, use `@site/types`: it is
 the one generated from your schema. `Link` as a type is a menu item; it is unrelated to Inertia's `Link` component, so
 import the component under that name and rename the type if you need both.
