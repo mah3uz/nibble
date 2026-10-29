@@ -46,6 +46,9 @@ Which view renders a request: the entry's own template, then its blueprint's, th
    `onMounted`. Server rendering drops the subtree that fails and the page hydrates with mismatches.
 7. **Rich text** is `<RichText :value="page.body" />`; images `<Image :image="…" sizes="…" />`; blocks
    `<Blocks :blocks="page.blocks" />` — all from `@nibble`.
+8. **Forms** come from a `form:<handle>` sidecar prop and are drawn with `useNibbleForm(props.form)`, which posts
+   them, applies conditions and steps, and gives each input its ids, errors and ARIA wiring. Start from crumbs'
+   `components/ContactForm.vue`; keep its honeypot input. `theming/forms.md` has every key and member.
 
 ## A sidecar
 
@@ -67,7 +70,9 @@ Sources: `entries:<collection>`, `terms:<taxonomy>`, `search:<index>`, `form:<ha
 2. `render` a path that uses it: read `view` and `layout` (the files that answered), `props`, and `error`.
 3. `run_query_sidecar` when only the data is in question.
 4. `logs` with `kind: ssr` or `browser` if the page renders but misbehaves; `last_error` for the latest failure.
-5. `lint` with `tool: types`, then `tool: js`, then `run_tests`.
+5. `lint` with `tool: types`, then `tool: js`, then `run_tests`. Types cover the theme only when
+   `tsconfig.app.json` includes `site/themes/<name>` (`nibble:generate:theme` writes it).
 
 `search_docs` answers anything else from the docs for the installed version; the theming guides are
-`theming/views.md`, `theming/queries.md` and `theming/components.md`.
+`theming/views.md`, `theming/content-in-views.md` (what each prop and field value looks like), `theming/queries.md`,
+`theming/components.md`, `theming/forms.md` and `theming/styling-and-shell.md`.

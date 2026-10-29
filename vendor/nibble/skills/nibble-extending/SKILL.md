@@ -22,7 +22,8 @@ whole; an upgrade refuses to run while one of those files has been changed in pl
 | a record's behaviour | a load hook: `ActiveSupport.on_load(:nibble_entry) { … }` (`:nibble_term`, `:nibble_asset`) |
 | reacting to content changes | `Nibble::Events.subscribe("record.published", async: true) { … }` in an initializer |
 | a form that runs Ruby | `Nibble::Forms.register_handler` |
-| telling another system | a webhook, set up in the Control Plane |
+| a field's computed default | `Nibble::Defaults.register("name") { … }` in an initializer; `default: computed:name` |
+| telling another system | a webhook, set up in the Control Plane (`running/webhooks.md`) |
 | gems | the site's `Gemfile`, below `eval_gemfile "vendor/nibble/Gemfile"` |
 
 Don't reopen Nibble's classes (`class Nibble::Records::Entry` in your file); load hooks exist so that doesn't break
@@ -32,7 +33,8 @@ on the next release. `check` reports Nibble files changed in place.
 
 Every change goes through `Nibble::Lifecycle.call(record, action, attrs, actor:)`. `actor:` is required: the user
 making the change, or `Nibble::Principal.system` for the site's own jobs and scripts. It checks that actor's
-permissions, keeps revisions, and publishes events. Never write content rows directly.
+permissions, keeps revisions, and publishes events. Never write content rows directly. Read-only fields keep their
+stored value for every actor except `Nibble::Principal.system`.
 
 ## Code of the site's own
 
@@ -40,5 +42,5 @@ permissions, keeps revisions, and publishes events. Never write content rows dir
 - Tests in `test/`, Minitest: `run_tests` returns failures as data. Name a test for the rule it protects.
 - `lint` with `ruby` before finishing.
 
-Guides: `extending/hooks.md`, `extending/control-plane.md`, `extending/management-api.md` — `read_doc` or
-`search_docs`.
+Guides: `extending/hooks.md`, `extending/control-plane.md`, `extending/management-api.md`,
+`extending/content-api.md`, `running/webhooks.md` — `read_doc` or `search_docs`.

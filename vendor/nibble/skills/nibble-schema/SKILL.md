@@ -25,8 +25,14 @@ is validated against a blueprint built from the schema.
 | global set, navigation, form | `site/schema/globals/`, `navigation/`, `forms/` |
 | fieldset (fields written once) | `site/schema/fieldsets/<handle>.yml` |
 
-Fieldtypes: `text`, `textarea`, `markdown`, `rich_text`, `slug`, `integer`, `toggle`, `date`, `link`, `select`,
-`radio`, `checkboxes`, `list`, `entries`, `terms`, `assets`, `files`, `grid`, `replicator`, `seo`, `secret`.
+Fieldtypes: `text`, `textarea`, `markdown`, `rich_text`, `code`, `slug`, `integer`, `decimal`, `range`, `rating`,
+`toggle`, `date`, `time`, `color`, `link`, `select`, `radio`, `button_group`, `checkboxes`, `list`, `entries`,
+`terms`, `assets`, `files`, `grid`, `replicator`, `seo`, `secret`, `note`, and on forms only `calculation`. Every
+option of each, and the options every field takes, are in `reference/fieldtypes.md`.
+
+A field's `required` and `read_only` take `true` or a condition (`required: { if: { contact_by: phone } }`), written
+as in `reference/conditions.md`. A read-only field keeps its stored value whenever a person or an app saves; only
+imports, content migrations and `Nibble::Principal.system` write it.
 
 ## The rule of thumb
 
@@ -35,7 +41,7 @@ Fieldtypes: `text`, `textarea`, `markdown`, `rich_text`, `slug`, `integer`, `tog
 | Change | Do |
 |---|---|
 | add a field, blueprint or collection | just add it |
-| rename a field or collection | a content migration (`rename_field`, `rename_collection`) in `site/schema/migrations/` |
+| rename, move or drop a field, or rename a collection | a content migration (`rename_field`, `move_field`, `remove_field`, `set_default`, `rename_collection`; `global:` for global sets) in `site/schema/migrations/` |
 | change a field's type | check stored values fit first; migrate if not |
 | remove a field, set or collection | migrate the values away, or decide to lose them — never silently |
 
@@ -48,5 +54,6 @@ for when a person has decided the data should go; don't reach for it yourself.
 2. `bin/rails nibble:schema:types` (a running dev server does this) so the theme's types match.
 3. `render` a page that uses the change, and `run_tests`.
 
-Guides: `modelling/collections.md`, `modelling/blueprints.md`, `modelling/changing-schema.md` — `read_doc` or
-`search_docs`.
+Guides: `modelling/collections.md`, `modelling/blueprints.md`, `modelling/changing-schema.md`, `modelling/forms.md`
+(and `modelling/form-keys.md` for every form key), `reference/fieldtypes.md`, `reference/validation.md`,
+`reference/conditions.md`, `running/check-messages.md` — `read_doc` or `search_docs`.
