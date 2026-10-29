@@ -54,7 +54,10 @@ module Nibble
         when "integer" then integer(field, schema)
         when "date"
           time = field.get("time_enabled") == true
-          schema.merge("format" => time ? "date-time" : "date", "description" => time ? "ISO 8601 date-time" : "ISO 8601 date")
+          zone = field.fieldtype.time_zone
+          description = time ? "ISO 8601 date-time" : "ISO 8601 date"
+          description += ". A time without an offset is read in #{zone}, and stored with #{zone}'s offset" if zone
+          schema.merge("format" => time ? "date-time" : "date", "description" => description)
         else schema
         end
       end

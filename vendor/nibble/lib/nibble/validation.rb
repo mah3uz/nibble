@@ -49,6 +49,7 @@ module Nibble
       "after_or_equal" => "The %{attribute} field must be a date after or equal to %{date}.",
       "before" => "The %{attribute} field must be a date before %{date}.",
       "before_or_equal" => "The %{attribute} field must be a date before or equal to %{date}.",
+      "local_time" => "The %{attribute} field is a time the clocks skip in %{zone}. Choose a time outside the hour they go forward.",
       "time" => "The %{attribute} field must be a time of day on the 24-hour clock, such as 14:30.",
       "earliest_time" => "The %{attribute} field must be %{time} or later.",
       "latest_time" => "The %{attribute} field must be %{time} or earlier.",

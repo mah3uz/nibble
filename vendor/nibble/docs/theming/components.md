@@ -215,7 +215,8 @@ Each field carries its settings, such as `placeholder`, `options`, and `prepend`
 input, and an `integer` field's `min`, `max` and `step`. A `decimal` field carries `decimals` (0 to 10, default 2), `min`, `max`, `step`
 and `placeholder`; a `range` field carries `min` (default 0), `max` (default 100), `step` (default 1), and its `default`
 starts the slider; a `rating` field carries `max` (2 to 10, default 5), and its values are 1 to `max`. Text fields carry `autocomplete`, textareas `rows`, toggles `inline_label` (plain text) and, when the label has links, `inline_label_html`,
-dates `time_enabled`, `earliest_date` and `latest_date`, times `seconds`, `earliest` and `latest` (as `"09:00"`),
+dates `time_enabled`, `earliest_date`, `latest_date` and `time_zone` (the IANA name to show beside the input; the
+server reads the time posted in it, and a page receives a stored value in it, with its offset), times `seconds`, `earliest` and `latest` (as `"09:00"`),
 colours `swatches` (lowercase `#rrggbb`) and `allow_any`, button groups `options`, and selects `max_items` and
 `clearable`; `default` is already
 resolved, so a computed default is a date, not a name. A field with a condition carries `conditions`, the rules for

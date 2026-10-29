@@ -93,7 +93,8 @@ anything else:
 ```
 
 A field's other settings reach the theme too: a `text` field's `autocomplete`, a `textarea`'s `rows`, a `toggle`'s
-`inline_label` (the text beside a consent box), a `date`'s `time_enabled`, `earliest_date` and `latest_date`, a
+`inline_label` (the text beside a consent box), a `date`'s `time_enabled`, `earliest_date`, `latest_date` and `time_zone` (resolved, so `site` arrives as the
+site's zone name; a visitor's local time is read in it), a
 `time`'s `seconds`, `earliest` and `latest`, a `color`'s `swatches` and `allow_any`, and a
 `select`'s `max_items` and `clearable`. A `button_group` carries its `options` as a `radio` does, and a
 [calculation](#11-calculations) may name one whose options are all numbers. A field's `default` arrives resolved, so `default: computed:today` is today's

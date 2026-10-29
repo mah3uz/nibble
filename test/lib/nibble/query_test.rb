@@ -32,6 +32,15 @@ class Nibble::QueryTest < ActiveSupport::TestCase
       titles({ from: "entries:posts", sort: "excerpt:desc" })
   end
 
+  test "a zoned date-time beside older UTC values sorts by instant, even in the hour the clocks repeat" do
+    sydney = Nibble::Field.new("starts", { "type" => "date", "time_enabled" => true, "time_zone" => "Australia/Sydney" }).fieldtype
+    values = [ "2026-04-04T15:45:00Z", sydney.process("2026-04-05T02:30"), sydney.process("2026-04-05T02:15"), sydney.process("2026-04-05T02:10:00+10:00") ]
+    values.each_with_index { |value, index| @posts[index].update_columns(data: @posts[index].data.merge("excerpt" => value)) }
+
+    assert_equal [ 2, 1, 0, 3 ].map { |index| @posts[index].title }, titles({ from: "entries:posts", sort: "excerpt:asc" }),
+      "02:15 and 02:30 before the change, 02:45 stored earlier, then 02:10 after the clocks go back"
+  end
+
   test "variables read from the current entry, term and declared params" do
     grids = @posts[1]
     spec = { from: "entries:posts", where: { topics: "$entry.topics" }, not: { id: "$entry.id" }, sort: "title:asc" }

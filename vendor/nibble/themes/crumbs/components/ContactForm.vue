@@ -257,7 +257,10 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
           <!-- eslint-enable vue/no-v-html -->
           <template v-else>
             <label :for="contact.inputId(field)" class="mb-3 block">
-              {{ field.display }}<span v-if="contact.isRequired(field)" class="text-accent" aria-hidden="true"> *</span>
+              {{ field.display }}<span v-if="contact.isRequired(field)" class="text-accent" aria-hidden="true"> *</span
+              ><span v-if="field.time_zone" class="text-sm text-gray-600 dark:text-gray-300">
+                ({{ field.time_zone }})</span
+              >
             </label>
             <textarea
               v-if="field.type === 'textarea'"

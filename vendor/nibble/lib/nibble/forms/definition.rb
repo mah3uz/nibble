@@ -82,6 +82,7 @@ module Nibble
         label_markup(config)
         config["text_html"] = field.fieldtype.html(locale) if field.display_only?
         config["options"] = field.fieldtype.options(locale) if OPTION_TYPES.include?(field.type)
+        config["time_zone"] = field.fieldtype.time_zone if field.type == "date" && field.fieldtype.time_zone
         config["default"] = public_default(field) if config.key?("default")
         if field.get("hidden") == true
           config["hidden"] = true

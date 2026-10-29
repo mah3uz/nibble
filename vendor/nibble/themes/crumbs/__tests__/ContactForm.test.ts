@@ -174,6 +174,7 @@ describe('crumbs ContactForm', () => {
 
     expect(tag(html, 'visit-day')).toMatch(/type="date"(?=[^>]*min="2026-11-01")(?=[^>]*max="2026-12-31")/)
     expect(tag(html, 'visit-arrival')).toMatch(/type="datetime-local"[^>]*min="2026-11-01T00:00"/)
+    expect(html).not.toMatch(/arrival[^<]*<span[^>]*> \(/)
     expect(tag(html, 'visit-files')).toMatch(/type="file"(?=[^>]*accept=".pdf,.jpg")(?=[^>]*multiple)/)
     expect(tag(html, 'visit-files-help')).toBeTruthy()
     expect(html).toContain('PDF or JPG, up to 5 MB each, at most 3 files.')
@@ -203,6 +204,16 @@ describe('crumbs ContactForm', () => {
     expect(html).toContain('<p>Replies take a day.</p>')
     expect(html).not.toContain('name="notice"')
     expect(html).not.toContain('for="visit-notice"')
+  })
+
+  it("names a date-time's zone in its label, so a visitor knows whose clock they are typing in", async () => {
+    const html = await render(
+      form({ fields: [field('starts', { type: 'date', time_enabled: true, time_zone: 'Australia/Sydney' })] }),
+    )
+
+    expect(html).toMatch(
+      /<label for="visit-starts"[^>]*>\s*starts(<!--[^>]*-->)*<span[^>]*> \(Australia\/Sydney\)<\/span>/,
+    )
   })
 
   it('draws a button group, and a colour limited to swatches, as radios a keyboard and a screen reader use as radios', async () => {

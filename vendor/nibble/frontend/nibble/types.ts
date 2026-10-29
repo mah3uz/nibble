@@ -88,7 +88,7 @@ type NibbleFormFieldTypes = {
   }
   radio: { options: NibbleFormOption[]; inline?: boolean }
   checkboxes: { options: NibbleFormOption[]; inline?: boolean }
-  date: { inline?: boolean; time_enabled?: boolean; earliest_date?: string; latest_date?: string }
+  date: { inline?: boolean; time_enabled?: boolean; earliest_date?: string; latest_date?: string; time_zone?: string }
   files: { max_files?: number; max_file_size?: number; extensions?: string[] }
   calculation: { formula: string; decimals?: number; prepend?: string; append?: string }
   note: { text_html?: string }

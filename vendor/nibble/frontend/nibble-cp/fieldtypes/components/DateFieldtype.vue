@@ -17,10 +17,14 @@ defineExpose(expose)
 const calendarOpen = ref(false)
 const timeEnabled = computed(() => props.config.time_enabled === true)
 const timezone = computed(() => (props.meta.timezone as string) || Intl.DateTimeFormat().resolvedOptions().timeZone)
+const zoned = computed(() => timeEnabled.value && props.meta.zoned === true)
 const raw = computed(() => (typeof props.value === 'string' && props.value !== 'now' ? props.value : null))
+const LOCAL = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(:\d{2})?$/
 
 const parts = computed(() => {
   if (!raw.value) return { dateIso: null as string | null, time: '' }
+  const local = zoned.value ? LOCAL.exec(raw.value) : null
+  if (local) return { dateIso: local[1]!, time: local[2]! }
   return timeEnabled.value ? fromIso(raw.value, timezone.value) : { dateIso: raw.value.slice(0, 10), time: '' }
 })
 const fieldValue = computed(() => {
@@ -33,6 +37,7 @@ const calendarValue = computed(() => (parts.value.dateIso ? parseDate(parts.valu
 const pad = (n: number) => String(n).padStart(2, '0')
 
 function emitDate(dateIso: string, time = parts.value.time) {
+  if (zoned.value) return update(`${dateIso}T${time || '00:00'}:00`)
   update(timeEnabled.value ? toIsoWithOffset(dateIso, time || '00:00', timezone.value) : dateIso)
 }
 
@@ -76,6 +81,7 @@ function onFieldChange(next: DateValue | undefined) {
             >
           </template>
         </div>
+        <span v-if="zoned" class="ms-2 shrink-0 text-sm text-gray-500 dark:text-gray-400">{{ timezone }}</span>
         <Button
           v-if="value && !isReadOnly"
           type="button"

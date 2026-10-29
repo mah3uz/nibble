@@ -221,6 +221,17 @@ Arrow keys move between the stars, and each star is named for a screen reader, s
 manage themselves, use a taxonomy with a `terms` field, or an `entries` field with `mode: select`, instead of
 options.
 
+**`date`** with `time_enabled: true` takes a `time_zone`: an IANA name such as `Europe/London`, or `site` for the
+zone the site is set to (`config.time_zone` in `config/application.rb`). The person then types a time on that zone's
+clock, read with the offset that zone has on that date (`+10:00` in Sydney's winter, `+11:00` in its summer), and
+stored in UTC like any date-time, so a field sorts by the moment whatever zone it has. A page receives it in the zone,
+with that offset (`2026-07-15T09:00:00+10:00`), and the Control Plane shows and edits it on the zone's clock, naming
+the zone beside the input. A time the clocks
+skip when they go forward, such as 02:30 on the night summer time starts, is refused with a message saying so. A time
+they repeat when they go back is the first of the two, before the change. `earliest_date` and `latest_date` are
+midnight in that zone. Without `time_zone`, a date-time is stored in UTC and shown in the site's zone. Adding a zone
+to a field that already has values keeps them unchanged: each is the same moment, shown in the new zone. `nibble:check` refuses a zone it doesn't know.
+
 **`button_group`** is a `radio` drawn as a row of joined buttons, for a few short choices such as sizes. It takes the
 same `options` and `cast_booleans`, stores the same value and reaches a page the same way, so a field can switch
 between the two without touching its content. The arrow keys move between its buttons as they move between radios.
@@ -244,6 +255,10 @@ anything else (`#fff`, `red`, a colour with transparency) is refused. Its option
 | `swatches` | a list of colours offered as buttons, each written as `#rrggbb` |
 | `allow_any` | `true` (the default) also offers a colour picker and a box for the hex value; `false` accepts only a swatch |
 | `default` | the colour a new entry starts with; with `allow_any: false` it must be one of the swatches |
+
+On a public form, a browser's colour input always holds a colour, so an optional `color` field drawn as one and
+posted without JavaScript arrives as `#000000` when the visitor didn't pick. With JavaScript, `useNibbleForm` posts
+nothing until they do. Swatch radios (`allow_any: false`) post nothing either way.
 
 **`link`** accepts a URL or a link to an entry, and follows the entry if it moves.
 
