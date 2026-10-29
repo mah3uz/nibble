@@ -22,6 +22,12 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
   **Make changes without asking**, which needs your password. Under **Users → Agent access**, **Approvals** decides
   whether people may choose: **Each person chooses** or **Always ask**. An app signed in with a code always asks.
 - **Approve or decline several at once,** with one password confirmation.
+- **A connection's access can change after it's connected.** **Settings** on each connected app, under **Account →
+  Connected apps** for your own and **Users → Agent access** for everyone's, changes its name, what it may do and
+  whether it asks, without connecting again. An administrator's change never goes past what the app's person may do
+  or what Agent access allows, is audited, and tells that person what changed and who changed it.
+- **An app learns what it can't do and why.** `GET /api/v1/operations` lists the operations a connection can't use
+  under `unavailable`, each with what it needs (such as "Assets: Write"), and calling one names that need.
 - **Apps send files without base64.** `PUT /api/v1/uploads` takes a file's bytes, and `upload_asset` takes the upload
   it returns, or a `url` for the site to fetch. `create_upload` gives an MCP app the address to send a file to. A file
   waiting for approval is kept once, and the approval page shows it.
