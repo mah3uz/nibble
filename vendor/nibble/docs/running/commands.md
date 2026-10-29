@@ -105,7 +105,7 @@ bin/kamal deploy                          # every deploy after
 
 ```sh
 bin/rails nibble:dev:seed                 # realistic demo posts, authors and topics
-bin/rails nibble:dev:setup                # connect Claude Code, Cursor and Codex to the developer tools
+bin/rails nibble:dev:setup                # set up the AI tools you choose (Claude Code, Codex, Cursor) in this folder
 bin/rails nibble:dev:mcp                  # the developer tools over MCP, for an agent
 bin/rails nibble:dev:tool render '{"path":"/"}'  # one developer tool, as JSON
 RAILS_ENV=test bin/rails nibble:bench     # render and listing budgets; --posts=, --requests=

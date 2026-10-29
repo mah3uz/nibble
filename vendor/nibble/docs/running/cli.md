@@ -110,7 +110,6 @@ or with `--json`, every command prints `{"ok": true, "data": …}` or `{"ok": fa
 ```sh
 nibble connect tidewater.example            # sign in if needed, then set up every AI app found
 nibble connect tidewater.example --client claude-code,cursor
-nibble connect tidewater.example --project  # into the current project only
 nibble disconnect tidewater.example         # remove what connect added
 ```
 
@@ -118,8 +117,10 @@ nibble disconnect tidewater.example         # remove what connect added
 Cursor), and installs the site's skill where the app supports skills. `--client` limits it to the apps you name.
 Run it again to refresh what it installed.
 
-By default it installs into your own folders, so the skill loads in every project you open. With `--project` it
-installs into the current project, so the skill loads only there. `disconnect` takes the same flags.
+It installs into the current project, the folder you run it in, so run it in the folder where you will use the site's
+tools. The skill loads only there, and nothing is installed user-wide. It refuses the folder of another Nibble site,
+so one site's tools never end up in another's. `disconnect` removes what `connect` added to the current project, and
+also the user-wide entries that older versions wrote.
 
 For finer control, each part has its own command:
 

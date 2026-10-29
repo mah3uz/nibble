@@ -25,8 +25,18 @@ After reading this guide, you will know:
 bin/rails nibble:dev:setup
 ```
 
-names the tools in `.mcp.json` for Claude Code and `.cursor/mcp.json` for Cursor, links Nibble's skills into
-`.claude/skills/`, and stops Claude Code editing `vendor/nibble/`. For Codex, run `codex mcp add nibble-dev -- bin/rails nibble:dev:mcp`.
+asks which tools to set up (Claude Code, Codex, Cursor), offering the ones found on your computer, and writes only
+into the site's folder. Nothing goes into your home folder, so the tools are available in this site and no other.
+`--tools claude,codex,cursor` answers without asking; without a terminal and without `--tools` it writes nothing.
+
+| Tool | Written |
+|---|---|
+| Claude Code | `.mcp.json` naming the tools, Nibble's skills linked into `.claude/skills/`, and a rule in `.claude/settings.json` that stops it editing `vendor/nibble/` |
+| Codex | `.codex/config.toml` with the `nibble-dev` server, and the skills linked into `.codex/skills/`; Codex reads a project's config once you trust the project |
+| Cursor | `.cursor/mcp.json` naming the tools |
+
+Run it again to update a tool's files; tools you don't choose are left as they are, and so is anything of your own in
+those files.
 
 The tools run only in development, with code reloading on, over standard input and output — nothing listens on the
 network — and they pick up each change the agent makes. `bin/rails nibble:dev:tool <name> '<json>'` runs any of them
@@ -61,9 +71,9 @@ Three skills come with Nibble, in `vendor/nibble/skills/`, so each upgrade bring
 | `nibble-schema` | collections, blueprints and fields, and changing them without stranding content |
 | `nibble-extending` | the site's own Ruby, Control Plane changes and events, without touching Nibble's files |
 
-An agent loads one when the work calls for it. Claude Code finds them through the links `nibble:dev:setup` makes;
+An agent loads one when the work calls for it. Claude Code and Codex find them through the links `nibble:dev:setup` makes;
 any agent that supports MCP's Skills extension gets them from the developer tools. A skill of your own in
-`.claude/skills/` with the same name is left alone.
+`.claude/skills/` or `.codex/skills/` with the same name is left alone.
 
 ## 4. Keeping out of Nibble's files
 
