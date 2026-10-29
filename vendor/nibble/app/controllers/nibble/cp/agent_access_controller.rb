@@ -25,6 +25,15 @@ module Nibble
         redirect_to "/cp/agent-access", notice: "Agent access saved."
       end
 
+      def change
+        grant = Nibble::Grant.find(params[:id])
+        Nibble::Oauth::AccessChange.new(grant, by: Nibble::Current.user, ip: request.remote_ip)
+          .call(**params.permit(:name, :preset, :approval_mode, areas: {}).to_h.symbolize_keys)
+        redirect_to "/cp/agent-access", notice: "Saved. The app has this access from its next request."
+      rescue Nibble::Oauth::AccessChange::Refused => refused
+        redirect_to "/cp/agent-access", inertia: { errors: { refused.field => refused.message } }
+      end
+
       def revoke
         Nibble::Grant.find(params[:id]).revoke!
         redirect_to "/cp/agent-access", notice: "Disconnected."
@@ -39,10 +48,8 @@ module Nibble
       end
 
       def grant_row(grant)
-        { id: grant.id, name: grant.name, kind: grant.kind, preset: grant.preset, via: grant.via, approvals: grant.approval_mode,
-          asks_approval: grant.asks_approval?, person: grant.user.name,
-          email: grant.user.email_address, created_at: grant.created_at.utc.iso8601, last_used_at: grant.last_used_at&.utc&.iso8601,
-          last_used_ip: grant.last_used_ip, expires_at: grant.expires_at.utc.iso8601 }
+        { id: grant.id, kind: grant.kind, owner: { id: grant.user.id, name: grant.user.name, email: grant.user.email_address },
+          created_at: grant.created_at.utc.iso8601, **Nibble::Oauth::AccessChange.props(grant) }
       end
     end
   end

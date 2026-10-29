@@ -93,6 +93,24 @@ class Api::OperationsTest < ActionDispatch::IntegrationTest
     assert_equal false, json["data"].find { |operation| operation["name"] == "update_entry" }.dig("annotations", "readOnlyHint")
   end
 
+  test "the catalogue says what this connection can't do and what it would need, so an app can tell its person" do
+    get "/api/v1/operations", headers: headers
+
+    missing = json["unavailable"].index_by { |operation| operation["name"] }
+    assert_equal({ "name" => "update_navigation", "title" => "Change a navigation menu", "needs" => "Navigation: Write" }, missing["update_navigation"])
+    assert_equal "Collections: Read", Nibble::Operations.need(%w[entries read])
+    assert_empty json["data"].map { |operation| operation["name"] } & missing.keys
+  end
+
+  test "calling an operation the connection can't use names what it needs and where to change it" do
+    post "/api/v1/operations/update_navigation", params: { handle: "main", tree: [] }, headers:, as: :json
+
+    assert_response :forbidden
+    assert_equal "this connection can't change a navigation menu: it needs Navigation: Write", json["detail"]
+    assert_equal "Navigation: Write", json.dig("details", "needs")
+    assert_equal "Change this connection's access under Account → Connected apps, or sign in again.", json["hint"]
+  end
+
   test "authenticated answers are never cached, by the page cache or anyone else" do
     get "/api/v1/operations/whoami", headers: headers
 

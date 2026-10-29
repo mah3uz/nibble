@@ -8,6 +8,7 @@ module Nibble
       "form.submitted" => "New form submission",
       "webhook.disabled" => "A webhook was turned off after repeated failures",
       "apps.connected" => "A new app was connected to your account",
+      "apps.access_changed" => "Someone changed what an app connected to your account may do",
       "apps.approval_requested" => "An app is waiting for your approval",
       "apps.approval_failed" => "A change you approved couldn't be made",
       "task.failed" => "A scheduled task started failing"

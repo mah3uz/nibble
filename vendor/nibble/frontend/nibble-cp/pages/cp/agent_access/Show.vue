@@ -18,8 +18,7 @@ type GrantRow = {
   kind: string
   preset: string
   via: string | null
-  person: string
-  email: string
+  owner: { id: number; name: string; email: string }
   created_at: string
   last_used_at: string | null
   last_used_ip: string | null
@@ -53,7 +52,7 @@ const save = () => form.patch('/cp/agent-access', { preserveScroll: true })
 
 async function revoke(grant: GrantRow) {
   const ok = await confirm({
-    title: `Disconnect ${grant.name} for ${grant.person}?`,
+    title: `Disconnect ${grant.name} for ${grant.owner.name}?`,
     description: 'It stops working at once. They can connect it again if their role allows.',
     confirmText: 'Disconnect',
     dangerous: true,
@@ -170,8 +169,8 @@ useBreadcrumbs([{ label: 'Agent access' }])
                     <span class="truncate font-medium text-gray-900 dark:text-gray-100">{{ grant.name }}</span>
                     <Badge variant="secondary">{{ ACCESS[grant.preset] ?? grant.preset }}</Badge>
                   </div>
-                  <p class="truncate text-sm text-gray-600 dark:text-gray-400" :title="grant.email">
-                    {{ grant.person }}
+                  <p class="truncate text-sm text-gray-600 dark:text-gray-400" :title="grant.owner.email">
+                    {{ grant.owner.name }}
                   </p>
                 </div>
               </div>

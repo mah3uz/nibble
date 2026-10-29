@@ -51,6 +51,16 @@ module Nibble
 
     def available(principal) = all.select { |operation| possible?(principal, operation.needs) }
 
+    def unavailable(principal)
+      all.reject { |operation| possible?(principal, operation.needs) }.map { |operation| { "name" => operation.name, "title" => operation.title, "needs" => need(operation.needs) } }
+    end
+
+    def need((kind, column))
+      areas = AgentAccess.areas.select { |area| area.key.split(".").first == kind }
+      title = areas.one? && areas.first.key == kind ? areas.first.title : areas.first&.group || kind.humanize
+      "#{title}: #{AgentAccess::COLUMNS[column]}"
+    end
+
     def possible?(principal, needs)
       return true if needs.nil?
 
@@ -64,7 +74,10 @@ module Nibble
     def call(name, input, caller:)
       operation = find(name) or raise Failure.new("unknown_operation", "there is no operation called #{name}", status: :not_found,
         hint: "operations lists what this connection can do")
-      raise Failure.new("forbidden", "this connection can't #{operation.title.downcase}", status: :forbidden) unless possible?(caller.principal, operation.needs)
+      unless possible?(caller.principal, operation.needs)
+        raise Failure.new("forbidden", "this connection can't #{operation.title.downcase}: it needs #{need(operation.needs)}", status: :forbidden,
+          hint: "Change this connection's access under Account → Connected apps, or sign in again.", details: { "needs" => need(operation.needs) })
+      end
 
       input = check(operation, input.to_h.deep_stringify_keys)
       return operation.handler.call(input, caller) if operation.read_only

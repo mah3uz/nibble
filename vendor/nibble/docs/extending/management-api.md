@@ -68,6 +68,17 @@ permission is `create_upload`'s, and it can only send files.
 A token sees only the operations it may use. There is no search operation: search belongs to a theme's
 [search page](../theming/queries.md#7-search).
 
+`GET /api/v1/operations` also lists, under `unavailable`, the operations this token can't use and what each needs, in
+the words of the Agent access page, so an app can tell its person what to change:
+
+```json
+{ "data": [ … ],
+  "unavailable": [ { "name": "upload_asset", "title": "Upload an asset", "needs": "Assets: Write" } ],
+  "meta": { … } }
+```
+
+The MCP tool list has only the tools the connection can call.
+
 ### Sending files
 
 `upload_asset` takes the file in exactly one of three ways:
@@ -88,7 +99,7 @@ curl -T photo.jpg -H "Authorization: Bearer $TOKEN" "https://example.com/api/v1/
 
 ```json
 { "data": { "upload": "eyJfcmFpbHMi…", "filename": "photo.jpg", "size": 612034, "expires_at": "2026-10-30T08:10:24Z" },
-  "meta": { "site": "https://example.com", "api_version": 1 } }
+  "meta": { "site": "https://example.com", "api_version": 2 } }
 ```
 
 The type and size are checked before anything is kept: an unaccepted type is `415 unsupported_type`, a file over
@@ -138,6 +149,18 @@ carry the same fields:
 ```
 
 `code` is stable; `hint` says what to do next.
+
+Calling an operation the connection can't use answers `forbidden` (HTTP 403), naming what it needs:
+
+```json
+{ "code": "forbidden", "message": "this connection can't upload an asset: it needs Assets: Write",
+  "hint": "Change this connection's access under Account → Connected apps, or sign in again.",
+  "details": { "needs": "Assets: Write" } }
+```
+
+On HTTP the message is the problem document's `detail`. What a connection needs is the smallest of its person's
+roles, the access chosen for it and the site's Agent access settings; see
+[Agent access](../running/agent-access.md#6-changing-what-an-app-may-do).
 
 ## 6. Approvals
 

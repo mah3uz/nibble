@@ -17,6 +17,7 @@ After reading this guide, you will know:
 - How to turn agent access on, and choose what apps may touch.
 - Who may connect apps, and how to see and disconnect them.
 - What makes an app wait for a person, and why.
+- How to change what a connected app may do, and who may.
 
 ## 1. What a connected app is
 
@@ -104,7 +105,28 @@ Each person sees their own under **Connected apps** in their account menu, and g
 app is connected to their account. An app stays connected while it is used: each use moves its expiry to 90 days
 ahead, and one left unused for 30 days has to sign in again. A script token ends when it was set to.
 
-## 6. What stays protected
+## 6. Changing what an app may do
+
+An app's access isn't fixed when it is connected. Its name, what it may do — read only, drafts only, everything, or
+area by area — and whether it waits for approval can all be changed later, in two places:
+
+- **Connected apps**, in a person's account menu, for their own apps.
+- **Users → Agent access**, for any app on the site. This needs the **Manage agent access** permission.
+
+Either way, the change needs a freshly confirmed password, and the app has its new access from its next request,
+without signing in again. Narrowing an app also stops any change it asked for and is still waiting on: approving it
+later fails, because the app can no longer make it.
+
+An administrator can widen or narrow anyone's app, and turn its approvals on or off, but only within the same limits
+as the person who connected it: an app connected by an Author can't be given publishing, whoever edits it, and
+nothing this page turns off can be handed to an app. An app signed in with a code still can't have *everything I can
+do*, and still always asks. When someone other than its person changes an app, its person gets a notification saying
+what changed and who changed it. Every change is in the audit log.
+
+An app that tries something it can no longer do is told what it needs — **Assets: Write**, say — and that its access
+can be changed under **Connected apps**.
+
+## 7. What stays protected
 
 - **An app never sees a password.** People sign in to the site itself, with their password, two-factor code or
   passkey.

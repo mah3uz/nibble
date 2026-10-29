@@ -3,7 +3,7 @@ module Nibble
     class ConnectedAppsController < BaseController
       EXPIRIES = { "7" => 7.days, "30" => 30.days, "90" => 90.days }.freeze
 
-      before_action :require_elevated_session, only: :create
+      before_action :require_elevated_session, only: %i[create update]
 
       def index
         grants = Nibble::Current.user.grants.includes(:oauth_client).order(created_at: :desc)
@@ -38,8 +38,10 @@ module Nibble
       end
 
       def update
-        grant.update!(name: params.require(:name).to_s.strip.first(100))
-        redirect_to "/cp/account/apps", notice: "Renamed."
+        Nibble::Oauth::AccessChange.new(grant, by: Nibble::Current.user, ip: request.remote_ip).call(**change_params)
+        redirect_to "/cp/account/apps", notice: "Saved. The app has this access from its next request."
+      rescue Nibble::Oauth::AccessChange::Refused => refused
+        redirect_to "/cp/account/apps", inertia: { errors: { refused.field => refused.message } }
       end
 
       def destroy
@@ -56,11 +58,14 @@ module Nibble
           title: approval.preview["title"] || approval.preview["handle"], created_at: approval.created_at.utc.iso8601 }
       end
 
+      def change_params
+        params.permit(:name, :preset, :approval_mode, areas: {}).to_h.symbolize_keys
+      end
+
       def row(grant)
         client = grant.oauth_client
-        { id: grant.id, name: grant.name, kind: grant.kind, preset: grant.preset, via: grant.via, approvals: grant.approval_mode,
-          asks_approval: grant.asks_approval?, host: client&.id_host, verified: client.nil? || client.verified?, created_at: grant.created_at.utc.iso8601,
-          last_used_at: grant.last_used_at&.utc&.iso8601, last_used_ip: grant.last_used_ip, expires_at: grant.expires_at.utc.iso8601 }
+        { id: grant.id, kind: grant.kind, host: client&.id_host, verified: client.nil? || client.verified?, created_at: grant.created_at.utc.iso8601,
+          **Nibble::Oauth::AccessChange.props(grant) }
       end
     end
   end

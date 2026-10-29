@@ -163,11 +163,11 @@ class Nibble::Cp::ApprovalsControllerTest < ActionDispatch::IntegrationTest
 
     get "/cp/account/apps"
     props = JSON.parse(Nokogiri::HTML(response.body).at_css("script[data-page]").text)["props"]
-    assert_equal [ [ "ask", true ], [ "off", false ] ], props["apps"].map { |app| app.values_at("approvals", "asks_approval") }.sort
+    assert_equal [ [ "ask", true ], [ "off", false ] ], props["apps"].map { |app| app.values_at("approval_mode", "asks_approval") }.sort
     get "/cp/agent-access"
     props = JSON.parse(Nokogiri::HTML(response.body).at_css("script[data-page]").text)["props"]
     assert_equal "choose", props["approvals"]
-    assert_equal [ "ask", "off" ], props["grants"].map { |row| row["approvals"] }.sort
+    assert_equal [ "ask", "off" ], props["grants"].map { |row| row["approval_mode"] }.sort
     assert_equal 1, props["grants"].count { |row| row["asks_approval"] }
   end
 

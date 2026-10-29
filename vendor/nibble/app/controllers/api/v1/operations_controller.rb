@@ -16,7 +16,9 @@ module Api
       end
 
       def index
-        render json: { "data" => Nibble::Operations.available(grant_principal(@grant)).map(&:catalogue), "meta" => meta }
+        principal = grant_principal(@grant)
+        render json: { "data" => Nibble::Operations.available(principal).map(&:catalogue), "unavailable" => Nibble::Operations.unavailable(principal),
+                       "meta" => meta }
       end
 
       def create

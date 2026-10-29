@@ -51,6 +51,7 @@ class Nibble::McpTest < ActionDispatch::IntegrationTest
     assert_not_includes names, "update_navigation"
     assert_equal "private", listed["cacheScope"], "a list that differs per person must never be shared"
     assert listed["tools"].find { |tool| tool["name"] == "list_entries" }.dig("annotations", "readOnlyHint")
+    assert_not listed.key?("unavailable"), "an agent should only ever be offered tools it can call"
   end
 
   test "a tool call acts as the person, and a refusal comes back as a result the agent can read" do
