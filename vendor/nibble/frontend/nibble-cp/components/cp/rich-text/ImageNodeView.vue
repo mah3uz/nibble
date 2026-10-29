@@ -59,7 +59,7 @@ function replace([asset]: AssetRow[]) {
           @mousedown.prevent
           @click="toggleAlt"
         >
-          <CpIcon name="rename" class="size-3" />Override Alt
+          <CpIcon name="rename" class="size-3" />Change alt text
         </Button>
         <Button type="button" size="sm" variant="outline" @mousedown.prevent @click="pickerOpen = true">
           <CpIcon name="replace" class="size-3" />Replace
@@ -77,7 +77,7 @@ function replace([asset]: AssetRow[]) {
           :data-invalid="missingAlt || undefined"
           class="h-10 border-gray-300 bg-white shadow-ui-sm focus-within:focus-outline has-[[data-slot=input-group-control]:focus-visible]:border-gray-300 has-[[data-slot=input-group-control]:focus-visible]:ring-0 dark:border-gray-700 dark:bg-gray-900"
         >
-          <InputGroupAddon><InputGroupText>Alt Text</InputGroupText></InputGroupAddon>
+          <InputGroupAddon><InputGroupText>Alt text</InputGroupText></InputGroupAddon>
           <InputGroupInput
             ref="altInput"
             v-model="alt"

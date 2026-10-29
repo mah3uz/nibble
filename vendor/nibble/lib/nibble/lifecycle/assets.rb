@@ -63,7 +63,7 @@ module Nibble
 
       def apply!(snapshot)
         snapshot["folder"] = snapshot["folder"].to_s.delete_prefix("/").delete_suffix("/")
-        invalid!(:folder, "can only use lowercase letters, numbers, dashes and underscores") unless snapshot["folder"].empty? || snapshot["folder"].match?(Records::AssetFolder::PATH)
+        invalid!(:folder, "Folder names can only use lowercase letters, numbers, dashes and underscores.") unless snapshot["folder"].empty? || snapshot["folder"].match?(Records::AssetFolder::PATH)
         snapshot["filename"] = renamed(snapshot["filename"]) if snapshot.key?("filename")
         snapshot["edits"] = normalized_edits(snapshot["edits"])
         snapshot["focal_zoom"] = (snapshot["focal_zoom"].presence || 1).to_f

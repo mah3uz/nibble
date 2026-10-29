@@ -91,8 +91,8 @@ module Nibble
         authorize!("assets.upload")
         name = params[:name].to_s.strip.parameterize
         path = [ params[:parent].presence, name ].compact.join("/")
-        error = if name.blank? || !path.match?(Nibble::Records::AssetFolder::PATH) then "can't be blank"
-        elsif Nibble::Records::AssetFolder.exists?(path:) then "already exists"
+        error = if name.blank? || !path.match?(Nibble::Records::AssetFolder::PATH) then "Give the folder a name."
+        elsif Nibble::Records::AssetFolder.exists?(path:) then "A folder with that name already exists."
         end
         return render(json: { errors: { "name" => [ error ] } }, status: :unprocessable_entity) if error
 
@@ -104,7 +104,7 @@ module Nibble
         authorize!("assets.edit")
         folder = Nibble::Records::AssetFolder.find_by!(path: params.require(:path))
         target = [ File.dirname(folder.path).delete_prefix("."), params.require(:name).to_s.parameterize ].compact_blank.join("/")
-        return render(json: { errors: { "name" => [ "already exists" ] } }, status: :unprocessable_entity) if Nibble::Records::AssetFolder.exists?(path: target)
+        return render(json: { errors: { "name" => [ "A folder with that name already exists." ] } }, status: :unprocessable_entity) if Nibble::Records::AssetFolder.exists?(path: target)
 
         Nibble::Records::AssetFolder.transaction do
           Nibble::Records::AssetFolder.where(path: folder.path).or(Nibble::Records::AssetFolder.where("path LIKE ?", "#{folder.path}/%")).find_each do |item|
@@ -120,7 +120,7 @@ module Nibble
         authorize!("assets.delete")
         folder = Nibble::Records::AssetFolder.find_by!(path: params.require(:path))
         in_use = Nibble::Records::Asset.where(folder: folder.path).or(Nibble::Records::Asset.where("folder LIKE ?", "#{folder.path}/%")).exists?
-        return render(json: { errors: { "path" => [ "isn't empty" ] } }, status: :unprocessable_entity) if in_use
+        return render(json: { errors: { "path" => [ "This folder still has files. Move or delete them first." ] } }, status: :unprocessable_entity) if in_use
 
         Nibble::Records::AssetFolder.where("path LIKE ?", "#{folder.path}/%").order(path: :desc).destroy_all
         folder.destroy!

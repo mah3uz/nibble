@@ -62,7 +62,7 @@ useSortable(listRef, ids, {
       >
         <GripVertical v-if="!single && !readOnly" class="drag-handle size-4 shrink-0 cursor-grab text-gray-400" />
         <span class="flex-1 truncate" :class="{ 'text-destructive': !known.get(itemId) }">{{
-          known.get(itemId)?.title ?? `Missing item ${itemId}`
+          known.get(itemId)?.title ?? "An item that's been deleted or you can't see"
         }}</span>
         <Badge v-if="known.get(itemId)?.status" variant="secondary">{{
           statusLabel(known.get(itemId)!.status!)

@@ -80,7 +80,7 @@ function finish() {
     >
       <div class="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
         <div>
-          <h2 class="text-lg font-medium text-gray-900 dark:text-white">Focal Point</h2>
+          <h2 class="text-lg font-medium text-gray-900 dark:text-white">Focal point</h2>
           <p class="mt-1 text-sm text-pretty text-gray-600 dark:text-gray-400">
             Drag to the part of the image that has to stay in frame. The crops beside it are examples; each keeps that
             point in view.

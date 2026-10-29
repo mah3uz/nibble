@@ -1,5 +1,6 @@
 import type { ListingProps, ListingRow } from '@/components/cp/listing/types'
 import type { PublishBlueprint } from '@/components/cp/publish/context'
+import { humanize } from '@/lib/utils'
 
 export type AssetRow = ListingRow & {
   filename: string
@@ -78,15 +79,21 @@ export async function request<T>(method: string, url: string, body?: unknown): P
   })
   const json = response.status === 204 ? {} : await response.json().catch(() => ({}))
   if (!response.ok)
-    throw new RequestError(firstError(json) ?? `Request failed (${response.status})`, response.status, json)
+    throw new RequestError(
+      firstError(json) ?? 'Something went wrong. Try again, and tell an administrator if it keeps happening.',
+      response.status,
+      json,
+    )
   return json as T
 }
+
+const SENTENCE_FIELDS = new Set(['base', 'file', 'name', 'path', 'folder', 'lock_version'])
 
 function firstError(body: Record<string, unknown>): string | null {
   if (typeof body.error === 'string') return body.error
   const errors = body.errors as Record<string, string[]> | undefined
   const [field, messages] = Object.entries(errors ?? {})[0] ?? []
-  return field ? `${field === 'base' || field === 'file' ? '' : `${field} `}${messages?.[0] ?? ''}`.trim() : null
+  return field ? `${SENTENCE_FIELDS.has(field) ? '' : `${humanize(field)} `}${messages?.[0] ?? ''}`.trim() : null
 }
 
 export function browseUrl(params: Record<string, string | number | null | undefined>) {

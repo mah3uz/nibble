@@ -19,8 +19,8 @@ export function assetMenuItems(can: Abilities): AssetMenuItem[] {
     { action: 'duplicate', label: 'Duplicate', icon: 'duplicate', allowed: can.upload },
     { action: 'move', label: 'Move', icon: 'move-folder', allowed: can.edit },
     { action: 'rename', label: 'Rename', icon: 'rename', allowed: can.edit },
-    { action: 'replace', label: 'Replace', icon: 'replace', allowed: can.edit },
-    { action: 'reupload', label: 'Reupload', icon: 'upload-cloud', allowed: can.edit },
+    { action: 'replace', label: 'Swap for another file', icon: 'replace', allowed: can.edit },
+    { action: 'reupload', label: 'Upload a new version', icon: 'upload-cloud', allowed: can.edit },
     { action: 'delete', label: 'Delete', icon: 'trash', allowed: can.delete, destructive: true },
   ]
   return items.filter((item) => item.allowed)

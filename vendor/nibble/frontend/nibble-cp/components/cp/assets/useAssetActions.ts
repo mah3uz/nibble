@@ -46,9 +46,9 @@ export function useAssetActions(options: {
     const to = extensionOf(file.name)
     const renamed = to && to !== from ? ` Its name will end in .${to} instead of .${from}.` : ''
     const ok = await confirm({
-      title: `Reupload ${asset.filename}?`,
+      title: `Upload a new version of ${asset.filename}?`,
       description: `${file.name} takes its place everywhere it's used.${renamed} The current file is deleted and can't be brought back.`,
-      confirmText: 'Reupload',
+      confirmText: 'Upload',
       dangerous: true,
     })
     if (!ok) return
@@ -72,7 +72,7 @@ export function useAssetActions(options: {
     const result = await confirm({
       title: `Replace ${asset.filename}`,
       description: `Everything that uses ${asset.filename} will use ${replacement.filename} instead.`,
-      confirmText: 'Replace',
+      confirmText: 'Swap',
       fields: [
         {
           handle: 'original',

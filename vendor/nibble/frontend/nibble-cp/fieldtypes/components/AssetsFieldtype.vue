@@ -77,7 +77,7 @@ async function setAlt(index: number) {
   const item = items.value[index]
   const summary = known.value.get(item.asset)
   const result = await confirm({
-    title: 'Alt Text',
+    title: 'Alt text',
     description: summary?.alt
       ? `Leave empty to use the asset's own: “${summary.alt}”`
       : 'Describe the image for people who can’t see it.',
@@ -147,7 +147,7 @@ useSortable(gridRef, items, {
       class="absolute inset-0 z-10 flex items-center justify-center gap-2 rounded-lg border border-dashed border-gray-400 bg-white/80 text-gray-700"
     >
       <CpIcon name="upload-cloud" class="size-5" />
-      <span class="text-sm">Drop to Upload</span>
+      <span class="text-sm">Drop to upload</span>
     </div>
 
     <div
@@ -160,11 +160,11 @@ useSortable(gridRef, items, {
         type="button"
         variant="outline"
         size="sm"
-        aria-label="Browse Assets"
+        aria-label="Browse assets"
         class="shrink-0"
         @click="selectorOpen = true"
         ><CpIcon name="folder" /><span class="@sm:hidden">Browse</span
-        ><span class="hidden @sm:inline">Browse Assets</span></Button
+        ><span class="hidden @sm:inline">Browse assets</span></Button
       >
       <div
         v-if="canUpload"
@@ -264,7 +264,7 @@ useSortable(gridRef, items, {
             class="w-18 flex-1 truncate px-2 py-1 text-xs"
             :class="known.get(item.asset) ? 'text-gray-600 dark:text-gray-300' : 'text-red-600'"
           >
-            {{ known.get(item.asset)?.filename ?? `Missing asset ${item.asset}` }}
+            {{ known.get(item.asset)?.filename ?? `A file that's been deleted` }}
           </div>
           <Badge
             v-if="altMode !== 'none' && known.get(item.asset)?.kind === 'image'"
@@ -275,7 +275,7 @@ useSortable(gridRef, items, {
             :class="{ 'border-sky-300 bg-sky-50 text-sky-700 dark:text-sky-300': !item.alt && altMode !== 'required' }"
             :disabled="isReadOnly"
             @click="setAlt(index)"
-            >{{ item.alt ? 'Alt ✓' : 'Set Alt' }}</Badge
+            >{{ item.alt ? 'Alt ✓' : 'Add alt text' }}</Badge
           >
           <template v-if="listMode">
             <Button

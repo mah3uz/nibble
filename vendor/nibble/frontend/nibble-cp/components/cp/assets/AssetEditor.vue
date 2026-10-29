@@ -172,7 +172,7 @@ function run(action: AssetMenuAction) {
               >
             </a>
             <span v-else />
-            <Button variant="ghost" size="icon" aria-label="Close Editor" @click="leave(() => emit('close'))"
+            <Button variant="ghost" size="icon" aria-label="Close editor" @click="leave(() => emit('close'))"
               ><CpIcon name="x"
             /></Button>
           </header>
@@ -183,7 +183,7 @@ function run(action: AssetMenuAction) {
             >
               <div class="dark flex flex-wrap items-center justify-center gap-2 px-2 py-4">
                 <Button v-if="canFocus && detail.can.edit" variant="ghost" size="sm" @click="focusing = true"
-                  ><CpIcon name="focus" /> Focal Point</Button
+                  ><CpIcon name="focus" /> Focal point</Button
                 >
                 <Button v-if="canFocus && detail.can.edit" variant="ghost" size="sm" @click="cropping = true"
                   ><CpIcon name="crop" /> Crop</Button
@@ -198,7 +198,7 @@ function run(action: AssetMenuAction) {
                   ><CpIcon name="replace" /> Replace</Button
                 >
                 <Button v-if="detail.can.edit" variant="ghost" size="sm" @click="run('reupload')"
-                  ><CpIcon name="upload-cloud" /> Reupload</Button
+                  ><CpIcon name="upload-cloud" /> Upload a new version</Button
                 >
                 <Button variant="ghost" size="sm" as-child
                   ><a :href="asset.download_url"><CpIcon name="download" /> Download</a></Button

@@ -158,7 +158,7 @@ async function onFolderDrop(path: string, event: DragEvent) {
 const confirm = useConfirm()
 async function createFolder() {
   const result = await confirm({
-    title: 'Create Folder',
+    title: 'Create folder',
     confirmText: 'Create',
     fields: [{ handle: 'name', label: 'Name', options: [] }],
   })
@@ -172,7 +172,7 @@ async function createFolder() {
 }
 async function renameFolder(path: string) {
   const result = await confirm({
-    title: 'Rename Folder',
+    title: 'Rename folder',
     confirmText: 'Rename',
     fields: [{ handle: 'name', label: 'Name', options: [], value: path.split('/').pop() }],
   })
@@ -270,7 +270,7 @@ function step(offset: number) {
   <div class="relative" @dragenter="onDragEnter" @dragleave="onDragLeave" @dragover.prevent @drop.prevent="onDrop">
     <div v-if="dragging" class="drag-notification">
       <CpIcon name="upload-cloud-large" class="size-8" />
-      <span>Drop File to Upload</span>
+      <span>Drop a file to upload</span>
     </div>
     <input ref="fileInput" class="hidden" type="file" multiple @change="onFileInput" />
 
@@ -280,7 +280,7 @@ function step(offset: number) {
           ><CpIcon name="upload" /> Upload</Button
         >
         <Button v-if="data.can.upload" variant="outline" @click="createFolder"
-          ><CpIcon name="add-folder" /> Create Folder</Button
+          ><CpIcon name="add-folder" /> Create folder</Button
         >
         <ToggleGroup
           type="single"

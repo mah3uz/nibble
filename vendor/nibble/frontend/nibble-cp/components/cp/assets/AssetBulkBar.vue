@@ -82,7 +82,9 @@ const kbd =
         <template v-if="count === 1 && can.edit">
           <Button variant="outline" @click="emit('run', 'rename')">Rename <span :class="kbd">r</span></Button>
           <Button variant="outline" @click="emit('run', 'replace')">Replace <span :class="kbd">e</span></Button>
-          <Button variant="outline" @click="emit('run', 'reupload')">Reupload <span :class="kbd">p</span></Button>
+          <Button variant="outline" @click="emit('run', 'reupload')"
+            >Upload a new version <span :class="kbd">p</span></Button
+          >
         </template>
         <Button v-if="can.edit && count > 1" variant="outline" @click="emit('run', 'tag')"
           >Tag <span :class="kbd">t</span></Button

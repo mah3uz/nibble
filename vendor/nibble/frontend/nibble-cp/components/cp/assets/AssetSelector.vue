@@ -72,7 +72,7 @@ function finish(rows: AssetRow[]) {
             ? 'border-b px-4 py-3 text-base font-medium text-gray-900 dark:border-gray-700 dark:text-white'
             : 'sr-only'
         "
-        >{{ title || 'Browse Assets' }}</SheetTitle
+        >{{ title || 'Browse assets' }}</SheetTitle
       >
       <SheetDescription class="sr-only">Choose assets for this field</SheetDescription>
       <div class="flex-1 overflow-y-auto px-4 pt-2">
