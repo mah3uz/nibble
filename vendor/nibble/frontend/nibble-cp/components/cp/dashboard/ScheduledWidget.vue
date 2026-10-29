@@ -21,7 +21,7 @@ const rows = computed(() =>
     <template #badge="{ row }">
       <time
         :datetime="row.published_at"
-        :title="new Date(row.published_at).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' })"
+        :title="new Date(row.published_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })"
         class="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-300/10 dark:text-amber-300"
         >{{ timeAgo(row.published_at) }}</time
       >

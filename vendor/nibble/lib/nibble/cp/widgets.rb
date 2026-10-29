@@ -8,7 +8,7 @@ module Nibble
         "activity_chart" => "Editing activity",
         "content_mix" => "Content by collection",
         "recent_entries" => "Recently edited",
-        "drafts" => "Unpublished changes",
+        "drafts" => "Drafts of live pages",
         "awaiting_review" => "Awaiting your review",
         "scheduled" => "Scheduled",
         "content_health" => "Needs attention",

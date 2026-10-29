@@ -15,9 +15,9 @@ const timeAgo = useTimeAgo(() => props.workingCopy.updated_at)
   <Alert :variant="workingCopy.stale ? 'destructive' : 'default'">
     <AlertTriangle v-if="workingCopy.stale" />
     <History v-else />
-    <AlertTitle v-if="workingCopy.stale">The live version changed after these changes were started.</AlertTitle>
+    <AlertTitle v-if="workingCopy.stale">Someone published a newer version after you started these changes. Check History before publishing so you don't undo theirs.</AlertTitle>
     <AlertTitle v-else>
-      Unpublished changes{{ workingCopy.user ? ` by ${workingCopy.user}` : '' }}, {{ timeAgo }}.
+      Draft{{ workingCopy.user ? ` by ${workingCopy.user}` : '' }}, {{ timeAgo }}.
     </AlertTitle>
     <AlertDescription>
       <div class="flex items-center gap-2 pt-1">

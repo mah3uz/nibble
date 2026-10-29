@@ -218,7 +218,7 @@ class Nibble::Cp::EntriesControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal "true", response.headers["X-Inertia"], "a full HTML page here would reload the preview blank"
     assert_equal "Typed again", response.parsed_body.dig("props", "page", "title")
-    assert_equal "Unpublished changes", response.parsed_body.dig("props", "preview", "label")
+    assert_equal "Draft", response.parsed_body.dig("props", "preview", "label")
   end
 
   test "validation errors come back keyed by field, and nothing is saved" do

@@ -63,7 +63,7 @@ module Nibble
     def preview_prop
       return nil unless @preview
 
-      { "label" => "Unpublished changes", "edit_url" => nil }
+      { "label" => "Draft", "edit_url" => nil }
     end
 
     def run_queries(queries, context, presenter)

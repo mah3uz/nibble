@@ -16,7 +16,7 @@ const rows = computed(() =>
 </script>
 
 <template>
-  <ItemList :rows="rows" empty-text="No unpublished changes.">
+  <ItemList :rows="rows" empty-text="No drafts of live pages.">
     <template #badge="{ row }">
       <span v-if="row.user" class="shrink-0 text-xs text-gray-500">{{ row.user }}</span>
     </template>
