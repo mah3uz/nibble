@@ -3,6 +3,7 @@ import { AlertCircle } from '@lucide/vue'
 import { computed } from 'vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import type { PublishBlueprint } from './context'
+import { errorText } from './errorText'
 
 const props = defineProps<{ errors: Record<string, string>; blueprint: PublishBlueprint }>()
 const emit = defineEmits<{ jump: [tabHandle: string | null, fieldHandle: string] }>()
@@ -31,7 +32,7 @@ const entries = computed(() =>
     .filter(([, message]) => message)
     .map(([path, message]) => {
       const label = labelFor(path)
-      return { path, text: label ? `${label} ${message}` : message }
+      return { path, text: errorText(label, message) }
     }),
 )
 </script>

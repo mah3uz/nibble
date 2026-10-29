@@ -213,7 +213,7 @@ module Nibble
         record.assign_snapshot(data)
         record.uri = Uris.for(record)
         valid = record.valid?
-        errors = record.errors.to_hash(true).transform_keys(&:to_s)
+        errors = Lifecycle.error_hash(record)
         record.restore_attributes
         raise Invalid.new(errors) unless valid
       end

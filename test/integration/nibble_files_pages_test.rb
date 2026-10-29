@@ -125,7 +125,9 @@ class NibbleFilesPagesTest < ActionDispatch::IntegrationTest
                                     { "title" => "Docs", "slug" => "docs" }, actor: Nibble::Principal.system)
 
     assert_not result.ok?, "/docs is the folder's own page"
-    assert_match "already used by", result.errors["uri"].to_a.join
+    message = result.errors["uri"].to_a.join
+    assert_equal "Another page already uses this address: /docs.", message
+    assert_no_match(/\.md|Uri/, message, "an editor sees neither a file path nor a raw attribute name")
   end
 
   test "an address no file holds is saved as normal" do

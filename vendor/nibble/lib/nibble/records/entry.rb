@@ -108,12 +108,12 @@ module Nibble
       def uri_available
         return if uri.nil? || deleted_at
 
-        errors.add(:uri, "#{uri} is already used by another entry") if self.class.kept.where(uri:).where.not(id:).exists?
+        errors.add(:uri, "Another page already uses this address: #{uri}.") if self.class.kept.where(uri:).where.not(id:).exists?
         if (page = Files.index.page(uri))
-          errors.add(:uri, "#{uri} is already used by #{page.path.relative_path_from(Rails.root)}")
+          errors.add(:uri, "Another page already uses this address: #{uri}.")
         end
         reserved = Nibble.config.reserved_paths.find { |path| uri == path || uri.start_with?("#{path}/") }
-        errors.add(:uri, "#{uri} is reserved for #{reserved}") if reserved
+        errors.add(:uri, "The address #{uri} is reserved for #{reserved}. Choose a different slug.") if reserved
       end
 
       def parent_valid

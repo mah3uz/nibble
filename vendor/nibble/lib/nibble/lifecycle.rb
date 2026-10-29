@@ -27,6 +27,11 @@ module Nibble
       end
     end
 
+    # An address clash reads as a whole sentence, so it keeps no attribute name in front of it.
+    def self.error_hash(record)
+      record.errors.to_hash(true).merge(uri: record.errors[:uri]).compact_blank.transform_keys(&:to_s)
+    end
+
     HANDLERS = {
       "entry" => "Nibble::Lifecycle::Entries",
       "term" => "Nibble::Lifecycle::Terms",
@@ -63,7 +68,7 @@ module Nibble
       rescue Invalid => error
         result(:invalid, record, errors: error.errors)
       rescue ActiveRecord::RecordInvalid => error
-        result(:invalid, record, errors: error.record.errors.to_hash(true).transform_keys(&:to_s))
+        result(:invalid, record, errors: Lifecycle.error_hash(error.record))
       rescue NeedsConfirmation => error
         result(:confirm, record, referrers: error.referrers)
       rescue ActiveRecord::StaleObjectError
