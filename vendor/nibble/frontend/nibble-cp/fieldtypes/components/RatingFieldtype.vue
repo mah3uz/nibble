@@ -38,8 +38,8 @@ function onKey(event: KeyboardEvent, n: number) {
       :aria-label="`${n} of ${max}`"
       :tabindex="current === n || (current === null && n === 1) ? 0 : -1"
       :disabled="isReadOnly"
-      class="rounded-sm p-0.5 text-gray-300 outline-none focus-visible:focus-outline disabled:opacity-60 dark:text-gray-700"
-      :class="{ 'text-amber-500 dark:text-amber-400': current !== null && n <= current }"
+      class="rounded-sm p-0.5 outline-none focus-visible:focus-outline disabled:opacity-60"
+      :class="current !== null && n <= current ? 'text-primary' : 'text-gray-300 dark:text-gray-600'"
       @click="choose(current === n ? null : n)"
       @keydown="onKey($event, n)"
     >
