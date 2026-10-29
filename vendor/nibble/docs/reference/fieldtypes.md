@@ -53,7 +53,9 @@ the option has no default and is simply off.
 | `value` | text, number or `true`/`false` | — | public forms only, with `hidden: true`: the value the field carries. With a `prefill`, it is used only when the query parameter and the post are both empty; without one, it is stored whatever is posted |
 | `encrypt` | `true`, `false` | `false` | public forms only: the submission stores the value encrypted. Not on `files` |
 | `if`, `if_any`, `unless`, `unless_any`, `show_when`, `show_when_any`, `hide_when`, `hide_when_any` | a [condition](conditions.md) | — | shows or hides the field while the condition passes. A field takes at most one |
-| `sortable`, `filterable`, `duplicate` | `true`, `false` | — | accepted and kept in the schema; Nibble doesn't act on them |
+| `sortable` | `true`, `false` | `true` | lets editors sort the entry listing by this field's column, in the order the value naturally has: numbers by size, dates by moment, text alphabetically, empty values last. Only `text`, `textarea`, `slug`, `integer`, `decimal`, `range`, `rating`, `date`, `time`, `toggle`, `color` and a `select`, `radio` or `button_group` that holds one choice offer it |
+| `filterable` | `true`, `false` | the same as `listable` | adds a filter for this field to the entry listing: one or more options for `select`, `radio`, `button_group` and `checkboxes`, yes or no for `toggle`, and a from and to date for `date`. Other types have no filter |
+| `duplicate` | `true`, `false` | — | accepted and kept in the schema; Nibble doesn't act on it |
 
 `hidden`, `prefill`, `value` and `encrypt` are written the same way in any blueprint but only a public form acts on
 them. [Forms](../modelling/forms.md) explains each in use.

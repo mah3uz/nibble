@@ -31,6 +31,9 @@ Open a collection in the sidebar — **Blog** — and its entries are listed.
 - The **columns** button, on the right, chooses which fields are shown. Your choice is remembered.
 - The **download** button beside it exports the list as a CSV file.
 - Click a column heading to sort by it.
+- Columns for fields such as a number, a date or a choice sort too, and fields that offer a filter (a choice, a yes/no
+  switch or a date) add it under **Filters**: tick the options you want, pick yes or no, or give a from and to date.
+  Entries with nothing in a sorted column stay at the bottom. Which fields offer these is the site's choice.
 
 Tick entries to act on several at once: publish, unpublish, move, add a topic or move to the trash.
 
