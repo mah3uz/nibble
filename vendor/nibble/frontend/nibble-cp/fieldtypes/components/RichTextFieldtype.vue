@@ -68,7 +68,7 @@ const counterClass = computed(() => {
   const ratio = limit.value ? characters.value / limit.value : 0
   return ratio > 1 ? 'text-destructive' : ratio >= 0.9 ? 'text-amber-600' : 'text-muted-foreground'
 })
-const readTime = ref('00:00')
+const readTime = ref(1)
 const storage: SetNodeStorage = {
   groups: groups.value,
   fieldPathPrefix: props.fieldPathPrefix ?? props.handle,

@@ -79,8 +79,18 @@ describe('readingTime', () => {
       },
     }).state.doc
 
-  it('reads 265 words per minute', () => {
-    expect(readingTime(doc(265, 0))).toBe('01:00')
+  it('reads 265 words per minute, in whole minutes, as a "2 min read" label wants', () => {
+    expect(readingTime(doc(265, 0))).toBe(1)
+    expect(readingTime(doc(530, 0))).toBe(2)
+  })
+
+  it('rounds to the nearest minute, so 2:15 reads as 2 and 2:45 as 3', () => {
+    expect(readingTime(doc(596, 0))).toBe(2)
+    expect(readingTime(doc(729, 0))).toBe(3)
+  })
+
+  it('never says less than a minute, even for an empty document', () => {
+    expect(readingTime(doc(0, 0))).toBe(1)
   })
 
   it('counts words across block boundaries rather than gluing them together', () => {
@@ -89,11 +99,12 @@ describe('readingTime', () => {
       content: [{ type: 'text', text: 'word' }],
     }))
     const editor = new Editor({ extensions: postExtensions, content: { type: 'doc', content: paragraphs } })
-    expect(readingTime(editor.state.doc)).toBe('01:00')
+    expect(readingTime(editor.state.doc)).toBe(1)
     editor.destroy()
   })
 
   it('gives each later image less time: 12s + 11s for two images', () => {
-    expect(readingTime(doc(0, 2))).toBe('00:23')
+    expect(readingTime(doc(530 - 3, 2))).toBe(2)
+    expect(readingTime(doc(530 + 115, 2))).toBe(3)
   })
 })
