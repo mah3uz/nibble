@@ -38,7 +38,7 @@ A submission can be deleted from its **…** menu once it has been dealt with.
 ### Handling
 
 Every submission starts as **New**. Press **Mark handled** on its page, or select several in the list and choose
-**Mark handled**, when someone has dealt with it; **Mark new** puts it back. The **Handling** filter shows only the
+**Mark handled**, when someone has dealt with it; **Mark not handled** puts it back to New. The **Handling** filter shows only the
 New or only the Handled ones, and a handled submission says who handled it and when. Opening a submission marks it
 read; **Mark unread** brings it back to the unread count so you remember to return to it.
 

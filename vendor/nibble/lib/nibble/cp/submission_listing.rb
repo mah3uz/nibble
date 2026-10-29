@@ -112,7 +112,7 @@ module Nibble
 
       def actions
         handling = can_edit? ? [ { "handle" => "mark_handled", "label" => "Mark handled", "bulk" => true, "fields" => [] },
-                                 { "handle" => "mark_new", "label" => "Mark new", "bulk" => true, "fields" => [] },
+                                 { "handle" => "mark_new", "label" => "Mark not handled", "bulk" => true, "fields" => [] },
                                  { "handle" => "mark_unread", "label" => "Mark unread", "bulk" => true, "fields" => [] } ] : []
         return handling unless can_delete?
 
