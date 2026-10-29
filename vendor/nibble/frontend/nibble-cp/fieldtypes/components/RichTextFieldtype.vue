@@ -23,7 +23,7 @@ import { MarkdownPaste } from '@/lib/tiptap/markdownPaste'
 import { readingTime } from '@/lib/tiptap/readingTime'
 import { clone } from '../../lib/clone'
 import { rowId } from '../../lib/rowId'
-import { RichTextCodeBlock, RichTextImage, baseExtensions, setNode } from '../rich-text/extensions'
+import { RichTextCodeBlock, RichTextImage, baseExtensions, hintExtensions, setNode } from '../rich-text/extensions'
 import {
   fetchGlobalLinks,
   findGlobalField,
@@ -51,6 +51,12 @@ const doc = (content: JSONContent[]): JSONContent => ({
   content: content.length ? content : [{ type: 'paragraph' }],
 })
 
+const limit = computed(() => Number(props.config.character_limit) || 0)
+const characters = ref(0)
+const counterClass = computed(() => {
+  const ratio = limit.value ? characters.value / limit.value : 0
+  return ratio > 1 ? 'text-destructive' : ratio >= 0.9 ? 'text-amber-600' : 'text-muted-foreground'
+})
 const readTime = ref('00:00')
 const storage: SetNodeStorage = {
   groups: groups.value,
@@ -77,6 +83,7 @@ const editor = useEditor({
     Markdown,
     MarkdownPaste,
     FindAndReplace.configure({ injectCSS: false, searchDebounceMs: 150 }),
+    ...hintExtensions(props.config),
   ],
   editorProps: {
     attributes: { class: 'nib-content prose prose-nibble' },
@@ -99,11 +106,15 @@ const editor = useEditor({
       return false
     },
   },
-  onCreate: ({ editor }) => (readTime.value = readingTime(editor.state.doc)),
+  onCreate: ({ editor }) => {
+    readTime.value = readingTime(editor.state.doc)
+    characters.value = editor.storage.characterCount?.characters() ?? 0
+  },
   onUpdate: ({ editor }) => {
     const content = editor.getJSON().content ?? []
     if (JSON.stringify(content) !== JSON.stringify(nodes())) update(content)
     readTime.value = readingTime(editor.state.doc)
+    characters.value = editor.storage.characterCount?.characters() ?? 0
   },
   onFocus: ({ editor }) => {
     if (editor.state.selection instanceof AllSelection) editor.commands.setTextSelection(editor.state.doc.content.size)
@@ -654,6 +665,7 @@ function showBubbleMenu({
       <div v-if="config.reading_time || config.word_count" class="nib-footer">
         <div v-if="config.reading_time">{{ readTime }} min read</div>
       </div>
+      <p v-if="limit && !isReadOnly" class="mt-1 text-xs" :class="counterClass">{{ characters }} / {{ limit }}</p>
     </div>
   </Teleport>
 

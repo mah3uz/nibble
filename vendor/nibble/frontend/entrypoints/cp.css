@@ -760,6 +760,13 @@ tr.sortable-ghost-placeholder > td {
 .dark .nib-editor {
   color: var(--gray-100);
 }
+.nib-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--gray-400);
+}
 .nib-editor:has(.nib-content:focus) {
   outline: none;
 }

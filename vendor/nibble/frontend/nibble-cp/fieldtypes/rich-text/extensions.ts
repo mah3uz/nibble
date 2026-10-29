@@ -3,6 +3,7 @@ import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import Image from '@tiptap/extension-image'
 import { ListItem } from '@tiptap/extension-list'
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table'
+import { CharacterCount, Placeholder } from '@tiptap/extensions'
 import StarterKit from '@tiptap/starter-kit'
 import { VueNodeViewRenderer } from '@tiptap/vue-3'
 import type { Component } from 'vue'
@@ -64,4 +65,12 @@ export function setNode(view: Component) {
     renderHTML: ({ HTMLAttributes }) => ['div', mergeAttributes(HTMLAttributes, { 'data-nibble-set': '' })],
     addNodeView: () => VueNodeViewRenderer(view),
   })
+}
+
+export function hintExtensions(config: Record<string, unknown>) {
+  const limit = Number(config.character_limit) || 0
+  return [
+    Placeholder.configure({ placeholder: typeof config.placeholder === 'string' ? config.placeholder : '' }),
+    ...(limit ? [CharacterCount.configure({ limit })] : []),
+  ]
 }
