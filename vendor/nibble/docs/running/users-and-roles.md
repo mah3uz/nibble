@@ -99,6 +99,37 @@ Each person manages their own password, their signed-in devices and two-factor a
   A minute before, a warning offers to extend it. Once it has ended, a dialog asks for the password (and the code, with
   two-factor on) and carries on where the page left off, unsaved changes included. `session.idle_minutes` in
   `config/nibble.yml` sets how long.
+- **Guessing is slowed down.** Ten wrong passwords for one email address within fifteen minutes, or twenty wrong
+  two-factor codes, locks that address out of signing in for the rest of the fifteen minutes: the sign-in page
+  answers "Too many attempts. Try again in 15 minutes." A wrong password typed into the "confirm your password" prompt
+  counts too. Failures older than fifteen minutes are forgotten, a successful sign-in clears the count, and a lockout
+  is written to the [audit log](utilities.md#9-audit-log) as `auth.locked_out`. Within one sign-in, five wrong codes
+  end the attempt and the person starts again.
+- **Recovery codes** are the way in when the phone is lost. Turning on two-factor with an authenticator app makes
+  eight single-use codes and shows them once; the person should save them somewhere safe. Typing one in place of the
+  six-digit code signs them in and uses it up. **New recovery codes**, on the account page, makes a fresh set after asking
+  for the password, and the old ones stop working.
+- **Passkeys** are an alternative second step that needs no codes. They are added from the same account page.
+
+### 5.1 Someone cannot get in
+
+| Their problem | What to do |
+|---|---|
+| Forgot the password | They choose **Forgot password?** on the sign-in page and follow the email. Or open them under **Users** and choose **Send password reset**. Both need mail to be set up ([Configuration](configuration.md#6-environment-and-credentials)). |
+| Locked out after too many tries | Wait fifteen minutes. Nothing needs undoing. |
+| Lost the phone, still has recovery codes | Sign in with a recovery code, then set up two-factor again from their account. |
+| Lost the phone and the codes | Another administrator switches two-factor off for them in a console (below); they sign in with their password and set it up again. |
+| Signed in on a device they no longer have | Open them under **Users** and revoke the session. |
+
+There is no button for switching off someone else's two-factor. On the server, as an administrator:
+
+```sh
+bin/kamal console
+Nibble::User.find_by!(email_address: "mina@tidewater.example").disable_two_factor!
+```
+
+If the person's role requires two-factor, they are sent to set it up again as soon as they sign in. Only a superuser
+may edit or reset another superuser.
 
 ## 6. Removing someone
 
