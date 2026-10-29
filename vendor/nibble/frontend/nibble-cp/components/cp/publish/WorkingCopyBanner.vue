@@ -19,7 +19,9 @@ const timeAgo = useTimeAgo(() => props.workingCopy.updated_at)
       >Someone published a newer version after you started these changes. Check History before publishing so you don't
       undo theirs.</AlertTitle
     >
-    <AlertTitle v-else> Draft{{ workingCopy.user ? ` by ${workingCopy.user}` : '' }}, {{ timeAgo }}. </AlertTitle>
+    <AlertTitle v-else>
+      Changes saved{{ workingCopy.user ? ` by ${workingCopy.user}` : '' }} {{ timeAgo }} aren't live yet.
+    </AlertTitle>
     <AlertDescription>
       <div class="flex items-center gap-2 pt-1">
         <Button v-if="workingCopy.stale" type="button" variant="outline" size="sm" @click="emit('view-history')"
