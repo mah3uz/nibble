@@ -14,7 +14,7 @@ class Nibble::Cp::FormNotSpamTest < ActionDispatch::IntegrationTest
 
   setup do
     WebMock.enable!
-    WebMock.disable_net_connect!
+    WebMock.disable_net_connect!(allow_localhost: true)
     @resolver = Nibble::Outbound::Guard.resolver
     Nibble::Outbound::Guard.resolver = ->(_host) { [ "93.184.216.34" ] }
     @rate_limit_store = Nibble::Forms::Submit.rate_limit_store
