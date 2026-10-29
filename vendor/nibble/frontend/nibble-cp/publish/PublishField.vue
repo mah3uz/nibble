@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
 import { Button } from '@/components/ui/button'
 import { FieldDescription, FieldError } from '@/components/ui/field'
@@ -71,11 +71,33 @@ const readOnly = computed(
 
 const control = ref<{ fieldActions?: FieldAction[] }>()
 const actions = computed(() => (props.field.actions ? (control.value?.fieldActions ?? []) : []))
+
+const showsInstructions = computed(
+  () =>
+    !!props.field.instructions &&
+    (props.field.instructions_position === 'below' || !props.field.hide_display || actions.value.length > 0),
+)
+const instructionsId = computed(() => `${path.value}-instructions`)
+const errorId = computed(() => `${path.value}-error`)
+const describedBy = computed(() =>
+  [showsInstructions.value && instructionsId.value, errors.value.length > 0 && errorId.value].filter(Boolean).join(' '),
+)
+const wrapper = useTemplateRef<HTMLElement>('wrapper')
+
+// Fieldtypes put the id they are given on their control, so linking it here spares each one, an extension's too, a prop.
+function linkDescription() {
+  const target = wrapper.value?.querySelector(`#${CSS.escape(path.value)}`)
+  if (!target) return
+  if (describedBy.value) target.setAttribute('aria-describedby', describedBy.value)
+  else target.removeAttribute('aria-describedby')
+}
+watch(describedBy, linkDescription, { flush: 'post' })
 </script>
 
 <template>
   <div
     v-if="visible && field.visibility !== 'hidden'"
+    ref="wrapper"
     :class="['form-group flex min-w-0 flex-col gap-2', `field-w-${field.width}`]"
     :data-field-path="path"
     :data-invalid="errors.length > 0 || undefined"
@@ -83,7 +105,11 @@ const actions = computed(() => (props.field.actions ? (control.value?.fieldActio
     <div v-if="!field.hide_display || actions.length" class="flex flex-col gap-1.5">
       <div class="flex items-center justify-between gap-2">
         <Label v-if="!field.hide_display" :for="path" class="block"
-          >{{ field.display }}<span v-if="required" class="relative -top-px ms-0.5 text-red-600">*</span></Label
+          >{{ field.display
+          }}<template v-if="required"
+            ><span class="relative -top-px ms-0.5 text-red-600" aria-hidden="true">*</span
+            ><span class="sr-only"> (required)</span></template
+          ></Label
         >
         <div v-if="actions.length" class="flex items-center gap-1">
           <Button
@@ -101,7 +127,10 @@ const actions = computed(() => (props.field.actions ? (control.value?.fieldActio
           </Button>
         </div>
       </div>
-      <FieldDescription v-if="field.instructions && field.instructions_position === 'above'" class="st-text-trim-start"
+      <FieldDescription
+        v-if="field.instructions && field.instructions_position === 'above'"
+        :id="instructionsId"
+        class="st-text-trim-start"
         ><FieldInstructions :text="field.instructions"
       /></FieldDescription>
     </div>
@@ -119,11 +148,13 @@ const actions = computed(() => (props.field.actions ? (control.value?.fieldActio
       :meta-path-prefix="metaPath"
       @update:value="(updated: unknown) => container.setFieldValue(path, updated)"
       @update:meta="(updated: unknown) => container.setFieldMeta(metaPath, updated)"
+      @vue:mounted="linkDescription"
+      @vue:updated="linkDescription"
     />
     <p v-else class="text-sm text-red-600">Unsupported fieldtype component "{{ field.component }}"</p>
-    <FieldDescription v-if="field.instructions && field.instructions_position === 'below'"
+    <FieldDescription v-if="field.instructions && field.instructions_position === 'below'" :id="instructionsId"
       ><FieldInstructions :text="field.instructions"
     /></FieldDescription>
-    <FieldError v-if="errors.length" :errors="errors" />
+    <FieldError v-if="errors.length" :id="errorId" :errors="errors" />
   </div>
 </template>
