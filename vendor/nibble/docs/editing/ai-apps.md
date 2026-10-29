@@ -1,12 +1,12 @@
 ---
 id: editing-ai-apps
-title: Working with AI apps
+title: Connect an AI app and approve its changes
 description: Connect Claude, ChatGPT, Codex or Cursor to the site, choose what it may do, approve what it asks to
   publish, and disconnect it.
-order: 7
+order: 11
 ---
 
-# Working with AI apps
+# Connect an AI app and approve its changes
 
 Tidewater's marketing lead drafts the weekly post with Claude, then reads it in the Control Plane before publishing.
 This guide is how to set that up. It needs an administrator to have turned on [agent access](../running/agent-access.md).
@@ -20,18 +20,14 @@ After reading this guide, you will know:
 
 ## 1. Connecting an app
 
-Open **Connected apps** from your account menu and copy the site's address for apps — for Tidewater,
-`https://tidewater.example/mcp`.
+Open **Connected apps** from your account menu and copy the address it shows for connecting apps.
 
 | App | Where to paste it |
 |---|---|
 | Claude (web, desktop) | Settings → Connectors → Add custom connector |
 | ChatGPT | its connector settings, with developer mode on |
-| Claude Code | `claude mcp add --transport http tidewater https://tidewater.example/mcp` |
-| Codex | `[mcp_servers.tidewater]` with `url = "https://tidewater.example/mcp"` in `~/.codex/config.toml`, then `codex mcp login tidewater` |
-| Cursor | its MCP settings, as a server with that URL |
 
-`nibble mcp install --client claude-code` (or `codex`, `cursor`) does this for you — see
+Other apps, such as Claude Code, Codex and Cursor, are set up from a terminal. Ask your developer, or see
 [The nibble command](../running/cli.md).
 
 The app sends you to the site to sign in, then asks what it may do:
@@ -49,10 +45,10 @@ trust, choose **Cancel**.
 > [!TIP]
 > **Draft** is the right choice for writing. The app drafts, you read it in the Control Plane, and you publish.
 
-## 2. Approving
+## 2. Approve what an app asks to publish
 
-With **Everything I can do**, an app that asks to publish, unpublish or trash something, or to change menus, globals,
-terms or files, is told to wait for you. You get a notification; the app shows you a link. The page shows what would
+With **Everything I can do**, an app that asks to publish, unpublish or trash something, or to change menus, site settings,
+labels or files, is told to wait for you. You get a notification; the app shows you a link. The page shows what would
 change, and warns if the change links to another site. Confirm your password and **Approve**, and Nibble makes that
 exact change, once — or **Decline** and nothing happens. If the change can no longer be made, because someone edited
 the same thing or the app's access changed, the page says why and nothing is altered. **Connected apps** lists the
@@ -77,11 +73,6 @@ For a script with no browser — a nightly import, a CI job — choose **Create 
 acts as you, with the access you choose, and expires within 90 days. It's shown once: store it as a secret. Scripts
 don't wait for approvals, so give a token only what the script needs.
 
-## 6. From a terminal
+## 6. Setting it up from a terminal
 
-The `nibble` command does the same work from a terminal — see [The nibble command](../running/cli.md):
-
-```sh
-nibble auth login tidewater.example
-nibble remote list-entries --collection posts
-```
+Developers can connect apps and run the same actions from a terminal. See [The nibble command](../running/cli.md).

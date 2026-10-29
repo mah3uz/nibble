@@ -1,11 +1,11 @@
 ---
 id: editing-form-submissions
-title: Form submissions
-description: Read, search and export what people sent through the site's forms, and know where their emails go.
-order: 5
+title: Find and handle form submissions
+description: Read, search and export what people sent through the site's forms, deal with spam, retry a failed delivery and find or erase one person's data.
+order: 8
 ---
 
-# Form submissions
+# Find and handle form submissions
 
 Every demo request Tidewater's site receives is kept, emailed to sales and listed in the Control Plane. This guide
 is for whoever answers them.
@@ -15,12 +15,15 @@ After reading this guide, you will know:
 - Where submissions are, and how to find one.
 - How to mark one handled, keep it unread, and leave notes for your team.
 - How to export them for a spreadsheet.
+- What to do with spam, and with a delivery that failed.
 - Where notification emails come from, and what to check when they stop.
 - How long submissions are kept.
+- How to find or erase everything held about one person.
 
 ## 1. Reading submissions
 
-Open **Forms** in the sidebar and choose a form. Each has its own list, newest first:
+Open **Forms** in the sidebar and choose a form. Each has its own list, newest first. The tabs above it are **All but
+spam** and **Spam** (see [Spam](#4-spam)):
 
 ![Submissions to the Book a demo form](../../images/cp/form-submissions.png)
 
@@ -44,7 +47,7 @@ see them. Handling, unread and notes need permission to edit the form's submissi
 
 ## 2. Exporting
 
-**Export Submissions** downloads the lot as a CSV file for a spreadsheet — for an event's sign-ups, or a month of
+**Export Submissions** downloads the lot as a spreadsheet file (CSV) that Excel or Google Sheets opens — for an event's sign-ups, or a month of
 demo requests for someone who does not use the Control Plane.
 
 Exports and deletes are recorded in the audit log with who did them, which form and how many submissions.
@@ -57,7 +60,7 @@ Exports and deletes are recorded in the audit log with who did them, which form 
 
 A form can email people when it is submitted. Tidewater's sends each demo request to `sales@`, and pressing Reply
 answers the person who asked. Who receives what is part of the form's setup; the address mail is sent **from** is a
-site setting under **Globals → Integrations**.
+site setting. See [Change the site's settings](site-settings.md).
 
 If emails stop arriving:
 
@@ -67,11 +70,23 @@ If emails stop arriving:
 3. Look in the spam folder — mail from a new domain often lands there for a while.
 4. Ask whoever runs the site to check the mail settings.
 
+### Deliveries to other systems
+
+A form can also pass each submission to another system, such as a customer-records tool. A submission's page lists
+these under **Deliveries**: where it went, whether it worked, how many attempts were made and any error. If one
+failed, choose **Retry** beside it. Ask whoever runs the site if it keeps failing.
+
 ## 4. Spam
 
-Every form is rate-limited and has a hidden field that catches most bots. Tidewater's demo form also has a CAPTCHA,
-whose keys are under **Globals → Integrations**. If spam gets through anyway, a CAPTCHA is the first thing to ask
-for.
+Every form blocks too-fast repeat submissions and has an invisible trap that most spam bots fall into. A form can also
+ask visitors to prove they are human (a CAPTCHA). If spam gets through anyway, a CAPTCHA is the first thing to ask for.
+
+Submissions caught as spam are kept apart. They do not send emails or deliveries. To check them, open the form and choose the
+**Spam** tab, which shows how many there are, as in **Spam (3)**. **All but spam** goes back.
+
+If a real person was caught, open their submission and choose **Not spam**, then confirm. It becomes a normal
+submission, and its emails and deliveries are sent then, as they would have been at first. Spam is deleted after a
+while, 30 days unless the site says otherwise, so look now and then.
 
 ## 5. How long they are kept
 
@@ -81,9 +96,9 @@ years. Tidewater's demo requests are kept for 90 days. Export anything you need 
 Submissions of a form the site no longer has are deleted too, after the retention that form last had or, if it had
 none, 30 days after it was removed.
 
-### Requests about one person
+## 6. Find or erase one person's data
 
 When someone asks what the site holds about them, or asks to be erased, an administrator opens **Forms → Personal
 data**, confirms their password and enters the email address. The page counts the matching submissions in every form,
-including forms the site no longer has. **Export JSON** or **Export CSV** gives the person their data; **Erase**
+including forms the site no longer has. **Export JSON** or **Export CSV** gives the person their data (JSON is for other systems, CSV opens in a spreadsheet); **Erase**
 deletes those submissions and their uploaded files for good. Both are recorded in the audit log.
