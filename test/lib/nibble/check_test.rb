@@ -257,6 +257,19 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     assert_match "charcter_limit: isn't an option of the text fieldtype", check.problems.map(&:to_s).join("\n")
   end
 
+  test "a set without a view is a warning, because its blocks render nothing" do
+    theme_file("collections/events.yml", title: "Events", blueprints: [ "event" ])
+    theme_file("blueprints/collections/events/event.yml", title: "Event", tabs: { main: { sections: [ { fields: [
+      { handle: "title", field: { type: "text" } },
+      { handle: "blocks", field: { type: "replicator", sets: { hero: { fields: [ { handle: "title", field: { type: "text" } } ] } } } }
+    ] } ] } })
+    @themes.join("check", "theme.yml").write("name: Check\n")
+
+    result = check
+    assert(result.warnings.any? { |warning| warning.message.include?("set 'hero' has no view sets/hero.vue") })
+    assert_not(result.problems.any? { |problem| problem.message.include?("set 'hero'") })
+  end
+
   test "unknown validation rules, reserved entry handles and bad references are all reported together" do
     theme_file("collections/events.yml", title: "Events", blueprints: [ "event" ])
     theme_file("blueprints/collections/events/event.yml", title: "Event", tabs: { main: { sections: [ { fields: [
@@ -269,6 +282,22 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     assert_match "unknown validation rule 'postcode'", messages
     assert_match "field handle 'slug' is reserved", messages
     assert_match "collection 'evnts' doesn't exist", messages
+  end
+
+  test "a routed collection whose entries resolve to a view the theme lacks warns, and one with a template that exists does not" do
+    theme_file("collections/events.yml", title: "Events", route: "/events/{slug}", blueprints: [ "event" ])
+    theme_file("blueprints/collections/events/event.yml", title: "Event", tabs: { main: { sections: [ { fields: [
+      { handle: "title", field: { type: "text" } }
+    ] } ] } })
+    @themes.join("check", "theme.yml").write("name: Check\n")
+
+    warning = check.warnings.find { |item| item.source.end_with?("collections/events.yml") }
+    assert_match "default.vue", warning.message
+
+    theme_file("collections/events.yml", title: "Events", route: "/events/{slug}", template: "pages/show", blueprints: [ "event" ])
+    FileUtils.mkdir_p(@themes.join("check", "views", "pages"))
+    FileUtils.touch(@themes.join("check", "views", "pages", "show.vue"))
+    assert_nil check.warnings.find { |item| item.source.end_with?("collections/events.yml") }
   end
 
   test "a schema that doesn't load is reported instead of raising" do

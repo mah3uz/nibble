@@ -346,15 +346,29 @@ module Nibble
       theme.manifest_problems.each { |message| problem(source, message.delete_prefix("theme.yml: ")) }
       Theme::REQUIRED_VIEWS.each { |view| problem(theme.views_path, "required view '#{view}.vue' is missing") unless theme.view?(view) }
       problem(theme.layouts_path, "required layout 'default.vue' is missing") unless theme.layout?("default")
-      set_handles(schema).each { |set| problem(theme.views_path, "set '#{set}' has no view sets/#{set}.vue") unless theme.view?("sets/#{set}") }
+      set_handles(schema).reject { |set| theme.view?("sets/#{set}") }.each do |set|
+        @warnings << Problem.new(source: theme.views_path.to_s.delete_prefix("#{Rails.root}/"), level: :warning,
+          message: "set '#{set}' has no view sets/#{set}.vue, so its blocks render nothing")
+      end
       schema.collections.select { |item| item["index_route"] }.each do |item|
         view = item["index_template"] || "collections/index"
         problem(item.path, "index_route needs the view #{view}.vue, which #{theme.handle} doesn't have") unless theme.view?(view)
       end
+      warn_missing_entry_views(schema, theme)
       types = TypeGenerator.output(@config)
       current = capture(types) { TypeGenerator.new(schema, config: @config).generate }
       if current && (!types.file? || types.read != current)
         problem(types, "generated types are out of date: run bin/rails nibble:schema:types")
+      end
+    end
+
+    def warn_missing_entry_views(schema, theme)
+      schema.collections.select { |item| item["route"] }.each do |item|
+        views = schema.blueprints_for(item).map { |blueprint| blueprint["template"] || item["template"] || "default" }.presence || [ item["template"] || "default" ]
+        views.uniq.reject { |view| theme.view?(view) }.each do |view|
+          @warnings << Problem.new(source: item.path.to_s.delete_prefix("#{Rails.root}/"), level: :warning,
+            message: "entries render the view #{view}.vue, which #{theme.handle} doesn't have; set a template or add the view")
+        end
       end
     end
 

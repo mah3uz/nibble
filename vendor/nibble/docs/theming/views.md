@@ -25,7 +25,7 @@ Once a URL has been resolved, the view is the first of these that is set:
 
 | For | View |
 |---|---|
-| an entry | its own `template`, then its blueprint's, then its collection's, then `default` |
+| an entry | its own `template`, then its blueprint's, then its collection's, then `default` (`crumbs` ships one; `nibble:check` warns when a routed collection's entries resolve to a view the theme doesn't have) |
 | a page written as a file | its frontmatter's `template`, then the same chain |
 | a taxonomy term | its taxonomy's `template`, then `taxonomies/show` |
 | a collection's index route | its `index_template`, then `collections/index` |
@@ -158,7 +158,7 @@ defineProps<{ heading: string; queries: { posts: PostsPost[] } }>()
 </script>
 ```
 
-A block whose set has no view renders nothing, so adding a set to a blueprint before its view exists is safe.
+A block whose set has no view renders nothing, so adding a set to a blueprint before its view exists is safe. `nibble:check` warns about it so the missing view is not forgotten.
 Tidewater's pricing block is built end to end in
 [Getting Started](../getting-started/tutorial.md#42-a-block-of-your-own-pricing).
 
@@ -166,7 +166,8 @@ Tidewater's pricing block is built end to end in
 
 `views/errors/404.vue` renders every address that resolves to nothing, and `views/errors/500.vue` renders a page
 that failed — both inside the default layout, so they look like the rest of the site. The 404 view may have a query
-sidecar, `views/errors/404.yml`, like any view.
+sidecar, `views/errors/404.yml`, like any view. The 500 view receives the same `site`, globals and navigation as any
+page when they can be loaded, and empty props when loading them fails, so a layout should tolerate both.
 
 > [!TIP]
 > Every 404 is counted, most-requested first, on the Control Plane's **Missing pages** screen at `/cp/404s`, and
