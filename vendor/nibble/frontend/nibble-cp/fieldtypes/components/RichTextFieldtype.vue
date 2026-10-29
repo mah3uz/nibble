@@ -213,7 +213,7 @@ defineFieldActions(
     ? []
     : [
         {
-          title: 'Toggle Fullscreen Mode',
+          title: 'Full screen',
           icon: () => (fullscreen.value ? 'fullscreen-close' : 'fullscreen-open'),
           run: toggleFullscreen,
           visibleWhenReadOnly: true,
@@ -338,27 +338,27 @@ const allButtons: ToolbarButton[] = [
   },
   {
     name: 'unorderedlist',
-    text: 'Unordered List',
+    text: 'Bulleted list',
     svg: 'list-ul',
     command: (e) => e.chain().focus().toggleBulletList().run(),
     active: 'bulletList',
   },
   {
     name: 'orderedlist',
-    text: 'Ordered List',
+    text: 'Numbered list',
     svg: 'list-ol',
     command: (e) => e.chain().focus().toggleOrderedList().run(),
     active: 'orderedList',
   },
   {
     name: 'removeformat',
-    text: 'Remove Formatting',
+    text: 'Clear formatting',
     svg: 'eraser',
     command: (e) => e.chain().focus().clearNodes().unsetAllMarks().run(),
   },
   {
     name: 'quote',
-    text: 'Blockquote',
+    text: 'Quote',
     svg: 'quote',
     command: (e) => e.chain().focus().toggleBlockquote().run(),
     active: 'blockquote',
@@ -380,83 +380,83 @@ const allButtons: ToolbarButton[] = [
   },
   {
     name: 'code',
-    text: 'Inline Code',
+    text: 'Code',
     svg: 'code-inline',
     command: (e) => e.chain().focus().toggleCode().run(),
     active: 'code',
   },
   {
     name: 'codeblock',
-    text: 'Code Block',
+    text: 'Code block',
     svg: 'code-block',
     command: (e) => e.chain().focus().toggleCodeBlock().run(),
     active: 'codeBlock',
   },
   {
     name: 'horizontalrule',
-    text: 'Horizontal Rule',
+    text: 'Divider',
     svg: 'hr',
     command: (e) => e.chain().focus().setHorizontalRule().run(),
   },
   {
     name: 'deletetable',
-    text: 'Delete Table',
+    text: 'Delete table',
     svg: 'delete-table',
     command: (e) => e.chain().focus().deleteTable().run(),
     whenActive: 'table',
   },
   {
     name: 'addcolumnbefore',
-    text: 'Add Column Before',
+    text: 'Add column before',
     svg: 'add-col-before',
     command: (e) => e.chain().focus().addColumnBefore().run(),
     whenActive: 'table',
   },
   {
     name: 'addcolumnafter',
-    text: 'Add Column After',
+    text: 'Add column after',
     svg: 'add-col-after',
     command: (e) => e.chain().focus().addColumnAfter().run(),
     whenActive: 'table',
   },
   {
     name: 'deletecolumn',
-    text: 'Delete Column',
+    text: 'Delete column',
     svg: 'delete-col',
     command: (e) => e.chain().focus().deleteColumn().run(),
     whenActive: 'table',
   },
   {
     name: 'addrowbefore',
-    text: 'Add Row Before',
+    text: 'Add row before',
     svg: 'add-row-before',
     command: (e) => e.chain().focus().addRowBefore().run(),
     whenActive: 'table',
   },
   {
     name: 'addrowafter',
-    text: 'Add Row After',
+    text: 'Add row after',
     svg: 'add-row-after',
     command: (e) => e.chain().focus().addRowAfter().run(),
     whenActive: 'table',
   },
   {
     name: 'deleterow',
-    text: 'Delete Row',
+    text: 'Delete row',
     svg: 'delete-row',
     command: (e) => e.chain().focus().deleteRow().run(),
     whenActive: 'table',
   },
   {
     name: 'toggleheadercell',
-    text: 'Toggle Header Cell',
+    text: 'Header cell',
     svg: 'flip-vertical',
     command: (e) => e.chain().focus().toggleHeaderCell().run(),
     whenActive: 'table',
   },
   {
     name: 'togglecellmerge',
-    text: 'Merge Cells',
+    text: 'Merge cells',
     svg: 'combine-cells',
     command: (e) => e.chain().focus().mergeCells().run(),
     whenActive: 'table',
@@ -529,7 +529,7 @@ function showBubbleMenu({
             variant="outline"
             size="sm"
             class="px-2.5"
-            aria-label="Toggle Fullscreen Mode"
+            aria-label="Full screen"
             tabindex="-1"
             @click="toggleFullscreen"
           >
@@ -652,7 +652,7 @@ function showBubbleMenu({
       </div>
 
       <div v-if="config.reading_time || config.word_count" class="nib-footer">
-        <div v-if="config.reading_time">{{ readTime }} Reading Time</div>
+        <div v-if="config.reading_time">{{ readTime }} min read</div>
       </div>
     </div>
   </Teleport>

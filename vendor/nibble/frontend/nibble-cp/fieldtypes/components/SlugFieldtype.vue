@@ -43,8 +43,8 @@ function onInput(raw: string | number) {
       <InputGroupButton
         type="button"
         size="icon-xs"
-        aria-label="Regenerate from source"
-        title="Regenerate from source"
+        aria-label="Make from title"
+        title="Make from title"
         @click="typeof source === 'string' && update(slugify(source, separator))"
       >
         <RefreshCw />

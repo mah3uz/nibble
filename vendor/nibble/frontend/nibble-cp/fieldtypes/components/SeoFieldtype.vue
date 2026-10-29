@@ -38,6 +38,13 @@ const description = computed(() => seo.value.description || fallbackDescription.
 const titleLimit = computed(() => Number(props.config.title_limit) || 60)
 const descriptionLimit = computed(() => Number(props.config.description_limit) || 160)
 const schemaTypes = computed(() => (props.config.schema_types as string[]) ?? [])
+const typeLabels: Record<string, string> = {
+  WebPage: 'Web page',
+  BlogPosting: 'Blog post',
+  FAQPage: 'FAQ page',
+  Organization: 'Organisation',
+  LocalBusiness: 'Local business',
+}
 const NONE = '__none__'
 const IMAGE_TYPES = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif']
 const imageConfig = computed(() => ({
@@ -88,7 +95,7 @@ const imageConfig = computed(() => ({
       />
     </div>
     <div class="space-y-2">
-      <label class="text-sm">Canonical URL</label>
+      <label class="text-sm">Main address (if this page copies another)</label>
       <Input
         :model-value="seo.canonical ?? ''"
         :disabled="isReadOnly"
@@ -110,7 +117,7 @@ const imageConfig = computed(() => ({
       />
     </div>
     <div v-if="schemaTypes.length" class="space-y-2">
-      <label class="text-sm">Schema type</label>
+      <label class="text-sm">Kind of page, for search engines</label>
       <Select
         :model-value="seo.schema_type ?? NONE"
         :disabled="isReadOnly"
@@ -119,7 +126,7 @@ const imageConfig = computed(() => ({
         <SelectTrigger class="w-full"><SelectValue /></SelectTrigger>
         <SelectContent>
           <SelectItem :value="NONE">Default</SelectItem>
-          <SelectItem v-for="type in schemaTypes" :key="type" :value="type">{{ type }}</SelectItem>
+          <SelectItem v-for="type in schemaTypes" :key="type" :value="type">{{ typeLabels[type] ?? type }}</SelectItem>
         </SelectContent>
       </Select>
     </div>
