@@ -47,6 +47,8 @@ module Nibble
       def honeypot = spam["honeypot"] == false ? nil : spam["honeypot"].presence || DEFAULT_HONEYPOT
       def rate_limit = DEFAULT_RATE_LIMIT.merge(spam["rate_limit"].to_h)
       def captcha? = spam["captcha"] == true
+      def min_seconds = spam["min_seconds"]
+      def max_links = spam["max_links"]
       def spam_retention_days = spam.fetch("retention_days", DEFAULT_SPAM_RETENTION_DAYS)
       def notify = Array(item["notify"])
       def deliveries = Array(item["api"]).map { |delivery| { "mode" => "async" }.merge(delivery) }
@@ -63,7 +65,7 @@ module Nibble
       def limits = item["limits"].is_a?(Hash) ? item["limits"] : {}
       def unique = Array(limits["unique"])
       def closed_message = limits["closed_message"].presence || DEFAULT_CLOSED_MESSAGE
-      def uncacheable? = limits.slice(*SCHEDULE_LIMITS).any?
+      def uncacheable? = limits.slice(*SCHEDULE_LIMITS).any? || !min_seconds.nil?
 
       def closed?(now = Time.current)
         opens_at, closes_at = limits.values_at("opens_at", "closes_at").map { |value| Forms.time(value) }
@@ -189,6 +191,8 @@ module Nibble
         end
         problems << "spam.captcha must be true or false" unless [ nil, true, false ].include?(form.spam["captcha"])
         problems << "spam.retention_days must be a positive number of days" unless form.spam_retention_days.to_i.positive?
+        problems << "spam.min_seconds must be a positive whole number of seconds" unless form.min_seconds.nil? || (form.min_seconds.is_a?(Integer) && form.min_seconds.positive?)
+        problems << "spam.max_links must be a whole number, 0 or more" unless form.max_links.nil? || (form.max_links.is_a?(Integer) && form.max_links >= 0)
         problems
       end
 

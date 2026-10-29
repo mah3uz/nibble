@@ -189,6 +189,16 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     assert_not_includes problems, "field 'phone' can't be encrypted"
   end
 
+  test "the timing and link spam checks take whole numbers, and stay off unless set" do
+    theme_file("forms/odd.yml", title: "Odd", fields: [ { handle: "email", field: { type: "text" } } ], spam: { min_seconds: 0, max_links: -1 })
+    theme_file("forms/set.yml", title: "Set", fields: [ { handle: "email", field: { type: "text" } } ], spam: { min_seconds: 3, max_links: 0 })
+
+    problems = check.problems.map(&:to_s).join("\n")
+    assert_includes problems, "forms/odd.yml: spam.min_seconds must be a positive whole number of seconds"
+    assert_includes problems, "forms/odd.yml: spam.max_links must be a whole number, 0 or more"
+    assert_not_includes problems, "set.yml"
+  end
+
   test "a form's limits must be ones Nibble can enforce: real times in order, a positive cap, and unique fields it can compare" do
     fields = [ { handle: "email", field: { type: "text" } }, { handle: "topics", field: { type: "checkboxes", options: %w[a b] } } ]
     theme_file("forms/broken.yml", title: "Broken", fields:, limits: { max_submissions: 0, opens_at: "next week", closes_at: "2026-11-01T09:00",

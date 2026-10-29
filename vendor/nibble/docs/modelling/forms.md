@@ -242,12 +242,27 @@ A theme renders the honeypot as a visually hidden text input with `tabindex="-1"
 password managers fill in fields with names like `website` or `email`, and `bin/rails nibble:check` warns when the
 honeypot has one.
 
-A submission that fills the honeypot looks sent to whoever sent it. On a form that stores submissions, its values are
-kept with the status **Spam**, its files never are, and nothing is emailed, delivered or handled. The form's
-submissions screen shows **All but spam**, and **Spam** lists what was caught. Someone who can edit the form can open
-a wrongly caught submission and choose **Not spam**: it becomes a received submission, and its notifications, API
-deliveries and handler run once, as they would have when it was sent. Its values still have to pass the form's
-checks.
+Two more checks stay off until a form turns them on:
+
+```yaml
+spam:
+  min_seconds: 3
+  max_links: 2
+```
+
+- **`min_seconds`** — a submission sent sooner than this after the form was shown is spam. The form's definition
+  carries a signed `timestamp`, which `useNibbleForm` posts back as `_nibble_t`; a theme that builds its own form posts
+  it as a hidden `_nibble_t` input. A submission without a valid one is spam, so a theme has to send it. A page showing
+  such a form is rendered for each visit rather than kept in the page cache, so each visitor's timestamp is their own.
+- **`max_links`** — a submission whose `text` and `textarea` fields hold more than this many links between them is
+  spam. `0` allows none.
+
+A submission caught by the honeypot, `min_seconds` or `max_links` looks sent to whoever sent it. On a form that
+stores submissions, its values are kept with the status **Spam**, its files never are, and nothing is emailed,
+delivered or handled. The form's submissions screen shows **All but spam**, and **Spam** lists what was caught.
+Someone who can edit the form can open a wrongly caught submission and choose **Not spam**: it becomes a received
+submission, and its notifications, API deliveries and handler run once, as they would have when it was sent. Its
+values still have to pass the form's checks.
 
 Spam is deleted after 30 days, or after `spam.retention_days`:
 
@@ -493,7 +508,7 @@ the visitor submitted from: the form title, field labels and option labels in it
 | `success` | `{ message }` or `{ redirect }`; the message may be `{global.<set>.<field>}` |
 | `notify` | a list of `{ to, cc, bcc, subject, message, reply_to, fields, if }` |
 | `api` | a list of `{ url or use, path, method, format, body, mode, errors, error_fields, retry }`; `errors` is `{ status, path, field, message }`, and a connection in `site/schema/apis/` takes `base_url`, `headers`, `timeout`, `errors` and `retry` |
-| `spam` | `{ honeypot, rate_limit: { requests, per_minutes }, captcha, retention_days }` |
+| `spam` | `{ honeypot, rate_limit: { requests, per_minutes }, captcha, min_seconds, max_links, retention_days }` |
 | `store`, `cp_notify` | true / false |
 | a field's `encrypt` | true stores its value encrypted; not on `files`, nor with `store: false` |
 | `retention_days` | a positive number |

@@ -235,6 +235,7 @@ export function useNibbleForm(definition: NibbleForm) {
       const body = new FormData()
       definition.fields.filter(isVisible).forEach((field) => append(body, field.handle, values[field.handle]))
       if (definition.honeypot) body.append(definition.honeypot, trap.value)
+      if (definition.timestamp) body.append('_nibble_t', definition.timestamp)
       body.append('_locale', locale.value)
       if (captcha) {
         const token = await captchaToken(captcha)

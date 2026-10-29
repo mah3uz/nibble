@@ -57,6 +57,17 @@ describe('useNibbleForm', () => {
 
     expect(scripts).toEqual(['https://www.google.com/recaptcha/api.js?render=abc'])
   })
+
+  it("posts the form's signed timestamp back, so the server can tell a bot that answered too fast", async () => {
+    const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) })
+    vi.stubGlobal('fetch', fetch)
+    vi.stubGlobal('HTMLFormElement', class {})
+    const { useNibbleForm } = await import('../useNibbleForm')
+
+    await useNibbleForm({ ...definition(null), timestamp: 'signed-time' }).submit()
+
+    expect((fetch.mock.calls[0][1].body as FormData).get('_nibble_t')).toBe('signed-time')
+  })
 })
 
 type Case = { description: string; config: Record<string, unknown>; values: Record<string, unknown>; visible: boolean }

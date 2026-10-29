@@ -6,6 +6,7 @@ module Nibble
       OPTION_TYPES = %w[select radio checkboxes].freeze
       LOCALIZED_CONFIG = %w[placeholder inline_label].freeze
       CLIENT_MESSAGES = %w[too_large generic network].freeze
+      TIMESTAMP_FIELD = "_nibble_t".freeze
 
       module_function
 
@@ -26,9 +27,17 @@ module Nibble
           "messages" => CLIENT_MESSAGES.to_h { |key| [ key, Forms.message("client.#{key}", locale) ] },
           "closed" => closed,
           "closed_message" => (Localized.resolve(form.closed_message, locale) if closed),
+          "timestamp" => (verifier.generate(Time.current.to_f, purpose: purpose(form)) if form.min_seconds),
           "result" => (result if result.is_a?(Hash) && result["handle"] == form.handle)
         }
       end
+
+      def rendered_at(form, token)
+        verifier.verified(token.to_s, purpose: purpose(form)) if token.is_a?(String)
+      end
+
+      def verifier = Rails.application.message_verifier("nibble/forms/timestamp")
+      def purpose(form) = "form:#{form.handle}"
 
       def prefill_params(form) = form.fields.all.values.filter_map { |field| prefill_name(field) }.uniq
 

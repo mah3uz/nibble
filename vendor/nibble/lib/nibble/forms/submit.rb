@@ -8,6 +8,7 @@ module Nibble
       PREFILL_LIMIT = 500
       REFUSED_LIMIT_FACTOR = 10
       SPAM_VALUE = [ String, Numeric, TrueClass, FalseClass ].freeze
+      LINK = %r{(?:https?://|\bwww\.)\S+}i
 
       mattr_accessor :rate_limit_store, default: -> { Rails.cache }
 
@@ -40,7 +41,7 @@ module Nibble
 
       def process
         return closed if @form.closed?
-        return spam! if @form.honeypot && @params[@form.honeypot].present?
+        return spam! if spam?
         return result(:invalid, errors: { "base" => [ captcha_message ] }) unless captcha_passed?
 
         fields = @form.fields
@@ -119,6 +120,22 @@ module Nibble
       def window = @form.rate_limit["per_minutes"].minutes
       def window_end = (Time.current.to_i / window.to_i + 1) * window.to_i
       def rate_key(kind) = "nibble:forms:#{@form.handle}:#{@ip_hash || 'unknown'}:#{kind}:#{Time.current.to_i / window.to_i}"
+
+      def spam? = (@form.honeypot && @params[@form.honeypot].present?) || too_fast? || too_many_links?
+
+      def too_fast?
+        return false unless @form.min_seconds
+
+        rendered = Definition.rendered_at(@form, @params[Definition::TIMESTAMP_FIELD]) or return true
+        Time.current.to_f - rendered < @form.min_seconds
+      end
+
+      def too_many_links?
+        return false unless @form.max_links
+
+        texts = @form.fields.all.values.select { |field| %w[text textarea].include?(field.type) }.flat_map { |field| Array.wrap(@params[field.handle]) }
+        texts.sum { |text| text.to_s.scan(LINK).size } > @form.max_links
+      end
 
       def captcha_passed?
         return true unless @form.captcha?

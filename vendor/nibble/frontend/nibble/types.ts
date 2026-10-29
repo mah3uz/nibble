@@ -122,5 +122,6 @@ export type NibbleForm = {
   messages?: { too_large: string; generic: string; network: string }
   closed?: boolean
   closed_message?: string | null
+  timestamp?: string | null
   result: NibbleFormResult | null
 }
