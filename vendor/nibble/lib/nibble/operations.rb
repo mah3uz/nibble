@@ -138,14 +138,16 @@ module Nibble
 
     def rehearse
       scheduled = Thread.current[:nibble_dispatch_scheduled]
+      warnings = Thread.current[:nibble_warnings] = []
       outcome = nil
       ActiveRecord::Base.transaction(requires_new: true) do
         outcome = yield
         raise ActiveRecord::Rollback
       end
-      outcome = outcome.except("id", "uuid", "cp_url", "url") if outcome["result"] == "created"
-      outcome.merge("result" => "would be #{outcome['result']}", "dry_run" => true, "saved" => false)
+      outcome = outcome.except("id", "uuid", "cp_url", "preview_url", "url") if outcome["result"] == "created"
+      outcome.merge("result" => "would be #{outcome['result']}", "dry_run" => true, "saved" => false, "warnings" => warnings.uniq)
     ensure
+      Thread.current[:nibble_warnings] = nil
       Thread.current[:nibble_dispatch_scheduled] = scheduled
     end
 

@@ -68,11 +68,20 @@ A token sees only the operations it may use. There is no search operation: searc
 ## 4. Rules every change follows
 
 - **Values follow `describe_schema`.** Unknown fields and arguments are refused with the names that would work.
-- **Rich text is Markdown.** Images are `![alt](asset:ID)`; links may be web, email, phone or site paths only.
-  Content Markdown can't hold — sets inside rich text — comes back as editor JSON.
+- **Rich text is Markdown**, at any depth: a `rich_text` field in a replicator set or a grid row, however deeply
+  nested, is written and read the same way as one at the top. Images are `![alt](asset:ID)`; links may be web,
+  email, phone or site paths only. Content Markdown can't hold comes back as editor JSON, and nodes sent as nodes
+  are kept as they are.
+- **`describe_schema` lists every set.** A replicator's `items` is a `oneOf` with one schema per set: `type` as a
+  `const` (the set's handle) beside the set's fields. A grid's `items` lists its fields. Three levels of nesting are
+  described; deeper ones are plain objects.
 - **`lock_version` is required** to change something. If someone saved it since you read it, the answer is
   `lock_conflict` with the current `lock_version`, and nothing is overwritten.
-- **`dry_run: true`** checks a change completely and saves nothing.
+- **`dry_run: true`** checks a change completely and saves nothing. The preview has a `warnings` list for what is
+  valid but probably a mistake: a replicator row whose `type` isn't one of its sets, or a rich text image
+  `asset:ID` that doesn't exist.
+- **`preview_url`** comes back from `create_entry` and `update_entry`: the Control Plane preview of the entry's
+  draft, for the person signed in there.
 - **`idempotency_key`** makes a retry safe: the same key returns the first answer instead of repeating the change.
 - **Entries change as drafts.** Publishing is a separate operation.
 - **Consequential changes wait for a person** when an app makes them: the answer is `approval_required` with an

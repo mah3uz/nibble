@@ -41,14 +41,7 @@ module Nibble
           "data" => outgoing(record.blueprint_fields, record.values) }
       end
 
-      def outgoing(fields, values)
-        values.to_h.each_with_object({}) do |(key, value), result|
-          field = fields.get(key)
-          next if field && FieldSchema::HIDDEN.include?(field.type)
-
-          result[key] = field&.type == "rich_text" && value.present? ? (RichTextMarkdown.to_markdown(value) || value) : value
-        end
-      end
+      def outgoing(fields, values) = walk(fields, values, :outgoing, nil)
 
       def incoming(fields, data, columns: [])
         data = data.to_h.stringify_keys
@@ -58,13 +51,68 @@ module Nibble
             hint: "Fields you can write: #{(columns + fields.handles).uniq.sort.join(', ')}. describe_schema lists their types.")
         end
 
-        data.to_h do |key, value|
+        data.each_key do |key|
           field = fields.get(key)
           raise Failure.new("forbidden", "#{key} can't be written by an app") if field && FieldSchema::HIDDEN.include?(field.type)
+        end
+        walk(fields, data, :incoming, nil)
+      end
 
-          [ key, field&.type == "rich_text" && value.is_a?(String) ? RichTextMarkdown.to_nodes(value) : value ]
+      def walk(fields, values, direction, path)
+        values.to_h.each_with_object({}) do |(key, value), result|
+          field = fields.get(key)
+          next if direction == :outgoing && field && FieldSchema::HIDDEN.include?(field.type)
+
+          result[key] = field ? convert(field, value, direction, [ path, key ].compact.join(".")) : value
         end
       end
+
+      def convert(field, value, direction, path)
+        case field.type
+        when "rich_text" then rich_text(value, direction, path)
+        when "replicator" then rows(value) { |row, index| set_row(field, row, direction, "#{path}.#{index}") }
+        when "grid" then rows(value) { |row, index| walk(field.fieldtype.row_fields, row, direction, "#{path}.#{index}") }
+        else value
+        end
+      end
+
+      def rows(value)
+        return value unless value.is_a?(Array)
+
+        value.each_with_index.map { |row, index| row.is_a?(Hash) ? yield(row.stringify_keys, index) : row }
+      end
+
+      def set_row(field, row, direction, path)
+        type = row["type"].to_s
+        unless field.fieldtype.sets_config.key?(type)
+          warn_about("#{path}: #{type.presence || 'no type'} isn't a set of #{field.handle}") if direction == :incoming
+          return row
+        end
+
+        walk(field.fieldtype.set_fields(type), row, direction, path)
+      end
+
+      def rich_text(value, direction, path)
+        if direction == :outgoing
+          value.present? ? (RichTextMarkdown.to_markdown(value) || value) : value
+        elsif value.is_a?(String)
+          RichTextMarkdown.to_nodes(value).tap { |nodes| check_assets(image_ids(nodes), path) }
+        else
+          value
+        end
+      end
+
+      def image_ids(nodes)
+        Array(nodes).flat_map { |node| node.is_a?(Hash) ? [ node.dig("attrs", "asset").presence, *image_ids(node["content"]) ] : [] }.compact
+      end
+
+      def check_assets(ids, path)
+        missing = Array(ids).map(&:to_s) - Records::Asset.kept.where(id: Array(ids)).pluck(:id).map(&:to_s)
+        missing.each { |id| warn_about("#{path}: asset #{id} doesn't exist") }
+        ids
+      end
+
+      def warn_about(message) = Thread.current[:nibble_warnings]&.push(message)
     end
   end
 end

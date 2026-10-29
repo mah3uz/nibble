@@ -164,6 +164,67 @@ class Nibble::OperationsTest < ActiveSupport::TestCase
     assert_equal({ "body" => "Hello **world**" }, Nibble::Operations::Editable.outgoing(fields, stored))
   end
 
+  def article_fields = Nibble::Records::Entry.new(collection: "articles", blueprint: "article").blueprint_fields
+
+  test "Markdown in a rich text set becomes editor nodes, not one paragraph holding the raw text" do
+    asset = create_asset
+    markdown = "# Title\n\n- one\n- two\n\n```ruby\nputs 1\n```\n\n![Logo](asset:#{asset.id})"
+    stored = Nibble::Operations::Editable.incoming(article_fields, { "blocks" => [ { "id" => "row1", "type" => "rich_text", "text" => markdown } ] })
+
+    row = stored["blocks"].first
+    assert_equal [ "row1", "rich_text" ], row.values_at("id", "type")
+    assert_equal %w[heading bulletList codeBlock image], row["text"].map { |node| node["type"] }
+    assert_equal({ "blocks" => [ { "id" => "row1", "type" => "rich_text", "text" => markdown } ] },
+      Nibble::Operations::Editable.outgoing(article_fields, stored), "reading it back gives the Markdown that was written")
+  end
+
+  test "nodes sent as nodes are kept, and a set inside a set or a grid row converts too" do
+    nodes = [ { "type" => "paragraph", "content" => [ { "type" => "text", "text" => "Kept" } ] } ]
+    data = { "blocks" => [
+      { "type" => "rich_text", "text" => nodes },
+      { "type" => "columns", "cells" => [ { "body" => "In a **grid**" } ], "inner" => [ { "type" => "rich_text", "text" => "Deep" } ] }
+    ] }
+
+    stored = Nibble::Operations::Editable.incoming(article_fields, data)["blocks"]
+
+    assert_equal nodes, stored[0]["text"]
+    assert_equal "paragraph", stored[1]["cells"][0]["body"].first["type"]
+    assert_equal "paragraph", stored[1]["inner"][0]["text"].first["type"]
+    assert_equal "Deep", Nibble::Operations::Editable.outgoing(article_fields, { "blocks" => stored })["blocks"][1]["inner"][0]["text"]
+  end
+
+  test "describe_schema lists each set of a replicator with its type and fields" do
+    schema = Nibble::Operations::FieldSchema.for(article_fields.get("blocks"))
+    sets = schema.dig("items", "oneOf")
+
+    assert_equal %w[quote rich_text columns], sets.map { |set| set.dig("properties", "type", "const") }
+    assert_equal [ "text" ], sets.second["properties"].keys - [ "type" ]
+    assert_equal "array", sets.third.dig("properties", "cells", "type")
+    assert_equal "rich_text", sets.third.dig("properties", "inner", "items", "oneOf", 0, "properties", "type", "const")
+  end
+
+  test "a dry run warns about an unknown set and a missing image" do
+    @grant = grant_for(users(:editor))
+    real = create_asset
+    data = { "title" => "Maybe", "blocks" => [ { "type" => "nope" }, { "type" => "rich_text", "text" => "![x](asset:999999)\n\n![y](asset:#{real.id})" } ] }
+
+    preview = run_op("create_entry", "collection" => "articles", "data" => data, "dry_run" => true)
+
+    assert_equal [ "blocks.0: nope isn't a set of blocks", "blocks.1.text: asset 999999 doesn't exist" ],
+      preview["warnings"]
+    assert_nil preview["preview_url"]
+  end
+
+  test "a created or changed entry links to its draft preview in the Control Plane" do
+    @grant = grant_for(users(:editor))
+
+    created = run_op("create_entry", "collection" => "articles", "data" => { "title" => "Preview me" })
+    assert_equal "https://example.com/cp/collections/articles/entries/#{created['id']}/preview", created["preview_url"]
+
+    changed = run_op("update_entry", "id" => created["id"], "lock_version" => created["lock_version"], "data" => { "summary" => "S" })
+    assert_equal created["preview_url"], changed["preview_url"]
+  end
+
   test "secret fields are neither shown to an app nor writable by one" do
     fields = Nibble::Fields.new([ { "handle" => "token", "field" => { "type" => "secret" } }, { "handle" => "name", "field" => { "type" => "text" } } ])
 

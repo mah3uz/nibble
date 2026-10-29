@@ -10,7 +10,12 @@ module NibbleRecordsHelper
       { handle: "related", field: { type: "entries", collections: [ "articles", "docs" ] } },
       { handle: "tags", field: { type: "terms", taxonomies: [ "tags" ] } },
       { handle: "image", field: { type: "assets", max_files: 1, preset: "card" } },
-      { handle: "blocks", field: { type: "replicator", sets: { quote: { fields: [ { handle: "source", field: { type: "entries" } } ] } } } }
+      { handle: "blocks", field: { type: "replicator", sets: {
+        quote: { fields: [ { handle: "source", field: { type: "entries" } } ] },
+        rich_text: { fields: [ { handle: "text", field: { type: "rich_text" } } ] },
+        columns: { fields: [ { handle: "cells", field: { type: "grid", fields: [ { handle: "body", field: { type: "rich_text" } } ] } },
+                             { handle: "inner", field: { type: "replicator", sets: { rich_text: { fields: [ { handle: "text", field: { type: "rich_text" } } ] } } } } ] }
+      } } }
     ] } ] } } },
     "collections/docs.yml" => { title: "Docs", route: "{parent_uri}/{slug}", structure: { max_depth: 3 }, blueprints: [ "doc" ],
                                 taxonomies: [ "tags" ], workflow: "review" },

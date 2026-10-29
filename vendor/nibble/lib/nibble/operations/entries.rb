@@ -113,7 +113,8 @@ module Nibble
       end
 
       def written(entry, caller, what)
-        Editable.entry(entry.reload, site: caller.site).merge("result" => what, "site" => caller.site)
+        Editable.entry(entry.reload, site: caller.site).merge("result" => what, "site" => caller.site,
+          "preview_url" => "#{caller.site}/cp/collections/#{entry.collection}/entries/#{entry.id}/preview")
       end
 
       def find!(input, trashed: false)
