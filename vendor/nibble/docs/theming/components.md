@@ -214,7 +214,7 @@ arrays or `null` and narrows them as before.
 Each field carries its settings, such as `placeholder`, `options`, and `prepend` and `append` to draw beside the
 input, and an `integer` field's `min`, `max` and `step`. A `decimal` field carries `decimals` (0 to 10, default 2), `min`, `max`, `step`
 and `placeholder`; a `range` field carries `min` (default 0), `max` (default 100), `step` (default 1), and its `default`
-starts the slider; a `rating` field carries `max` (2 to 10, default 5), and its values are 1 to `max`. Text fields carry `autocomplete`, textareas `rows`, toggles `inline_label`,
+starts the slider; a `rating` field carries `max` (2 to 10, default 5), and its values are 1 to `max`. Text fields carry `autocomplete`, textareas `rows`, toggles `inline_label` (plain text) and, when the label has links, `inline_label_html`,
 dates `time_enabled`, `earliest_date` and `latest_date`, and selects `max_items` and `clearable`; `default` is already
 resolved, so a computed default is a date, not a name. A field with a condition carries `conditions`, the rules for
 when to draw it (see [Forms](../modelling/forms.md#1-declaring-a-form)). `isVisible(field)` evaluates them as the
@@ -230,6 +230,11 @@ browser accepts the places the server keeps. Draw a `range` as `<input type="ran
 `<output>` beside it showing the value; without a `default` the value starts at `min`, so a range always posts a number.
 Draw a `rating` as a `fieldset` with a `legend` holding one radio input for each number from 1 to `max`, each with a label
 a screen reader hears as "3 of 5", and style the labels as stars. The visitor leaves it unrated by choosing none.
+
+A `note` field carries `text_html`, the note's Markdown rendered and sanitized by the server: draw it as a block of
+text, not an input, and it has no value in `values`. A toggle's `inline_label_html` is the same kind of HTML, holding
+only links with `href` and `rel="noopener"`; draw it inside the checkbox's `<label>`. A text field's `input_type` is
+`email`, `url` or `tel` when the server checks the value, so draw it as that input type.
 
 A `calculation` field carries its `formula`, and its `decimals`, `prepend` and `append` when it has them.
 `calculated(field)` runs the formula in the browser with the same rules as the server, over the current `values`, so it

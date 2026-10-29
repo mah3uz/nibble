@@ -46,8 +46,8 @@ success:
 ```
 
 Fields are declared exactly as in a [blueprint](blueprints.md), but a public form may only use `text`, `textarea`,
-`integer`, `decimal`, `range`, `rating`, `toggle`, `select`, `radio`, `checkboxes`, `date`, `files` and
-[`calculation`](#11-calculations).
+`integer`, `decimal`, `range`, `rating`, `toggle`, `select`, `radio`, `checkboxes`, `date`, `files`,
+[`calculation`](#11-calculations) and [`note`](#14-notes).
 `nibble:check` refuses anything else.
 
 A consent box is a `required` toggle. A submission with it unticked is refused with "The Consent field is required.",
@@ -240,7 +240,51 @@ and only a form can have one. `nibble:check` refuses a formula that doesn't pars
 doesn't have or one that doesn't hold a number, a calculation that depends on itself (directly or through other
 calculations), `decimals` outside 0–15, and a calculation in a blueprint or global set.
 
-### 1.2 Steps, and finishing later
+### 1.2 Text that is checked
+
+A `text` field with `input_type: email`, `url` or `tel` checks what the visitor typed, unless they left it blank: an
+email address, an absolute `http://` or `https://` address, or a phone number made of digits, spaces and `+ ( ) . -`
+with at least three digits. The messages are "must be a valid email address", "must be a valid URL" and "must be a valid
+phone number", and a field's `messages` under `email`, `url` or `phone` replace them, per locale. A `validate: [ "regex:…" ]`
+on a `tel` field replaces the phone check, so `regex:/^04\d{8}$/` accepts only Australian mobile numbers. See
+[the fieldtypes](blueprints.md#3-the-fieldtypes).
+
+### 1.3 A consent checkbox
+
+A consent box is a `required` toggle whose `inline_label` links to the policy:
+
+```yaml
+  - handle: consent
+    field:
+      type: toggle
+      display: Consent
+      inline_label: I agree to the [privacy policy](/privacy) and the [terms](/terms)
+      required: true
+```
+
+The label may be written per locale. A link may go to a web, email or phone address or a page on the site; any other
+link is shown as its text. The theme receives `inline_label` as plain text with only the link text, and
+`inline_label_html` with the links as `<a href rel="noopener">` when the label has any. Emails, the Control Plane's
+submissions and CSV exports show the plain text.
+
+### 1.4 Notes
+
+A `note` field puts text between the fields, such as how replies are handled:
+
+```yaml
+  - handle: reply_time
+    field:
+      type: note
+      text: We reply **within a working day**. Urgent? [Call us](tel:+61299991234).
+```
+
+`text` is Markdown, per locale if the site has several: paragraphs, emphasis, lists and links to web, email, phone or
+site addresses. The theme receives it as `text_html`, already safe to draw as HTML. A note is not an answer: it is not
+posted, stored, emailed, exported or delivered, it has no value for a condition to read, and it can't be `required`,
+`hidden`, `encrypt`ed or have a `default`; `nibble:check` refuses those. It takes the other options a field does,
+such as `display`, `width` and `conditions`.
+
+### 1.5 Steps, and finishing later
 
 `steps: true` on a sectioned form makes each section a step. The visitor sees one step at a time with a progress
 indicator, Back and Next, and Next checks that step before moving on:
@@ -663,6 +707,9 @@ Nibble adds around them, and the email with a link to a saved form, is translate
 | `spam` | `{ honeypot, rate_limit: { requests, per_minutes }, captcha, min_seconds, max_links, retention_days }` |
 | `store`, `cp_notify` | true / false |
 | a field's `encrypt` | true stores its value encrypted; not on `files`, nor with `store: false` |
+| a `text` field's `input_type` | `email`, `url` and `tel` check the value ([Text that is checked](#12-text-that-is-checked)) |
+| a `toggle` field's `inline_label` | text beside the box, which may hold Markdown links ([A consent checkbox](#13-a-consent-checkbox)) |
+| a `note` field's `text` | Markdown shown between fields; stores nothing ([Notes](#14-notes)) |
 | a `calculation` field's `formula`, `decimals`, `prepend`, `append` | the formula, **required**; places to round to, 0–15; text before and after the figure ([Calculations](#11-calculations)) |
 | a `decimal` field's `decimals`, `min`, `max`, `step`, `placeholder`, `prepend`, `append` | places kept, 0–10 (default 2); bounds; the input's step; text in and around the input |
 | a `range` field's `min`, `max`, `step`, `default`, `prepend`, `append` | the scale (0, 100, 1 by default), where it starts, and text around the value |

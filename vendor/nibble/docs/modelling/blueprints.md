@@ -142,8 +142,47 @@ and a locale the site doesn't have.
 | Files | `assets`, `files` |
 | Repeating | `grid`, `replicator` |
 | Whole page | `seo` |
+| Display only | `note` |
 
 The ones worth knowing properly:
+
+**`text`** takes an `input_type`: `text` (the default), `email`, `url`, `tel`, `number`, `date`, `month`, `week`,
+`time`, `color`, `password` or `hidden`, which sets the input a theme draws. Three of them check the value when it is
+saved, in a blueprint and on a [public form](forms.md) alike, and a blank value always passes:
+
+| `input_type` | Accepts | Message key |
+|---|---|---|
+| `email` | an email address | `email` |
+| `url` | an absolute `http://` or `https://` address | `url` |
+| `tel` | digits, spaces and `+ ( ) . -`, with at least three digits | `phone` |
+
+A field's own `validate: [ "regex:/^04\d{8}$/" ]` replaces the phone check, so a site can ask for the numbers it
+takes. Each rule's wording comes from the field's `messages` under the key above, per locale if the site has several
+(see [Options every field takes](#2-options-every-field-takes)). `nibble:check` warns when saved entries, terms or
+global sets hold an email, URL or phone that fails its check, with how many and the first few ids; they can't be saved
+again until the value is corrected. The other options of a `text` field are `character_limit`, `autocomplete`,
+`placeholder`, `prepend` and `append`.
+
+**`toggle`** is a switch; its `inline_label` is the text beside it, and `inline_label_when_true` replaces that text
+while it is on. `inline_label` may hold Markdown links, such as `I agree to the [privacy policy](/privacy)`, per
+locale like any label. A link may go to a web, email or phone address or a page on the site; anything else, such as
+`javascript:`, is shown as plain text. Nothing else in the label becomes markup. See the
+[consent checkbox recipe](forms.md#13-a-consent-checkbox).
+
+**`note`** shows text and holds no value. Its `text` is Markdown, per locale if the site has several: paragraphs,
+emphasis, lists and links to web, email, phone or site addresses are kept, and everything else, including raw HTML,
+headings and images, is dropped. The Control Plane draws it as a muted block across the form, and a public form passes
+it to the theme as `text_html`. A note is never stored, exported, emailed, searched, listed in the content API, or
+offered to connected apps to write. It can't be `required`, `hidden`, `encrypt`ed or have a `default`; `nibble:check`
+refuses those.
+
+```yaml
+- handle: pricing_hint
+  field:
+    type: note
+    text: |
+      Prices include **GST**. See the [price list](/prices) for what is covered.
+```
 
 **`rich_text`** is the full editor — headings, lists, links, images, tables, code blocks and find-and-replace. It is
 stored as structured data, not HTML, and rendered to safe HTML on the server. Your theme never sees raw markup it
