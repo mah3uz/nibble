@@ -207,6 +207,13 @@ class Nibble::OperationsTest < ActiveSupport::TestCase
     assert_match "Read-only when locked is true", conditional["description"]
   end
 
+  # An app can only fill a conditionally required field before the save is refused if the schema says when it's needed.
+  test "a field required only on a condition says when" do
+    schema = described({ "type" => "text", "required" => { "if" => { "contact_by" => "phone" } } })
+    assert_match "Required when contact_by is phone", schema["description"]
+    refute_match "Required", described({ "type" => "text", "required" => true })["description"].to_s
+  end
+
   test "a field shown only on a condition says so and isn't required in its row" do
     schema = described({ "type" => "text", "if" => { "hero_kind" => "video" } })
     assert_match "Only when hero_kind is video", schema["description"]

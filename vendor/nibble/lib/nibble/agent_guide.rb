@@ -7,7 +7,7 @@ module Nibble
       ## How to work
 
       1. Call `whoami` first: it says who you act as and what this connection may do. `describe_site` lists the content model.
-      2. Before creating or changing content, call `describe_schema` for its collection, taxonomy, global set or menu, and write values that match each field's schema.
+      2. Before creating or changing content, call `describe_schema` for its collection, taxonomy, global set or menu, and write values that match each field's schema. A field's description says when it is shown, required or read-only. Read-only fields keep their saved value: the answer's `ignored` lists any you sent.
       3. Read with `get_entry` (or `get_term`, `get_global`, `get_navigation`) before changing it, and send its `lock_version`. On `lock_conflict`, read it again, reapply your change to the current data, and retry. Never overwrite what someone else saved.
       4. Changing an entry saves a draft; the live page doesn't change until it's published. Publishing is a separate step (`transition_entry`) that your access may not allow: if it's refused, tell the person it's ready for them to publish.
       5. Terms, global sets, navigation menus and assets have no drafts: a change to them is live at once. Be sure before you make one.

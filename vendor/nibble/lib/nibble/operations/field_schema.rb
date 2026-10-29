@@ -82,7 +82,9 @@ module Nibble
       def conditions(field)
         shown = Conditions.describe(field.config, prefix: field.prefix)
         locked = field.read_only_condition && Conditions.describe(field.read_only_condition, prefix: field.prefix)
-        [ (shown && "#{shown['show'] ? 'Only when' : 'Not when'} #{sentence(shown)}; otherwise it isn't saved"),
+        needed = field.required_condition && Conditions.describe(field.required_condition, prefix: field.prefix)
+        [ (shown && "#{shown['show'] ? 'Only when' : 'Not when'} #{sentence(shown)}; otherwise it's hidden and its rules don't apply"),
+          (needed && "Required #{needed['show'] ? 'when' : 'unless'} #{sentence(needed)}"),
           (locked && "Read-only #{locked['show'] ? 'when' : 'unless'} #{sentence(locked)}; a value sent then is ignored") ].compact
       end
 
