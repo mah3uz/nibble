@@ -12,6 +12,8 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+## 0.22.2 — 2026-10-30 05:17 +0600
+
 ### What's fixed
 
 - **A site builds its assets again.** The rich text editor's character counter and placeholder, and the Control Plane's
