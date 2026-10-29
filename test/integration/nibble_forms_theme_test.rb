@@ -28,6 +28,19 @@ class NibbleFormsThemeTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "regex:/@/", "validation rules stay on the server"
   end
 
+  test "a hidden field arrives filled from the page's query, and the form's action carries it so a post can't lose it" do
+    get "/about"
+    assert_equal [ true, "direct", "/forms/contact" ], [ contact["fields"].last["hidden"], contact["fields"].last["value"], contact["action"] ]
+
+    get "/about?utm_source=newsletter&utm_other=x"
+    assert_equal [ "newsletter", "/forms/contact?utm_source=newsletter" ], [ contact["fields"].last["value"], contact["action"] ]
+    assert_equal({ "utm_source" => "newsletter" }, page_props["props"]["site"]["params"])
+
+    get "/about?utm_source=newsletter"
+    get "/about"
+    assert_equal "direct", contact["fields"].last["value"], "a page cached for one source isn't served for another"
+  end
+
   test "the site key reaches the theme once CAPTCHA is configured, never the secret" do
     ok Nibble::Lifecycle.call(Nibble::Records::GlobalSet.new(handle: "integrations", locale: "en"), :save,
       { "captcha_provider" => "turnstile", "captcha_site_key" => "site-key-1", "captcha_secret_key" => { "plain" => "very-secret" } }, actor: Nibble::Principal.system)

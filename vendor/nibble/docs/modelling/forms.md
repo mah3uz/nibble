@@ -102,6 +102,23 @@ current value of `field`, and `value` is the text written in the schema:
 A theme can't run `custom`, so it draws that field and leaves the decision to the server. The server is always the
 authority: it applies the same conditions to every submission, whatever the theme drew.
 
+A field with `hidden: true` is never drawn as an input. Give it a fixed `value`, a `prefill` from the page's query
+string, or both, to record where a visitor came from:
+
+```yaml
+- handle: source
+  field: { type: text, hidden: true, prefill: { query: utm_source }, value: direct }
+- handle: channel
+  field: { type: text, hidden: true, value: web }
+```
+
+A hidden field is validated, stored, emailed and delivered like any other. With a `prefill`, the value is the page's
+`?utm_source=` when it has one, then what the form posts, then `value`. With only a `value`, Nibble stores that value
+whatever is posted. The definition marks the field `hidden: true` and carries the resolved `value` for the current
+request, and the form's `action` carries the prefilled query (`/forms/demo?utm_source=news`), so a theme that forgets a
+hidden field still records it. A page that declares a prefill is cached once per value of that query parameter.
+`nibble:check` refuses `prefill` or `value` on a field that isn't `hidden: true`, and a hidden `files` field.
+
 A long form can be split into sections instead of one `fields` list. Each section has a `display`, optional
 `instructions` and its own `fields`, declared the same way:
 

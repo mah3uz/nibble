@@ -5,18 +5,20 @@ module Nibble
         def ok? = status == :ok
       end
 
+      PREFILL_LIMIT = 500
       SPAM_VALUE = [ String, Numeric, TrueClass, FalseClass ].freeze
 
       mattr_accessor :rate_limit_store, default: -> { Rails.cache }
 
-      def self.call(form, params, ip: nil, user_agent: nil, locale: nil) = new(form, params, ip:, user_agent:, locale:).call
+      def self.call(form, params, ip: nil, user_agent: nil, locale: nil, query: {}) = new(form, params, ip:, user_agent:, locale:, query:).call
 
       def self.not_spam(form, submission, user:, ip: nil)
         new(form, submission.data, ip: nil, user_agent: submission.user_agent, locale: submission.locale).not_spam(submission, user:, ip:)
       end
 
-      def initialize(form, params, ip:, user_agent:, locale:)
+      def initialize(form, params, ip:, user_agent:, locale:, query: {})
         @form = form
+        @query = query.to_h.stringify_keys
         @params = params.to_h.stringify_keys
         @ip_hash = Records::FormSubmission.hash_ip(ip)
         @ip = ip
@@ -30,7 +32,7 @@ module Nibble
         return result(:invalid, errors: { "base" => [ captcha_message ] }) unless captcha_passed?
 
         fields = @form.fields
-        values = @params.slice(*fields.handles)
+        values = @params.slice(*fields.handles).merge(hidden_values(fields))
         errors = errors_in(fields, values)
         return result(:invalid, errors:, values:) if errors.any?
 
@@ -67,6 +69,16 @@ module Nibble
           found[field.handle] = [ Validation.message("step", attribute: field.display, override: field.get("messages", {})["step"], locale: @locale,
             default: "The %{attribute} field must go up in steps of %{step} (from %{from}).", step:, min: from, from:) ]
         end
+      end
+
+      def hidden_values(fields)
+        fields.all.values.select { |field| field.get("hidden") == true }.to_h do |field|
+          name = field.get("prefill", {})["query"]
+          posted = (@params[field.handle] if name)
+          queried = @query[name] if name
+          queried = queried.truncate(PREFILL_LIMIT, omission: "") if queried.is_a?(String)
+          [ field.handle, posted.presence || queried.presence || field.get("value") ]
+        end.compact
       end
 
       def result(status, submission: nil, errors: {}, values: {}) = Result.new(status:, submission:, errors:, values:)

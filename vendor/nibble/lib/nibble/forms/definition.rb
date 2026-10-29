@@ -7,15 +7,16 @@ module Nibble
 
       module_function
 
-      def call(form, result: nil)
+      def call(form, result: nil, params: {})
         captcha = ({ "provider" => nil, "site_key" => nil }.merge(Integrations.captcha.to_h.slice("provider", "site_key"))) if form.captcha?
+        fields = form.fields
         {
           "handle" => form.handle,
           "title" => form.title,
-          "action" => "/forms/#{form.handle}",
+          "action" => action(form, fields, params),
           "honeypot" => form.honeypot,
           "captcha" => captcha,
-          "fields" => form.fields.all.values.map { |field| field_definition(field) },
+          "fields" => fields.all.values.map { |field| field_definition(field, params) },
           "sections" => sections(form),
           "success" => form.success.slice("message", "redirect"),
           "result" => (result if result.is_a?(Hash) && result["handle"] == form.handle)
@@ -28,10 +29,32 @@ module Nibble
         end
       end
 
-      def field_definition(field)
+      def prefill_params(form) = form.fields.all.values.filter_map { |field| prefill_name(field) }.uniq
+
+      def prefill_name(field)
+        field.get("prefill", {})["query"] if field.get("hidden") == true
+      end
+
+      def prefill_value(field, params)
+        queried = params[prefill_name(field)]
+        queried.truncate(Submit::PREFILL_LIMIT, omission: "") if queried.is_a?(String) && queried.present?
+      end
+
+      def action(form, fields, params)
+        queried = fields.all.values.to_h { |field| [ prefill_name(field), prefill_value(field, params) ] }.compact
+        queried.delete(nil)
+        queried.empty? ? "/forms/#{form.handle}" : "/forms/#{form.handle}?#{queried.to_query}"
+      end
+
+      def field_definition(field, params = {})
         config = field.fieldtype.config.slice(*FIELD_CONFIG).compact
         config["options"] = field.fieldtype.options if OPTION_TYPES.include?(field.type)
         config["default"] = field.default_value if config.key?("default")
+        if field.get("hidden") == true
+          config["hidden"] = true
+          config["value"] = config["default"] = prefill_value(field, params) || field.get("value")
+          config.compact!
+        end
         conditions = Conditions.describe(field.config, prefix: field.prefix)
         config["conditions"] = conditions if conditions
         { "handle" => field.handle, "type" => field.type, "display" => field.display, "instructions" => field.instructions,

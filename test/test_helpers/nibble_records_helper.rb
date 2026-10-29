@@ -89,6 +89,12 @@ module NibbleRecordsHelper
       { handle: "note", field: { type: "text", unless: { kind: [ "isnt personal", "empty" ] } } },
       { handle: "vip", field: { type: "toggle", if: "custom vip_only:gold" } }
     ] },
+    "forms/tracked.yml" => { title: "Tracked", fields: [
+      { handle: "name", field: { type: "text", required: true } },
+      { handle: "source", field: { type: "text", hidden: true, prefill: { query: "utm_source" }, validate: [ "max:10" ] } },
+      { handle: "channel", field: { type: "text", hidden: true, value: "web" } },
+      { handle: "campaign", field: { type: "text", hidden: true, prefill: { query: "utm_campaign" }, value: "organic" } }
+    ] },
     "forms/worded_pledge.yml" => { title: "Worded pledge", fields: [
       { handle: "amount", field: { type: "integer", min: 2000, step: 500, messages: { step: { en: "Steps of $%{step} from $%{min}", fr: "Par tranches de %{step}" } } } }
     ] },

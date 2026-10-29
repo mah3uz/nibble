@@ -73,6 +73,8 @@ export type NibbleFormField = {
   max_items?: number
   clearable?: boolean
   conditions?: NibbleFormConditions
+  hidden?: boolean
+  value?: string | number | boolean
 }
 
 export type NibbleFormSection = {

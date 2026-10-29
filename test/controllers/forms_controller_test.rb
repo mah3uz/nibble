@@ -45,6 +45,20 @@ class FormsControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil submission.ip_hash
   end
 
+  test "a hidden field takes the page's query from the form's action, a fixed value the visitor can't change, and is stored like the rest" do
+    post "/forms/tracked?utm_source=news", params: { name: "Ada", channel: "forged", source: "" }, as: :json
+
+    assert_response :created
+    assert_equal({ "name" => "Ada", "source" => "news", "channel" => "web", "campaign" => "organic" }, Submission.sole.data)
+  end
+
+  test "a hidden field is validated like any other" do
+    post "/forms/tracked?utm_source=#{'x' * 11}", params: { name: "Ada" }, as: :json
+
+    assert_response :unprocessable_entity
+    assert_equal [ "source" ], response.parsed_body["errors"].keys
+  end
+
   test "invalid input comes back keyed by field and nothing is stored" do
     submit :contact, VALID.merge(email: "not-an-email", message: "x" * 501, topic: "billing").except(:name)
 

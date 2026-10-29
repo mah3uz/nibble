@@ -4,7 +4,7 @@ class FormsController < ActionController::Base
   def create
     form = Nibble::Forms.find(request.path_parameters[:handle]) or return head(:not_found)
     result = Nibble::Forms::Submit.call(form, request.request_parameters, ip: request.remote_ip, user_agent: request.user_agent,
-      locale: request.request_parameters["_locale"])
+      locale: request.request_parameters["_locale"], query: request.query_parameters)
     json? ? respond_json(form, result) : respond_html(form, result)
   end
 

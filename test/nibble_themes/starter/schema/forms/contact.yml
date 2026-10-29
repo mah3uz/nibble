@@ -10,3 +10,5 @@ fields:
     field: { type: select, options: { sales: Sales, support: Support } }
   - handle: attachment
     field: { type: files, max_files: 1, max_file_size: 2, extensions: [pdf] }
+  - handle: source
+    field: { type: text, hidden: true, prefill: { query: utm_source }, value: direct }

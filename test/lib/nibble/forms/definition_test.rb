@@ -64,6 +64,29 @@ class Nibble::Forms::DefinitionTest < ActiveSupport::TestCase
     assert_equal({ "show" => true, "match" => "all", "rules" => [ { "field" => nil, "operator" => "custom", "value" => "custom vip_only:gold" } ] }, fields["vip"]["conditions"])
   end
 
+  test "a hidden field is marked, carries its resolved value, and a prefill from the page's query rides on the form's action" do
+    tracked = ->(params = {}) { Nibble::Forms::Definition.call(Nibble::Forms.find("tracked"), params:) }
+    fields = tracked.().fetch("fields").index_by { |field| field["handle"] }
+
+    assert_equal [ nil, true, true, true ], %w[name source channel campaign].map { |handle| fields[handle]["hidden"] }
+    assert_equal [ nil, "web", "organic" ], fields.values_at("source", "channel", "campaign").map { |field| field["value"] }
+    assert_equal "/forms/tracked", tracked.()["action"]
+
+    filled = tracked.({ "utm_source" => "news", "utm_campaign" => [ "a" ], "other" => "x" })
+    assert_equal [ "news", "web", "organic" ], filled["fields"].values_at(1, 2, 3).map { |field| field["value"] }
+    assert_equal "news", filled["fields"][1]["default"], "a theme that starts from `default` is filled too"
+    assert_equal "/forms/tracked?utm_source=news", filled["action"]
+  end
+
+  test "prefill, or a fixed value, on a field that isn't hidden is a problem, as is a hidden files field" do
+    field = ->(config) { { handle: "a", field: config } }
+
+    assert_includes problems(title: "X", fields: [ field.({ type: "text", prefill: { query: "utm_source" } }) ]), "field 'a' has `prefill` but isn't `hidden: true`, so the visitor would see and edit it"
+    assert_includes problems(title: "X", fields: [ field.({ type: "text", value: "x" }) ]), "field 'a' has `value` but isn't `hidden: true`"
+    assert_includes problems(title: "X", fields: [ field.({ type: "files", hidden: true }) ]), "field 'a' is hidden, which a files field can't be"
+    assert_empty problems(title: "X", fields: [ field.({ type: "text", hidden: true, prefill: { query: "utm_source" }, value: "x" }) ])
+  end
+
   test "a field with no default sends none" do
     assert_not definition("settings")["fields"].find { |field| field["handle"] == "message" }.key?("default")
   end

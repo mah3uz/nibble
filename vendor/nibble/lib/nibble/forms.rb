@@ -77,6 +77,7 @@ module Nibble
         form.fields(schema:).all.each_value do |field|
           problems << "field '#{field.handle}' uses '#{field.type}', which can't be used on a public form" unless PUBLIC_FIELDTYPES.include?(field.type)
           problems << "field handle '#{field.handle}' clashes with the honeypot" if field.handle == form.honeypot
+          problems.concat(hidden_problems(field))
         end
         problems.concat(Uploads.problems(form, schema:))
         problems.concat(spam_problems(form))
@@ -91,6 +92,15 @@ module Nibble
       end
 
       private
+
+      def hidden_problems(field)
+        hidden = field.get("hidden") == true
+        problems = []
+        problems << "field '#{field.handle}' has `prefill` but isn't `hidden: true`, so the visitor would see and edit it" if field.config.key?("prefill") && !hidden
+        problems << "field '#{field.handle}' has `value` but isn't `hidden: true`" if field.config.key?("value") && !hidden
+        problems << "field '#{field.handle}' is hidden, which a files field can't be" if hidden && field.type == "files"
+        problems
+      end
 
       def section_problems(form)
         return [ "give `fields` or `sections`, not both" ] if !form.item["fields"].nil? && !form.item["sections"].nil?

@@ -20,7 +20,7 @@ module Nibble
 
     def build
       sidecar = Views.sidecar(@match.template)
-      declared = @params.slice(*sidecar.params, *Views.set_params)
+      declared = @params.slice(*self.class.param_names(@match.template))
       context = Query::Context.public(locale: @match.locale, entry: (@match.record if @match.kind == :entry),
         term: (@match.record if @match.kind == :term), params: declared)
       presenter = Presenter.new(context:)
@@ -35,7 +35,20 @@ module Nibble
       Result.new(props:, seo:, view: @match.template)
     end
 
-    def self.declared_params(template, params) = params.slice(*Views.sidecar(template).params, *Views.set_params)
+    def self.declared_params(template, params) = params.slice(*param_names(template))
+
+    def self.param_names(template)
+      sidecars = [ Views.sidecar(template), *Views.sidecars.select { |sidecar| sidecar.view.start_with?("sets/") } ]
+      sidecars.flat_map { |sidecar| [ *sidecar.params, *form_params(sidecar) ] }.uniq
+    end
+
+    def self.form_params(sidecar)
+      sidecar.queries.values.flat_map do |spec|
+        kind, handle = (spec["from"] if spec.is_a?(Hash)).to_s.split(":", 2)
+        form = Forms.find(handle) if kind == "form"
+        form ? Forms::Definition.prefill_params(form) : []
+      end
+    end
 
     private
 
@@ -56,7 +69,7 @@ module Nibble
     def run_queries(queries, context, presenter)
       queries.to_h do |name, spec|
         spec = Query::Spec.parse(spec, context:)
-        next [ name, Forms::Definition.call(Forms.find(spec.source.handle), result: @form_result) ] if spec.source.form?
+        next [ name, Forms::Definition.call(Forms.find(spec.source.handle), result: @form_result, params: context.params) ] if spec.source.form?
 
         result = Query.build(spec, context).result
         data = presenter.present(result.records, fields: result.spec.fields, include: result.spec.include)
