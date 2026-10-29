@@ -490,8 +490,8 @@ working. Stores a list of entry ids, or one id with `max_items: 1`; a page recei
 |---|---|---|---|
 | `collections` | list of collection handles | all | the collections the picker offers |
 | `max_items` | whole number | — | the most entries accepted; `1` makes a single choice |
-| `mode` | `default`, `select`, `typeahead` | `default` | sent to the Control Plane with the field; the picker doesn't change with it |
-| `create` | `true`, `false` | `true` | sent to the Control Plane with the field; the picker doesn't change with it |
+| `mode` | `auto`, `default`, `select`, `typeahead`, `stack` | `auto` | how the picker looks. `auto` is a dropdown when there are 25 or fewer choices (a short list is quickest to scan) and the search picker otherwise; `default` is always the search picker; `select` is a dropdown of up to 50 choices, then the search picker; `typeahead` is a box that suggests as you type; `stack` opens a side panel with a searchable, paged list. `nibble:check` refuses any other value |
+| `create` | `true`, `false` | `true` | adds "Create a new …" under the picker, which asks for a title and selects what it makes; only people whose role can create there see it, so it costs nothing where it can't work. Entries are saved as drafts, terms are live |
 
 ```yaml
 field: { type: entries, collections: [posts], max_items: 3 }
@@ -505,8 +505,8 @@ The same for taxonomy terms. Stores a list of term ids, or one with `max_items: 
 |---|---|---|---|
 | `taxonomies` | list of taxonomy handles | all | the taxonomies the picker offers |
 | `max_items` | whole number | — | the most terms accepted; `1` makes a single choice |
-| `mode` | `default`, `select`, `typeahead` | `default` | sent to the Control Plane with the field; the picker doesn't change with it |
-| `create` | `true`, `false` | `true` | sent to the Control Plane with the field; the picker doesn't change with it |
+| `mode` | `auto`, `default`, `select`, `typeahead`, `stack` | `auto` | how the picker looks. `auto` is a dropdown when there are 25 or fewer choices (a short list is quickest to scan) and the search picker otherwise; `default` is always the search picker; `select` is a dropdown of up to 50 choices, then the search picker; `typeahead` is a box that suggests as you type; `stack` opens a side panel with a searchable, paged list. `nibble:check` refuses any other value |
+| `create` | `true`, `false` | `true` | adds "Create a new …" under the picker, which asks for a title and selects what it makes; only people whose role can create there see it, so it costs nothing where it can't work. Entries are saved as drafts, terms are live |
 
 ```yaml
 field: { type: terms, taxonomies: [topics], max_items: 1 }

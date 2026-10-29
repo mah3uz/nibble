@@ -1,14 +1,22 @@
 <script setup lang="ts">
 import { GripVertical, X } from '@lucide/vue'
 import { useSortable } from '@vueuse/integrations/useSortable'
-import { computed, ref, useTemplateRef, watch } from 'vue'
+import { computed, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { statusLabel } from '@/lib/format'
 import type { ItemSummary } from '../../lib/relationships'
+import { searchRelationships } from '../../lib/relationships'
+import type { CreateTarget } from '../../lib/relationships'
+import { normalizeMode, pickerFor, probeLimit } from '../relationshipMode'
+import RecordCreate from './RecordCreate.vue'
 import RecordSearch from './RecordSearch.vue'
+import RecordSelect from './RecordSelect.vue'
+import RecordStack from './RecordStack.vue'
+import RecordTypeahead from './RecordTypeahead.vue'
 
 const props = defineProps<{
+  mode?: unknown
   type: string
   value: unknown
   meta: Record<string, unknown>
@@ -41,6 +49,22 @@ function pick(item: ItemSummary) {
   if (ids.value.includes(item.id)) return emitIds(ids.value.filter((id) => id !== item.id))
   if (!full.value) emitIds([...ids.value, item.id])
 }
+
+const mode = computed(() => normalizeMode(props.mode))
+const options = ref<ItemSummary[] | null>(null)
+const picker = computed(() => pickerFor(mode.value, props.readOnly ? 0 : (options.value?.length ?? null)))
+const creatable = computed(() => ((props.meta.creatable as CreateTarget[]) ?? []).filter((target) => target.handle))
+const picking = computed(() => !props.readOnly && !full.value && !(single.value && ids.value.length))
+
+onMounted(async () => {
+  const limit = probeLimit(mode.value)
+  if (!limit || props.readOnly) return
+  try {
+    options.value = await searchRelationships(props.type, { query: '', scope: props.scope, limit })
+  } catch {
+    options.value = Array.from({ length: limit }, () => ({ id: '', title: '' }))
+  }
+})
 
 const listRef = useTemplateRef<HTMLElement>('list')
 useSortable(listRef, ids, {
@@ -78,14 +102,49 @@ useSortable(listRef, ids, {
         /></Button>
       </div>
     </div>
-    <RecordSearch
-      v-if="!readOnly && !full && !(single && ids.length)"
-      :id="id"
+    <template v-if="picking">
+      <RecordSelect
+        v-if="picker === 'select'"
+        :id="id"
+        :options="options ?? []"
+        :selected-ids="ids"
+        :label="label"
+        @pick="pick"
+      />
+      <RecordTypeahead
+        v-else-if="picker === 'typeahead'"
+        :id="id"
+        :type="type"
+        :scope="scope"
+        :selected-ids="ids"
+        :label="label"
+        @pick="pick"
+      />
+      <RecordStack
+        v-else-if="picker === 'stack'"
+        :id="id"
+        :type="type"
+        :scope="scope"
+        :selected-ids="ids"
+        :label="label"
+        :single="single"
+        @pick="pick"
+      />
+      <RecordSearch
+        v-else-if="picker === 'search'"
+        :id="id"
+        :type="type"
+        :scope="scope"
+        :selected-ids="ids"
+        :label="label"
+        @pick="pick"
+      />
+    </template>
+    <RecordCreate
+      v-if="picking && picker !== 'loading' && creatable.length"
       :type="type"
-      :scope="scope"
-      :selected-ids="ids"
-      :label="label"
-      @pick="pick"
+      :targets="creatable"
+      @created="pick"
     />
   </div>
 </template>

@@ -78,6 +78,13 @@ Some fields worth knowing by name:
 | **Entries**, or a label list such as **Topics** | a picker for other entries or labels — an author, a topic, related posts. To make a new label, see [Add and edit categories and tags](categories-and-tags.md) |
 | **Page blocks** | build a page from blocks in any order: text, quote, call to action, image, gallery, pricing |
 
+### Picking and creating related items
+
+A field that points at other entries or labels shows a dropdown when there are only a few to choose from, and a search
+box when there are many. Under it, **Create a new …** lets you add one without leaving the entry: type its title, and it
+is chosen for you. A new entry is saved as a draft; a new label is live at once. The option only appears if your role
+lets you create that kind of item.
+
 ### Working with blocks
 
 A block is one building piece of a page: a quote, an image, a pricing table. Use the add button under the blocks

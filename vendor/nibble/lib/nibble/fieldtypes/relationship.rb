@@ -5,6 +5,14 @@ module Nibble
       self.relationship = true
       self.selectable = false
 
+      MODES = %w[auto default select typeahead stack].freeze
+      DIALOG_TYPES = %w[text textarea integer].freeze
+
+      def self.dialog_fields(record)
+        record.blueprint_definition.fields.select { |item| item.required? && DIALOG_TYPES.include?(item.type) && item.handle != "title" }
+          .map { |item| { "handle" => item.handle, "display" => item.display, "type" => item.type } }
+      end
+
       def self.resolver_type = raise(NotImplementedError)
 
       def single? = config("max_items").to_i == 1
@@ -25,7 +33,12 @@ module Nibble
       def pre_process_validatable(value) = Array.wrap(value).compact_blank
 
       def preload
-        { "data" => find(field&.value), "max_items" => config("max_items"), "mode" => config("mode"), "create" => config("create") }
+        { "data" => find(field&.value), "max_items" => config("max_items"), "mode" => config("mode"), "create" => config("create"),
+          "creatable" => config("create") ? creatable : [] }
+      end
+
+      def config_problems
+        MODES.include?(config("mode")) ? [] : [ "has mode #{config('mode').inspect}, which isn't one of #{MODES.join(', ')}" ]
       end
 
       def pre_process_index(value) = find(value).map { |item| item.slice("id", "title", "edit_url", "status") }
