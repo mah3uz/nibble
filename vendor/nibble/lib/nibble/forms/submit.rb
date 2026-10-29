@@ -50,7 +50,7 @@ module Nibble
         return result(:invalid, errors:, values:) if errors.any?
 
         data, blob_ids = upload(fields, values)
-        store(fields.add_values(data).process.values.compact, blob_ids)
+        store(processed(fields, data), blob_ids)
       end
 
       def not_spam(submission, user:, ip:)
@@ -62,7 +62,7 @@ module Nibble
         errors = errors_in(fields, values)
         return result(:invalid, submission:, errors:, values:) if errors.any?
 
-        data = fields.add_values(values).process.values.compact
+        data = processed(fields, values)
         duplicate = duplicate_errors(data)
         return result(:invalid, submission:, errors: duplicate, values:) if duplicate
         return result(:not_spam, submission:) unless claim(submission, data, user:, ip:)
@@ -97,6 +97,11 @@ module Nibble
       end
 
       def result(status, submission: nil, errors: {}, values: {}) = Result.new(status:, submission:, errors:, values:)
+
+      def processed(fields, values)
+        data = fields.add_values(values).process.values
+        data.merge(Calculations.new(fields, data).values).compact
+      end
 
       def errors_in(fields, values)
         errors = Validator.new(fields, replacements: { "type" => "form_submission" }, locale: @locale).validate(values).errors
@@ -158,8 +163,8 @@ module Nibble
         return result(:ok) unless @form.store?
 
         fields = @form.fields
-        files = fields.all.values.select { |field| field.type == "files" }.map(&:handle)
-        data = @params.slice(*fields.handles).except(*files).select { |_, value| plain?(value) }
+        kept = fields.all.values.reject { |field| %w[files calculation].include?(field.type) }.map(&:handle)
+        data = @params.slice(*kept).select { |_, value| plain?(value) }
         result(:ok, submission: receive(data, status: "spam"))
       end
 

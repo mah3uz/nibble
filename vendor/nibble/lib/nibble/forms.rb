@@ -1,6 +1,6 @@
 module Nibble
   module Forms
-    PUBLIC_FIELDTYPES = %w[text textarea integer toggle select radio checkboxes date files].freeze
+    PUBLIC_FIELDTYPES = %w[text textarea integer toggle select radio checkboxes date files calculation].freeze
     CAPTCHA_PROVIDERS = %w[turnstile recaptcha].freeze
     DELIVERY_MODES = %w[sync async].freeze
     DEFAULT_HONEYPOT = "_nibble_hp".freeze
@@ -98,6 +98,8 @@ module Nibble
       end
 
       def display_value(field, value, locale = nil)
+        return field.fieldtype.display(value) if field.type == Calculations::TYPE
+
         labels = field.fieldtype.respond_to?(:options) ? field.fieldtype.options(locale).to_h { |option| [ option["value"].to_s, option["label"].to_s ] } : {}
         case value
         when Array then value.map { |item| item.is_a?(Hash) ? item["filename"].to_s : labels.fetch(item.to_s, item.to_s) }
@@ -123,6 +125,7 @@ module Nibble
           problems.concat(encrypt_problems(form, field))
         end
         problems.concat(Uploads.problems(form, schema:))
+        problems.concat(Calculations.problems(form.fields(schema:)))
         problems.concat(spam_problems(form))
         problems.concat(limit_problems(form, schema))
         handles = form.fields(schema:).handles

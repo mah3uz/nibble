@@ -4,7 +4,7 @@ import { coreFieldtypeHandles, registerCoreFieldtypes } from '../core'
 import { registeredFieldtypes, resolveFieldtype } from '../registry'
 
 // Public-form fieldtypes are rendered by themes, never edited in the CP.
-const FORM_ONLY = ['files']
+const FORM_ONLY = ['files', 'calculation']
 const handles = allHandles.filter((handle) => !FORM_ONLY.includes(handle))
 
 describe('core fieldtypes (shared list with Nibble::Fieldtypes::CORE)', () => {

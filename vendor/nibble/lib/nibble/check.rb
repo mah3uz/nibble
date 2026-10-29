@@ -31,7 +31,7 @@ module Nibble
     def run
       schema = capture("schema") { Schema.load(@config) } or return self
 
-      schema.fieldsets.each { |item| capture(item.path) { check_fields(Fields.new(item["fields"], schema:, source: item.path, key: "fields"), item.path) } }
+      schema.fieldsets.each { |item| capture(item.path) { check_fields(Fields.new(item["fields"], schema:, source: item.path, key: "fields"), item.path, calculations: true) } }
       (schema.collections + schema.taxonomies).each do |parent|
         schema.blueprints_for(parent).each do |item|
           capture(item.path) do
@@ -47,7 +47,7 @@ module Nibble
       schema.forms.each do |item|
         capture(item.path) do
           form = Forms::Form.new(item:)
-          check_fields(form.fields(schema:), item.path)
+          check_fields(form.fields(schema:), item.path, calculations: true)
           Forms.problems(form, schema:).each { |message| problem(item.path, message) }
           Forms.locale_problems(form, schema:, locales: @config.locales.map(&:code)).each { |message| problem(item.path, message) }
           Forms.warnings(form).each { |message| @warnings << Problem.new(source: item.path.to_s.delete_prefix("#{Rails.root}/"), message:, level: :warning) }
@@ -78,13 +78,14 @@ module Nibble
       nil
     end
 
-    def check_fields(fields, source)
+    def check_fields(fields, source, calculations: false)
       fields.each do |field|
         rule_names = (field.validation_rules + Validation.explode(field.fieldtype.rules)).map { |rule| rule.to_s.split(":", 2).first }
         rule_names.each do |name|
           problem(source, "field '#{field.path}' uses unknown validation rule '#{name}'") unless Validation.known?(name)
         end
         check_messages(field, rule_names, source)
+        problem(source, "field '#{field.path}' is a calculation, which only a form can have") if field.type == Forms::Calculations::TYPE && !calculations
         if field.computed_default? && !Defaults.registered?(name = field.get("default").delete_prefix(Field::COMPUTED_DEFAULT_PREFIX))
           problem(source, "field '#{field.path}' has computed default '#{name}', which isn't registered")
         end
@@ -92,7 +93,7 @@ module Nibble
           @warnings << Problem.new(source:, level: :warning,
             message: "field '#{field.path}' is a #{field.type}, which apps can't be told how to write: give the fieldtype a json_schema")
         end
-        field.fieldtype.nested_fields.each { |nested| check_fields(nested, source) }
+        field.fieldtype.nested_fields.each { |nested| check_fields(nested, source, calculations:) }
       end
     end
 
