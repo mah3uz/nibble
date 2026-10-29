@@ -157,7 +157,8 @@ registered.
 
 When the thing to tell is another application, you may not need Ruby at all. **Webhooks**, in the Control Plane,
 posts a signed payload to a URL on the events you choose — the same events as above — and shows each delivery and
-its retries.
+its retries. Setting one up, the events, the retry schedule and the delivery log are in
+[Webhooks](../running/webhooks.md).
 
 Each delivery is a JSON `POST` with an `X-Nibble-Signature` header, `t=<timestamp>,v1=<signature>`, where the
 signature is the HMAC-SHA256 of `<timestamp>.<body>` with the webhook's secret. Check it before trusting the body.
