@@ -133,11 +133,11 @@ rate limit, a CAPTCHA, a network failure). For a summary at the top, use `errorL
 with a `label`, `message` and an `href` to the input, and give the container to `summaryEl`:
 
 ```vue
-<div v-if="Object.keys(demo.errors.value).length" :ref="(el) => (demo.summaryEl.value = el as HTMLElement)" role="alert" tabindex="-1">
+<div v-if="Object.keys(demo.errors.value).length" :ref="(el) => (demo.summaryEl.value = el as HTMLElement)" tabindex="-1">
   <p>{{ demo.errors.value.base ?? 'Please check these answers:' }}</p>
   <ul>
     <li v-for="error in demo.errorList.value" :key="error.handle">
-      <a :href="error.href">{{ error.label }}: {{ error.message }}</a>
+      <a :href="error.href" @click="f.goToField(error.handle, $event)">{{ error.label }}: {{ error.message }}</a>
     </li>
   </ul>
 </div>
@@ -184,7 +184,9 @@ and `aria-hidden="true"` keep keyboards, screen readers and autofill away from i
 
 `form.captcha` is `null` unless the form asks for one. With `captcha: true` in the form's `spam`, it is
 `{ provider, site_key }`, where `provider` is `'turnstile'` or `'recaptcha'`, and a `null` provider means the site
-hasn't set a CAPTCHA up, so the form refuses everyone. Give the composable an empty element to draw into:
+hasn't set a CAPTCHA up, so the form refuses everyone. `unavailable` from `useNibbleForm` is true then: show
+`form.messages.unavailable` (the text the server refuses with) above the form and disable the submit button, so a visitor
+isn't left to type a message that can't be sent. Give the composable an empty element to draw into:
 
 ```vue
 <div :ref="(el) => (demo.captchaEl.value = el as HTMLElement | null)" />
@@ -423,7 +425,7 @@ announces it:
 ```
 
 Opened from a link (`?resume=<token>`), `form.result` is `{ status: 'resumed', values }`, and `values` starts from
-them; when the link no longer works it is `{ status: 'expired', message }`, which you should show. `submit` sends the
+them, so show `form.messages.resumed` as a status line to say they came back (files are never saved); when the link no longer works it is `{ status: 'expired', message }`, which you should show. `submit` sends the
 token as `_nibble_resume`, so the save is deleted once the form is sent; a form posted without JavaScript needs the
 token as a hidden input:
 
@@ -478,6 +480,9 @@ The wording a theme draws that isn't in the schema comes from `form.messages`, w
 | `check_answers` | Please check these answers: | the line above a list of errors |
 | `required_note` | Fields marked * are required. | the note about `*` (the first `*` is the marker) |
 | `required` | (required) | what a screen reader hears for a required field |
+| `resumed` | We've brought back what you saved. Attach any files again. | the status line when `form.result.status` is `resumed`, after a visitor opens their resume link |
+| `not_chosen` | Not chosen | beside a colour input that has no value yet, since a colour input shows black until one is picked |
+| `unavailable` | This form can't take submissions right now. Please try again later. | the line above a form whose CAPTCHA isn't set up (`unavailable` is true) |
 
 Read them with a fallback, since `messages` is optional in the type:
 
@@ -516,7 +521,9 @@ group is typed as a radio; a toggle is a `boolean`; a `files` field is `File[]`;
 - Required is shown in text a screen reader hears, not only by a coloured or `aria-hidden` `*`; say what `*` means once.
 - Help and errors are linked with `aria-describedby="demo.describedBy(field)"` and the input has `aria-invalid` while it
   has an error.
-- The error summary has `role="alert"` and `tabindex="-1"` on `summaryEl`, and links to each input with `errorList`.
+- The error summary has `tabindex="-1"` on `summaryEl` and no `role="alert"`: it takes focus when it appears, so a role
+  would have it read twice. It links to each input with `errorList`, and each link calls `goToField(handle, $event)`, which
+  opens the step that holds the field and focuses it.
 - The success message is on `messageEl` with `role="status"` and `tabindex="-1"`, and `saved` and calculations are
   live regions (`role="status"`, `aria-live="polite"`) that are on the page before they fill.
 - The honeypot is hidden from keyboards, screen readers and autofill (`tabindex="-1"`, `aria-hidden="true"`,
@@ -605,6 +612,7 @@ The rest depend on the type, and are absent unless the schema set them:
 | `errors` | messages by field handle, and `base` for the form as a whole |
 | `errorList` | the field errors in form order, each with `handle`, `label`, `message` and an `href` to its input |
 | `processing` | true while a submission, step check or save is in flight |
+| `unavailable` | true when the form needs a CAPTCHA the site hasn't set up, so nothing it takes can be sent |
 | `sent`, `message` | whether the submission succeeded, and the success message |
 | `submit`, `reset` | send it; clear it |
 | `enhanced` | true once the component has mounted in the browser, so a control that needs JavaScript can wait for it |
@@ -625,6 +633,7 @@ The rest depend on the type, and are absent unless the schema set them:
 |---|---|
 | `inputId(field)`, `helpId(field)`, `errorId(field)` | the ids for a field's input, its help and its error, unique to the form |
 | `describedBy(field)` | the `aria-describedby` for its input |
+| `goToField(handle, event)` | for an error link's click: opens the step holding the field and focuses its input |
 | `summaryEl`, `messageEl` | refs for the error summary and the success message; each is focused when it appears, so give it `tabindex="-1"` |
 
 **Steps**
@@ -706,7 +715,6 @@ const attrs = (field: NibbleFormField) => ({
     <div
       v-if="Object.keys(errors).length"
       :ref="(el) => (f.summaryEl.value = el as HTMLElement)"
-      role="alert"
       tabindex="-1"
     >
       <p>{{ errors.base ?? form.messages?.check_answers ?? 'Please check these answers:' }}</p>

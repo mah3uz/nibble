@@ -203,6 +203,16 @@ export function useNibbleForm<Values extends Record<string, unknown> = Record<st
     el.value?.focus()
   }
 
+  async function goToField(handle: string, event?: Event) {
+    const field = byHandle.get(handle)
+    if (!field) return
+    event?.preventDefault()
+    const found = steps.value.findIndex((section) => section.fields.includes(handle))
+    if (stepping.value && found >= 0) step.value = found
+    await nextTick()
+    document.getElementById(inputId(field))?.focus()
+  }
+
   function accept(field: NibbleFormField) {
     return field.extensions?.map((extension) => `.${extension}`).join(',')
   }
@@ -240,6 +250,8 @@ export function useNibbleForm<Values extends Record<string, unknown> = Record<st
       'error-callback': () => pendingToken?.(null),
     })
   }
+
+  const unavailable = Boolean(definition.captcha && !definition.captcha.provider)
 
   const captcha: Captcha | null =
     definition.captcha?.provider && definition.captcha.site_key
@@ -390,6 +402,8 @@ export function useNibbleForm<Values extends Record<string, unknown> = Record<st
     trap,
     errors,
     errorList,
+    goToField,
+    unavailable,
     sent,
     message,
     processing,

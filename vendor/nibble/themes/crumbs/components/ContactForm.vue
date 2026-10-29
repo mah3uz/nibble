@@ -16,6 +16,9 @@ const FALLBACK: Record<NibbleFormMessageKey, string> = {
   check_answers: 'Please check these answers:',
   required_note: 'Fields marked * are required.',
   required: '(required)',
+  resumed: "We've brought back what you saved. Attach any files again.",
+  not_chosen: 'Not chosen',
+  unavailable: "This form can't take submissions right now. Please try again later.",
 }
 const t = (key: NibbleFormMessageKey) => props.form.messages?.[key] ?? FALLBACK[key]
 const requiredNote = computed(() => t('required_note').split('*'))
@@ -39,6 +42,16 @@ const submitLabel = computed(() => {
   return contact.processing.value ? t('sending') : props.form.submit_label || t('send')
 })
 
+function sectionNumber(index: number) {
+  const shown = (group: (typeof groups.value)[number]) =>
+    group.fields.some((field) => !field.hidden && contact.isVisible(field))
+  return groups.value.slice(0, index).filter(shown).length + 1
+}
+
+const rangeText = (field: NibbleFormField) =>
+  field.prepend || field.append
+    ? `${field.prepend ?? ''}${contact.values[field.handle]}${field.append ? ` ${field.append}` : ''}`
+    : undefined
 const help = (field: NibbleFormField) => [field.instructions, contact.fileLimits(field)].filter(Boolean).join(' ')
 const invalid = (field: NibbleFormField) => (contact.errors.value[field.handle] ? 'true' : undefined)
 const optionId = (field: NibbleFormField, index: number) =>
@@ -64,6 +77,15 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
 
 <template>
   <p v-if="form.closed" role="status">{{ form.closed_message }}</p>
+  <p
+    v-else-if="contact.sent.value"
+    :ref="(el) => (contact.messageEl.value = el as HTMLElement | null)"
+    role="status"
+    tabindex="-1"
+    class="max-w-2xl border-l-2 border-accent pl-4 text-lg"
+  >
+    {{ contact.message.value }}
+  </p>
   <form
     v-else
     :action="form.action"
@@ -73,26 +95,25 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
     novalidate
     @submit="contact.submit"
   >
-    <p
-      v-if="contact.sent.value"
-      :ref="(el) => (contact.messageEl.value = el as HTMLElement | null)"
-      role="status"
-      tabindex="-1"
-      class="border-l-2 border-accent pl-4 text-lg"
-    >
-      {{ contact.message.value }}
+    <p v-if="contact.unavailable" role="status" class="border-l-2 border-red-600 pl-4 text-red-700 dark:text-red-400">
+      {{ t('unavailable') }}
+    </p>
+    <p v-if="form.result?.status === 'resumed'" role="status" class="border-l-2 border-current/40 pl-4">
+      {{ t('resumed') }}
     </p>
     <div
       v-if="hasErrors"
       :ref="(el) => (contact.summaryEl.value = el as HTMLElement | null)"
-      role="alert"
       tabindex="-1"
       class="border-l-2 border-red-600 pl-4 text-red-700 dark:text-red-400"
     >
       <p>{{ contact.errors.value.base ?? t('check_answers') }}</p>
       <ul v-if="contact.errorList.value.length" class="mt-2 grid gap-1 text-sm">
         <li v-for="error in contact.errorList.value" :key="error.handle">
-          <a :href="error.href" class="underline underline-offset-4 hover:text-accent"
+          <a
+            :href="error.href"
+            class="underline underline-offset-4 hover:text-accent"
+            @click="contact.goToField(error.handle, $event)"
             >{{ error.label }}: {{ error.message }}</a
           >
         </li>
@@ -130,7 +151,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
       class="grid gap-8"
     >
       <template v-if="form.sections">
-        <legend class="mb-2 text-xl">{{ index + 1 }}. {{ group.display }}</legend>
+        <legend class="mb-2 text-xl">{{ sectionNumber(index) }}. {{ group.display }}</legend>
         <p v-if="group.instructions" class="-mt-4 text-sm text-gray-600 dark:text-gray-300">{{ group.instructions }}</p>
       </template>
       <template v-for="field in group.fields" :key="field.handle">
@@ -204,7 +225,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
               <label
                 v-for="n in field.max ?? 5"
                 :key="n"
-                class="relative cursor-pointer text-3xl leading-none has-focus-visible:outline-2 has-focus-visible:outline-offset-2"
+                class="relative cursor-pointer text-3xl leading-none has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent"
                 :class="n <= Number(contact.values[field.handle]) ? 'text-accent' : 'text-current/30'"
               >
                 <input
@@ -223,7 +244,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
             </div>
           </fieldset>
           <div v-else-if="field.type === 'toggle'">
-            <p v-if="field.inline_label" class="mb-3">{{ field.display }}</p>
+            <p v-if="field.inline_label" :id="`${contact.inputId(field)}-display`" class="mb-3">{{ field.display }}</p>
             <div class="flex items-start gap-3">
               <input
                 :id="contact.inputId(field)"
@@ -232,12 +253,15 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
                 :name="contact.fieldName(field)"
                 value="true"
                 :required="contact.isRequired(field)"
+                :aria-labelledby="
+                  field.inline_label ? `${contact.inputId(field)}-display ${contact.inputId(field)}-label` : undefined
+                "
                 :aria-describedby="contact.describedBy(field)"
                 :aria-invalid="invalid(field)"
                 class="mt-1 size-5 shrink-0 accent-accent"
               />
               <!-- eslint-disable vue/no-v-html -->
-              <label :for="contact.inputId(field)">
+              <label :id="`${contact.inputId(field)}-label`" :for="contact.inputId(field)">
                 <span
                   v-if="field.inline_label_html"
                   class="[&_a]:underline"
@@ -339,6 +363,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
                 :min="field.min ?? 0"
                 :max="field.max ?? 100"
                 :step="field.step ?? 1"
+                :aria-valuetext="rangeText(field)"
                 :aria-describedby="contact.describedBy(field)"
                 :aria-invalid="invalid(field)"
                 class="min-w-0 flex-1 accent-accent"
@@ -362,7 +387,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
               :aria-invalid="invalid(field)"
               class="w-full border-b border-current bg-transparent px-1 py-3"
             />
-            <template v-else-if="field.type === 'color'">
+            <div v-else-if="field.type === 'color'" class="flex flex-wrap items-center gap-3">
               <input
                 :id="contact.inputId(field)"
                 v-model="contact.values[field.handle] as string"
@@ -373,11 +398,15 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
                 :aria-describedby="contact.describedBy(field)"
                 :aria-invalid="invalid(field)"
                 class="h-12 w-20 cursor-pointer border border-current bg-transparent p-1"
+                :class="{ 'opacity-30': !contact.values[field.handle] }"
               />
+              <span v-if="!contact.values[field.handle]" class="text-sm text-gray-600 dark:text-gray-300">{{
+                t('not_chosen')
+              }}</span>
               <datalist v-if="field.swatches?.length" :id="`${contact.inputId(field)}-swatches`">
                 <option v-for="swatch in field.swatches" :key="swatch" :value="swatch" />
               </datalist>
-            </template>
+            </div>
             <output
               v-else-if="field.type === 'calculation'"
               :id="contact.inputId(field)"
@@ -448,7 +477,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
       <button
         type="submit"
         class="min-h-14 border border-current px-6 py-3 hover:text-accent"
-        :disabled="contact.processing.value"
+        :disabled="contact.processing.value || contact.unavailable"
       >
         {{ submitLabel }}
       </button>
@@ -456,7 +485,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
         v-if="form.resume && contact.enhanced.value"
         type="button"
         class="min-h-14 underline underline-offset-4 hover:text-accent"
-        :disabled="contact.processing.value"
+        :disabled="contact.processing.value || contact.unavailable"
         @click="contact.saveForLater"
       >
         {{ t('save_later') }}

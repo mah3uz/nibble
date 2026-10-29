@@ -242,6 +242,18 @@ describe('useNibbleForm values and body', () => {
   })
 })
 
+describe('useNibbleForm unavailable', () => {
+  it('is true only for a form that needs a CAPTCHA the site has not set up', async () => {
+    const { useNibbleForm } = await import('../useNibbleForm')
+    const unavailable = (captcha: NibbleForm['captcha']) => useNibbleForm(definition(captcha)).unavailable
+
+    expect(unavailable({ provider: null, site_key: null })).toBe(true)
+    expect(unavailable({ provider: 'turnstile', site_key: 'key' })).toBe(false)
+    expect(unavailable(null)).toBe(false)
+    mounted.length = 0
+  })
+})
+
 describe('useNibbleForm steps and saving for later', () => {
   const email = field({ handle: 'email', required: true })
   const kind = field({ handle: 'kind', type: 'radio', options: [] })
@@ -334,6 +346,20 @@ describe('useNibbleForm steps and saving for later', () => {
 
     expect(calls.map((call) => call.url)).toEqual(['/forms/contact/steps/0'])
     expect(contact.step.value).toBe(1)
+  })
+
+  it('moves to the step holding a field and focuses it when an error link to it is followed', async () => {
+    const focused: string[] = []
+    const lookup = vi.fn((id: string) => ({ focus: () => focused.push(id) }))
+    ;(document as unknown as { getElementById: typeof lookup }).getElementById = lookup
+    const contact = await start(stepped())
+    const event = { preventDefault: vi.fn() } as unknown as Event
+
+    await contact.goToField('note', event)
+
+    expect(contact.step.value).toBe(2)
+    expect(event.preventDefault).toHaveBeenCalled()
+    expect(focused).toEqual(['contact-note'])
   })
 
   it('opens the step with the first error when the final send is refused', async () => {

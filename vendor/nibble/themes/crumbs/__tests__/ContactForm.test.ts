@@ -159,7 +159,7 @@ describe('crumbs ContactForm', () => {
     expect(tag(html, 'visit-message')).toMatch(/^<textarea[^>]*rows="3"/)
     expect(tag(html, 'visit-guests')).toContain('type="number"')
     expect(tag(html, 'visit-consent')).toMatch(/type="checkbox"[^>]*value="true"/)
-    expect(html).toMatch(/<label for="visit-consent">(<!--\[-->)?\s*I agree to be contacted/)
+    expect(html).toMatch(/<label[^>]*for="visit-consent">(<!--\[-->)?\s*I agree to be contacted/)
     expect(tag(html, 'visit-size')).toMatch(/^<select(?=[^>]*required)/)
     expect(html).toMatch(/<option value disabled selected>\s*Choose one…/)
     expect(tag(html, 'visit-extras')).toMatch(/^<select(?=[^>]*multiple)(?=[^>]*name="extras\[\]")/)
@@ -193,14 +193,17 @@ describe('crumbs ContactForm', () => {
             type: 'toggle',
             required: true,
             inline_label: 'I agree to the privacy policy',
-            inline_label_html: 'I agree to the <a href="/privacy" rel="noopener">privacy policy</a>',
+            inline_label_html:
+              'I agree to the <a href="/privacy" rel="noopener noreferrer" target="_blank">privacy policy</a>',
           }),
           field('notice', { type: 'note', text_html: '<p>Replies take a day.</p>' }),
         ],
       }),
     )
 
-    expect(html).toMatch(/<label for="visit-consent">[\s\S]*<a href="\/privacy" rel="noopener">privacy policy<\/a>/)
+    expect(html).toMatch(
+      /<label[^>]*for="visit-consent">[\s\S]*<a href="\/privacy" rel="noopener noreferrer" target="_blank">privacy policy<\/a>/,
+    )
     expect(html).toContain('<p>Replies take a day.</p>')
     expect(html).not.toContain('name="notice"')
     expect(html).not.toContain('for="visit-notice"')
@@ -308,7 +311,8 @@ describe('crumbs ContactForm', () => {
       }),
     )
 
-    expect(html).toMatch(/<div role="alert" tabindex="-1"/)
+    expect(html).toMatch(/<div tabindex="-1"/)
+    expect(html).not.toContain('role="alert"')
     expect(html).toMatch(/<a href="#visit-email"[^>]*>email: The email must be a valid email address.<\/a>/)
     expect(tag(html, 'visit-email')).toMatch(
       /(?=[^>]*aria-describedby="visit-email-help visit-email-error")(?=[^>]*aria-invalid="true")(?=[^>]*value="ada@")/,
@@ -328,6 +332,70 @@ describe('crumbs ContactForm', () => {
     )
 
     expect(html).toMatch(/<p role="status" tabindex="-1"[^>]*>\s*Thanks, we’ll be in touch./)
+    expect(html).not.toContain('<form')
+  })
+
+  it('says a form that needs an unconfigured CAPTCHA cannot be sent, and disables the button, before anything is typed', async () => {
+    const html = await render(
+      form({
+        captcha: { provider: null, site_key: null },
+        messages: { too_large: '', generic: '', network: '', unavailable: 'Not taking messages today.' },
+      }),
+    )
+
+    expect(html).toMatch(/<p role="status"[^>]*>\s*Not taking messages today\./)
+    expect(html).toMatch(/<button type="submit"[^>]*disabled/)
+    expect(await render(form({ captcha: { provider: 'turnstile', site_key: 'k' } }))).not.toMatch(
+      /<button type="submit"[^>]*disabled/,
+    )
+  })
+
+  it('tells a visitor who followed a resume link that what they saved is back', async () => {
+    const html = await render(form({ result: { handle: 'visit', status: 'resumed', values: { name: 'Ada' } } }))
+
+    expect(html).toContain('We&#39;ve brought back what you saved. Attach any files again.')
+  })
+
+  it('numbers sections by those drawn, so a skipped conditional step leaves no gap', async () => {
+    const skipped = {
+      conditions: { show: true, match: 'all', rules: [{ field: 'name', operator: 'equals', value: 'x' }] },
+    }
+    const html = await render(
+      form({
+        fields: [field('name'), field('extra', skipped), field('note')],
+        sections: [
+          { display: 'One', instructions: null, fields: ['name'] },
+          { display: 'Two', instructions: null, fields: ['extra'] },
+          { display: 'Three', instructions: null, fields: ['note'] },
+        ],
+      }),
+    )
+
+    expect(html).toMatch(/<legend[^>]*>1\. One/)
+    expect(html).toMatch(/<legend[^>]*>2\. Three/)
+  })
+
+  it('shows that a colour has not been chosen, rather than a black that sends nothing', async () => {
+    const html = await render(form({ fields: [field('brand', { type: 'color', required: true })] }))
+
+    expect(tag(html, 'visit-brand')).toContain('opacity-30')
+    expect(html).toContain('Not chosen')
+  })
+
+  it('names a toggle with a heading and a label by both, and gives a range its units as text', async () => {
+    const html = await render(
+      form({
+        fields: [
+          field('agree', { type: 'toggle', display: 'Consent', inline_label: 'I agree' }),
+          field('mood', { type: 'range', min: 0, max: 10, prepend: '$', append: 'k' }),
+        ],
+      }),
+    )
+
+    expect(tag(html, 'visit-agree')).toContain('aria-labelledby="visit-agree-display visit-agree-label"')
+    expect(html).toMatch(/id="visit-agree-display"[^>]*>Consent/)
+    expect(html).toMatch(/id="visit-agree-label"/)
+    expect(tag(html, 'visit-mood')).toContain('aria-valuetext="$0 k"')
   })
 
   it('keeps the honeypot out of reach of keyboards, screen readers and autofill, so a real enquiry is not caught as spam', async () => {
