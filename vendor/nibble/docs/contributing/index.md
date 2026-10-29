@@ -3,7 +3,7 @@ id: contributing
 title: Contributing to Nibble
 description: Working on Nibble itself — getting set up, finding your way around, and sending a change back that is
   easy to take.
-order: 7
+order: 8
 ---
 
 # Contributing to Nibble
