@@ -18,6 +18,7 @@ module Nibble
           nav: Nibble::Cp::Navigation.for(Nibble::Current.user),
           preferences: Nibble::UserPreferences.all(Nibble::Current.user),
           locales: Nibble.config.locales.map { |locale| { code: locale.code, default: locale.default } },
+          format_locale: format_locale,
           site_url: Nibble.config.url,
           session: { lifetime: Nibble.config.session_idle.to_i, remaining: Nibble::Current.session&.remaining },
           flash: flash.to_hash.slice("notice", "alert")
@@ -25,6 +26,15 @@ module Nibble
       }
 
       private
+
+      def format_locale
+        return Nibble.config.default_locale.code if Nibble.config.locales_declared?
+
+        request.headers["Accept-Language"].to_s.split(",").filter_map { |part|
+          tag = part.split(";").first.to_s.strip
+          tag if tag.match?(/\A[A-Za-z0-9]+(-[A-Za-z0-9]+)*\z/)
+        }.first || "en"
+      end
 
       def require_two_factor_enrolment
         return unless Nibble::Current.user&.requires_two_factor? && !Nibble::Current.user.two_factor?

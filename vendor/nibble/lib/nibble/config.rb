@@ -29,6 +29,7 @@ module Nibble
                 :outbound_allowed_hosts, :outbound_secrets, :outbound_config, :outbound_allow_private_networks
 
     def initialize(values, themes_path: nil, site_schema_path: nil, content_path: nil, published_path: nil, types_path: nil, agents_path: nil)
+      @locales_declared = values.to_h.key?("locales") || values.to_h.key?(:locales)
       values = DEFAULTS.deep_merge(values.to_h.deep_stringify_keys.compact)
       @themes_path = themes_path && Pathname(themes_path)
       @site_schema_path = site_schema_path && Pathname(site_schema_path)
@@ -58,6 +59,8 @@ module Nibble
 
     # New behaviour ships off: a site opts in by raising load_defaults, never by upgrading.
     def behaviour?(introduced_in) = Release.at_least?(load_defaults, introduced_in)
+
+    def locales_declared? = @locales_declared
 
     def default_locale = locales.find(&:default)
 
