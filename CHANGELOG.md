@@ -12,6 +12,24 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+### What's new
+
+- **A field can say what it expects.** `messages: { regex: "Enter an Australian mobile number" }` on a blueprint or
+  form field replaces the default text for that rule, as a string or per locale, on public forms, in the Control Plane
+  and in API errors. `nibble:check` refuses a message for a rule the field doesn't have.
+- **Number fields on forms reach the theme with `min`, `max` and `step`,** and crumbs draws them as number inputs. A
+  public form refuses a value off the step, as the browser does; blueprint fields still treat `step` as a hint.
+- **A submission caught as spam can be rescued.** Its values are kept (never its files) for `spam.retention_days`,
+  30 by default. The submissions list shows **All but spam** and a **Spam** tab with its count, and **Not spam**
+  stores the submission and sends its emails, deliveries and handler once, as if it had just arrived.
+
+### Changed
+
+- **Spam is deleted after `spam.retention_days`** (30 by default, or `retention_days` if shorter), including spam
+  stored before this release, which holds no values.
+- **`nibble:check` warns when a form's honeypot has a name autofill may fill in,** such as `website` or `email`,
+  because a visitor's browser would then mark a real enquiry as spam.
+
 ## 0.21.3 — 2026-10-29 20:05 +0600
 
 ### What's new
