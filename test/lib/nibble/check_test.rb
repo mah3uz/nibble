@@ -89,16 +89,20 @@ class Nibble::CheckTest < ActiveSupport::TestCase
       { handle: "name", field: { type: "text", validate: [ "required" ] } },
       { handle: "related", field: { type: "entries" } },
       { handle: "website", field: { type: "text" } }
-    ], spam: { honeypot: "website", captcha: "turnstile", rate_limit: { requests: 0 } },
+    ], spam: { honeypot: "website", captcha: "turnstile", rate_limit: { requests: 0 }, retention_days: 0 },
       api: [ { use: "crm" }, { url: "ftp://example.test", mode: "later" } ], notify: [ { subject: "New" }, { to: "team@example.test", fields: [ "phone" ], reply_to: "phone" } ],
       handler: "crm.missing", success: { redirect: "thanks" })
 
-    problems = check.problems.map(&:to_s).join("\n")
+    result = check
+    problems = result.problems.map(&:to_s).join("\n")
+    assert_includes result.warnings.map(&:to_s).join("\n"), "spam.honeypot 'website' looks like a field browsers and password managers fill in",
+      "autofill would fill a honeypot called website and throw real enquiries away"
     [
       "field 'related' uses 'entries', which can't be used on a public form",
       "field handle 'website' clashes with the honeypot",
       "spam.rate_limit needs positive requests and per_minutes",
       "spam.captcha must be true or false",
+      "spam.retention_days must be a positive number of days",
       "api.0 uses the API connection 'crm', which isn't in the schema",
       "api.1.url must be an absolute http(s) URL",
       "api.1.mode must be sync or async",
@@ -164,7 +168,7 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     theme_file("forms/contact.yml", title: "Contact", fields: [ { handle: "email", field: { type: "text", input_type: "email" } } ],
       api: [ { use: "crm" } ], notify: [ { to: "team@example.test" } ], success: { message: "Thanks!" }, retention_days: 90)
 
-    form_problems = check.problems.select { |problem| problem.source.include?("forms/") }
+    form_problems = check.findings.select { |problem| problem.source.include?("forms/") }
     assert_empty form_problems, form_problems.map(&:to_s).join("\n")
     form = Nibble::Forms::Form.new(item: Nibble::Schema.load(Nibble::Config.new({ "theme" => "check", "locales" => [ { "code" => "en", "default" => true } ] }, themes_path: @themes)).find(:forms, "contact"))
     assert_equal [ "_nibble_hp", { "requests" => 5, "per_minutes" => 1 }, "async" ], [ form.honeypot, form.rate_limit, form.deliveries.first["mode"] ]

@@ -50,6 +50,7 @@ module Nibble
           form = Forms::Form.new(item:)
           check_fields(form.fields(schema:), item.path)
           Forms.problems(form, schema:).each { |message| problem(item.path, message) }
+          Forms.warnings(form).each { |message| @warnings << Problem.new(source: item.path.to_s.delete_prefix("#{Rails.root}/"), message:, level: :warning) }
         end
       end
       schema.tasks.each do |item|

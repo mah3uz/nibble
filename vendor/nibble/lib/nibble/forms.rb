@@ -5,6 +5,8 @@ module Nibble
     DELIVERY_MODES = %w[sync async].freeze
     DEFAULT_HONEYPOT = "_nibble_hp".freeze
     DEFAULT_RATE_LIMIT = { "requests" => 5, "per_minutes" => 1 }.freeze
+    DEFAULT_SPAM_RETENTION_DAYS = 30
+    AUTOFILL_NAMES = /name|mail|phone|tel|address|street|city|zip|postal|country|company|organi[sz]ation|website|url|homepage|user|login/i
 
     Form = Data.define(:item) do
       def handle = item.handle
@@ -31,6 +33,7 @@ module Nibble
       def honeypot = spam["honeypot"] == false ? nil : spam["honeypot"].presence || DEFAULT_HONEYPOT
       def rate_limit = DEFAULT_RATE_LIMIT.merge(spam["rate_limit"].to_h)
       def captcha? = spam["captcha"] == true
+      def spam_retention_days = spam.fetch("retention_days", DEFAULT_SPAM_RETENTION_DAYS)
       def notify = Array(item["notify"])
       def deliveries = Array(item["api"]).map { |delivery| { "mode" => "async" }.merge(delivery) }
       def cp_notify? = item["cp_notify"] == true
@@ -56,6 +59,12 @@ module Nibble
         when nil then nil
         else labels.fetch(value.to_s, value.to_s)
         end
+      end
+
+      def warnings(form)
+        return [] unless form.honeypot&.match?(AUTOFILL_NAMES)
+
+        [ "spam.honeypot '#{form.honeypot}' looks like a field browsers and password managers fill in, so real enquiries may be caught as spam" ]
       end
 
       def problems(form, schema:)
@@ -93,6 +102,7 @@ module Nibble
           problems << "spam.rate_limit needs positive requests and per_minutes"
         end
         problems << "spam.captcha must be true or false" unless [ nil, true, false ].include?(form.spam["captcha"])
+        problems << "spam.retention_days must be a positive number of days" unless form.spam_retention_days.to_i.positive?
         problems
       end
 
