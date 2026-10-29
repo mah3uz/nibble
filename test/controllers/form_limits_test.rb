@@ -26,6 +26,17 @@ class FormLimitsTest < ActionDispatch::IntegrationTest
   def submit(handle, values) = post("/forms/#{handle}", params: values, as: :json)
   def definition(handle) = Nibble::Forms::Definition.call(Nibble::Forms.find(handle))
 
+  test "a closed message written per locale reaches the visitor as the text for their locale, not as the map" do
+    form_file("seminar", { "max_submissions" => 1, "closed_message" => { "en" => "All seats are taken.", "fr" => "Complet." } })
+    configure_nibble_records(locales: [ { "code" => "en", "default" => true }, { "code" => "fr" } ])
+    submit :seminar, { email: "ada@example.test" }
+
+    submit :seminar, { email: "grace@example.test", _locale: "fr" }
+    assert_equal({ "base" => [ "Complet." ] }, response.parsed_body["errors"])
+    submit :seminar, { email: "alan@example.test" }
+    assert_equal({ "base" => [ "All seats are taken." ] }, response.parsed_body["errors"])
+  end
+
   test "a full form refuses with its closed message and tells the theme it's closed, and spam doesn't take a place" do
     form_file("seminar", { "max_submissions" => 2, "closed_message" => "All seats are taken." })
 

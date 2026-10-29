@@ -216,7 +216,7 @@ module Nibble
         result(:invalid, errors:, values: data) if errors
       end
 
-      def closed = result(:closed, errors: { "base" => [ @form.closed_message ] })
+      def closed = result(:closed, errors: { "base" => [ Localized.resolve(@form.closed_message, @locale) ] })
 
       def unique_keys(data)
         @form.unique.filter_map do |handle|
