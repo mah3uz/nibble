@@ -33,7 +33,10 @@ module Nibble
 
     def instructions(site:, url:) = [ intro(site, url), RULES.strip, notes ].compact.join("\n\n")
 
-    def name(site) = "nibble-#{site.parameterize.presence || 'site'}".first(64)
+    def name(site)
+      slug = site.parameterize.presence || "site"
+      (slug == "nibble" || slug.start_with?("nibble-") ? slug : "nibble-#{slug}").first(64)
+    end
 
     def description(site, url, schema)
       collections = schema.collections.map { |item| AgentAccess.title(item) }.first(8).to_sentence
