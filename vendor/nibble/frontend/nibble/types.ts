@@ -79,6 +79,7 @@ type NibbleFormFieldTypes = {
   checkboxes: { options: NibbleFormOption[]; inline?: boolean }
   date: { inline?: boolean; time_enabled?: boolean; earliest_date?: string; latest_date?: string }
   files: { max_files?: number; max_file_size?: number; extensions?: string[] }
+  calculation: { formula: string; decimals?: number; prepend?: string; append?: string }
 }
 
 type NibbleFormFieldKey = {
