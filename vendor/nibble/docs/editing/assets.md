@@ -1,12 +1,12 @@
 ---
 id: editing-assets
-title: Assets
-description: Upload images and files once and use them anywhere — folders, focal points, alt text, and checking what
-  uses an asset before deleting it.
-order: 3
+title: Upload and manage images and files
+description: Upload images and files once and use them anywhere, swap one for another everywhere, rename, move and
+  duplicate them, and check what uses one before deleting it.
+order: 4
 ---
 
-# Assets
+# Upload and manage images and files
 
 An asset is a file you have uploaded: a screenshot of the product, a team photo, a PDF price list. You upload it once
 and use it anywhere.
@@ -14,6 +14,7 @@ and use it anywhere.
 After reading this guide, you will know:
 
 - How to upload and organise files.
+- How to replace, rename, move and duplicate one.
 - How one image serves every size the site needs.
 - Why alt text belongs on the asset.
 - How to check what uses an asset before deleting it.
@@ -25,7 +26,8 @@ After reading this guide, you will know:
 ![Tidewater's asset library](../../images/cp/assets.png)
 
 - **Upload**, or drag files onto the page. Several at once is fine.
-- **Create Folder** to organise them — `product/`, `team/` and `blog/`, say.
+- **Create Folder** to organise them — `product/`, `team/` and `blog/`, say. Point at a folder and choose its **⋯**
+  menu to **Rename** or **Delete** it.
 - **Search** finds files by name, title and alt text; **Filters** narrow by type.
 - Switch between a grid of thumbnails and a list with the buttons at the top right.
 
@@ -66,10 +68,53 @@ upload, not a hunt through forty pages.
 Video gets a thumbnail generated automatically. Documents and other files work the same way, without the image
 tools.
 
-## 5. Before you delete
+## 5. Change an asset
+
+Click an asset to edit it: its alt text, title, tags, focal point and crop (**Focal Point** and **Crop** are buttons in the editor). Choose **Save** when you are done.
+
+For the other changes, select the asset (click its tile, or tick its box), then use the bar that appears at the
+bottom of the page. Right-clicking an asset, or the menu on its row in the list, offers the same choices.
+
+| Choose | To |
+|---|---|
+| **Rename** | change the file's name |
+| **Move** | put it in another folder |
+| **Duplicate** | make a copy, to crop or edit without touching the original |
+| **Replace** | swap this asset for another one, everywhere it is used |
+| **Reupload** | keep this asset and swap in a new file |
+| **Copy URL** | copy the file's address |
+| **Download** | save the file to your computer |
+
+### 5.1 Replace or Reupload
+
+They sound alike, and do different things.
+
+**Replace** points everything that uses this asset at a different asset that is already in the library. Choose
+**Replace**, pick the other asset, then choose what happens to the old one: keep it, or move it to the trash.
+Nibble tells you how many places changed.
+
+**Reupload** keeps the same asset and gives it a new file. Choose **Reupload**, pick the file on your computer and
+confirm. The new file takes the old one's place everywhere, and the old file is deleted for good. The new file has to be the same
+kind: an image for an image, a video for a video.
+
+> [!TIP]
+> A new logo with a new file name: upload it, then **Replace** the old logo with it. The same file name, improved:
+> **Reupload**.
+
+### 5.2 Several at once
+
+Select more than one asset and the bar offers **Download**, **Duplicate**, **Move**, **Tag** and **Delete**. **Tag**
+adds the same tag to all of them. **Esc** deselects.
+
+### 5.3 Crop
+
+In an image's editor, choose **Crop** to cut the picture down. **Apply** changes the asset. **Save as copy**
+keeps the original and makes a cropped copy. **Reset** starts over.
+
+## 6. Before you delete
 
 Each asset shows what uses it. Check that list before deleting.
 
 > [!WARNING]
 > If something still uses an asset, deleting it takes the image off that page at once. Deleted assets go to the
-> trash like entries, under **Kind → assets**, so a mistake can be undone for as long as the trash keeps them.
+> [trash](trash.md) like entries, under **Kind → assets**, so a mistake can be undone for as long as the trash keeps them.
