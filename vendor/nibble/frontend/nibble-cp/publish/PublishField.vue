@@ -78,11 +78,13 @@ const showsInstructions = computed(
     (props.field.instructions_position === 'below' || !props.field.hide_display || actions.value.length > 0),
 )
 const instructionsId = computed(() => `${path.value}-instructions`)
+const labelId = computed(() => `${path.value}-label`)
 const errorId = computed(() => `${path.value}-error`)
 const describedBy = computed(() =>
   [showsInstructions.value && instructionsId.value, errors.value.length > 0 && errorId.value].filter(Boolean).join(' '),
 )
 const wrapper = useTemplateRef<HTMLElement>('wrapper')
+const LABELABLE = new Set(['button', 'input', 'meter', 'output', 'progress', 'select', 'textarea'])
 
 // Fieldtypes put the id they are given on their control, so linking it here spares each one, an extension's too, a prop.
 function linkDescription() {
@@ -90,6 +92,8 @@ function linkDescription() {
   if (!target) return
   if (describedBy.value) target.setAttribute('aria-describedby', describedBy.value)
   else target.removeAttribute('aria-describedby')
+  if (!props.field.hide_display && !LABELABLE.has(target.localName) && !target.hasAttribute('aria-labelledby'))
+    target.setAttribute('aria-labelledby', labelId.value)
 }
 watch(describedBy, linkDescription, { flush: 'post' })
 </script>
@@ -104,7 +108,7 @@ watch(describedBy, linkDescription, { flush: 'post' })
   >
     <div v-if="!field.hide_display || actions.length" class="flex flex-col gap-1.5">
       <div class="flex items-center justify-between gap-2">
-        <Label v-if="!field.hide_display" :for="path" class="block"
+        <Label v-if="!field.hide_display" :id="labelId" :for="path" class="block"
           >{{ field.display
           }}<template v-if="required"
             ><span class="relative -top-px ms-0.5 text-red-600" aria-hidden="true">*</span

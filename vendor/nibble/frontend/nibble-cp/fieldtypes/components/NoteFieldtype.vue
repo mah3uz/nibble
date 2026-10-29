@@ -10,6 +10,8 @@ defineExpose(expose)
 <template>
   <!-- eslint-disable vue/no-v-html -->
   <div
+    :id="id"
+    role="note"
     class="text-sm text-muted-foreground [&_a]:underline [&_ol]:list-decimal [&_ol]:pl-5 [&_p+p]:mt-2 [&_ul]:list-disc [&_ul]:pl-5"
     v-html="config.text_html"
   />
