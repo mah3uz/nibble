@@ -135,6 +135,25 @@ Every form gets two protections without asking:
   it off with `honeypot: false`.
 - **Rate limiting** — five submissions a minute from one address by default.
 
+A theme renders the honeypot as a visually hidden text input with `tabindex="-1"`, `autocomplete="off"` and
+`aria-hidden="true"`, so keyboards, screen readers and autofill pass it by. Keep its name meaningless: browsers and
+password managers fill in fields with names like `website` or `email`, and `bin/rails nibble:check` warns when the
+honeypot has one.
+
+A submission that fills the honeypot looks sent to whoever sent it. On a form that stores submissions, its values are
+kept with the status **Spam**, its files never are, and nothing is emailed, delivered or handled. The form's
+submissions screen shows **All but spam**, and **Spam** lists what was caught. Someone who can edit the form can open
+a wrongly caught submission and choose **Not spam**: it becomes a received submission, and its notifications, API
+deliveries and handler run once, as they would have when it was sent. Its values still have to pass the form's
+checks.
+
+Spam is deleted after 30 days, or after `spam.retention_days`:
+
+```yaml
+spam:
+  retention_days: 7
+```
+
 A public demo form on a startup's site will still attract determined bots. Turn on a CAPTCHA:
 
 ```yaml
@@ -259,6 +278,8 @@ retention_days: 90
 Submissions older than that are deleted on a schedule, so a contact form does not quietly accumulate people's
 personal details for years. `store: false` keeps nothing at all — the email and API deliveries still happen.
 
+Spam goes sooner: after `spam.retention_days`, 30 by default, or after `retention_days` when that is shorter.
+
 > [!NOTE]
 > Ninety days suits a demo form: long enough for sales to follow up, short enough that the site does not become a
 > second, forgotten CRM.
@@ -272,7 +293,7 @@ personal details for years. `store: false` keeps nothing at all — the email an
 | `success` | `{ message }` or `{ redirect }` |
 | `notify` | a list of `{ to, reply_to, fields }` |
 | `api` | a list of `{ url or use, path, method, format, body, mode, errors, error_fields, retry }`; `errors` is `{ status, path, field, message }`, and a connection in `site/schema/apis/` takes `base_url`, `headers`, `timeout`, `errors` and `retry` |
-| `spam` | `{ honeypot, rate_limit: { requests, per_minutes }, captcha }` |
+| `spam` | `{ honeypot, rate_limit: { requests, per_minutes }, captcha, retention_days }` |
 | `store`, `cp_notify` | true / false |
 | `retention_days` | a positive number |
 | `handler` | the name of a registered Ruby handler |
