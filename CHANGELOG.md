@@ -12,6 +12,13 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+### What's fixed
+
+- **A site builds its assets again.** The rich text editor's character counter and placeholder, and the Control Plane's
+  calendar, use packages that 0.22.0 didn't declare, so `bin/vite build` (and a deploy) could fail with `failed to
+  resolve import "@tiptap/extensions"`. Both are declared now, and a test fails when Nibble's frontend imports a
+  package it doesn't declare.
+
 ## 0.22.1 — 2026-10-30 05:00 +0600
 
 ### What's new
