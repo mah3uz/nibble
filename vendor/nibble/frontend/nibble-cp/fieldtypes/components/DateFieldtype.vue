@@ -4,6 +4,7 @@ import { CalendarIcon, X } from '@lucide/vue'
 import { DateFieldInput, DateFieldRoot } from 'reka-ui'
 import { computed, ref } from 'vue'
 import { fromIso, toIsoWithOffset } from '../../lib/datetime'
+import { formatLocale } from '../../lib/format'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -56,6 +57,7 @@ function onFieldChange(next: DateValue | undefined) {
         :id="id"
         v-slot="{ segments }"
         :model-value="fieldValue"
+        :locale="formatLocale()"
         :granularity="timeEnabled ? (config.time_seconds_enabled ? 'second' : 'minute') : 'day'"
         hide-time-zone
         :disabled="isReadOnly"
@@ -99,6 +101,7 @@ function onFieldChange(next: DateValue | undefined) {
     <PopoverContent align="start" class="w-[20rem] p-4">
       <Calendar
         :model-value="calendarValue"
+        :locale="formatLocale()"
         :default-placeholder="calendarValue"
         :min-value="config.earliest_date ? parseDate(String(config.earliest_date)) : undefined"
         :max-value="config.latest_date ? parseDate(String(config.latest_date)) : undefined"
