@@ -144,7 +144,9 @@ const hasError = computed(() => Object.keys(errors.value).some((path) => path.st
         :meta-path-prefix="metaPathPrefix"
         :read-only="readOnly"
       />
-      <p v-else class="text-sm text-red-600">This block type is no longer available, so it can't be edited. Remove it, or ask a developer to bring it back.</p>
+      <p v-else class="text-sm text-red-600">
+        This block type is no longer available, so it can't be edited. Remove it, or ask a developer to bring it back.
+      </p>
     </div>
   </div>
 </template>

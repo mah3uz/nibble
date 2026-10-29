@@ -63,9 +63,7 @@ async function restore(version: Version) {
 
   const ok = await confirmRestore({
     title: `Restore the revision from ${new Date(version.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}?`,
-    description: record.live
-      ? 'It becomes a draft. Publish it to make it live.'
-      : 'It is saved as a new revision.',
+    description: record.live ? 'It becomes a draft. Publish it to make it live.' : 'It is saved as a new revision.',
     confirmText: 'Restore',
   })
   if (ok) router.post(`${props.url}/${version.id}/restore`, { lock_version: record.lock_version })
