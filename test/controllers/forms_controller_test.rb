@@ -145,6 +145,7 @@ class FormsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "a flood of invalid posts is still cut off, at ten times the limit" do
+    travel_to Time.zone.at((Time.current.to_i / 600) * 600 + 30)
     50.times { submit :contact, VALID.except(:email) }
     assert_response :unprocessable_entity
 
