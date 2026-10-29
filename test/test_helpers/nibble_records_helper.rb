@@ -75,6 +75,13 @@ module NibbleRecordsHelper
     "forms/pledge.yml" => { title: "Pledge", fields: [
       { handle: "amount", field: { type: "integer", min: 2000, max: 10_000, step: 500 } }
     ] },
+    "forms/settings.yml" => { title: "Settings", fields: [
+      { handle: "email", field: { type: "text", input_type: "email", autocomplete: "email" } },
+      { handle: "message", field: { type: "textarea", rows: 8 } },
+      { handle: "agree", field: { type: "toggle", inline_label: "I agree to the terms", default: true } },
+      { handle: "arrival", field: { type: "date", time_enabled: true, earliest_date: "2026-01-01", latest_date: "2030-12-31", default: "computed:today" } },
+      { handle: "topics", field: { type: "select", multiple: true, max_items: 2, clearable: true, options: %w[a b c] } }
+    ] },
     "forms/worded_pledge.yml" => { title: "Worded pledge", fields: [
       { handle: "amount", field: { type: "integer", min: 2000, step: 500, messages: { step: { en: "Steps of $%{step} from $%{min}", fr: "Par tranches de %{step}" } } } }
     ] },

@@ -55,6 +55,14 @@ export type NibbleFormField = {
   min?: number
   max?: number
   step?: number
+  autocomplete?: string
+  rows?: number
+  inline_label?: string
+  time_enabled?: boolean
+  earliest_date?: string
+  latest_date?: string
+  max_items?: number
+  clearable?: boolean
 }
 
 export type NibbleFormSection = {

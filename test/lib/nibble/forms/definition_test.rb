@@ -3,6 +3,9 @@ require "test_helper"
 class Nibble::Forms::DefinitionTest < ActiveSupport::TestCase
   include NibbleRecordsHelper
 
+  setup { Nibble::Defaults.register("today") { "2026-09-17" } }
+  teardown { Nibble::Defaults.reset! }
+
   def definition(handle) = Nibble::Forms::Definition.call(Nibble::Forms.find(handle))
 
   def problems(content)
@@ -36,6 +39,21 @@ class Nibble::Forms::DefinitionTest < ActiveSupport::TestCase
     amount = definition("pledge")["fields"].first
 
     assert_equal [ 2000, 10_000, 500 ], amount.values_at("min", "max", "step")
+  end
+
+  test "settings a fieldtype already takes reach the theme, and a computed default arrives resolved" do
+    fields = definition("settings")["fields"].index_by { |field| field["handle"] }
+
+    assert_equal "email", fields["email"]["autocomplete"]
+    assert_equal 8, fields["message"]["rows"]
+    assert_equal [ "I agree to the terms", true ], fields["agree"].values_at("inline_label", "default")
+    assert_equal [ true, "2026-01-01", "2030-12-31" ], fields["arrival"].values_at("time_enabled", "earliest_date", "latest_date")
+    assert_equal "2026-09-17", fields["arrival"]["default"], "computed:today is a date, not the literal"
+    assert_equal [ 2, true ], fields["topics"].values_at("max_items", "clearable")
+  end
+
+  test "a field with no default sends none" do
+    assert_not definition("settings")["fields"].find { |field| field["handle"] == "message" }.key?("default")
   end
 
   test "a public submission off the step, counted from min, is refused and one on it is accepted" do

@@ -1,7 +1,8 @@
 module Nibble
   module Forms
     module Definition
-      FIELD_CONFIG = %w[placeholder input_type character_limit default width multiple inline max_files max_file_size extensions prepend append min max step].freeze
+      FIELD_CONFIG = %w[placeholder input_type character_limit default width multiple inline max_files max_file_size extensions prepend append min max step
+        autocomplete rows inline_label time_enabled earliest_date latest_date max_items clearable].freeze
       OPTION_TYPES = %w[select radio checkboxes].freeze
 
       module_function
@@ -30,6 +31,7 @@ module Nibble
       def field_definition(field)
         config = field.fieldtype.config.slice(*FIELD_CONFIG).compact
         config["options"] = field.fieldtype.options if OPTION_TYPES.include?(field.type)
+        config["default"] = field.default_value if config.key?("default")
         { "handle" => field.handle, "type" => field.type, "display" => field.display, "instructions" => field.instructions,
           "required" => field.required? }.merge(config)
       end

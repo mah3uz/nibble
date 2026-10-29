@@ -73,6 +73,11 @@ An `integer` field's `min`, `max` and `step` reach the theme, which draws a numb
 Nibble also refuses a value that is off the step, counted from `min` (or 0): with `min: 2000` and `step: 500`, 2250 is
 refused and 2500 is accepted. The field's `messages.step` sets the wording, with `%{attribute}`, `%{step}` and `%{min}`. In a blueprint, `step` is only a hint to the input.
 
+A field's other settings reach the theme too: a `text` field's `autocomplete`, a `textarea`'s `rows`, a `toggle`'s
+`inline_label` (the text beside a consent box), a `date`'s `time_enabled`, `earliest_date` and `latest_date`, and a
+`select`'s `max_items` and `clearable`. A field's `default` arrives resolved, so `default: computed:today` is today's
+date.
+
 A long form can be split into sections instead of one `fields` list. Each section has a `display`, optional
 `instructions` and its own `fields`, declared the same way:
 
