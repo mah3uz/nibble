@@ -80,6 +80,7 @@ module Nibble
 
           record = record_type(spec)
           record = picked(record, spec.fields) if spec.fields && !spec.source.search?
+          record = "(#{record} & { entries_count: number })" if spec.counts
           "    #{prop}: #{spec.paginate ? "Paginated<#{record}>" : "#{record}[]"}"
         end
         "  '#{sidecar.view}': {\n#{props.join("\n")}\n  }"

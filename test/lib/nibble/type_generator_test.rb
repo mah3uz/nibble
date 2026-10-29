@@ -29,6 +29,17 @@ class Nibble::TypeGeneratorTest < ActiveSupport::TestCase
     end
   end
 
+  test "a term query that counts entries types the count, so a view can show it without a cast" do
+    with_copied_theme do |types, _|
+      types.dirname.join("starter/views/posts/show.yml").write(
+        { "topics" => { "from" => "terms:topics", "counts" => "posts", "fields" => %w[title] } }.to_yaml
+      )
+      Nibble.reset_schema!
+
+      assert_match "topics: (Pick<(TopicsTopic), 'title' | 'id' | 'type' | 'uri' | 'url'> & { entries_count: number })[]", generated
+    end
+  end
+
   def with_copied_theme
     themes = Pathname(Dir.mktmpdir("nibble-types"))
     FileUtils.cp_r(Rails.root.join("test/nibble_themes/starter"), themes.join("starter"))
