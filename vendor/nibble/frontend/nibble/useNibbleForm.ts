@@ -107,10 +107,12 @@ const FALLBACK_MESSAGES = {
   network: 'Something went wrong. Please check your connection and try again.',
 }
 
-export function useNibbleForm(definition: NibbleForm) {
+export function useNibbleForm<Values extends Record<string, unknown> = Record<string, NibbleFormValue>>(
+  definition: NibbleForm<Values>,
+) {
   const locale = useLocale()
   const text = (key: keyof typeof FALLBACK_MESSAGES) => definition.messages?.[key] ?? FALLBACK_MESSAGES[key]
-  const values = reactive<Record<string, NibbleFormValue>>(
+  const state = reactive<Record<string, NibbleFormValue>>(
     Object.fromEntries(
       definition.fields.map((field) => [field.handle, refilled(field, definition.result) ?? initialValue(field)]),
     ),
@@ -140,8 +142,8 @@ export function useNibbleForm(definition: NibbleForm) {
     return many(field) ? `${field.handle}[]` : field.handle
   }
 
-  const isVisible = (field: NibbleFormField) => isFieldVisible(field, values)
-  const calculations = computed(() => calculate(definition.fields, values, isVisible))
+  const isVisible = (field: NibbleFormField) => isFieldVisible(field, state)
+  const calculations = computed(() => calculate(definition.fields, state, isVisible))
   const calculated = (field: NibbleFormField) => calculations.value.get(field.handle) ?? null
   const calculatedText = (field: NibbleFormField) => formatCalculation(field, calculated(field), locale.value)
   const drawn = (handle: string) => {
@@ -195,7 +197,7 @@ export function useNibbleForm(definition: NibbleForm) {
   }
 
   function setFiles(handle: string, event: Event) {
-    values[handle] = Array.from((event.target as HTMLInputElement).files ?? [])
+    state[handle] = Array.from((event.target as HTMLInputElement).files ?? [])
   }
 
   async function captchaToken(captcha: Captcha): Promise<string | null> {
@@ -253,7 +255,7 @@ export function useNibbleForm(definition: NibbleForm) {
   })
 
   function reset() {
-    definition.fields.forEach((field) => (values[field.handle] = initialValue(field)))
+    definition.fields.forEach((field) => (state[field.handle] = initialValue(field)))
     trap.value = ''
     step.value = 0
   }
@@ -262,7 +264,7 @@ export function useNibbleForm(definition: NibbleForm) {
     const body = new FormData()
     definition.fields
       .filter((field) => isVisible(field) && include(field))
-      .forEach((field) => append(body, field.handle, values[field.handle]))
+      .forEach((field) => append(body, field.handle, state[field.handle]))
     body.append('_locale', locale.value)
     return body
   }
@@ -373,7 +375,7 @@ export function useNibbleForm(definition: NibbleForm) {
   }
 
   return {
-    values,
+    values: state as unknown as Values,
     trap,
     errors,
     errorList,

@@ -111,7 +111,8 @@ export type NibbleFormResult = {
   values?: Record<string, string | number | boolean | (string | number)[]>
 }
 
-export type NibbleForm = {
+export type NibbleForm<Values extends Record<string, unknown> = Record<string, NibbleFormValue>> = {
+  readonly __values?: Values
   handle: string
   title: string | null
   action: string

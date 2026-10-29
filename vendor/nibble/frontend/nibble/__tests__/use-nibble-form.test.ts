@@ -1,7 +1,8 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest'
 import cases from '../../../../../test/fixtures/files/nibble_conditions.json'
 import { KEYS, parse } from '../../nibble-cp/conditions'
-import type { NibbleForm, NibbleFormConditions, NibbleFormField } from '../types'
+import type { NibbleForm, NibbleFormConditions, NibbleFormField, NibbleFormValue } from '../types'
+import type { useNibbleForm } from '../useNibbleForm'
 
 const mounted: (() => void)[] = []
 
@@ -364,5 +365,20 @@ describe('useNibbleForm steps and saving for later', () => {
 
     expect(contact.values).toMatchObject({ email: 'ada@example.test', kind: 'person' })
     expect(contact.errors.value).toEqual({})
+  })
+})
+
+describe('useNibbleForm value types', () => {
+  type ContactValues = { name: string; topic: 'sales' | 'support' | ''; files: File[] }
+  type Form = ReturnType<typeof useNibbleForm<ContactValues>>
+
+  it('types values from the form definition it is given', () => {
+    expectTypeOf<Form['values']['topic']>().toEqualTypeOf<'sales' | 'support' | ''>()
+    expectTypeOf<Form['values']['files']>().toEqualTypeOf<File[]>()
+  })
+
+  it('still accepts a typed form where an untyped one is expected', () => {
+    expectTypeOf<NibbleForm<ContactValues>>().toExtend<NibbleForm>()
+    expectTypeOf<NibbleForm>().toExtend<NibbleForm<Record<string, NibbleFormValue>>>()
   })
 })
