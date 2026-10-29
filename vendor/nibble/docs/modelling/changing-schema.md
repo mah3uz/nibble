@@ -99,7 +99,12 @@ runs twice.
 
 ## 4. The operations
 
-Each operation names a `collection` or a `taxonomy` to work on.
+Each operation names a `collection` or a `taxonomy` to work on. `rename_field`, `set_default`, `move_field` and
+`remove_field` also take a `global`, and change that global in every locale:
+
+```yaml
+- rename_field: { global: site, from: phone, to: telephone }
+```
 
 ### 4.1 `rename_field`
 
@@ -157,6 +162,48 @@ relationships.
 > [!CAUTION]
 > `delete_collection` removes entries outright — there is no trash to restore them from, because there is no
 > schema left to restore them under. Take a [backup](../running/backups.md) first, and read the dry run.
+
+### 4.7 `move_field`
+
+```yaml
+- move_field:
+    from: { global: site, field: google_rating }
+    to: { global: social, field: rating }
+```
+
+Moves each value to another field and removes it from the first: from one global to another, locale by locale, or
+between two fields of the same collection, taxonomy or global. A locale with no `social` values yet gets them.
+
+The field it moves to must be in the schema, and of the same type as the field it moves from — read from the
+schema, or from the [last snapshot](#5-changing-a-fields-type) once that field has gone.
+
+A record whose destination already holds a different value is left as it is, and named in the migration's report:
+
+```
+move site.google_rating to social.rating, leaving global 3 (fr) where rating already holds a value: 1
+```
+
+Its value stays where it was, so `nibble:check` keeps refusing until you decide. To replace what is there, add a
+migration with `overwrite: true`:
+
+```yaml
+- move_field:
+    from: { global: site, field: google_rating }
+    to: { global: social, field: rating }
+    overwrite: true
+```
+
+### 4.8 `remove_field`
+
+```yaml
+- remove_field: { collection: posts, field: intro }
+```
+
+Removes a field's stored values once it is no longer in the schema, so `nibble:check` passes without
+`--allow-data-loss`. It refuses while the field is still in the schema.
+
+Each record it changes gets a revision, and the one before still holds the value. A draft's value goes too, and a
+draft has no revisions.
 
 ## 5. Changing a field's type
 
