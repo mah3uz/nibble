@@ -32,6 +32,20 @@ class Nibble::ConfigTest < ActiveSupport::TestCase
     assert_equal Rails.root.join("site/themes/starter"), config("theme" => "starter").theme_path
   end
 
+  test "a missing theme the shell's NIBBLE_THEME chose says so, since nothing in the site's files names it" do
+    missing = Dir.mktmpdir("nibble-themes")
+    shell = ENV["NIBBLE_THEME"]
+    ENV["NIBBLE_THEME"] = File.basename(missing)
+    error = assert_raises(Nibble::ConfigError) { Nibble::Theme.load(missing) }
+    assert_includes error.message, "NIBBLE_THEME=#{File.basename(missing)}"
+
+    ENV.delete("NIBBLE_THEME")
+    error = assert_raises(Nibble::ConfigError) { Nibble::Theme.load(missing) }
+    assert_not_includes error.message, "NIBBLE_THEME", "a theme the site's own settings name needs no hint about the shell"
+  ensure
+    ENV["NIBBLE_THEME"] = shell
+  end
+
   test "the theme the layout asks for is the theme the settings name" do
     Nibble.config = config("theme" => "starter")
 

@@ -10,10 +10,15 @@ module Nibble
     def initialize(path)
       @path = Pathname(path)
       file = @path.join("theme.yml")
-      raise ConfigError.new("theme", "no theme.yml in #{@path}") unless file.file?
+      raise ConfigError.new("theme", "no theme.yml in #{@path}#{chosen_by_environment}") unless file.file?
 
       @manifest = YAML.safe_load_file(file) || {}
       raise SchemaError.new(file:, reason: "theme.yml must be a map") unless @manifest.is_a?(Hash)
+    end
+
+    def chosen_by_environment
+      named = ENV["NIBBLE_THEME"].presence
+      named == @path.basename.to_s ? "; NIBBLE_THEME=#{named} in this shell chose it, so unset it to use the site's own theme" : ""
     end
 
     def handle = manifest["handle"] || path.basename.to_s
