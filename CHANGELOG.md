@@ -12,6 +12,12 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+### What's new
+
+- **A block's count can have a default.** `limit: { from: $set.count, default: 3 }` (and the same for
+  `paginate.per_page`) uses the default while the editor's field is blank, as it is on a block saved before the field
+  existed.
+
 ### What's fixed
 
 - **CAPTCHAs are verified on a site that limits `outbound.allowed_hosts`.** The check went through the allowlist, so
@@ -19,6 +25,14 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
   is fixed in Nibble, so it is called without being listed; a check that can't be made is now logged.
 - **A term query with `counts` is typed with `entries_count`** in `site/types.d.ts`, so a view can show the count
   without a cast.
+
+### Changed
+
+- **A blank `limit: $set.<field>` shows at most 100,** the cap an editor's own number is held to, instead of the whole
+  collection.
+
+  **Upgrade:** a block whose count field is blank and whose collection has more than 100 entries now lists 100. Add a
+  `default` to its sidecar's `limit` to choose another number.
 
 ## 0.21.1 — 2026-10-29 17:57 +0600
 

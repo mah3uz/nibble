@@ -39,7 +39,7 @@ module Nibble
         @paginate = parse_paginate
         @limit = bounded("limit", @raw["limit"])
         @offset = @raw["offset"].nil? ? nil : Integer(@raw["offset"], exception: false) || raise(Invalid.new("offset", "must be a number"))
-        raise Invalid.new("paginate", "can't be combined with limit") if @paginate && (@limit || (!@context && variable?(@raw["limit"])))
+        raise Invalid.new("paginate", "can't be combined with limit") if @paginate && @limit
         @counts = parse_counts
         @include = @raw["include"].nil? ? [] : parse_list("include") { |handle| @relation_fields.key?(handle) || raise(Invalid.new("include", "'#{handle}' isn't a relationship field")) }
         @fields = @raw.key?("fields") ? parse_list("fields") { |handle| valid_field?(handle) || raise(Invalid.new("fields", "unknown field '#{handle}'")) } : nil
@@ -106,14 +106,25 @@ module Nibble
 
       def variable?(value) = value.is_a?(String) && value.start_with?("$")
 
-      def bounded(key, value, fallback: nil)
+      def bounded(key, value, fallback: MAX_PER_PAGE)
         return nil if value.nil?
+        (value, fallback) = with_default(key, value, fallback) if value.is_a?(Hash)
         return variable_number(key, value, fallback) if variable?(value)
 
         number = Integer(value, exception: false)
         raise Invalid.new(key, "must be between 1 and #{MAX_PER_PAGE}") unless number && number.between?(1, MAX_PER_PAGE)
 
         number
+      end
+
+      def with_default(key, raw, fallback)
+        raise Invalid.new(key, "takes from and default") unless (raw.keys - %w[from default]).empty? && variable?(raw["from"])
+        return [ raw["from"], fallback ] unless raw.key?("default")
+
+        default = Integer(raw["default"], exception: false)
+        raise Invalid.new("#{key}.default", "must be between 1 and #{MAX_PER_PAGE}") unless default&.between?(1, MAX_PER_PAGE)
+
+        [ raw["from"], default ]
       end
 
       def variable_number(key, value, fallback)

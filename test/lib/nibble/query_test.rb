@@ -132,11 +132,24 @@ class Nibble::QueryTest < ActiveSupport::TestCase
     assert_equal 1, Nibble::Query::Spec.parse({ from: "entries:posts", limit: "$set.count" }, context: Nibble::Query::Context.public(set: { "count" => -3 })).limit
   end
 
-  test "a blank count behaves as if the key were absent, so the block still renders" do
-    set = { "count" => "" }
-    assert_equal run_query({ from: "entries:posts" }).records.size, run_query({ from: "entries:posts", limit: "$set.count" }, set:).records.size
-    assert_equal 12, run_query({ from: "entries:posts", paginate: { per_page: "$set.count" } }, set: {}).pagination["per_page"]
-    assert_equal run_query({ from: "entries:posts" }).records.size, run_query({ from: "entries:posts", limit: "$set.count" }, set: { "count" => "lots" }).records.size
+  # A block saved before its count field existed has it blank, and must neither vanish nor load a whole collection.
+  test "a blank count takes the sidecar's default, or 100 without one, so the block still renders within the cap" do
+    spec = ->(raw, set) { Nibble::Query::Spec.parse({ from: "entries:posts" }.merge(raw), context: Nibble::Query::Context.public(set:)) }
+    assert_equal 3, spec.({ limit: { from: "$set.count", default: 3 } }, { "count" => "" }).limit
+    assert_equal 2, spec.({ limit: { from: "$set.count", default: 3 } }, { "count" => "2" }).limit, "the editor's number wins over the default"
+    assert_equal 100, spec.({ limit: "$set.count" }, { "count" => "" }).limit
+    assert_equal 100, spec.({ limit: "$set.count" }, { "count" => "lots" }).limit
+    assert_equal 12, spec.({ paginate: { per_page: "$set.count" } }, {}).paginate["per_page"]
+    assert_equal 6, spec.({ paginate: { per_page: { from: "$set.count", default: 6 } } }, {}).paginate["per_page"]
+    assert_equal 2, run_query({ from: "entries:posts", limit: { from: "$set.count", default: 2 } }, set: {}).records.size
+  end
+
+  test "a default is a number within the cap, beside a block or entry variable" do
+    invalid = ->(limit) { assert_raises(Nibble::Query::Invalid) { Nibble::Query::Spec.parse({ from: "entries:posts", limit: }) }.key }
+    assert_equal "limit.default", invalid.({ from: "$set.count", default: 500 })
+    assert_equal "limit.default", invalid.({ from: "$set.count", default: "three" })
+    assert_equal "limit", invalid.({ from: 3, default: 3 })
+    assert_equal "limit", invalid.({ from: "$set.count", fallback: 3 })
   end
 
   test "limit variables are limited to the block or entry, and literals stay strict" do

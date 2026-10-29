@@ -139,15 +139,18 @@ related:
 *Other posts in any of this post's topics, not this one, at most three.*
 
 `limit` and `paginate.per_page` also take `$set.<field>` (or `$entry.<field>`), so an editor chooses how many a block
-shows. A blank field behaves as if the key were absent, and a number outside 1 to 100 is held to that range:
+shows. Give a `default` for when the field is blank, as it is on a block saved before the field existed:
 
 ```yaml
 # site/themes/tidewater/views/sets/latest_posts.yml
 posts:
   from: entries:posts
   sort: published_at:desc
-  limit: $set.count
+  limit: { from: $set.count, default: 3 }
 ```
+
+Without a `default`, a blank field shows up to 100 for `limit` and 12 for `per_page`. A number outside 1 to 100 is
+held to that range.
 
 ## 6. Pagination
 
