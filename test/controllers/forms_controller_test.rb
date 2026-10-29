@@ -60,12 +60,14 @@ class FormsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "Enter an Australian mobile number" ], response.parsed_body["errors"]["phone"]
   end
 
-  test "a filled honeypot looks like success to the bot but is kept only as spam" do
-    submit :contact, VALID.merge(_nibble_hp: "http://spam.test")
+  test "a filled honeypot looks like success to the bot, and keeps its values as spam so a wrongly caught enquiry can be read" do
+    submit :contact, VALID.merge(_nibble_hp: "http://spam.test", admin: true, topic: { "$gt" => "" })
 
     assert_response :created
-    assert_equal [ "spam", {} ], Submission.sole.values_at(:status, :data)
+    assert_equal [ "spam", VALID.except(:topic).stringify_keys ], Submission.sole.values_at(:status, :data),
+      "only the form's own fields are kept, and only as plain values"
     assert_empty Nibble::Records::OutboxEvent.where(name: "form.submitted")
+    assert_no_enqueued_jobs only: [ Nibble::Jobs::NotifySubmission, Nibble::Jobs::DeliverSubmission ]
   end
 
   test "a burst of submissions from one address is cut off at the form's rate limit" do

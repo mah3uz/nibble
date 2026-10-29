@@ -141,6 +141,22 @@ class Nibble::Cp::FormsControllerTest < ActionDispatch::IntegrationTest
     assert_not Submission.exists?(old.id)
   end
 
+  test "spam is kept only for spam.retention_days, 30 by default, even on a form that keeps its submissions forever" do
+    old = Submission.create!(form: "lead", status: "spam", data: { "email" => "bot@example.test" }, created_at: 31.days.ago)
+    recent = Submission.create!(form: "lead", status: "spam", data: { "email" => "ada@example.test" }, created_at: 29.days.ago)
+    real = Submission.create!(form: "lead", data: { "email" => "grace@example.test" }, created_at: 2.years.ago)
+
+    Nibble::Jobs::PurgeSubmissions.perform_now
+    assert_equal [ recent.id, real.id ].sort, Submission.ids.sort
+    assert_not Submission.exists?(old.id)
+
+    @nibble_themes.join("records/schema/forms/lead.yml")
+      .write({ "title" => "Lead", "spam" => { "retention_days" => 7 }, "fields" => [ { "handle" => "email", "field" => { "type" => "text" } } ] }.to_yaml)
+    Nibble.reset_schema!
+    Nibble::Jobs::PurgeSubmissions.perform_now
+    assert_equal [ real.id ], Submission.ids
+  end
+
   test "a new-submission notification links to the submission" do
     submission = contact
     Nibble::Records::Notification.notify(users(:editor).id, "form.submitted", subject: submission, title: "Contact", form: "contact")

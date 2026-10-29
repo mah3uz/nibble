@@ -5,6 +5,8 @@ module Nibble
         def ok? = status == :ok
       end
 
+      SPAM_VALUE = [ String, Numeric, TrueClass, FalseClass ].freeze
+
       mattr_accessor :rate_limit_store, default: -> { Rails.cache }
 
       def self.call(form, params, ip: nil, user_agent: nil, locale: nil) = new(form, params, ip:, user_agent:, locale:).call
@@ -77,9 +79,16 @@ module Nibble
       end
 
       def spam!
-        submission = Records::FormSubmission.create!(form: @form.handle, status: "spam", ip_hash: @ip_hash, user_agent: @user_agent, locale: @locale) if @form.store?
+        return result(:ok) unless @form.store?
+
+        fields = @form.fields
+        files = fields.all.values.select { |field| field.type == "files" }.map(&:handle)
+        data = @params.slice(*fields.handles).except(*files).select { |_, value| plain?(value) }
+        submission = Records::FormSubmission.create!(form: @form.handle, status: "spam", data:, ip_hash: @ip_hash, user_agent: @user_agent, locale: @locale)
         result(:ok, submission:)
       end
+
+      def plain?(value) = Array.wrap(value).all? { |item| SPAM_VALUE.any? { |type| item.is_a?(type) } }
 
       def upload(fields, values)
         handles = fields.all.values.select { |field| field.type == "files" }.map(&:handle)

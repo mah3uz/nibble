@@ -74,10 +74,10 @@ class FormUploadsTest < ActionDispatch::IntegrationTest
     assert_empty ActiveStorage::Attachment.where(blob:)
   end
 
-  test "spam never reaches storage" do
+  test "spam's files never reach storage, though its other values are kept" do
     apply upload("cv.pdf", PDF), _nibble_hp: "bot"
     assert_response :created
-    assert_equal [ "spam", 0 ], [ submission.status, ActiveStorage::Blob.count ]
+    assert_equal [ "spam", { "name" => "Ada" }, 0 ], [ submission.status, submission.data, ActiveStorage::Blob.count ]
   end
 
   test "only people who can see submissions get a short-lived download link, which always downloads" do
