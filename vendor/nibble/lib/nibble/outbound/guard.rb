@@ -23,12 +23,12 @@ module Nibble
         true
       end
 
-      def check!(uri)
+      def check!(uri, builtin: false)
         raise Refused, "only http and https URLs can be called" unless %w[http https].include?(uri.scheme)
 
         host = uri.hostname.to_s.downcase
         raise Refused, "the URL has no host" if host.empty?
-        raise Refused, "#{host} isn't in outbound.allowed_hosts" unless allowed_host?(host)
+        raise Refused, "#{host} isn't in outbound.allowed_hosts" unless builtin || allowed_host?(host)
 
         addresses = literal(host) || resolver.call(host)
         raise Refused, "#{host} doesn't resolve" if addresses.empty?

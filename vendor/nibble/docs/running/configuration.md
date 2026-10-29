@@ -96,7 +96,7 @@ In production, a missing job or a passkey setting that no longer allows the site
 | `assets.max_upload_mb` | the largest file anyone may upload |
 | `assets.additional_extensions` | file types beyond the ones allowed by default |
 | `assets.presets` | named image sizes — see below |
-| `outbound.allowed_hosts` | the only hosts Nibble may call, for form deliveries and webhooks |
+| `outbound.allowed_hosts` | the only hosts Nibble may call, for form deliveries, webhooks, API connections and tasks; CAPTCHA checks need no entry |
 | `outbound.secrets` | the secret names those calls may use |
 | `outbound.config` | plain values those calls may use, as `{config.name}` |
 | `outbound.allow_private_networks` | `true` lets calls reach your own machine or a private network while developing; `false` by default |

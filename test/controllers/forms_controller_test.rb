@@ -134,6 +134,17 @@ class FormsControllerTest < ActionDispatch::IntegrationTest
     assert captcha(provider: "recaptcha", recaptcha_min_score: "1.5").invalid?, "a score outside 0.0 to 1.0 can't be saved"
   end
 
+  # The provider's verify URL is fixed in Nibble, so a site that lists only its own API still checks CAPTCHAs.
+  test "a CAPTCHA is verified on a site whose outbound allowlist names only its own API" do
+    captcha(provider: "recaptcha")
+    stub_request(:post, "https://www.google.com/recaptcha/api/siteverify").to_return(body: { success: true, score: 0.9 }.to_json)
+    configure_nibble_records(outbound: { "allowed_hosts" => [ "api.crm.example" ] })
+
+    submit :signup, { email: "ada@example.test", _captcha: "token" }
+
+    assert_response :success
+  end
+
   test "without JavaScript a form posts back to its page with the outcome, or goes to its success page" do
     post "/forms/contact", params: VALID, headers: { "Referer" => "http://www.example.com/contact" }
     assert_redirected_to "http://www.example.com/contact"

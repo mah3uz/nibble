@@ -14,6 +14,9 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ### What's fixed
 
+- **CAPTCHAs are verified on a site that limits `outbound.allowed_hosts`.** The check went through the allowlist, so
+  every submission was refused as a robot unless the provider's host was listed. The provider's verification address
+  is fixed in Nibble, so it is called without being listed; a check that can't be made is now logged.
 - **A term query with `counts` is typed with `entries_count`** in `site/types.d.ts`, so a view can show the count
   without a cast.
 

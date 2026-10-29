@@ -91,9 +91,9 @@ module NibbleRecordsHelper
     Nibble.boot!
   end
 
-  def configure_nibble_records(load_defaults: nil)
+  def configure_nibble_records(load_defaults: nil, outbound: {})
     Nibble.config = Nibble::Config.new({ "theme" => "records", "url" => "https://example.com", "load_defaults" => load_defaults, "locales" => [ { "code" => "en", "default" => true } ], "reserved_paths" => [ "/cp" ],
-                                         "outbound" => { "secrets" => [ "crm_token" ] },
+                                         "outbound" => { "secrets" => [ "crm_token" ] }.merge(outbound),
                                          "assets" => { "presets" => { "card" => { "w" => 32, "h" => 16, "fit" => "crop", "srcset" => [ 16, 32 ] } } } },
       themes_path: @nibble_themes, site_schema_path: @nibble_themes.join("site_schema"), agents_path: @nibble_themes.join("agents"))
   end

@@ -120,6 +120,18 @@ class Nibble::OutboundTest < ActiveSupport::TestCase
     refused("https://api.example.test/")
   end
 
+  # A URL in Nibble's own code is the only kind exempt from the allowlist; where it redirects, and every other check, still apply.
+  test "a builtin URL is called without being listed, but only that URL, and never inward" do
+    configure("allowed_hosts" => [ "api.example.test" ])
+    stub_request(:post, "https://v6.example.test/verify").to_return(status: 200, body: "{}")
+    stub_request(:post, "https://v6.example.test/bounce").to_return(status: 307, headers: { "Location" => "https://mixed.example.test/next" })
+
+    assert_equal 200, Outbound.request(:post, "https://v6.example.test/verify", purpose: "test", builtin: true).status
+    refused("https://v6.example.test/verify", method: :post)
+    assert_raises(Outbound::Refused, match: /allowed_hosts/) { Outbound.request(:post, "https://v6.example.test/bounce", purpose: "test", builtin: true) }
+    assert_raises(Outbound::Refused, match: /private/) { Outbound.request(:post, "https://internal.example.test/", purpose: "test", builtin: true) }
+  end
+
   test "oversized and slow responses fail instead of tying up a worker" do
     stub_request(:get, "https://api.example.test/big").to_return(status: 200, body: "x" * 2.megabytes)
     stub_request(:get, "https://api.example.test/slow").to_timeout

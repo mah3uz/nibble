@@ -20,7 +20,8 @@ module Nibble
 
     module_function
 
-    def request(method, url, purpose:, body: nil, format: :json, headers: {}, timeout: 10, max_bytes: 1.megabyte, redirects: 3, owner: nil, secrets: [])
+    # builtin: the URL is fixed in Nibble's own code, never one a site or an editor writes, so allowed_hosts doesn't govern it.
+    def request(method, url, purpose:, body: nil, format: :json, headers: {}, timeout: 10, max_bytes: 1.megabyte, redirects: 3, owner: nil, secrets: [], builtin: false)
       method = method.to_s.upcase
       started = Process.clock_gettime(Process::CLOCK_MONOTONIC)
       uri = URI.parse(url.to_s)
@@ -30,8 +31,8 @@ module Nibble
       entry = { owner:, purpose:, method:, url: uri.to_s, headers:, payload:, secrets: }
 
       response = nil
-      (redirects + 1).times do
-        response = perform(method, uri, payload, headers, timeout, max_bytes, started)
+      (redirects + 1).times do |hop|
+        response = perform(method, uri, payload, headers, timeout, max_bytes, started, builtin: builtin && hop.zero?)
         location = response.headers["location"]
         break unless REDIRECTS.include?(response.status) && location
 
@@ -58,8 +59,8 @@ module Nibble
       raise failure
     end
 
-    def perform(method, uri, payload, headers, timeout, max_bytes, started)
-      address = Guard.check!(uri)
+    def perform(method, uri, payload, headers, timeout, max_bytes, started, builtin: false)
+      address = Guard.check!(uri, builtin:)
       http = Net::HTTP.new(uri.hostname, uri.port)
       http.ipaddr = address
       http.use_ssl = uri.scheme == "https"

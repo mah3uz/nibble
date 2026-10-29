@@ -139,7 +139,8 @@ spam:
 ```
 
 Then choose the provider — Cloudflare Turnstile or Google reCAPTCHA — and paste its keys under
-**Globals → Integrations**. The theme's form component renders the widget from the form's definition.
+**Globals → Integrations**. The theme's form component renders the widget from the form's definition. Nibble checks
+each token with the provider's own verification address, which `outbound.allowed_hosts` doesn't need to list.
 
 A theme receives `captcha` on the form: `null` when the form has no `captcha: true`, `{ provider, site_key }` when the
 keys are set, and `{ provider: null, site_key: null }` when the form asks for a CAPTCHA but Integrations has no keys.

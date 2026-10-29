@@ -16,12 +16,13 @@ module Nibble
         return false if token.blank? || settings["secret_key"].blank?
 
         response = Outbound.request(:post, VERIFY_URLS.fetch(settings["provider"]), purpose: "captcha", format: :form,
-          body: { secret: settings["secret_key"], response: token, remoteip: ip }.compact, secrets: [ settings["secret_key"] ], timeout: 5)
+          body: { secret: settings["secret_key"], response: token, remoteip: ip }.compact, secrets: [ settings["secret_key"] ], timeout: 5, builtin: true)
         result = response.json.to_h
         return false unless result["success"] == true
 
         settings["provider"] != "recaptcha" || result["score"].to_f >= settings.fetch("min_score", DEFAULT_MIN_SCORE).to_f
-      rescue Outbound::Refused, Outbound::Failed
+      rescue Outbound::Refused, Outbound::Failed => error
+        Rails.logger.warn("[nibble] CAPTCHA verification with #{settings['provider']} couldn't be made, so the submission is refused: #{error.message}")
         false
       end
     end
