@@ -28,6 +28,7 @@
       "@nibble": ["./vendor/nibble/frontend/nibble/index.ts"],
       "@nibble/*": ["./vendor/nibble/frontend/nibble/*"],
       "@theme/*": ["./vendor/nibble/themes/crumbs/*"],
+      "@site/types": ["./tmp/nibble/crumbs-types.d.ts"],
       "@site/*": ["./site/*"]
     }
   },
@@ -38,6 +39,6 @@
     "vendor/nibble/frontend/**/*.vue",
     "vendor/nibble/themes/*/**/*.ts",
     "vendor/nibble/themes/*/**/*.vue",
-    "site/types.d.ts"
+    "tmp/nibble/crumbs-types.d.ts"
   ]
 }
