@@ -21,8 +21,7 @@ module Nibble
           next if (wanted.any? && wanted.exclude?(item.handle)) || item["files"].present?
           next unless Access.can?(Current.user, "entries.#{item.handle}.create")
 
-          { "handle" => item.handle, "label" => item["title"].to_s.singularize,
-            "fields" => self.class.dialog_fields(Records::Entry.new(collection: item.handle, blueprint: Array(item["blueprints"]).first)) }
+          self.class.dialog_target(item.handle, item["title"].to_s.singularize, Records::Entry.new(collection: item.handle, blueprint: Array(item["blueprints"]).first))
         end
       end
 

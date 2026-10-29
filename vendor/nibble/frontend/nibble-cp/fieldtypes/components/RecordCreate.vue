@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { createRelationship, type CreateTarget, type ItemSummary } from '../../lib/relationships'
+import { unplacedErrors } from '../relationshipMode'
 
 const props = defineProps<{ type: string; targets: CreateTarget[] }>()
 const emit = defineEmits<{ created: [item: ItemSummary] }>()
@@ -26,6 +27,9 @@ const saving = ref(false)
 
 const target = computed(() => props.targets.find((item) => item.handle === targetHandle.value) ?? props.targets[0])
 const noun = computed(() => target.value.label.toLowerCase())
+const otherErrors = computed(() =>
+  unplacedErrors(errors.value, ['title', ...target.value.fields.map((field) => field.handle)]),
+)
 
 function show() {
   targetHandle.value = props.targets[0].handle
@@ -89,6 +93,12 @@ async function save() {
             :type="field.type === 'integer' ? 'number' : 'text'"
           />
           <p v-if="errors[field.handle]" class="text-sm text-destructive">{{ errors[field.handle] }}</p>
+        </div>
+        <div v-if="otherErrors.length" role="alert" class="space-y-1 text-sm text-destructive">
+          <p>It can't be created from here:</p>
+          <ul class="list-disc ps-5">
+            <li v-for="message in otherErrors" :key="message">{{ message }}</li>
+          </ul>
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" @click="open = false">Cancel</Button>

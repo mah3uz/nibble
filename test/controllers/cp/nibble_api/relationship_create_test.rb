@@ -86,6 +86,40 @@ class Nibble::Cp::NibbleApi::RelationshipCreateTest < ActionDispatch::Integratio
     end
   end
 
+  def add_taxonomy(handle, fields)
+    root = @nibble_themes.join("records", "schema")
+    root.join("taxonomies", "#{handle}.yml").write({ "title" => handle.titleize, "blueprints" => [ handle.singularize ] }.to_yaml)
+    path = root.join("blueprints", "taxonomies", handle, "#{handle.singularize}.yml")
+    FileUtils.mkdir_p(path.dirname)
+    path.write({ "title" => handle.singularize.titleize, "tabs" => { "main" => { "sections" => [ { "fields" => [
+      { "handle" => "title", "field" => { "type" => "text", "required" => true } }, *fields
+    ] } ] } } }.to_yaml)
+    Nibble.reset_schema!
+  end
+
+  test "a target whose blueprint requires a field the dialog can't draw is never offered, so Create can't dead-end" do
+    add_taxonomy("badges", [ { "handle" => "icon", "field" => { "type" => "assets", "required" => true } } ])
+    add_taxonomy("levels", [ { "handle" => "rank", "field" => { "type" => "integer", "required" => true } } ])
+    field = Nibble::Field.new("labels", { "type" => "terms", "taxonomies" => %w[badges levels] }).fieldtype
+
+    as_user(users(:admin)) do
+      creatable = field.preload["creatable"]
+      assert_equal [ "levels" ], creatable.pluck("handle")
+      assert_equal [ "rank" ], creatable.first["fields"].pluck("handle")
+    end
+  end
+
+  test "an error for a field the dialog has no input for still comes back, keyed by that field, for the dialog to show" do
+    add_taxonomy("badges", [ { "handle" => "icon", "field" => { "type" => "assets", "required" => true } } ])
+    sign_in_as users(:admin)
+
+    assert_no_difference -> { Nibble::Records::Term.count } do
+      create_via("term", target: "badges", title: "Gold")
+    end
+    assert_response :unprocessable_entity
+    assert json["errors"]["icon"].present?
+  end
+
   test "check refuses a mode the picker doesn't know, and accepts each it does" do
     problems = ->(mode) { Nibble::Field.new("topics", { "type" => "entries", "mode" => mode }).fieldtype.config_problems }
 

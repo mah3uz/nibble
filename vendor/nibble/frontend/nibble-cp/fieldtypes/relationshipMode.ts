@@ -19,3 +19,30 @@ export function pickerFor(mode: RelationshipMode, loaded: number | null): Picker
   if (loaded === null) return 'loading'
   return loaded < probeLimit(mode) ? 'select' : 'search'
 }
+
+export function nextIds(ids: string[], id: string, { single, max }: { single: boolean; max: number }): string[] {
+  if (single) return [id]
+  if (ids.includes(id) || (max > 0 && ids.length >= max)) return ids
+  return [...ids, id]
+}
+
+export function chooseLabel(display: unknown, single: boolean): string {
+  const noun = typeof display === 'string' ? display.trim().replace(/^[A-Z](?![A-Z])/, (c) => c.toLowerCase()) : ''
+  if (!noun) return 'Choose…'
+  if (!single) return `Choose ${noun}…`
+  return `Choose ${/^[aeiou]/i.test(noun) ? 'an' : 'a'} ${noun}…`
+}
+
+export function unplacedErrors(errors: Record<string, string>, placed: string[]): string[] {
+  return Object.entries(errors)
+    .filter(([key]) => !placed.includes(key))
+    .map(([, message]) => message)
+}
+
+export function latestRequest() {
+  let current = 0
+  return () => {
+    const mine = ++current
+    return () => mine === current
+  }
+}

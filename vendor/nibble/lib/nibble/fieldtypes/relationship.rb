@@ -8,9 +8,17 @@ module Nibble
       MODES = %w[auto default select typeahead stack].freeze
       DIALOG_TYPES = %w[text textarea integer].freeze
 
+      def self.required_fields(record) = record.blueprint_definition.fields.select { |item| item.required? && item.handle != "title" }
+
       def self.dialog_fields(record)
-        record.blueprint_definition.fields.select { |item| item.required? && DIALOG_TYPES.include?(item.type) && item.handle != "title" }
+        required_fields(record).select { |item| DIALOG_TYPES.include?(item.type) }
           .map { |item| { "handle" => item.handle, "display" => item.display, "type" => item.type } }
+      end
+
+      def self.dialog_target(handle, label, record)
+        return unless required_fields(record).all? { |item| DIALOG_TYPES.include?(item.type) }
+
+        { "handle" => handle, "label" => label, "fields" => dialog_fields(record) }
       end
 
       def self.resolver_type = raise(NotImplementedError)
