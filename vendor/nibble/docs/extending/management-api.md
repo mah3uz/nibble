@@ -30,6 +30,7 @@ Agent access must be [turned on](../running/agent-access.md); until then these e
 | `GET /api/v1/operations` | the operations this token may use, with their arguments as JSON Schema |
 | `GET /api/v1/operations/<operation>` | an operation that only reads; arguments in the query string |
 | `POST /api/v1/operations/<operation>` | any operation; arguments as a JSON body |
+| `PUT /api/v1/uploads` | a file's bytes, held for `upload_asset` |
 
 Both are built from one list of operations, so they never disagree. Answers are never cached. Every `/api/v1/operations` answer,
 refusals included, carries `Nibble-Api-Version`: the management API's contract number. It changes only when a client
@@ -50,7 +51,8 @@ The site is its own OAuth authorization server, for public clients only:
   the app. Tokens are bound to the endpoint they were issued for: an MCP token doesn't open the operations endpoints.
 - **Device code**, only if the site allows it.
 
-Send the token in the `Authorization` header. A token in a URL is refused.
+Send the token in the `Authorization` header. A token in a URL is refused; the one address that carries its own
+permission is `create_upload`'s, and it can only send files.
 
 ## 3. Operations
 
@@ -60,11 +62,43 @@ Send the token in the `Authorization` header. A token in a URL is refused.
 | Entries | `list_entries`, `get_entry`, `create_entry`, `update_entry`, `transition_entry`, `list_revisions` |
 | Terms | `list_terms`, `get_term`, `create_term`, `update_term`, `transition_term` |
 | Globals and navigation | `get_global`, `update_global`, `get_navigation`, `update_navigation` |
-| Assets | `list_assets`, `get_asset`, `upload_asset`, `update_asset`, `transition_asset` |
+| Assets | `list_assets`, `get_asset`, `create_upload`, `upload_asset`, `update_asset`, `transition_asset` |
 | Forms | `list_form_submissions` |
 
 A token sees only the operations it may use. There is no search operation: search belongs to a theme's
 [search page](../theming/queries.md#7-search).
+
+### Sending files
+
+`upload_asset` takes the file in exactly one of three ways:
+
+- **`upload`**: the id of a file sent to `PUT /api/v1/uploads`. The way to send a file on disk.
+- **`url`**: an `http` or `https` address the site fetches, with the checks every outbound request has:
+  [`outbound.allowed_hosts`](../running/configuration.md#4-every-key), no private or reserved addresses, and the
+  site's upload size limit. `filename` names the file when the address doesn't.
+- **`content_base64`** with `filename`: the file inside the request. Only for small files: base64 is a third larger,
+  and a request waiting for approval holds the whole file.
+
+Send a file's bytes as the body of `PUT /api/v1/uploads?filename=<name>`, with `Content-Length` and the token in
+`Authorization`:
+
+```sh
+curl -T photo.jpg -H "Authorization: Bearer $TOKEN" "https://example.com/api/v1/uploads?filename=photo.jpg"
+```
+
+```json
+{ "data": { "upload": "eyJfcmFpbHMi…", "filename": "photo.jpg", "size": 612034, "expires_at": "2026-10-30T08:10:24Z" },
+  "meta": { "site": "https://example.com", "api_version": 1 } }
+```
+
+The type and size are checked before anything is kept: an unaccepted type is `415 unsupported_type`, a file over
+the limit `413 too_large`, and a request without `Content-Length` `411 length_required`. A sent file has no address
+and is no asset yet. Only the connection that sent it can pass its `upload` to `upload_asset`, once, within a day;
+the nightly clean-up deletes it after that.
+
+An MCP client never shows its token to the agent, so `create_upload` (with `filename`) answers with a `url` that
+carries its own permission for 15 minutes, with `method`, `max_bytes`, `accepted_types` and `expires_in`. PUT the
+file there with no `Authorization` header: `curl -T photo.jpg "<url>"`.
 
 ## 4. Rules every change follows
 

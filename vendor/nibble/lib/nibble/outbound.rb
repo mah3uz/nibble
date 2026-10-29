@@ -96,9 +96,14 @@ module Nibble
         url: redact.(entry[:url]).truncate(2_000),
         request_headers: entry[:headers].to_h { |name, value| [ name, name.match?(SENSITIVE_HEADER) ? "[redacted]" : redact.(value) ] },
         request_body: entry[:payload] && redact.(entry[:payload]).truncate(LOGGED_BYTES),
-        status: response&.status, response_body: response && redact.(response.body).truncate(LOGGED_BYTES),
+        status: response&.status, response_body: response && redact.(loggable(response.body)).truncate(LOGGED_BYTES),
         error: error&.message, duration_ms: response&.duration_ms, created_at: Time.current
       )
+    end
+
+    def loggable(body)
+      text = body.to_s.dup.force_encoding(Encoding::UTF_8)
+      text.valid_encoding? ? text : "[#{text.bytesize} bytes that aren't text]"
     end
   end
 end

@@ -22,6 +22,7 @@ module Nibble
             asset.destroy!
           end
         end
+        Assets::Staged.purge_expired(now)
       end
     end
   end

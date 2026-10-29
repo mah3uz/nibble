@@ -74,4 +74,22 @@ class Nibble::AssetsPurgeTest < ActiveSupport::TestCase
     assert_not ActiveStorage::Blob.exists?(stray.id)
     assert_match "assets moved to the trash, files deleted", output
   end
+
+  test "the nightly purge deletes files apps sent but never used after a day, and nothing an asset holds" do
+    grant = Nibble::Grant.create!(user: users(:editor), oauth_client: Nibble::OauthClient.cli, kind: "app", name: "App", preset: "everything",
+      abilities: Nibble::AgentAccess.preset("everything"))
+    stage = ->(name) { file_fixture("photo.jpg").open { |file| Nibble::Assets::Staged.store(file, filename: name, grant:) } }
+    abandoned = stage.("abandoned.jpg")
+    fresh = stage.("fresh.jpg")
+    used = stage.("used.jpg").tap { |blob| create_asset({}, blob:) }
+    stray = ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "stray.jpg")
+    [ abandoned, used, stray ].each { |blob| blob.update_columns(created_at: 2.days.ago) }
+
+    Nibble::Jobs::PurgeTrash.perform_now
+
+    assert_not ActiveStorage::Blob.exists?(abandoned.id)
+    assert ActiveStorage::Blob.exists?(fresh.id), "an app may still use it"
+    assert ActiveStorage::Blob.exists?(used.id), "a staged file an asset took is never purged, whatever its metadata says"
+    assert ActiveStorage::Blob.exists?(stray.id), "other stray files are left to nibble:cleanup:assets"
+  end
 end

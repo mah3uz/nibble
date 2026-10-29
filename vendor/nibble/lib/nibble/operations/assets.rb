@@ -14,11 +14,22 @@ module Nibble
           Operation.new(name: "get_asset", title: "Read an asset", read_only: true, destructive: false, needs: %w[assets read],
             handler: method(:get), description: "One asset: its URL, size, alt text and other fields, and its lock_version.",
             input: Operations.schema({ "id" => { "type" => "integer" } }, %w[id])),
+          Operation.new(name: "create_upload", title: "Get an upload URL", read_only: false, destructive: false, needs: %w[assets write],
+            handler: method(:create_upload),
+            description: "A URL to send one file to with an HTTP PUT, the file's bytes as the body (curl -T file 'URL'). The answer's " \
+                         "upload id goes to upload_asset as upload. Use this for a file you have locally instead of content_base64.",
+            input: Operations.schema({ "filename" => { "type" => "string", "description" => "The file's name, with its extension" } }, %w[filename])),
           Operation.new(name: "upload_asset", title: "Upload an asset", read_only: false, destructive: false, needs: %w[assets write],
-            handler: method(:upload), consequential: true, description: "Upload a file, sent as base64. Only the file types this site accepts, up to its size limit.",
-            input: Operations.schema({ "filename" => { "type" => "string" }, "content_base64" => { "type" => "string" },
+            handler: method(:upload), consequential: true,
+            description: "Make an asset from exactly one of: upload (an id from sending a file to create_upload's URL), url (a public " \
+                         "web address the site fetches), or content_base64 (only for small files; it needs filename). Only the file " \
+                         "types this site accepts, up to its size limit.",
+            input: Operations.schema({ "upload" => { "type" => "string", "description" => "An upload id from create_upload's URL" },
+                                       "url" => { "type" => "string", "description" => "An http or https address to fetch the file from" },
+                                       "content_base64" => { "type" => "string" },
+                                       "filename" => { "type" => "string", "description" => "Required with content_base64; names a url's file" },
                                        "folder" => { "type" => "string" }, "alt" => { "type" => "string" }, "title" => { "type" => "string" } },
-              %w[filename content_base64], write: true)),
+              [], write: true)),
           Operation.new(name: "update_asset", title: "Change an asset", read_only: false, destructive: false, needs: %w[assets write],
             handler: method(:update), consequential: true, description: "Change an asset's alt text, title, caption, credit, folder, tags or filename.",
             input: Operations.schema({ "id" => { "type" => "integer" }, "lock_version" => { "type" => "integer" },
@@ -47,20 +58,76 @@ module Nibble
         view(find!(input["id"]))
       end
 
+      def create_upload(input, caller)
+        Operations.require!(caller.principal, "assets.upload")
+        grant = caller.principal.grant or raise Failure.new("forbidden", "only a connected app can send files this way", status: :forbidden)
+        uploadable!(input["filename"])
+
+        { "url" => Nibble::Assets::Staged.upload_url(caller.site, grant, input["filename"]), "method" => "PUT",
+          "max_bytes" => Nibble.config.max_upload_bytes, "accepted_types" => (Nibble::Assets::UPLOADABLE + Nibble.config.asset_extensions).uniq.sort,
+          "expires_in" => Nibble::Assets::Staged::URL_LIFETIME.to_i }
+      end
+
       def upload(input, caller)
-        content = Base64.strict_decode64(input["content_base64"])
-        limit = Nibble.config.max_upload_bytes
-        raise Failure.new("too_large", "the file is larger than #{limit / 1.megabyte} MB", status: :content_too_large) if content.bytesize > limit
+        sources = %w[upload url content_base64].select { |key| input.key?(key) }
+        unless sources.one?
+          raise Failure.new("invalid_input", "send exactly one of upload, url or content_base64",
+            hint: "Send a local file to create_upload's URL and pass its upload id, or pass a url the site can fetch.")
+        end
 
         Operations.require!(caller.principal, "assets.upload")
-        blob = ActiveStorage::Blob.create_and_upload!(io: StringIO.new(content), filename: input["filename"].to_s)
-        result = Nibble::Assets::Upload.call(blob, { "folder" => input["folder"].to_s, "alt" => input["alt"], "title" => input["title"] }.compact,
-          actor: caller.principal)
+        attrs = { "folder" => input["folder"].to_s, "alt" => input["alt"], "title" => input["title"] }.compact
+        result = sources.first == "upload" ? from_upload(input, attrs, caller) : Nibble::Assets::Upload.call(blob_for(input), attrs, actor: caller.principal)
         raise Failure.new("invalid", result.errors.values.flatten.first.to_s, details: { "errors" => result.errors }) unless result.ok?
 
         view(result.record).merge("result" => "uploaded", "site" => caller.site)
+      end
+
+      def from_upload(input, attrs, caller)
+        raise Failure.new("invalid_input", "an upload keeps the filename it was sent with; leave filename out") if input.key?("filename")
+
+        grant = caller.principal.grant
+        blob = Nibble::Assets::Staged.find(input["upload"], grant) or raise Failure.new("upload_not_found",
+          "that upload has expired, was used already, or wasn't sent by this connection", status: :not_found,
+          hint: "Send the file again with a new create_upload URL.")
+        Nibble::Assets::Staged.claim(blob)
+        Nibble::Assets::Upload.call(blob, attrs, actor: caller.principal).tap do |result|
+          Nibble::Assets::Staged.release(blob, grant) unless result.ok?
+        end
+      end
+
+      def blob_for(input)
+        input.key?("url") ? fetched(input["url"], input["filename"]) : decoded(input["content_base64"], input["filename"])
+      end
+
+      def decoded(content_base64, filename)
+        raise Failure.new("invalid_input", "missing filename", hint: "content_base64 needs a filename.") if filename.blank?
+
+        content = Base64.strict_decode64(content_base64)
+        limit = Nibble.config.max_upload_bytes
+        raise Failure.new("too_large", "the file is larger than #{limit / 1.megabyte} MB", status: :content_too_large) if content.bytesize > limit
+
+        ActiveStorage::Blob.create_and_upload!(io: StringIO.new(content), filename:)
       rescue ArgumentError
         raise Failure.new("invalid_input", "content_base64 isn't valid base64")
+      end
+
+      def fetched(url, filename)
+        filename = filename.presence || File.basename(URI.parse(url).path.to_s)
+        uploadable!(filename, hint: "Name the file, with its extension, in filename.")
+        response = Outbound.request(:get, url, purpose: "asset_upload", headers: { "Accept" => "*/*" }, timeout: 30,
+          max_bytes: Nibble.config.max_upload_bytes)
+        raise Failure.new("fetch_failed", "#{url} answered #{response.status}") unless response.ok?
+
+        ActiveStorage::Blob.create_and_upload!(io: StringIO.new(response.body), filename:)
+      rescue URI::InvalidURIError, Outbound::Refused, Outbound::Failed => error
+        raise Failure.new("fetch_failed", "the site couldn't fetch #{url}: #{error.message}",
+          hint: "Use a public http or https address, or send the file to create_upload's URL instead.")
+      end
+
+      def uploadable!(filename, hint: nil)
+        message = Nibble::Assets::Upload.refusal(filename, 0) or return
+        raise Failure.new("invalid", message, hint:)
       end
 
       def update(input, caller)

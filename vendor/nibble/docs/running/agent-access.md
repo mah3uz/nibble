@@ -57,7 +57,7 @@ Collections kept as files offer only **Read**: their entries live in the site's 
 > [!NOTE]
 > An app can describe itself with a document on its own site, which Nibble fetches when someone connects it; Claude
 > Code's is on `claude.ai`. If [`outbound.allowed_hosts`](configuration.md#4-every-key) is set, add those hosts to it,
-> or the app can't connect.
+> or the app can't connect. The same list limits the web addresses an app may ask the site to fetch a file from.
 
 ## 3. Who may connect apps
 

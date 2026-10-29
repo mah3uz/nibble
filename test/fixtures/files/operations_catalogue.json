@@ -40,6 +40,20 @@
       "openWorldHint": false
     }
   },
+  "create_upload": {
+    "arguments": [
+      "filename"
+    ],
+    "required": [
+      "filename"
+    ],
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
   "describe_schema": {
     "arguments": [
       "handle",
@@ -423,12 +437,11 @@
       "filename",
       "folder",
       "idempotency_key",
-      "title"
+      "title",
+      "upload",
+      "url"
     ],
-    "required": [
-      "content_base64",
-      "filename"
-    ],
+    "required": [],
     "annotations": {
       "readOnlyHint": false,
       "destructiveHint": false,

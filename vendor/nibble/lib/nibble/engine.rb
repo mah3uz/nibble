@@ -43,6 +43,9 @@ module Nibble
       ::Nibble.boot!
     end
 
+    # An operation's rehearsal rolls back, and a file it would purge has to outlive it.
+    config.to_prepare { ActiveStorage::PurgeJob.enqueue_after_transaction_commit = true }
+
     config.after_initialize do
       ::Nibble::Environment.boot!(serving: Rails.const_defined?(:Server)) if ::Nibble::Environment.deployed?
       # The types describe the theme this server renders, whatever wrote them last.

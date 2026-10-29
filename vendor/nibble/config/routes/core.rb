@@ -23,6 +23,7 @@ Rails.application.routes.draw do
       get "health", to: "health#show"
       get "operations", to: "operations#index"
       match "operations/:operation", to: "operations#create", via: %i[get post], constraints: { operation: /[a-z_]+/ }, as: :operation
+      put "uploads", to: "uploads#update", as: :uploads
     end
   end
 
@@ -41,6 +42,7 @@ Rails.application.routes.draw do
     end
     resources :passwords, param: :token
     post "direct_uploads", to: "direct_uploads#create", as: :direct_uploads
+    get "uploads/:id/preview", to: "uploads#preview", as: :upload_preview
     patch "preferences", to: "preferences#update", as: :preferences
     scope "account", as: :account do
       post "two_factor", to: "two_factor#create", as: :two_factor
