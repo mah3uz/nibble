@@ -239,6 +239,15 @@ class Nibble::Cp::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Colleague's", entry.reload.title
   end
 
+  # The editor picks Publish or Submit for review from this, so a new entry must carry its collection's workflow.
+  test "a new entry in a review collection says so, so its editor offers Submit for review rather than Publish" do
+    get "#{entries_path('docs')}/new"
+    assert_equal "review", props.dig("meta", "workflow")
+
+    get "#{entries_path}/new"
+    assert_equal "simple", props.dig("meta", "workflow")
+  end
+
   test "review workflow actions move the entry and are refused out of order" do
     doc = create_entry("docs", { "title" => "Guide", "body" => "Body" })
 

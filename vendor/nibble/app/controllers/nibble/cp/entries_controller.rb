@@ -240,7 +240,7 @@ module Nibble
           id: entry.id, status: entry.status, live: entry.live?, lock_version: entry.lock_version,
           permalink: entry.uri && "#{Nibble.config.url}#{entry.uri}",
           updated_at: entry.updated_at&.utc&.iso8601, updated_by: entry.updated_by_id && Nibble::User.find_by(id: entry.updated_by_id)&.name,
-          workflow: entry.persisted? ? entry.workflow : "simple",
+          workflow: entry.workflow,
           workflow_status: entry.draft&.workflow_status
         }
       end
