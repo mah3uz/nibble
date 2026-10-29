@@ -59,6 +59,21 @@ class FormResumeTest < ActionDispatch::IntegrationTest
     assert_not_includes stored_text, token, "only the token's digest is stored, so the database alone can't open a saved form"
   end
 
+  test "a resume link's token never reaches the log, as anyone holding it can read what was saved" do
+    save
+    saved = token
+    log = StringIO.new
+    Rails.logger.broadcast_to(ActiveSupport::Logger.new(log))
+
+    get "/apply?resume=#{saved}"
+    post "/forms/apply", params: SAVED.merge(_nibble_resume: saved), as: :json
+
+    assert_match "resume=[FILTERED]", log.string
+    assert_no_match saved, log.string
+  ensure
+    Rails.logger.broadcasts.pop if log
+  end
+
   test "a saved form is never a submission: nothing is stored as one, announced, emailed to staff or delivered" do
     assert_no_enqueued_jobs { save }
 

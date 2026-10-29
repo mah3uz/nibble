@@ -30,7 +30,7 @@ module Nibble
     end
 
     initializer "nibble.filter_parameters" do |app|
-      app.config.filter_parameters += %i[upload_token]
+      app.config.filter_parameters += %i[upload_token resume]
     end
 
     initializer "nibble.middleware" do |app|
