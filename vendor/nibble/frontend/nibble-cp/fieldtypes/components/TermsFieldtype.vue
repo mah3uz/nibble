@@ -19,6 +19,7 @@ const scope = computed(() => ({ taxonomies: props.config.taxonomies ?? [] }))
     :meta="meta"
     :scope="scope"
     :max-items="Number(config.max_items) || 0"
+    :mode="config.mode"
     :read-only="isReadOnly"
     :label="(config.placeholder as string) || 'Choose…'"
     @update="update"

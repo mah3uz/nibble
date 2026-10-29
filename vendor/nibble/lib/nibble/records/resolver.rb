@@ -12,9 +12,9 @@ module Nibble
         ids.filter_map { |id| records[id.to_s] && summary(records[id.to_s]) }
       end
 
-      def search(query:, scope: {}, limit: 20)
+      def search(query:, scope: {}, limit: 20, offset: 0)
         title = @model.arel_table[:title]
-        scoped(scope).where(title.lower.matches("%#{@model.sanitize_sql_like(query.to_s.downcase)}%")).order(:title).limit(limit).map { |record| summary(record) }
+        scoped(scope).where(title.lower.matches("%#{@model.sanitize_sql_like(query.to_s.downcase)}%")).order(:title).limit(limit).offset(offset).map { |record| summary(record) }
       end
 
       def resolve(id)
