@@ -42,11 +42,6 @@ module Nibble
         } }
       ]
 
-      INERT_OPTIONS = %w[toolbar_mode smart_typography enable_input_rules enable_paste_rules link_noopener link_noreferrer
-                         link_collections always_show_set_button previews inline_hard_breaks].freeze
-
-      def config_warnings = ineffective_options(INERT_OPTIONS)
-
       def pre_process(value)
         nodes = to_nodes(value)
         return [] if nodes.empty?
@@ -83,6 +78,14 @@ module Nibble
 
       def self.text_length(nodes)
         Array(nodes).sum { |node| node.is_a?(Hash) ? (node["type"] == "text" ? node["text"].to_s.length : text_length(node["content"])) : 0 }
+      end
+
+      def config_problems
+        return [] unless field
+
+        Array(config("link_collections")).filter_map do |handle|
+          "link_collections names collection '#{handle}', which doesn't exist" unless field.schema.collection(handle)
+        end
       end
 
       def rules = [ "global_links", *("max_text:#{config('character_limit')}" if config("character_limit").to_i.positive?) ]
@@ -231,7 +234,10 @@ module Nibble
         end
       end
 
-      def render(nodes) = ::RichText::Renderer.call({ "type" => "doc", "content" => nodes }, image_preset: config("image_preset"))
+      def render(nodes)
+        rel = %w[noopener noreferrer].select { |token| config("link_#{token}") == true }
+        ::RichText::Renderer.call({ "type" => "doc", "content" => nodes }, image_preset: config("image_preset"), link_rel: rel)
+      end
 
       def image_assets(value) = find_images(to_nodes(value)).filter_map { |node| node.dig("attrs", "asset").presence&.to_s }.uniq
 

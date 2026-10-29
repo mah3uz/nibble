@@ -4,12 +4,15 @@ module RichText
 
     HEADING_LEVELS = (2..4)
 
-    def self.call(document, image_preset: nil)
-      Sanitizer.sanitize(new(image_preset:).render(document))
+    EXTERNAL = %r{\Ahttps?://}i
+
+    def self.call(document, image_preset: nil, link_rel: [])
+      Sanitizer.sanitize(new(image_preset:, link_rel:).render(document))
     end
 
-    def initialize(image_preset: nil)
+    def initialize(image_preset: nil, link_rel: [])
       @image_preset = image_preset
+      @link_rel = Array(link_rel)
     end
 
     def render(document)
@@ -76,7 +79,8 @@ module RichText
       return html if href.nil?
 
       target = attrs["target"] == "_blank" ? %( target="_blank") : ""
-      %(<a href="#{html_escape(href)}"#{target}>#{html}</a>)
+      rel = @link_rel.any? && href.strip.match?(EXTERNAL) ? %( rel="#{@link_rel.join(' ')}") : ""
+      %(<a href="#{html_escape(href)}"#{target}#{rel}>#{html}</a>)
     end
 
     def global_href(attrs)

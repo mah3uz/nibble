@@ -84,6 +84,14 @@ class Nibble::Fieldtypes::ContentFieldtypesTest < ActiveSupport::TestCase
     assert_nil fieldtype(:rich_text).augment(nil)
   end
 
+  test "a rich text field's link_noopener and link_noreferrer set rel on its other-site links" do
+    link = { "type" => "paragraph", "content" => [ { "type" => "text", "text" => "x", "marks" => [ { "type" => "link", "attrs" => { "href" => "https://example.com" } } ] } ] }
+
+    assert_includes fieldtype(:rich_text, link_noopener: true).augment([ link ]), %(rel="noopener")
+    assert_includes fieldtype(:rich_text, link_noopener: true, link_noreferrer: true).augment([ link ]), %(rel="noopener noreferrer")
+    assert_not_includes fieldtype(:rich_text).augment([ link ]), "rel="
+  end
+
   test "images inside rich text count as uses of their asset, so usage, delete protection and cache purges see them" do
     image = ->(id) { { "type" => "image", "attrs" => { "asset" => id, "alt" => "" } } }
     body = [ paragraph("Intro"), image.("7"), { "type" => "bulletList", "content" => [ { "type" => "listItem", "content" => [ image.("9"), image.("7") ] } ] } ]

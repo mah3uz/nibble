@@ -334,4 +334,15 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     messages = Nibble::Check.run(config: config.("0.16.1"), static: true).problems.map(&:message)
     assert_not(messages.any? { |message| message.include?("no longer read") })
   end
+
+  test "a rich text field that limits links to a collection that doesn't exist is reported" do
+    theme_file("collections/pages.yml", title: "Pages", blueprints: [ "page" ])
+    theme_file("blueprints/collections/pages/page.yml", title: "Page", tabs: { main: { sections: [ { fields: [
+      { handle: "body", field: { type: "rich_text", link_collections: [ "pages", "ghosts" ] } }
+    ] } ] } })
+
+    messages = check.problems.map(&:to_s).join("\n")
+    assert_match "link_collections names collection 'ghosts'", messages
+    assert_no_match "collection 'pages'", messages
+  end
 end

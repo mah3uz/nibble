@@ -119,4 +119,16 @@ class RichText::RendererTest < ActiveSupport::TestCase
     dom = Nokogiri::HTML5.fragment(RichText::Sanitizer.sanitize(%(<img src="/a.jpg" srcset="/a.jpg 1x, javascript:alert(1) 2x" alt="">)))
     assert_nil dom.at_css("img")["srcset"]
   end
+
+  test "links to other sites carry the rel a field asks for, and on-site links stay bare" do
+    link = ->(href) { text("go", [ { "type" => "link", "attrs" => { "href" => href } } ]) }
+    anchors = lambda do |rel|
+      html = RichText::Renderer.call(doc(paragraph(link.("https://example.com/x"), link.("/about"), link.("mailto:a@b.co"))), link_rel: rel)
+      Nokogiri::HTML5.fragment(html).css("a").to_h { |a| [ a["href"], a["rel"] ] }
+    end
+
+    assert_equal({ "https://example.com/x" => "noopener", "/about" => nil, "mailto:a@b.co" => nil }, anchors.(%w[noopener]))
+    assert_equal "noopener noreferrer", anchors.(%w[noopener noreferrer])["https://example.com/x"]
+    assert_nil anchors.([])["https://example.com/x"]
+  end
 end
