@@ -104,6 +104,8 @@ add tables and columns, so they can be rolled back, but the snapshot taken befor
 - **Crumbs ships a fallback `default` view,** and `nibble:check` warns when a collection's entries resolve to a view
   the theme lacks. A set without a view is a warning, since its blocks render nothing.
 - **The 500 page gets the site's shared props,** falling back to empty ones if loading them fails.
+- **Saving changes to a live entry no longer warns that someone published a newer version.** The warning now appears
+  only when the entry really was published after those changes were started.
 - **Publish works on a new entry,** creating and publishing it in one click, and a new entry in a collection that
   needs review offers **Submit for review**.
 - **Apps are no longer told a field hidden by its condition isn't saved;** it keeps what's sent, and only its rules
