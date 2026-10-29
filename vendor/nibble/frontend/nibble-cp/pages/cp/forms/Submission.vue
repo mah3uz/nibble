@@ -50,6 +50,7 @@ const props = defineProps<{
   can_delete: boolean
   can_edit: boolean
   can_mark_not_spam: boolean
+  can_resend_notifications: boolean
   spam_days: number | null
 }>()
 
@@ -65,6 +66,8 @@ const spamNote = computed(() => {
   const deleted = props.spam_days ? ` It's deleted ${props.spam_days} days after it arrived.` : ''
   return `This was caught as spam, so nothing was sent on.${deleted}`
 })
+const notifications = computed(() => props.submission.deliveries.filter((item) => item.key.startsWith('notify.')))
+const deliveries = computed(() => props.submission.deliveries.filter((item) => !item.key.startsWith('notify.')))
 const date = (value: string) => new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
 
 function retry(delivery: Delivery) {
@@ -91,6 +94,15 @@ async function markNotSpam() {
     confirmText: 'Not spam',
   })
   if (ok) router.post(`${base.value}/not_spam`, {}, { preserveScroll: true })
+}
+
+async function resendNotifications() {
+  const ok = await confirm({
+    title: 'Send notifications again?',
+    description: 'Every notification email for this form is sent again, to the addresses it names now.',
+    confirmText: 'Send again',
+  })
+  if (ok) router.post(`${base.value}/resend_notifications`, {}, { preserveScroll: true })
 }
 
 async function destroy() {
@@ -129,6 +141,9 @@ async function destroy() {
         <Button v-if="can_edit" variant="outline" @click="markUnread">Mark unread</Button>
         <Button v-if="can_mark_not_spam && submission.values_kept" variant="outline" @click="markNotSpam"
           >Not spam</Button
+        >
+        <Button v-if="can_resend_notifications" variant="outline" @click="resendNotifications"
+          >Send notifications again</Button
         >
         <Button v-if="can_delete" variant="outline" @click="destroy">Delete</Button>
       </template>
@@ -173,7 +188,31 @@ async function destroy() {
     </section>
 
     <section
-      v-if="submission.deliveries.length"
+      v-if="notifications.length"
+      class="relative mb-6 w-full rounded-2xl bg-gray-150 p-1.75 pt-0 dark:bg-gray-950/35 dark:inset-shadow-2xs dark:inset-shadow-black"
+    >
+      <header class="px-4.5 py-3">
+        <h3 class="text-sm font-medium tracking-tight text-gray-700 dark:text-white">Notifications</h3>
+      </header>
+      <ul
+        class="divide-y divide-gray-200 rounded-xl bg-white text-sm shadow-ui-md ring ring-gray-200 dark:divide-gray-700 dark:bg-gray-850 dark:ring-gray-700/80"
+      >
+        <li v-for="item in notifications" :key="item.key" class="min-w-0 space-y-1 px-4.5 py-3">
+          <div class="flex items-center gap-2">
+            <span class="truncate font-medium" :title="item.target">{{ item.target || 'No recipient' }}</span>
+            <StatusCell :value="item.status" />
+          </div>
+          <p class="text-xs text-gray-600 dark:text-gray-400">
+            Email · {{ item.attempts }} {{ item.attempts === 1 ? 'attempt' : 'attempts' }}
+            <template v-if="item.at"> · {{ date(item.at) }}</template>
+          </p>
+          <p v-if="item.error" class="text-xs text-red-700 dark:text-red-400">{{ item.error }}</p>
+        </li>
+      </ul>
+    </section>
+
+    <section
+      v-if="deliveries.length"
       class="relative mb-6 w-full rounded-2xl bg-gray-150 p-1.75 pt-0 dark:bg-gray-950/35 dark:inset-shadow-2xs dark:inset-shadow-black"
     >
       <header class="px-4.5 py-3">
@@ -182,7 +221,7 @@ async function destroy() {
       <ul
         class="divide-y divide-gray-200 rounded-xl bg-white text-sm shadow-ui-md ring ring-gray-200 dark:divide-gray-700 dark:bg-gray-850 dark:ring-gray-700/80"
       >
-        <li v-for="delivery in submission.deliveries" :key="delivery.key" class="flex items-start gap-4 px-4.5 py-3">
+        <li v-for="delivery in deliveries" :key="delivery.key" class="flex items-start gap-4 px-4.5 py-3">
           <div class="min-w-0 flex-1 space-y-1">
             <div class="flex items-center gap-2">
               <span class="truncate font-medium" :title="delivery.target">{{ delivery.target }}</span>

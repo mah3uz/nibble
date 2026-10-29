@@ -6,6 +6,7 @@ const tone: Record<string, string> = {
   published: 'bg-green-200 text-green-900 dark:bg-green-300/6 dark:text-green-300',
   scheduled: 'bg-amber-200 text-amber-900 dark:bg-amber-300/6 dark:text-amber-300',
   delivered: 'bg-green-200 text-green-900 dark:bg-green-300/6 dark:text-green-300',
+  sent: 'bg-green-200 text-green-900 dark:bg-green-300/6 dark:text-green-300',
   enabled: 'bg-green-200 text-green-900 dark:bg-green-300/6 dark:text-green-300',
   pending: 'bg-amber-200 text-amber-900 dark:bg-amber-300/6 dark:text-amber-300',
   disabled: 'bg-red-200 text-red-900 dark:bg-red-300/6 dark:text-red-300',

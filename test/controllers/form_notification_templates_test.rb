@@ -128,6 +128,24 @@ class FormNotificationTemplatesTest < ActionDispatch::IntegrationTest
     assert Nibble::Records::AuditEntry.exists?(action: "form.notifications_resent", subject_id: Submission.sole.id)
   end
 
+  test "the submission page offers to send notifications again only to someone who can edit, and never for spam" do
+    perform_enqueued_jobs { submit }
+    path = "/cp/forms/help/submissions/#{Submission.sole.id}"
+    can_resend = -> { get(path) && JSON.parse(Nokogiri::HTML(response.body).at_css("script[data-page]").text)["props"]["can_resend_notifications"] }
+
+    sign_in_as users(:editor)
+    assert can_resend.call
+
+    Submission.sole.update!(status: "spam")
+    assert_not can_resend.call, "spam sent nothing, so there is nothing to send again"
+
+    Submission.sole.update!(status: "received")
+    viewer = users(:author)
+    viewer.roles = [ Nibble::Role.create!(handle: "help_viewer", title: "Help viewer", abilities: %w[forms.help.view]) ]
+    sign_in_as viewer
+    assert_not can_resend.call
+  end
+
   test "staff mail links to the submission in the Control Plane and the visitor's does not" do
     perform_enqueued_jobs { submit }
     id = Submission.sole.id
