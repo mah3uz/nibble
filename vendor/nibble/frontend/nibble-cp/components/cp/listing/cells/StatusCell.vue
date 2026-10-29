@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { capitalize } from '@/lib/format'
+import { statusLabel } from '@/lib/format'
 
 defineProps<{ value: string | null }>()
 const tone: Record<string, string> = {
@@ -30,7 +30,7 @@ const tone: Record<string, string> = {
       'inline-block shrink rounded-full px-2 py-0.5 text-center text-xs select-none',
       tone[value] ?? 'bg-gray-200 text-gray-900 dark:bg-gray-300/8 dark:text-gray-300',
     ]"
-    >{{ capitalize(value) }}</span
+    >{{ statusLabel(value) }}</span
   >
   <span v-else class="text-sm text-muted-foreground">—</span>
 </template>

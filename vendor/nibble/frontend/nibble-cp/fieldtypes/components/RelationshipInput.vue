@@ -4,6 +4,7 @@ import { useSortable } from '@vueuse/integrations/useSortable'
 import { computed, ref, useTemplateRef, watch } from 'vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { statusLabel } from '@/lib/format'
 import type { ItemSummary } from '../../lib/relationships'
 import RecordSearch from './RecordSearch.vue'
 
@@ -63,7 +64,9 @@ useSortable(listRef, ids, {
         <span class="flex-1 truncate" :class="{ 'text-destructive': !known.get(itemId) }">{{
           known.get(itemId)?.title ?? `Missing item ${itemId}`
         }}</span>
-        <Badge v-if="known.get(itemId)?.status" variant="secondary">{{ known.get(itemId)?.status }}</Badge>
+        <Badge v-if="known.get(itemId)?.status" variant="secondary">{{
+          statusLabel(known.get(itemId)!.status!)
+        }}</Badge>
         <Button
           type="button"
           variant="ghost"

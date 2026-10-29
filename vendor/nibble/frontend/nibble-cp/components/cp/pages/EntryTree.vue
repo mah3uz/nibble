@@ -3,6 +3,7 @@ import { Link, router } from '@inertiajs/vue3'
 import { useSortable } from '@vueuse/integrations/useSortable'
 import { ref, useTemplateRef } from 'vue'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
+import { statusLabel } from '@/lib/format'
 
 export type TreeNode = {
   id: number
@@ -60,7 +61,7 @@ useSortable(container, list, {
         <div class="flex min-w-0 flex-1 items-center gap-2 px-1.5 sm:gap-3">
           <div class="flex min-w-0 grow items-center gap-2 py-3 sm:gap-3">
             <span :class="['size-2 shrink-0 rounded-full', DOT[node.status] ?? 'bg-gray-300 dark:bg-gray-600']" />
-            <span class="sr-only">{{ node.status }}</span>
+            <span class="sr-only">{{ statusLabel(node.status) }}</span>
             <Link
               :href="node.edit_url"
               class="truncate text-sm font-medium text-gray-900 hover:underline dark:text-white"
