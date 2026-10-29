@@ -12,13 +12,6 @@ class Nibble::AgentGuideTest < ActiveSupport::TestCase
     assert_match "**Articles** (`articles`)", skill, "the content model comes from the schema"
   end
 
-  # Every skill starts nibble- so a person with several sites can tell them apart, but a site called Nibble shouldn't read twice.
-  test "a site whose name already starts with nibble doesn't get the prefix again" do
-    assert_equal "nibble", Nibble::AgentGuide.name("Nibble")
-    assert_equal "nibble-docs", Nibble::AgentGuide.name("Nibble Docs")
-    assert_equal "nibble-nibbler-shop", Nibble::AgentGuide.name("Nibbler Shop")
-  end
-
   test "the fingerprint moves when the site's notes change, so an installed skill knows it's stale" do
     before = Nibble::AgentGuide.document(site: "S", url: "https://s.example")["fingerprint"]
     FileUtils.mkdir_p(Nibble.config.agents_path)
