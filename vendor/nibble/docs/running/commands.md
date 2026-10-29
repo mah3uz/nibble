@@ -77,6 +77,17 @@ bin/rails nibble:admin:create                                 # asks for a role,
 bin/kamal app exec -i 'bin/rails nibble:admin:create'         # the same, on the server
 ```
 
+It asks, in order: the role (only when the site has more than one; it lists them by number), your name, your email
+address and a password. A password needs at least 12 characters with a lowercase letter, an uppercase letter, a number
+and a symbol. On a terminal it asks for the password twice and does not echo it. To script it, pipe the answers one per
+line, in that order; piped, the password is asked once:
+
+```sh
+printf '%s\n' 'Ada Lovelace' 'ada@example.com' 'Correct-horse-9battery' | bin/rails nibble:admin:create
+```
+
+With more than one role, put the role's number first.
+
 ## 6. Installing, upgrading and deploying
 
 ```sh
