@@ -34,6 +34,22 @@ class Nibble::Cp::ConnectionAccessTest < ActionDispatch::IntegrationTest
     assert Nibble::Records::AuditEntry.exists?(action: "auth.app_access_changed", actor_id: users(:author).id, subject_id: @grant.id)
   end
 
+  test "renaming a connection needs no fresh password, since it changes nothing the app may do" do
+    sign_in_as users(:author)
+    Nibble::Current.session.update!(elevated_at: 20.minutes.ago)
+    change_own(name: "Claude at home")
+    assert_equal "Claude at home", @grant.reload.name
+  end
+
+  test "saving a connection's unchanged approvals while the site always asks is not refused" do
+    @grant.update!(approval_mode: "off")
+    Nibble::AgentAccess.update!(approvals: "always")
+    sign_in_as users(:author)
+    Nibble::Current.session.update!(elevated_at: Time.current)
+    change_own(name: "Renamed", approval_mode: "off")
+    assert_equal "Renamed", @grant.reload.name, "resending what is stored must not block the rest of the form"
+  end
+
   test "an administrator can widen anyone's connection, but never past its owner's role or the site's settings" do
     sign_in_as users(:admin)
 

@@ -3,7 +3,8 @@ module Nibble
     class ConnectedAppsController < BaseController
       EXPIRIES = { "7" => 7.days, "30" => 30.days, "90" => 90.days }.freeze
 
-      before_action :require_elevated_session, only: %i[create update]
+      before_action :require_elevated_session, only: :create
+      before_action :require_elevated_session, only: :update, if: :changes_access?
 
       def index
         grants = Nibble::Current.user.grants.includes(:oauth_client).order(created_at: :desc)
@@ -57,6 +58,8 @@ module Nibble
         { id: approval.public_id, app: approval.grant.name, operation: Nibble::Operations.find(approval.operation)&.title,
           title: approval.preview["title"] || approval.preview["handle"], created_at: approval.created_at.utc.iso8601 }
       end
+
+      def changes_access? = params.key?(:preset) || params.key?(:areas) || params.key?(:approval_mode)
 
       def change_params
         params.permit(:name, :preset, :approval_mode, areas: {}).to_h.symbolize_keys

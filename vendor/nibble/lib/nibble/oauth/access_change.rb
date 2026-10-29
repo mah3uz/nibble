@@ -45,7 +45,9 @@ module Nibble
         attrs = {}
         attrs[:name] = name.to_s.strip.first(100) unless name.nil?
         attrs.merge!(preset: preset.to_s, abilities: refusing(:preset) { consent.abilities(preset, areas) }) unless preset.nil?
-        attrs[:approval_mode] = refusing(:approval_mode) { consent.approval_mode(approval_mode.to_s) } unless approval_mode.nil?
+        unless approval_mode.nil? || approval_mode.to_s == @grant.approval_mode
+          attrs[:approval_mode] = refusing(:approval_mode) { consent.approval_mode(approval_mode.to_s) }
+        end
 
         before = snapshot
         raise Refused.new(:name, @grant.errors.full_messages.to_sentence) unless @grant.update(attrs)
