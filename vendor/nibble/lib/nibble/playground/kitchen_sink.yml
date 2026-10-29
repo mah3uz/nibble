@@ -14,6 +14,9 @@ tabs:
           - { handle: price, field: { type: decimal, decimals: 2, min: 0, prepend: "$", width: 50 } }
           - { handle: volume, field: { type: range, min: 0, max: 10, width: 50 } }
           - { handle: score, field: { type: rating, max: 5, width: 50 } }
+          - { handle: opens_at, field: { type: time, earliest: "09:00", latest: "17:30", width: 50 } }
+          - { handle: accent, field: { type: color, swatches: ["#1a2b3c", "#ffaa00"], width: 50 } }
+          - { handle: size, field: { type: button_group, options: { small: Small, large: Large }, width: 50 } }
           - { handle: featured, field: { type: toggle, inline_label: Feature on the home page, width: 50 } }
           - { handle: editing_note, field: { type: note, text: "Keep it **short**. See the [style guide](/style)." } }
           - { handle: category, field: { type: select, options: { news: News, guides: Guides }, clearable: true, width: 50 } }
