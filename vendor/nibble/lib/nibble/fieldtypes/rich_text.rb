@@ -24,7 +24,7 @@ module Nibble
           "image_preset" => { "type" => "text", "default" => "content", "width" => 50 }
         } },
         { "display" => "Links", "fields" => {
-          "link_noopener" => { "type" => "toggle", "default" => false, "width" => 33 },
+          "link_noopener" => { "type" => "toggle", "default" => true, "width" => 33 },
           "link_noreferrer" => { "type" => "toggle", "default" => false, "width" => 33 },
           "target_blank" => { "type" => "toggle", "default" => false, "width" => 33 },
           "link_collections" => { "type" => "list", "default" => [] }
