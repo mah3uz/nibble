@@ -79,7 +79,7 @@ rich-text link to it follows that field. Give the global a field that holds an a
               field: { type: text, input_type: url }
 ```
 
-In the rich-text link dialog, choose **Global**, then the global and the field. The dialog shows the address the
+In the rich-text link dialog, choose **Site settings**, then the group and the field. The dialog shows the address the
 field holds now. When someone changes the field, every page that links to it shows the new address, without its
 entries being saved again.
 

@@ -12,6 +12,16 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+### Changed
+
+- **A site's skill doesn't repeat "nibble" in its name.** A site called Nibble gets the skill `nibble`, one called
+  Nibble Docs gets `nibble-docs`, and any other site keeps `nibble-<site name>`. Run `nibble connect <site>` again
+  in the folder where you use it, and remove the folder under its old name from `.claude/skills` or `.codex/skills`.
+
+### What's fixed
+
+- **The rich text guide names the link dialog's Site settings tab,** where it said Global.
+
 ## 0.22.0 — 2026-10-30 04:29 +0600
 
 This release is mostly forms and fields, and a plainer Control Plane. Four database migrations are added; they only
