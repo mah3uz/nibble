@@ -12,6 +12,12 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+### What's new
+
+- **`bin/rails nibble:dev:setup --remove` undoes the setup.** It takes out the developer tools server, the `vendor/nibble/`
+  rule and the skill links, leaves anything else in those files, and the setup chooser now asks again on an answer it
+  can't read.
+
 ### Changed
 
 - **A site's skill doesn't repeat "nibble" in its name.** A site called Nibble gets the skill `nibble`, one called

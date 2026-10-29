@@ -27,7 +27,9 @@ bin/rails nibble:dev:setup
 
 asks which tools to set up (Claude Code, Codex, Cursor), offering the ones found on your computer, and writes only
 into the site's folder. Nothing goes into your home folder, so the tools are available in this site and no other.
-`--tools claude,codex,cursor` answers without asking; without a terminal and without `--tools` it writes nothing.
+`--tools claude,codex,cursor` answers without asking; without a terminal and without `--tools` it writes nothing and exits with an error.
+`bin/rails nibble:dev:setup --remove` undoes it: it takes out the `nibble-dev` server, the `vendor/nibble/` rule and the skill
+links, and nothing else, then removes the folders that are left empty. Add `--tools` to undo only some tools.
 
 | Tool | Written |
 |---|---|
