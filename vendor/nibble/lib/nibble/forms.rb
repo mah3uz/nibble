@@ -38,7 +38,12 @@ module Nibble
       def deliveries = Array(item["api"]).map { |delivery| { "mode" => "async" }.merge(delivery) }
       def cp_notify? = item["cp_notify"] == true
       def handler = item["handler"].presence
-      def success = item["success"].to_h
+      def success
+        success = item["success"].to_h
+        return success unless success["message"].is_a?(String)
+
+        success.merge("message" => Notify::Template.new(form: self).render(success["message"]).to_s)
+      end
       def retention_days = item["retention_days"]
     end
 
@@ -78,7 +83,8 @@ module Nibble
         handles = form.fields(schema:).handles
         form.notify.each_with_index { |notify, index| problems.concat(notify_problems(notify, index, handles)) }
         form.deliveries.each_with_index { |delivery, index| problems.concat(delivery_problems(delivery, index, schema)) }
-        problems << "success needs a message or a redirect" unless form.success.empty? || form.success["message"].present? || redirect?(form.success["redirect"])
+        problems << "success needs a message or a redirect" unless form.item["success"].blank? || form.item["success"]["message"].present? || redirect?(form.success["redirect"])
+        problems.concat(template_problems(form.item["success"]["message"], "success.message", [])) if form.item["success"].is_a?(Hash) && form.item["success"]["message"].is_a?(String)
         problems << "handler '#{form.handler}' isn't registered" if form.handler && !handlers.key?(form.handler)
         problems << "retention_days must be a positive number of days" unless form.retention_days.nil? || form.retention_days.to_i.positive?
         problems
@@ -114,7 +120,48 @@ module Nibble
           problems << "notify.#{index}.fields must be a list of the form's field handles"
         end
         problems << "notify.#{index}.reply_to must be one of the form's field handles" if notify.key?("reply_to") && !handles.include?(notify["reply_to"])
+        %w[to cc bcc].each do |key|
+          Array(notify[key]).each { |address| problems.concat(recipient_problems(address, "notify.#{index}.#{key}", handles)) }
+        end
+        %w[subject message].each do |key|
+          problems.concat(template_problems(notify[key], "notify.#{index}.#{key}", handles)) if notify.key?(key)
+        end
+        Conditions::KEYS.each do |key|
+          next unless notify.key?(key)
+
+          unless notify[key].is_a?(Hash) && notify[key].keys.all? { |handle| handles.include?(handle.to_s) }
+            problems << "notify.#{index}.#{key} must map the form's field handles to the values to match"
+          end
+        end
         problems
+      end
+
+      def recipient_problems(address, label, handles)
+        message = "#{label} must be an address, {field.<handle>} or {global.<set>.<field>}"
+        return [ message ] unless address.is_a?(String)
+        return [] unless address.include?("{")
+        return [ message ] unless address.strip.match?(/\A\{(field|global)\.[A-Za-z0-9_.]+\}\z/)
+
+        template_problems(address, label, handles)
+      end
+
+      def template_problems(value, label, handles)
+        return [ "#{label} must be text" ] unless value.is_a?(String)
+
+        value.scan(Outbound::Template::PATTERN).filter_map do |kind, name|
+          case kind
+          when "field" then "#{label} names {field.#{name}}, which isn't one of the form's field handles" unless handles.include?(name)
+          when "form" then "#{label} can use {form.title} only" unless name == "title"
+          when "global" then global_problem(label, name)
+          else "#{label} can't use {#{kind}.#{name}} in an email"
+          end
+        end
+      end
+
+      def global_problem(label, name)
+        handle, field = name.split(".", 2)
+        found = field && handle != Integrations::HANDLE && Nibble.schema.find(:globals, handle) && Records::GlobalSet.new(handle:).blueprint_fields.get(field)
+        "#{label} names {global.#{name}}, which isn't a field of a global set" unless found
       end
 
       def delivery_problems(delivery, index, schema)

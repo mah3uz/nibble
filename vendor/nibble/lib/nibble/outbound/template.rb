@@ -1,13 +1,14 @@
 module Nibble
   module Outbound
     class Template
-      PATTERN = /\{(secret|config|field)\.([A-Za-z0-9_]+)\}/
+      PATTERN = /\{(secret|config|field|form|global)\.([A-Za-z0-9_]+(?:\.[A-Za-z0-9_]+)?)\}/
       WHOLE = /\A#{PATTERN}\z/
 
       attr_reader :secrets_used
 
-      def initialize(fields: {})
+      def initialize(fields: {}, form: nil)
         @fields = fields.to_h.stringify_keys
+        @form = form
         @secrets_used = []
       end
 
@@ -28,9 +29,19 @@ module Nibble
       def lookup(kind, name)
         case kind
         when "field" then @fields[name]
+        when "form" then name == "title" ? (@form&.title || @form&.handle) : nil
+        when "global" then global(*name.split(".", 2))
         when "config" then Nibble.config.outbound_config.fetch(name) { raise Error, "{config.#{name}} isn't in outbound.config" }
         else secret(name)
         end
+      end
+
+      def global(handle, field)
+        return nil if field.nil? || handle == Integrations::HANDLE || !Nibble.schema.find(:globals, handle)
+
+        Dependencies.add("global:#{handle}")
+        value = Records::GlobalSet.find_by(handle:, locale: Nibble.config.default_locale.code)&.values&.dig(field)
+        value.is_a?(String) || value.is_a?(Numeric) ? value : nil
       end
 
       def secret(name)

@@ -91,6 +91,7 @@ Rails.application.routes.draw do
     post "forms/:handle/submissions/:id/unread", to: "form_submissions#unread", as: :unread_form_submission
     post "forms/:handle/submissions/:id/notes", to: "form_submissions#add_note", as: :form_submission_notes
     post "forms/:handle/submissions/:id/not_spam", to: "form_submissions#not_spam", as: :not_spam_form_submission
+    post "forms/:handle/submissions/:id/resend_notifications", to: "form_submissions#resend_notifications", as: :resend_form_submission_notifications
     post "forms/:handle/submissions/:id/deliveries/:key/retry", to: "form_submissions#retry", as: :retry_form_submission_delivery,
       constraints: { key: %r{[^/]+} }
     get "forms/:handle/submissions/:submission_id/files/:id", to: "form_files#show", as: :form_submission_file

@@ -34,9 +34,19 @@ module Nibble
         update!(deliveries: list, status: overall_status(list))
       end
 
+      def record_delivery!(key, **changes)
+        with_lock do
+          changes = changes.transform_keys(&:to_s)
+          previous = delivery(key).to_h
+          entry = previous.merge(changes, "key" => key, "attempts" => previous["attempts"].to_i + 1)
+          update!(deliveries: deliveries.reject { |item| item["key"] == key } + [ entry ])
+        end
+      end
+
       private
 
       def overall_status(list)
+        list = list.select { |item| item["key"].to_s.start_with?("api.") }
         return status if status == "spam" || list.empty?
         return "rejected" if list.any? { |item| item["status"] == "rejected" }
         return "failed" if list.any? { |item| item["status"] == "failed" }

@@ -16,6 +16,7 @@ module Nibble
                         deliveries: @submission.deliveries.map { |delivery| delivery_row(delivery) }, values_kept: @submission.data.present? },
           spam_days: spam_days,
           can_edit: can_edit?,
+          can_resend_notifications: @form.notify.any? && @submission.status != "spam" && can_edit?,
           can_mark_not_spam: @submission.status == "spam" && can_edit?,
           blueprint: { handle: @form.handle, title: @form.title, tabs: [ { handle: "main", display: "Main",
                                                                           sections: [ { fields: fields.to_publish_a } ] } ] },
@@ -82,6 +83,17 @@ module Nibble
         redirect_back_or_to "/cp/forms/#{@form.handle}/submissions/#{@submission.id}", notice: "Delivery queued to retry."
       end
 
+      def resend_notifications
+        authorize!("forms.#{@form.handle}.edit")
+        path = "/cp/forms/#{@form.handle}/submissions/#{@submission.id}"
+        return redirect_to path, alert: "This submission has no notifications to send." if @form.notify.empty? || @submission.status == "spam" || @submission.data.blank?
+
+        Nibble::Records::AuditEntry.create!(action: "form.notifications_resent", actor_type: "user", actor_id: Nibble::Current.user.id, subject_type: @submission.record_type,
+          subject_id: @submission.id, changeset: { "form" => @form.handle }, ip: request.remote_ip, created_at: Time.current)
+        Nibble::Jobs::NotifySubmission.perform_later(@form.handle, submission_id: @submission.id, resend: true)
+        redirect_to path, notice: "Notifications queued to send again."
+      end
+
       private
 
       def find_submission
@@ -112,7 +124,7 @@ module Nibble
 
       def delivery_row(delivery)
         delivery.slice("key", "target", "mode", "status", "attempts", "response_status", "error", "errors", "at")
-          .merge("can_retry" => delivery["status"] == "failed" && Nibble::Access.can?(Nibble::Current.user, "forms.#{@form.handle}.edit"))
+          .merge("can_retry" => delivery["key"].to_s.start_with?("api.") && delivery["status"] == "failed" && Nibble::Access.can?(Nibble::Current.user, "forms.#{@form.handle}.edit"))
       end
     end
   end

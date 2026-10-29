@@ -1,6 +1,12 @@
-New submission
+<%= @visitor ? "Your submission" : "New submission" %>
 
+<% if @message -%>
+<%= @message %>
+<% elsif @visitor -%>
+Thanks for filling in <%= @form.title || @form.handle %> on <%= site_name %>. Here's what you sent.
+<% else -%>
 Someone filled in <%= @form.title || @form.handle %> on <%= site_name %>. Here's what they sent.
+<% end -%>
 <% @rows.each do |label, value| %>
 
 <%= label %>:
@@ -9,4 +15,8 @@ Someone filled in <%= @form.title || @form.handle %> on <%= site_name %>. Here's
 <% if @reply_to %>
 
 Reply to this email to answer them at <%= @reply_to %>.
+<% end %>
+<% if @link %>
+
+Open this submission in the Control Plane: <%= @link %>
 <% end %>
