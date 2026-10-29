@@ -95,8 +95,8 @@ class Nibble::DevSetupTest < ActiveSupport::TestCase
       root.join(".claude").mkpath
       root.join(".claude/settings.json").write({ "permissions" => { "deny" => [ "Read(.env)" ] }, "model" => "opus" }.to_json)
 
-      Nibble::Dev::Setup.run(root:)
-      Nibble::Dev::Setup.run(root:)
+      Nibble::Dev::Setup.run(root:, tools: %w[claude])
+      Nibble::Dev::Setup.run(root:, tools: %w[claude])
 
       settings = JSON.parse(root.join(".claude/settings.json").read)
       assert_equal [ "Read(.env)", "Edit(/vendor/nibble/**)" ], settings.dig("permissions", "deny"), "running it twice adds the rule once"
@@ -111,11 +111,101 @@ class Nibble::DevSetupTest < ActiveSupport::TestCase
       root.join(".claude/skills/nibble-schema").mkpath
       root.join(".claude/skills/nibble-schema/SKILL.md").write("ours")
 
-      Nibble::Dev::Setup.run(root:)
-      Nibble::Dev::Setup.run(root:)
+      Nibble::Dev::Setup.run(root:, tools: %w[claude codex])
+      Nibble::Dev::Setup.run(root:, tools: %w[claude codex])
 
+      assert_equal "../../vendor/nibble/skills/nibble-theming", root.join(".codex/skills/nibble-theming").readlink.to_s
       assert_equal "../../vendor/nibble/skills/nibble-theming", root.join(".claude/skills/nibble-theming").readlink.to_s
       assert_equal "ours", root.join(".claude/skills/nibble-schema/SKILL.md").read
+    end
+  end
+
+  test "setup writes only the files of the tools chosen and leaves the others as they were" do
+    Dir.mktmpdir do |dir|
+      root = Pathname(dir)
+      root.join(".cursor").mkpath
+      root.join(".cursor/mcp.json").write("old")
+
+      written = Nibble::Dev::Setup.run(root:, tools: %w[codex])
+
+      assert_includes written, ".codex/config.toml"
+      assert_equal %w[.codex], Dir.children(dir).sort - %w[.cursor]
+      assert_equal "old", root.join(".cursor/mcp.json").read
+      assert_not root.join(".mcp.json").exist?
+      assert_raises(Nibble::Error) { Nibble::Dev::Setup.run(root:, tools: %w[vim]) }
+    end
+  end
+
+  test "setup writes Cursor's file alone when only Cursor is chosen" do
+    Dir.mktmpdir do |dir|
+      Nibble::Dev::Setup.run(root: Pathname(dir), tools: %w[cursor])
+
+      assert_equal %w[.cursor], Dir.children(dir)
+      assert_equal %w[nibble:dev:mcp], JSON.parse(File.read("#{dir}/.cursor/mcp.json")).dig("mcpServers", "nibble-dev", "args")
+    end
+  end
+
+  test "setup writes Codex's project config and merges it with what the file holds" do
+    Dir.mktmpdir do |dir|
+      root = Pathname(dir)
+      root.join(".codex").mkpath
+      root.join(".codex/config.toml").write("model = \"gpt-5\"\n\n[mcp_servers.other]\ncommand = \"x\"\n")
+
+      Nibble::Dev::Setup.run(root:, tools: %w[codex])
+      Nibble::Dev::Setup.run(root:, tools: %w[codex])
+
+      toml = root.join(".codex/config.toml").read
+      assert_equal 1, toml.scan("[mcp_servers.nibble-dev]").size, "running it twice adds the section once"
+      assert_includes toml, "model = \"gpt-5\"\n\n[mcp_servers.other]\ncommand = \"x\"\n\n[mcp_servers.nibble-dev]\ncommand = \"bin/rails\"\nargs = [\"nibble:dev:mcp\"]\n"
+    end
+  end
+
+  test "setup replaces a stale nibble-dev section in Codex's config and keeps the sections after it" do
+    Dir.mktmpdir do |dir|
+      root = Pathname(dir)
+      root.join(".codex").mkpath
+      root.join(".codex/config.toml").write("[mcp_servers.nibble-dev]\ncommand = \"old\"\n\n[mcp_servers.other]\ncommand = \"x\"\n")
+
+      Nibble::Dev::Setup.run(root:, tools: %w[codex])
+
+      assert_equal "[mcp_servers.nibble-dev]\ncommand = \"bin/rails\"\nargs = [\"nibble:dev:mcp\"]\n\n[mcp_servers.other]\ncommand = \"x\"\n", root.join(".codex/config.toml").read
+    end
+  end
+
+  test "setup never writes outside the site's folder" do
+    Dir.mktmpdir do |dir|
+      neighbour = Pathname(dir).join("home").tap(&:mkpath)
+      root = Pathname(dir).join("site").tap(&:mkpath)
+
+      Nibble::Dev::Setup.run(root:, tools: Nibble::Dev::Setup::TOOLS)
+
+      assert_empty neighbour.children
+      assert_equal %w[home site], Dir.children(dir).sort
+      assert_equal %w[.claude .codex .cursor .mcp.json], root.children.map { |c| c.basename.to_s }.sort
+    end
+  end
+
+  test "the setup command writes nothing without a terminal and without --tools, and says how to pass them" do
+    Dir.mktmpdir do |dir|
+      out = Dir.chdir(Rails.root) do
+        `HOME=#{dir} bin/rails nibble:dev:setup < /dev/null 2>&1`
+      end
+
+      assert_includes out, "--tools claude,codex,cursor"
+      assert_not_includes out, "wrote"
+      assert_empty Dir.children(dir)
+    end
+  end
+
+  test "setup detects the tools on this computer from the path and Cursor's folder" do
+    Dir.mktmpdir do |dir|
+      bin = Pathname(dir).join("bin").tap(&:mkpath)
+      bin.join("codex").write("#!/bin/sh\n")
+      bin.join("codex").chmod(0o755)
+
+      assert_equal %w[codex], Nibble::Dev::Setup.detected(env: { "PATH" => bin.to_s }, home: dir)
+      Pathname(dir).join(".cursor").mkpath
+      assert_equal %w[codex cursor], Nibble::Dev::Setup.detected(env: { "PATH" => bin.to_s }, home: dir)
     end
   end
 end

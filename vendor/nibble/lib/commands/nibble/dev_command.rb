@@ -39,12 +39,40 @@ class NibbleDevCommand < Rails::Command::Base
     abort e.message
   end
 
-  desc "setup", "Connect AI agents in this folder to the developer tools, and keep their edits out of vendor/nibble"
+  desc "setup", "Connect the AI tools you choose in this folder to the developer tools, and keep their edits out of vendor/nibble"
+  option :tools, desc: "Set up these tools without asking: claude, codex, cursor (comma-separated)"
   def setup
     boot_application!
-    Nibble::Dev::Setup.run.each { |path| puts "  wrote #{path}" }
-    puts "Claude Code and Cursor: .mcp.json and .cursor/mcp.json name the nibble-dev server; Claude Code may not edit vendor/nibble/."
-    puts "Codex: codex mcp add nibble-dev -- bin/rails nibble:dev:mcp"
+    tools = options[:tools] ? options[:tools].split(",").map(&:strip).reject(&:empty?) : choose_tools
+    return if tools.nil?
+    return puts("No tools chosen; nothing written.") if tools.empty?
+
+    Nibble::Dev::Setup.run(tools:).each { |path| puts "  wrote #{path}" }
+    puts "Claude Code may not edit vendor/nibble/." if tools.include?("claude")
+    puts "Codex reads .codex/config.toml once you trust this project." if tools.include?("codex")
     puts "Agents read AGENTS.md; vendor/nibble/AGENTS.md tells them Nibble's files are not theirs to change."
+  rescue Nibble::Error => e
+    abort e.message
+  end
+
+  no_commands do
+    LABELS = { "claude" => "Claude Code", "codex" => "Codex", "cursor" => "Cursor" }.freeze
+
+    def choose_tools
+      unless $stdin.tty?
+        puts "Not a terminal, so nothing was written. Say which tools to set up:"
+        puts "  bin/rails nibble:dev:setup --tools claude,codex,cursor"
+        return nil
+      end
+
+      found = Nibble::Dev::Setup.detected
+      puts "Which AI tools should use this site's developer tools? Files are written only in this folder."
+      Nibble::Dev::Setup::TOOLS.each_with_index do |tool, i|
+        puts "  #{i + 1}. #{LABELS[tool]}#{' (found on this computer)' if found.include?(tool)}"
+      end
+      default = found.map { |tool| Nibble::Dev::Setup::TOOLS.index(tool) + 1 }.join(",")
+      answer = ask("Numbers, separated by commas (none to skip)", default: default).to_s
+      answer.split(/[\s,]+/).reject(&:empty?).filter_map { |n| Nibble::Dev::Setup::TOOLS[n.to_i - 1] if n.to_i.between?(1, 3) }.uniq
+    end
   end
 end
