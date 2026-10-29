@@ -3,6 +3,7 @@ import { Check, X } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { parseHex } from '../color'
 import { fieldtypeEmits, fieldtypeProps, useFieldtype } from '../useFieldtype'
 
 const props = defineProps(fieldtypeProps)
@@ -10,7 +11,6 @@ const emit = defineEmits(fieldtypeEmits)
 const { update, isReadOnly, expose } = useFieldtype(emit, props)
 defineExpose(expose)
 
-const HEX = /^#[0-9a-f]{6}$/
 const current = computed(() => (typeof props.value === 'string' ? props.value.toLowerCase() : ''))
 const swatches = computed(() =>
   (Array.isArray(props.config.swatches) ? props.config.swatches : []).map((swatch) => String(swatch).toLowerCase()),
@@ -19,17 +19,35 @@ const allowAny = computed(() => props.config.allow_any !== false)
 
 const text = ref(current.value)
 watch(current, (value) => (text.value = value))
+const invalid = computed(() => text.value.trim() !== '' && parseHex(text.value) === null)
 
-function choose(raw: string) {
-  const next = raw.trim().toLowerCase()
-  text.value = next
-  update(next === '' ? null : next)
+function choose(next: string | null) {
+  text.value = next ?? ''
+  update(next)
+}
+
+function commit() {
+  const hex = text.value.trim() === '' ? null : parseHex(text.value)
+  if (hex === null && text.value.trim() !== '') return
+  if (hex !== (current.value || null)) choose(hex)
+  else text.value = current.value
+}
+
+function onBlur() {
+  commit()
+  emit('blur')
 }
 </script>
 
 <template>
   <div class="flex flex-wrap items-center gap-2">
-    <div v-if="swatches.length" :id="allowAny ? undefined : id" role="group" class="flex flex-wrap gap-1.5">
+    <div
+      v-if="swatches.length"
+      :id="allowAny ? undefined : id"
+      role="group"
+      :aria-labelledby="allowAny && id ? `${id}-label` : undefined"
+      class="flex flex-wrap gap-1.5"
+    >
       <button
         v-for="swatch in swatches"
         :key="swatch"
@@ -48,25 +66,26 @@ function choose(raw: string) {
     <template v-if="allowAny">
       <input
         type="color"
-        :value="HEX.test(current) ? current : '#000000'"
+        :value="parseHex(current) ?? '#000000'"
         :disabled="isReadOnly"
-        aria-label="Pick a colour"
+        aria-label="Pick a color"
         class="h-10 w-12 cursor-pointer rounded-lg border border-gray-300 bg-white p-1 shadow-ui-sm outline-none focus-visible:focus-outline disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900"
         @input="choose(($event.target as HTMLInputElement).value)"
       />
       <Input
         :id="id"
+        v-model="text"
         :name="handle"
         class="w-32 font-mono"
-        :model-value="text"
         placeholder="#rrggbb"
         maxlength="7"
         spellcheck="false"
         autocomplete="off"
+        :aria-invalid="invalid || undefined"
         :readonly="isReadOnly"
-        @update:model-value="(next) => choose(String(next))"
+        @keydown.enter.prevent="commit"
         @focus="emit('focus')"
-        @blur="emit('blur')"
+        @blur="onBlur"
       />
     </template>
     <Button
@@ -74,8 +93,8 @@ function choose(raw: string) {
       type="button"
       variant="subtle"
       size="icon-sm"
-      aria-label="Clear colour"
-      @click="choose('')"
+      aria-label="Clear color"
+      @click="choose(null)"
       ><X
     /></Button>
   </div>
