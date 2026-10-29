@@ -30,21 +30,40 @@ type Delivery = {
 
 const props = defineProps<{
   form: { handle: string; title: string }
-  submission: { id: number; status: string; created_at: string; deliveries: Delivery[] }
+  submission: { id: number; status: string; created_at: string; deliveries: Delivery[]; values_kept: boolean }
   blueprint: PublishBlueprint
   values: Record<string, unknown>
   meta: Record<string, unknown>
   can_delete: boolean
+  can_mark_not_spam: boolean
+  spam_days: number | null
 }>()
 
 const confirm = useConfirm()
 const values = ref(props.values)
 const listUrl = computed(() => `/cp/forms/${props.form.handle}`)
 const base = computed(() => `${listUrl.value}/submissions/${props.submission.id}`)
+const spamNote = computed(() => {
+  if (props.submission.status !== 'spam') return null
+  if (!props.submission.values_kept)
+    return "This was caught as spam and its values weren't kept, so it can't be marked as not spam."
+  const deleted = props.spam_days ? ` It's deleted ${props.spam_days} days after it arrived.` : ''
+  return `This was caught as spam, so nothing was sent on.${deleted}`
+})
 const date = (value: string) => new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
 
 function retry(delivery: Delivery) {
   router.post(`${base.value}/deliveries/${encodeURIComponent(delivery.key)}/retry`, {}, { preserveScroll: true })
+}
+
+async function markNotSpam() {
+  const ok = await confirm({
+    title: 'Mark as not spam?',
+    description:
+      'It becomes a real submission: its notifications, API deliveries and handler run now, as they would have when it was sent.',
+    confirmText: 'Not spam',
+  })
+  if (ok) router.post(`${base.value}/not_spam`, {}, { preserveScroll: true })
 }
 
 async function destroy() {
@@ -77,9 +96,14 @@ async function destroy() {
     >
       <template #meta><StatusCell :value="submission.status" /></template>
       <template #actions>
+        <Button v-if="can_mark_not_spam && submission.values_kept" variant="outline" @click="markNotSpam"
+          >Not spam</Button
+        >
         <Button v-if="can_delete" variant="outline" @click="destroy">Delete</Button>
       </template>
     </PageHeader>
+
+    <p v-if="spamNote" class="mb-6 text-sm text-gray-600 dark:text-gray-400">{{ spamNote }}</p>
 
     <PublishContainer v-model="values" :blueprint="blueprint" :meta="meta" read-only name="submission">
       <PublishSections :sections="blueprint.tabs[0].sections" />

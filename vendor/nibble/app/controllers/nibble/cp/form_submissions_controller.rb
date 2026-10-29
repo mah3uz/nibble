@@ -11,7 +11,9 @@ module Nibble
         render inertia: "cp/forms/Submission", props: {
           form: { handle: @form.handle, title: @form.title || @form.handle.humanize },
           submission: { id: @submission.id, status: @submission.status, created_at: @submission.created_at.utc.iso8601,
-                        deliveries: @submission.deliveries.map { |delivery| delivery_row(delivery) } },
+                        deliveries: @submission.deliveries.map { |delivery| delivery_row(delivery) }, values_kept: @submission.data.present? },
+          spam_days: spam_days,
+          can_mark_not_spam: @submission.status == "spam" && Nibble::Access.can?(Nibble::Current.user, "forms.#{@form.handle}.edit"),
           blueprint: { handle: @form.handle, title: @form.title, tabs: [ { handle: "main", display: "Main",
                                                                           sections: [ { fields: fields.to_publish_a } ] } ] },
           values: fields.pre_process.values,
@@ -24,6 +26,19 @@ module Nibble
         authorize!("forms.#{@form.handle}.delete")
         @submission.destroy!
         redirect_to "/cp/forms/#{@form.handle}", notice: "Submission deleted."
+      end
+
+      def not_spam
+        authorize!("forms.#{@form.handle}.edit")
+        result = Nibble::Forms::Submit.not_spam(@form, @submission, user: Nibble::Current.user, ip: request.remote_ip)
+        path = "/cp/forms/#{@form.handle}/submissions/#{@submission.id}"
+        case result.status
+        when :ok then redirect_to path, notice: "Marked as not spam and sent on."
+        when :rejected then redirect_to path, alert: "Marked as not spam, but a delivery rejected it."
+        when :invalid then redirect_to path, alert: "It can't be marked as not spam: #{result.errors.values.flatten.join(' ')}"
+        when :cleared then redirect_to path, alert: "Its values are no longer kept, so it can't be marked as not spam."
+        else redirect_to path, notice: "This submission is no longer marked as spam."
+        end
       end
 
       def retry
@@ -41,6 +56,8 @@ module Nibble
         @form = Nibble::Forms.find(params[:handle]) or raise ActiveRecord::RecordNotFound
         @submission = Nibble::Records::FormSubmission.where(form: @form.handle).find(params[:id])
       end
+
+      def spam_days = [ @form.spam_retention_days, @form.retention_days ].filter_map { |days| days.to_i if days.to_i.positive? }.min
 
       def file_meta
         @form.fields.all.values.select { |field| field.type == "files" }.to_h do |field|

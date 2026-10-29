@@ -84,6 +84,7 @@ Rails.application.routes.draw do
     get "forms/:handle", to: "forms#show", as: :form
     get "forms/:handle/submissions/:id", to: "form_submissions#show", as: :form_submission
     delete "forms/:handle/submissions/:id", to: "form_submissions#destroy"
+    post "forms/:handle/submissions/:id/not_spam", to: "form_submissions#not_spam", as: :not_spam_form_submission
     post "forms/:handle/submissions/:id/deliveries/:key/retry", to: "form_submissions#retry", as: :retry_form_submission_delivery,
       constraints: { key: %r{[^/]+} }
     get "forms/:handle/submissions/:submission_id/files/:id", to: "form_files#show", as: :form_submission_file

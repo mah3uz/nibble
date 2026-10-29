@@ -11,6 +11,10 @@ module Nibble
 
       def self.call(form, params, ip: nil, user_agent: nil, locale: nil) = new(form, params, ip:, user_agent:, locale:).call
 
+      def self.not_spam(form, submission, user:, ip: nil)
+        new(form, submission.data, ip: nil, user_agent: submission.user_agent, locale: submission.locale).not_spam(submission, user:, ip:)
+      end
+
       def initialize(form, params, ip:, user_agent:, locale:)
         @form = form
         @params = params.to_h.stringify_keys
@@ -27,12 +31,27 @@ module Nibble
 
         fields = @form.fields
         values = @params.slice(*fields.handles)
-        errors = Validator.new(fields, replacements: { "type" => "form_submission" }, locale: @locale).validate(values).errors
-        errors = step_errors(fields, values).merge(errors)
+        errors = errors_in(fields, values)
         return result(:invalid, errors:, values:) if errors.any?
 
         data, blob_ids = upload(fields, values)
         store(fields.add_values(data).process.values.compact, blob_ids)
+      end
+
+      def not_spam(submission, user:, ip:)
+        return result(:not_spam, submission:) unless submission.status == "spam"
+        return result(:cleared, submission:) if submission.data.blank?
+
+        fields = @form.fields
+        values = @params.slice(*fields.handles)
+        errors = errors_in(fields, values)
+        return result(:invalid, submission:, errors:, values:) if errors.any?
+
+        data = fields.add_values(values).process.values.compact
+        return result(:not_spam, submission:) unless claim(submission, data, user:, ip:)
+
+        outcome = deliver(submission, data)
+        outcome.ok? ? outcome : result(:rejected, submission:, errors: outcome.errors, values: data)
       end
 
       private
@@ -51,6 +70,11 @@ module Nibble
       end
 
       def result(status, submission: nil, errors: {}, values: {}) = Result.new(status:, submission:, errors:, values:)
+
+      def errors_in(fields, values)
+        errors = Validator.new(fields, replacements: { "type" => "form_submission" }, locale: @locale).validate(values).errors
+        step_errors(fields, values).merge(errors)
+      end
 
       def rate_limited?
         limit = @form.rate_limit
@@ -105,17 +129,33 @@ module Nibble
       def store(data, blob_ids = [])
         return deliver(nil, data) unless @form.store?
 
-        deliveries = @form.deliveries.each_with_index.map do |delivery, index|
-          { "key" => "api.#{index}", "target" => delivery["use"] || delivery["url"], "mode" => delivery["mode"], "status" => "pending", "attempts" => 0 }
-        end
         submission = Records::FormSubmission.transaction do
           Records::FormSubmission.create!(form: @form.handle, data:, ip_hash: @ip_hash, user_agent: @user_agent, locale: @locale, deliveries:).tap do |record|
             record.files.attach(ActiveStorage::Blob.where(id: blob_ids).to_a) if blob_ids.any?
-            Events.publish("form.submitted", "type" => record.record_type, "id" => record.id, "form" => @form.handle, "locale" => @locale)
+            announce(record)
           end
         end
         deliver(submission, data)
       end
+
+      def claim(submission, data, user:, ip:)
+        Records::FormSubmission.transaction do
+          next false if Records::FormSubmission.where(id: submission.id, status: "spam").update_all(status: "received").zero?
+
+          submission.reload.update!(data:, deliveries:)
+          announce(submission)
+          Records::AuditEntry.create!(action: "form.not_spam", actor_type: "user", actor_id: user.id, subject_type: submission.record_type,
+            subject_id: submission.id, changeset: { "form" => @form.handle, "status" => %w[spam received] }, ip:, created_at: Time.current)
+        end
+      end
+
+      def deliveries
+        @form.deliveries.each_with_index.map do |delivery, index|
+          { "key" => "api.#{index}", "target" => delivery["use"] || delivery["url"], "mode" => delivery["mode"], "status" => "pending", "attempts" => 0 }
+        end
+      end
+
+      def announce(record) = Events.publish("form.submitted", "type" => record.record_type, "id" => record.id, "form" => @form.handle, "locale" => @locale)
 
       def deliver(submission, data)
         errors = {}
