@@ -34,8 +34,16 @@ module Nibble
         {
           id: revision.id, label: LABELS.fetch(revision.kind, revision.kind.humanize), created_at: revision.created_at.utc.iso8601,
           author: revision.actor&.name, via: revision.grant&.name, restorable: true, message: revision.message,
-          changes: Nibble::Revisions.diff(@entry, previous&.data || {}, revision.data).transform_values { |change| [ change["from"], change["to"] ] }
+          changes: readable_changes(previous&.data || {}, revision.data)
         }
+      end
+
+      def readable_changes(from, to)
+        fields = @entry.blueprint_fields
+        Nibble::Revisions.diff(@entry, from, to).to_h do |key, change|
+          field = fields.get(key)
+          [ key, { label: field&.display || key.humanize, from: Nibble::Cp::Readable.value(change["from"], field), to: Nibble::Cp::Readable.value(change["to"], field) } ]
+        end
       end
 
       def load_entry

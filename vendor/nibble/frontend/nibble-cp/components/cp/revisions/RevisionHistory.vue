@@ -46,7 +46,7 @@ watch(page, load)
 const groups = computed(() => {
   const byDay = new Map<string, Version[]>()
   for (const version of payload.value?.versions ?? []) {
-    const day = new Date(version.created_at).toLocaleDateString('en-AU', {
+    const day = new Date(version.created_at).toLocaleDateString(undefined, {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
@@ -62,10 +62,10 @@ async function restore(version: Version) {
   if (!record) return
 
   const ok = await confirmRestore({
-    title: `Restore this ${record.type}'s content from ${new Date(version.created_at).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' })}?`,
+    title: `Restore the revision from ${new Date(version.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}?`,
     description: record.live
-      ? 'Restored into unpublished changes — review and publish to make it live.'
-      : 'This is saved as a new version.',
+      ? 'It becomes a draft. Publish it to make it live.'
+      : 'It is saved as a new revision.',
     confirmText: 'Restore',
   })
   if (ok) router.post(`${props.url}/${version.id}/restore`, { lock_version: record.lock_version })

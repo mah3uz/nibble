@@ -4,7 +4,6 @@ import { ref } from 'vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { fieldDiff } from '@/lib/field-diff'
-import { humanize } from '@/lib/utils'
 
 export type Version = {
   id: number
@@ -14,16 +13,20 @@ export type Version = {
   via?: string | null
   restorable: boolean
   message: string | null
-  changes: Record<string, [unknown, unknown]>
+  changes: Record<string, { label: string; from: string; to: string }>
 }
 
 const props = defineProps<{ version: Version; previewUrl: string }>()
 const emit = defineEmits<{ restore: [] }>()
 
-const when = (iso: string) => new Date(iso).toLocaleTimeString('en-AU', { hour: 'numeric', minute: '2-digit' })
-const fields = () => Object.keys(props.version.changes)
+const when = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+const fields = () => Object.values(props.version.changes).map((change) => change.label)
 const diffs = () =>
-  Object.entries(props.version.changes).map(([field, [before, after]]) => ({ field, diff: fieldDiff(before, after) }))
+  Object.entries(props.version.changes).map(([field, change]) => ({
+    field,
+    label: change.label,
+    diff: fieldDiff(change.from, change.to),
+  }))
 
 const expanded = ref(false)
 </script>
@@ -50,7 +53,7 @@ const expanded = ref(false)
         >
       </button>
       <div class="flex shrink-0 items-center gap-1">
-        <Button as-child type="button" variant="ghost" size="icon-sm" title="Preview this version">
+        <Button as-child type="button" variant="ghost" size="icon-sm" title="Preview this revision">
           <a :href="previewUrl" target="_blank" rel="noopener"><ExternalLink /></a>
         </Button>
         <Button v-if="version.restorable" type="button" variant="outline" size="sm" @click="emit('restore')"
@@ -62,11 +65,11 @@ const expanded = ref(false)
     <p v-if="version.message" class="text-sm italic">“{{ version.message }}”</p>
 
     <p v-if="!fields().length" class="text-xs text-muted-foreground">No content changes.</p>
-    <p v-else-if="!expanded" class="text-xs text-muted-foreground">{{ fields().map(humanize).join(', ') }}</p>
+    <p v-else-if="!expanded" class="text-xs text-muted-foreground">{{ fields().join(', ') }}</p>
 
     <div v-else class="space-y-3">
-      <div v-for="{ field, diff } in diffs()" :key="field" class="space-y-1">
-        <div class="text-xs font-medium">{{ humanize(field) }}</div>
+      <div v-for="{ field, label, diff } in diffs()" :key="field" class="space-y-1">
+        <div class="text-xs font-medium">{{ label }}</div>
         <div v-if="diff.inline" class="flex flex-wrap items-baseline gap-2 text-sm">
           <del v-if="diff.before" class="bg-red-50 px-1 text-red-700 dark:bg-red-950 dark:text-red-300">{{
             diff.before
