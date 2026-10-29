@@ -86,6 +86,7 @@ In production, a missing job or a passkey setting that no longer allows the site
 
 | Key | What it does |
 |---|---|
+| `load_defaults` | the release whose behaviour the site uses, such as `"0.21.0"`; `"0.0"` when the line is missing. A release that changes something your site would notice ships it switched off, and raising this to that release's version switches it on. Upgrading never changes it — see [Upgrading](upgrading.md#9-raising-load_defaults) |
 | `theme` | the active theme's handle, a directory under `site/themes/`, or one Nibble ships such as `crumbs` |
 | `url` | the public site URL; canonical links, sitemaps, feeds and mail are built from it |
 | `locales` | the site's languages: `code`, `default`, `url_prefix`, and `search_tokenizer` (`porter` or `trigram`); [forms](../modelling/form-translation.md) take text per locale |
@@ -106,8 +107,8 @@ develop. It only takes effect in development and test; production ignores it, an
 error if it is set there. Everything else still applies: only http and https, `allowed_hosts`, and the host must resolve.
 
 > [!NOTE]
-> `reserved_paths` only adds. Nibble always reserves `/cp`, `/api`, `/forms`, `/media`, `/assets`, `/nibble-assets`, `/up`,
-> `/sitemap.xml`, `/robots.txt` and `/.well-known`, because a site whose Control Plane was shadowed by a page could
+> `reserved_paths` only adds. Nibble always reserves `/cp`, `/api`, `/mcp`, `/oauth`, `/forms`, `/media`, `/assets`,
+> `/nibble-assets`, `/up`, `/sitemap.xml`, `/robots.txt` and `/.well-known`, because a site whose Control Plane was shadowed by a page could
 > not be fixed from inside.
 
 ## 5. Image presets

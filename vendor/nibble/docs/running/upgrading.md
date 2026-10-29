@@ -146,3 +146,21 @@ bin/rails nibble:upgrade 0.17.0
 ```
 
 It is slower, and it is the difference between knowing which release caused a surprise and guessing.
+
+## 9. Raising `load_defaults`
+
+`config/nibble.yml` holds a `load_defaults` line, written at install with the release then current. It names the
+release whose behaviour the site uses. When a release changes something a site would notice, such as what the Content
+API leaves out or how search indexes are built, the change arrives switched off, and upgrading never moves the line.
+
+To switch a release's changes on, read its entry in the changelog, make any change it asks for, and raise the line to that
+release's version:
+
+```yaml
+default: &default
+  load_defaults: "0.21.0"
+```
+
+Then run `bin/rails nibble:check`, which names anything the new behaviour no longer accepts. A line that is missing
+counts as `"0.0"`, so none of the changes are on. `bin/rails nibble` shows the release your site is running and
+the behaviour it has chosen.

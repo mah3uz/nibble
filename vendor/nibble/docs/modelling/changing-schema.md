@@ -68,8 +68,11 @@ operations:
       to: summary
 ```
 
-A migration is a YAML file in `site/schema/migrations/`, run once, in file-name order — so start the name with the date.
-Change the blueprint in the same commit.
+A migration is a YAML file in a `migrations/` folder of the site's schema, `site/schema/migrations/`, run once, in file-name
+order — so start the name with the date. Nibble reads the same folder in its own schema and in the active theme's
+`schema/`, so a theme that renames a field can ship the migration that moves its content; the names of all three are
+ordered together, and each is recorded under its layer, so two layers can use the same file name. Change the blueprint in
+the same commit.
 
 ### 3.2 Try it
 

@@ -110,7 +110,7 @@ content of sites you sign in to. See [The nibble command](cli.md).
 The **playground**, at `/cp/nibble/playground` in development, renders every blueprint — plus one using every
 fieldtype — backed by records in memory. It is the fastest way to see what a field looks like without making content.
 
-## 8. Nibble's own releases
+## 9. Nibble's own releases
 
 ```sh
 bin/nibble-release 0.16.0

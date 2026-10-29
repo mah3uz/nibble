@@ -48,6 +48,8 @@ same on staging.
 | [Global](globals-and-navigation.md) | one set of site-wide fields | `site`, `seo`, `integrations` |
 | [Navigation](globals-and-navigation.md) | a menu | `main`, `footer`, `help` |
 | [Form](forms.md) | a public form and where submissions go | `demo` |
+| [API connection](form-delivery.md#22-api-connections) | an outside API a form delivery or a task calls: its address, headers, timeout and retries | `crm` |
+| [Search](collections.md#7-sitemap-feed-api-and-search) | the settings of each search index; one file, `search.yml` | `search.yml` |
 | [Task](scheduled-tasks.md) | work done on a schedule: fetching figures, importing a feed | `stats`, `jobs` |
 
 ## 3. Three layers
@@ -93,7 +95,9 @@ site/schema/
 ├── globals/company.yml
 ├── navigation/help.yml
 ├── forms/demo.yml
+├── apis/crm.yml
 ├── tasks/stats.yml
+├── search.yml
 └── migrations/2026_10_01_rename_intro.yml
 ```
 
