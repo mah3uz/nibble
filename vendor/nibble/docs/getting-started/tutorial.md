@@ -485,6 +485,60 @@ submission is listed under **Forms → Book a demo**, and sales gets an email ti
 > Before this form is public, turn on spam protection. Every form is rate-limited and has a hidden honeypot field,
 > but a CAPTCHA is what stops a determined bot. See [Forms](../modelling/form-spam-and-privacy.md#1-spam).
 
+### 7.3 A quote form
+
+A form can do more than collect text. Tidewater also quotes a price before anyone talks to sales, and wants a start
+date, a call time and the colour for their invoices. Declare it beside the demo form:
+
+```yaml
+# site/schema/forms/quote.yml
+title: Get a quote
+fields:
+  - handle: email
+    field: { type: text, input_type: email, display: Work email, required: true }
+  - handle: invoices
+    field: { type: range, display: Invoices a month, min: 10, max: 500, step: 10, default: 100 }
+  - handle: unit_price
+    field: { type: decimal, hidden: true, value: 0.45, decimals: 2 }
+  - handle: total
+    field:
+      type: calculation
+      display: Estimated monthly price
+      formula: "{invoices} * {unit_price}"
+      decimals: 2
+      prepend: $
+  - handle: budget
+    field: { type: decimal, display: Monthly budget, decimals: 2, min: 0, prepend: $ }
+  - handle: call_time
+    field: { type: time, display: Best time to call, earliest: "09:00", latest: "17:30" }
+  - handle: start
+    field:
+      type: date
+      display: Start date
+      time_enabled: true
+      time_zone: Australia/Sydney
+  - handle: brand_color
+    field: { type: color, display: Invoice colour, swatches: ["#0f766e", "#1d4ed8", "#111827"] }
+success:
+  message: Thanks — your quote is on its way.
+```
+
+- `range` is a slider; it stores a number between `min` and `max`, and `default` is where it starts.
+- A `hidden` field is never shown, but it is stored with the value you give it. Here it keeps the unit price out of
+  the visitor's way and in one place for you to change.
+- `calculation` works its figure out from the other fields, so the visitor sees the price move with the slider. Nibble
+  works it out again when the form is sent and stores that, never a value posted by the browser. Give money
+  `decimals`.
+- `decimal` keeps a fixed number of places. `time` stores a 24-hour time such as `14:30`, written in quotes in YAML.
+- A `date` with `time_enabled` also asks for a time, and `time_zone` says whose clock the visitor types on: the time
+  is stored as the same moment in UTC and a page receives it with Sydney's offset.
+- `color` stores `#rrggbb`; `swatches` offers colours as buttons, and a picker comes with them unless `allow_any: false`.
+
+Put it on a page the way you did the demo form, with `from: form:quote` in a `quote.yml` sidecar and a view like
+`demo.vue`; `ContactForm` draws every one of these fields. Each type's options are in the
+[field type reference](../reference/fieldtypes.md), and [Forms in your theme](../theming/forms-in-your-theme.md) shows
+how to draw them yourself.
+
 ## 8. Before the first deploy
 
 Run the checks that a deploy would run:
