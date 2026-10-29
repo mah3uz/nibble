@@ -80,6 +80,12 @@ module Nibble
         Array(nodes).sum { |node| node.is_a?(Hash) ? (node["type"] == "text" ? node["text"].to_s.length : text_length(node["content"])) : 0 }
       end
 
+      def publish_config(config)
+        listed = Array(config["link_collections"]).presence
+        listed ||= field&.schema&.collections&.select { |item| item["route"].present? }&.map(&:handle) || []
+        super.merge("link_collections" => listed)
+      end
+
       def config_problems
         return [] unless field
 

@@ -92,6 +92,16 @@ class Nibble::Fieldtypes::ContentFieldtypesTest < ActiveSupport::TestCase
     assert_not_includes fieldtype(:rich_text, link_noopener: false).augment([ link ]), "rel="
   end
 
+  test "the editor is offered the routed collections to link to unless the field names its own" do
+    routed = Nibble.schema.collections.select { |item| item["route"].present? }.map(&:handle)
+    unrouted = Nibble.schema.collections.reject { |item| item["route"].present? }.map(&:handle)
+    published = ->(config) { field(:rich_text, config).to_publish_h.dig("config", "link_collections") }
+
+    assert_equal routed, published.({})
+    assert_empty published.({}) & unrouted
+    assert_equal [ "x" ], published.(link_collections: [ "x" ])
+  end
+
   test "images inside rich text count as uses of their asset, so usage, delete protection and cache purges see them" do
     image = ->(id) { { "type" => "image", "attrs" => { "asset" => id, "alt" => "" } } }
     body = [ paragraph("Intro"), image.("7"), { "type" => "bulletList", "content" => [ { "type" => "listItem", "content" => [ image.("9"), image.("7") ] } ] } ]
