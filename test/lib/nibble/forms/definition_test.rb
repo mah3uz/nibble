@@ -143,4 +143,18 @@ class Nibble::Forms::DefinitionTest < ActiveSupport::TestCase
     assert_includes problems(title: "X"), "needs `fields` or `sections`"
     assert_empty problems(title: "X", sections: [ { display: "One", fields: [ field ] } ])
   end
+
+  test "nibble:check refuses steps without sections, and a resume that couldn't send its link or keep what it saved" do
+    email = { handle: "email", field: { type: "text", input_type: "email" } }
+    sections = [ { display: "One", fields: [ email ] } ]
+    resume = "resume_email must name one of the form's text fields, where the visitor gives the address to send the link to"
+
+    assert_includes problems(title: "X", steps: true, fields: [ email ]), "steps needs `sections`: each section is a step"
+    assert_empty problems(title: "X", steps: true, resume: true, resume_email: "email", sections:)
+    assert_includes problems(title: "X", resume: true, sections:), resume
+    assert_includes problems(title: "X", resume: true, resume_email: "phone", sections:), resume
+    assert_includes problems(title: "X", resume: true, resume_email: "email", resume_days: 0, sections:), "resume_days must be a positive number of days"
+    assert_includes problems(title: "X", resume: true, resume_email: "email", store: false, sections:),
+      "resume needs the form to store submissions, since it keeps what was entered until the visitor comes back"
+  end
 end

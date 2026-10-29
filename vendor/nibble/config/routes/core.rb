@@ -207,6 +207,8 @@ Rails.application.routes.draw do
   post "cp/device", to: "nibble/oauth/authorizations#lookup"
 
   post "forms/:handle", to: "forms#create", format: false, constraints: { handle: /[a-z0-9_-]+/ }, as: :form_submissions
+  post "forms/:handle/steps/:index", to: "forms#step", format: false, constraints: { handle: /[a-z0-9_-]+/, index: /\d+/ }
+  post "forms/:handle/resume", to: "forms#save", format: false, constraints: { handle: /[a-z0-9_-]+/ }
   get "media/:uuid/:filename", to: "asset_files#show", format: false, constraints: { filename: /[^\/]+/ }, as: :asset_file
   get "media/:uuid/:preset/:filename", to: "asset_files#show", format: false, constraints: { filename: /[^\/]+/ }, as: :asset_transform
   get "robots.txt", to: "sitemaps#robots", format: false

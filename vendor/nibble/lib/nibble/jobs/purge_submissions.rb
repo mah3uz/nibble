@@ -13,6 +13,7 @@ module Nibble
               spam_retention_days: form.spam_retention_days.to_i.positive? ? form.spam_retention_days.to_i : nil, missing_since: nil)
         end
         purge_removed_forms
+        Records::FormPartial.expired.delete_all
       end
 
       private

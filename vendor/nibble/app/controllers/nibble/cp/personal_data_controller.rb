@@ -10,7 +10,8 @@ module Nibble
         matches = @person.submissions
         titles = Nibble::Forms.all.to_h { |form| [ form.handle, form.title || form.handle.humanize ] }
         forms = matches.group_by(&:form).map { |handle, items| { handle:, title: titles[handle] || handle, removed: !titles.key?(handle), count: items.size } }
-        render inertia: "cp/personal_data/Show", props: { email: @person.email, searched: @person.present?, total: matches.size, forms: }
+        render inertia: "cp/personal_data/Show", props: { email: @person.email, searched: @person.present?, total: matches.size, forms:,
+          saved: @person.partials.size }
       end
 
       def export
@@ -26,20 +27,23 @@ module Nibble
 
       def destroy
         matches = @person.submissions
+        partials = @person.partials
         Nibble::Records::FormSubmission.transaction do
           matches.each(&:destroy!)
-          audit("form.person_erased", matches)
+          partials.each(&:destroy!)
+          audit("form.person_erased", matches, saved: partials.size)
         end
-        redirect_to "/cp/personal-data", notice: "#{matches.size} #{'submission'.pluralize(matches.size)} erased."
+        saved = " and #{partials.size} saved #{'form'.pluralize(partials.size)}" if partials.any?
+        redirect_to "/cp/personal-data", notice: "#{matches.size} #{'submission'.pluralize(matches.size)}#{saved} erased."
       end
 
       private
 
       def find_person = @person = Nibble::Forms::Person.new(params[:email])
 
-      def audit(action, matches)
+      def audit(action, matches, **extra)
         Nibble::Forms::Audit.record(action, user: Nibble::Current.user, ip: request.remote_ip, email_digest: @person.digest,
-          count: matches.size, forms: matches.group_by(&:form).transform_values(&:size))
+          count: matches.size, forms: matches.group_by(&:form).transform_values(&:size), **extra)
       end
     end
   end

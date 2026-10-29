@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_29_170100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_170200) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -171,6 +171,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_170100) do
     t.string "name", null: false
     t.json "payload", default: {}, null: false
     t.index ["dispatched_at"], name: "index_events_outbox_on_dispatched_at"
+  end
+
+  create_table "form_partials", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "data", default: {}, null: false
+    t.json "encrypted_data"
+    t.datetime "expires_at", null: false
+    t.string "form", null: false
+    t.string "locale"
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expires_at"], name: "index_form_partials_on_expires_at"
+    t.index ["token_digest"], name: "index_form_partials_on_token_digest", unique: true
   end
 
   create_table "form_retentions", force: :cascade do |t|

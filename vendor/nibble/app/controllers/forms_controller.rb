@@ -7,7 +7,25 @@ class FormsController < ActionController::Base
     form = Nibble::Forms.find(request.path_parameters[:handle]) or return head(:not_found)
     result = Nibble::Forms::Submit.call(form, request.request_parameters, ip: request.remote_ip, user_agent: request.user_agent,
       locale:, query: request.query_parameters)
+    Nibble::Forms::Resume.complete(form, request.request_parameters[Nibble::Forms::Resume::TOKEN_FIELD]) if result.ok?
     json? ? respond_json(form, result) : respond_html(form, result)
+  end
+
+  def step
+    form = Nibble::Forms.find(request.path_parameters[:handle])
+    index = request.path_parameters[:index].to_i
+    return head(:not_found) unless form&.steps? && form.section_items[index]
+
+    result = Nibble::Forms::Step.call(form, request.request_parameters, index:, ip: request.remote_ip, user_agent: request.user_agent, locale:)
+    respond_check(result, ok: true)
+  end
+
+  def save
+    form = Nibble::Forms.find(request.path_parameters[:handle])
+    return head(:not_found) unless form&.resume?
+
+    result = Nibble::Forms::Resume.call(form, request.request_parameters, page:, ip: request.remote_ip, user_agent: request.user_agent, locale:)
+    respond_check(result, ok: true, message: Nibble::Forms.message("resume.saved", locale, count: form.resume_days))
   end
 
   private
@@ -15,6 +33,19 @@ class FormsController < ActionController::Base
   def locale = request.request_parameters["_locale"]
 
   def json? = request.format.json? || request.content_mime_type&.json?
+
+  def page
+    path = request.request_parameters["_nibble_page"]
+    path.is_a?(String) && path.match?(%r{\A/(?![/\\])[^?#\s]*\z}) ? path : "/"
+  end
+
+  def respond_check(result, **body)
+    case result.status
+    when :ok then render json: body
+    when :rate_limited then render json: { ok: false, errors: result.errors }, status: :too_many_requests
+    else render json: { ok: false, errors: result.errors }, status: :unprocessable_entity
+    end
+  end
 
   def respond_json(form, result)
     case result.status

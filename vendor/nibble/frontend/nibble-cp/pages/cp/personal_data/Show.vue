@@ -9,7 +9,7 @@ import { useConfirm } from '@/lib/confirm'
 
 type FormRow = { handle: string; title: string; removed: boolean; count: number }
 
-const props = defineProps<{ email: string; searched: boolean; total: number; forms: FormRow[] }>()
+const props = defineProps<{ email: string; searched: boolean; total: number; forms: FormRow[]; saved: number }>()
 
 const confirm = useConfirm()
 const email = ref(props.email)
@@ -24,8 +24,10 @@ function download(format: 'json' | 'csv') {
 
 async function erase() {
   const ok = await confirm({
-    title: `Erase ${props.total} ${props.total === 1 ? 'submission' : 'submissions'}?`,
-    description: `Every submission containing ${props.email}, in every form, is deleted with its uploaded files. This can’t be undone.`,
+    title: props.total
+      ? `Erase ${props.total} ${props.total === 1 ? 'submission' : 'submissions'}?`
+      : `Erase ${props.saved} saved ${props.saved === 1 ? 'form' : 'forms'}?`,
+    description: `Every submission containing ${props.email}, in every form, is deleted with its uploaded files, and so is every saved, unfinished form. This can’t be undone.`,
     confirmText: 'Erase',
     dangerous: true,
   })
@@ -52,9 +54,9 @@ async function erase() {
     </form>
 
     <template v-if="searched">
-      <p v-if="!total" class="text-sm">No submissions contain {{ props.email }}.</p>
+      <p v-if="!total && !saved" class="text-sm">No submissions contain {{ props.email }}.</p>
       <template v-else>
-        <DataTablePanel>
+        <DataTablePanel v-if="total">
           <thead>
             <tr>
               <th>Form</th>
@@ -70,6 +72,10 @@ async function erase() {
             </tr>
           </tbody>
         </DataTablePanel>
+        <p v-if="saved" class="text-sm">
+          {{ saved }} saved, unfinished {{ saved === 1 ? 'form contains' : 'forms contain' }} it, waiting for the visitor to
+          come back. Erase deletes {{ saved === 1 ? 'it' : 'them' }} too.
+        </p>
         <div class="flex gap-2">
           <Button variant="outline" @click="download('json')">Export JSON</Button>
           <Button variant="outline" @click="download('csv')">Export CSV</Button>

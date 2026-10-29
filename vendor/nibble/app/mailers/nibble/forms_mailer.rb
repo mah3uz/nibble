@@ -16,5 +16,13 @@ module Nibble
       mail to: plan.to, cc: plan.cc.presence, bcc: plan.bcc.presence,
            subject: plan.subject || "New submission: #{@form.title(plan.locale) || @form.handle}", reply_to: @reply_to
     end
+
+    def resume(form_handle, to, link, expires_at, locale)
+      @form = Nibble::Forms.find(form_handle) or return
+      @title = @form.title(locale) || @form.handle
+      @link = link
+      @expires_at = expires_at
+      mail to:, subject: "Finish filling in #{@title}"
+    end
   end
 end

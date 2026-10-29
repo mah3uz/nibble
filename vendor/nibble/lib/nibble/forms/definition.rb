@@ -11,6 +11,8 @@ module Nibble
       module_function
 
       def call(form, result: nil, params: {}, locale: nil)
+        resume = Resume.load(form, params, locale:)
+        params = resume.params
         captcha = ({ "provider" => nil, "site_key" => nil }.merge(Integrations.captcha.to_h.slice("provider", "site_key"))) if form.captcha?
         fields = form.fields
         closed = form.closed?
@@ -23,12 +25,14 @@ module Nibble
           "captcha" => captcha,
           "fields" => fields.all.values.map { |field| field_definition(field, params, locale) },
           "sections" => form.sections(locale:)&.map { |section| section.merge("fields" => section["fields"].handles) },
+          "steps" => form.steps?,
+          "resume" => resume.definition,
           "success" => form.success(locale).slice("message", "redirect"),
           "messages" => CLIENT_MESSAGES.to_h { |key| [ key, Forms.message("client.#{key}", locale) ] },
           "closed" => closed,
           "closed_message" => (Localized.resolve(form.closed_message, locale) if closed),
           "timestamp" => (verifier.generate(Time.current.to_f, purpose: purpose(form)) if form.min_seconds),
-          "result" => (result if result.is_a?(Hash) && result["handle"] == form.handle)
+          "result" => (result if result.is_a?(Hash) && result["handle"] == form.handle) || resume.result
         }
       end
 
@@ -39,7 +43,7 @@ module Nibble
       def verifier = Rails.application.message_verifier("nibble/forms/timestamp")
       def purpose(form) = "form:#{form.handle}"
 
-      def prefill_params(form) = form.fields.all.values.filter_map { |field| prefill_name(field) }.uniq
+      def prefill_params(form) = [ *form.fields.all.values.filter_map { |field| prefill_name(field) }, *(Resume::QUERY if form.resume?) ].uniq
 
       def prefill_name(field)
         field.get("prefill", {})["query"] if field.get("hidden") == true

@@ -7,14 +7,8 @@ module Nibble
 
       def present? = email.include?("@")
 
-      def submissions
-        return Records::FormSubmission.none unless present?
-
-        text = Arel::Nodes::NamedFunction.new("CAST", [ Records::FormSubmission.arel_table[:data].as("TEXT") ])
-        like = Arel::Nodes::NamedFunction.new("LOWER", [ text ]).matches("%#{Records::FormSubmission.sanitize_sql_like(email)}%", nil, true)
-        scope = Records::FormSubmission.where(like).or(Records::FormSubmission.where.not(encrypted_data: nil))
-        scope.order(:created_at, :id).select { |submission| mentions?(submission.data) }
-      end
+      def submissions = matching(Records::FormSubmission)
+      def partials = matching(Records::FormPartial)
 
       def digest = Records::FormSubmission.hash_ip(email)
 
@@ -47,6 +41,15 @@ module Nibble
       end
 
       private
+
+      def matching(model)
+        return model.none unless present?
+
+        text = Arel::Nodes::NamedFunction.new("CAST", [ model.arel_table[:data].as("TEXT") ])
+        like = Arel::Nodes::NamedFunction.new("LOWER", [ text ]).matches("%#{model.sanitize_sql_like(email)}%", nil, true)
+        scope = model.where(like).or(model.where.not(encrypted_data: nil))
+        scope.order(:created_at, :id).select { |record| mentions?(record.data) }
+      end
 
       def mentions?(value)
         case value

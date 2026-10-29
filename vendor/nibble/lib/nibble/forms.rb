@@ -6,13 +6,19 @@ module Nibble
     DEFAULT_HONEYPOT = "_nibble_hp".freeze
     DEFAULT_RATE_LIMIT = { "requests" => 5, "per_minutes" => 1 }.freeze
     DEFAULT_SPAM_RETENTION_DAYS = 30
+    DEFAULT_RESUME_DAYS = 7
     MESSAGES = {
       "rate_limited" => { one: "Too many submissions. Please try again in %{count} minute.", other: "Too many submissions. Please try again in %{count} minutes." },
       "captcha_failed" => "Please confirm you're not a robot.",
       "captcha_unavailable" => "This form can't take submissions right now. Please try again later.",
       "client.too_large" => "The files are too large to send.",
       "client.generic" => "Something went wrong. Please try again.",
-      "client.network" => "Something went wrong. Please check your connection and try again."
+      "client.network" => "Something went wrong. Please check your connection and try again.",
+      "resume.saved" => { one: "We've emailed you a link to finish this form. It works for %{count} day.", other: "We've emailed you a link to finish this form. It works for %{count} days." },
+      "resume.email" => "Enter your email address so we can send you a link to finish later.",
+      "resume.failed" => "We couldn't send the email. Please try again.",
+      "resume.too_large" => "There's too much here to save. Please send the form instead.",
+      "resume.expired" => "This link has expired or the form has already been sent. Please start again."
     }.freeze
     DEFAULT_CLOSED_MESSAGE = "This form isn't taking submissions right now.".freeze
     LIMIT_KEYS = %w[max_submissions opens_at closes_at closed_message unique].freeze
@@ -41,6 +47,10 @@ module Nibble
         end
       end
 
+      def steps? = item["steps"] == true && sectioned?
+      def resume? = item["resume"] == true
+      def resume_email = item["resume_email"]
+      def resume_days = item["resume_days"] || DEFAULT_RESUME_DAYS
       def store? = item["store"] != false
       def encrypted_handles = fields.all.values.select { |field| field.get("encrypt") == true }.map(&:handle)
       def spam = item["spam"].to_h
@@ -128,6 +138,7 @@ module Nibble
         problems.concat(Calculations.problems(form.fields(schema:)))
         problems.concat(spam_problems(form))
         problems.concat(limit_problems(form, schema))
+        problems.concat(resume_problems(form, schema))
         handles = form.fields(schema:).handles
         form.notify.each_with_index { |notify, index| problems.concat(notify_problems(notify, index, handles)) }
         form.deliveries.each_with_index { |delivery, index| problems.concat(delivery_problems(delivery, index, schema)) }
@@ -214,6 +225,20 @@ module Nibble
         %w[max_submissions unique].each do |key|
           problems << "limits.#{key} needs the form to store submissions, which is what it counts against" if limits.key?(key) && !form.store?
         end
+        problems
+      end
+
+      def resume_problems(form, schema)
+        problems = []
+        problems << "steps needs `sections`: each section is a step" if form.item["steps"] == true && !form.sectioned?
+        return problems unless form.resume?
+
+        field = form.fields(schema:).get(form.resume_email.to_s)
+        unless field&.type == "text" && field.get("hidden") != true
+          problems << "resume_email must name one of the form's text fields, where the visitor gives the address to send the link to"
+        end
+        problems << "resume_days must be a positive number of days" unless form.resume_days.is_a?(Integer) && form.resume_days.positive?
+        problems << "resume needs the form to store submissions, since it keeps what was entered until the visitor comes back" unless form.store?
         problems
       end
 
