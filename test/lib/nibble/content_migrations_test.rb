@@ -14,6 +14,27 @@ class Nibble::ContentMigrationsTest < ActiveSupport::TestCase
     entry
   end
 
+  def global_schema(handle, fields)
+    @nibble_themes.join("records/schema/globals").mkpath
+    @nibble_themes.join("records/schema/globals/#{handle}.yml").write({ "title" => handle.capitalize, "blueprint" => { "title" => handle.capitalize,
+      "tabs" => { "main" => { "sections" => [ { "fields" => fields.map { |field, type| { "handle" => field, "field" => { "type" => type } } } } ] } } } }.to_yaml)
+    Nibble.reset_schema!
+  end
+
+  def save_global(handle, locale, values)
+    record = Nibble::Records::GlobalSet.find_or_initialize_by(handle:, locale:)
+    assert lifecycle(record, :save, values).ok?
+    record.reload
+  end
+
+  def in_two_locales
+    Nibble.config = Nibble::Config.new({ "theme" => "records", "url" => "https://example.com", "reserved_paths" => [ "/cp" ],
+                                         "locales" => [ { "code" => "en", "default" => true }, { "code" => "fr", "url_prefix" => "/fr" } ] },
+      themes_path: @nibble_themes, site_schema_path: @nibble_themes.join("site_schema"), agents_path: @nibble_themes.join("agents"))
+    Nibble.reset_schema!
+    yield
+  end
+
   def run_migrations(dry_run: false)
     results = Nibble::ContentMigrations.run(dry_run:)
     Nibble::Events.dispatch_pending
@@ -200,6 +221,41 @@ class Nibble::ContentMigrationsTest < ActiveSupport::TestCase
 
     assert_match "still in the schema", error.message
     assert_equal 1, Nibble::Records::Entry.where(collection: "articles").count
+  end
+
+  test "a global's field is renamed in every locale, so no translation is stranded under the old name" do
+    global_schema("contact", "phone" => "text", "telephone" => "text")
+    in_two_locales do
+      english = save_global("contact", "en", "phone" => "555 0100")
+      french = save_global("contact", "fr", "phone" => "01 23 45")
+      global_schema("contact", "telephone" => "text")
+      migration("2026_10_05_rename_phone", { "rename_field" => { "global" => "contact", "from" => "phone", "to" => "telephone" } })
+
+      assert_empty Nibble::Drift.issues, "the pending rename answers the removed field"
+
+      results = run_migrations
+
+      assert_equal [ [ "rename contact.phone to telephone", 2 ] ], results.first.counts
+      assert_equal [ "555 0100", "01 23 45" ], [ english.reload.data["telephone"], french.reload.data["telephone"] ]
+      assert_not english.data.key?("phone")
+      assert_equal "import", english.revisions.last.kind
+      assert_equal "555 0100", english.revisions.last.data["telephone"]
+      assert_empty Nibble::Drift.issues
+    end
+  end
+
+  test "a global's default fills only the locales where it is empty" do
+    global_schema("contact", "phone" => "text", "hours" => "text")
+    in_two_locales do
+      blank = save_global("contact", "en", "phone" => "555 0100")
+      set = save_global("contact", "fr", "hours" => "9–5")
+      migration("2026_10_06_hours", { "set_default" => { "global" => "contact", "field" => "hours", "value" => "By appointment" } })
+
+      results = run_migrations
+
+      assert_equal [ "By appointment", "9–5" ], [ blank.reload.data["hours"], set.reload.data["hours"] ]
+      assert_equal 1, results.first.counts.first.last
+    end
   end
 
   test "migrations run in date order across layers" do

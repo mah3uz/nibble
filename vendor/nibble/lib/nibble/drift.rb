@@ -85,7 +85,12 @@ module Nibble
 
       private
 
-      def scope_of(args) = args["collection"] ? "collections/#{args['collection']}" : "taxonomies/#{args['taxonomy']}"
+      def scope_of(args)
+        return "collections/#{args['collection']}" if args["collection"]
+        return "globals/#{args['global']}" if args["global"]
+
+        "taxonomies/#{args['taxonomy']}"
+      end
     end
 
     class Scan

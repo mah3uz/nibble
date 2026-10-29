@@ -20,7 +20,7 @@ module Nibble
         name, args = operation.first
         args = args.to_h.stringify_keys
         item = target_item(args)
-        raise Error, "#{where}: needs a collection or taxonomy that exists" if item.nil? && REMOVED.exclude?(name.to_s)
+        raise Error, "#{where}: needs a collection, taxonomy or global that exists" if item.nil? && REMOVED.exclude?(name.to_s)
 
         problem = public_send("#{name}_problem", args, item)
         raise Error, "#{where}: #{problem}" if problem
@@ -169,14 +169,20 @@ module Nibble
       end
 
       def scope(args)
-        args["collection"] ? Records::Entry.where(collection: args["collection"]) : Records::Term.where(taxonomy: args["taxonomy"])
+        return Records::Entry.where(collection: args["collection"]) if args["collection"]
+        return Records::GlobalSet.where(handle: args["global"]) if args["global"]
+
+        Records::Term.where(taxonomy: args["taxonomy"])
       end
 
       def target_item(args)
-        args["collection"] ? Nibble.schema.collection(args["collection"]) : Nibble.schema.taxonomy(args["taxonomy"].to_s)
+        return Nibble.schema.collection(args["collection"]) if args["collection"]
+        return Nibble.schema.find(:globals, args["global"].to_s) if args["global"]
+
+        Nibble.schema.taxonomy(args["taxonomy"].to_s)
       end
 
-      def label(args) = args["collection"] || args["taxonomy"]
+      def label(args) = args["collection"] || args["global"] || args["taxonomy"]
     end
   end
 end
