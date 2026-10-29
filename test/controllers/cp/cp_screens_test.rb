@@ -209,7 +209,7 @@ class Nibble::Cp::CpScreensTest < ActionDispatch::IntegrationTest
 
     post "/cp/utilities/purge_cache", params: { tags: "entry:#{entry.id}, collection:articles" }
     assert_redirected_to "/cp/utilities/cache"
-    assert_equal "Purged entry:#{entry.id} and collection:articles.", flash[:notice]
+    assert_equal "Cleared pages tagged entry:#{entry.id} and collection:articles.", flash[:notice]
 
     post "/cp/utilities/purge_cache", params: { tags: "  " }
     assert_equal "Name at least one cache tag.", flash[:alert], "clearing everything by accident is the failure to avoid"

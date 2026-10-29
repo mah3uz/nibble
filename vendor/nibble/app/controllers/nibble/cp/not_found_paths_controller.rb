@@ -10,7 +10,7 @@ module Nibble
 
       def destroy
         Nibble::Records::NotFound.find(params[:id]).destroy!
-        redirect_to cp_not_found_paths_path, notice: "Removed from the 404 log."
+        redirect_to cp_not_found_paths_path, notice: "Removed from missing pages."
       end
     end
   end

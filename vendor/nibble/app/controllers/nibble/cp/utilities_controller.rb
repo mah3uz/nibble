@@ -146,7 +146,7 @@ module Nibble
         return redirect_to cache_cp_utilities_path, alert: "Name at least one cache tag." if tags.empty?
 
         Nibble::PageCache.purge(tags)
-        redirect_to cache_cp_utilities_path, notice: "Purged #{tags.to_sentence}."
+        redirect_to cache_cp_utilities_path, notice: "Cleared pages tagged #{tags.to_sentence}."
       end
 
       def rebuild_search

@@ -18,8 +18,8 @@ const suggest = (path: string) => router.visit(`/cp/redirects?from=${encodeURICo
     <EmptyState
       v-if="empty"
       :icon="FileSearch"
-      title="No 404s recorded"
-      description="Paths visitors ask for that don't exist show up here."
+      title="No missing pages yet"
+      description="Addresses visitors ask for that don't exist show up here."
     />
     <CpListing v-else :listing="listing" :exportable="false">
       <template #cell-path="{ value }">
