@@ -97,6 +97,12 @@ not a separate front end talking to an API, which is why a new fieldtype is one 
 rather than a contract negotiated across a network. A site can replace any screen from `site/cp/pages/` — see
 [Customising the Control Plane](../extending/control-plane.md).
 
+Its UI components in `vendor/nibble/frontend/nibble-cp/components/ui/` come from shadcn-vue, set up by
+`components.json` at the repository root. The tool isn't installed, so add a component with
+`npx shadcn-vue@latest add <component>`. The few variants those components need from shadcn-vue's stylesheet, such as
+`data-open:` and `no-scrollbar`, are written out in `frontend/entrypoints/cp.css`; a new component that uses another
+one needs it copied there too.
+
 ## 6. Deliberately not here
 
 No Redis, no Elasticsearch, no separate front-end application, no GraphQL. Search is SQLite's FTS5, the cache and
