@@ -233,7 +233,7 @@ module Nibble
       end
 
       def move_workflow(from_states, to)
-        invalid!(:base, "The #{record.collection} collection doesn't use the review workflow.") unless record.workflow == "review"
+        invalid!(:base, "#{record.collection.humanize} don't go through review.") unless record.workflow == "review"
 
         from = workflow_state
         invalid!(:base, "An entry that is #{from.humanize(capitalize: false)} can't be moved to #{to.humanize(capitalize: false)}.") unless from_states.include?(from)

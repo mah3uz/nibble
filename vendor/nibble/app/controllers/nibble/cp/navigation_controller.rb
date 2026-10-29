@@ -25,7 +25,7 @@ module Nibble
       def update
         item = load_item
         if (folder = files_folder(item))
-          return redirect_to edit_cp_navigation_path(item.handle), alert: "#{item['title']} is built from #{folder}. Change the files and deploy."
+          return redirect_to edit_cp_navigation_path(item.handle), alert: "#{item['title']} is kept in the site's files, so it can't be edited here. Ask a developer to change it."
         end
 
         result = Nibble::Lifecycle.call(record(item), :save, { "tree" => from_tree_items(params[:tree]) }, actor: Nibble::Current.user)

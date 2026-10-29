@@ -86,7 +86,7 @@ const historyOpen = ref(new URLSearchParams(usePage().url.split('?')[1] ?? '').h
 const confirm = useConfirm()
 async function destroy() {
   const ok = await confirm({
-    title: `Move this ${props.blueprint.title.toLowerCase()} to the trash?`,
+    title: `Move “${props.title}” to the trash?`,
     description: 'You can restore it from the trash later.',
     confirmText: 'Move to trash',
     dangerous: true,
@@ -138,7 +138,7 @@ async function destroy() {
             @reject="save('reject')"
           />
           <Button v-if="can.delete && currentMeta.id" type="button" variant="destructive" @click="destroy">
-            <Trash2 /> Trash
+            <Trash2 /> Move to trash
           </Button>
         </template>
       </PageHeader>
@@ -147,8 +147,9 @@ async function destroy() {
         v-if="source"
         class="rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-850 dark:text-gray-400"
       >
-        Written in <code class="font-mono text-[0.8125rem]">{{ source.file ?? 'a file' }}</code
-        >. Change it there and deploy.
+        <span :title="source.file ?? undefined"
+          >This page is kept in the site's files, so it can't be edited here. Ask a developer to change it.</span
+        >
       </p>
 
       <ErrorSummary :errors="errors" :blueprint="blueprint" @jump="onJump" />

@@ -58,8 +58,9 @@ function save() {
       <p
         class="mb-4 rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-850 dark:text-gray-400"
       >
-        Built from the folders in <code class="font-mono text-[0.8125rem]">{{ source.folder }}</code
-        >. Change the files there and deploy.
+        <span :title="source.folder"
+          >This menu is built from the site's files, so it can't be edited here. Ask a developer to change it.</span
+        >
       </p>
       <ul class="rounded-lg border border-gray-200 dark:border-gray-700">
         <li

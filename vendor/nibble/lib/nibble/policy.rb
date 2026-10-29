@@ -31,10 +31,10 @@ module Nibble
     def denial(principal, record, action)
       return if principal.system?
 
-      ability = ability(record, action) or return "Only Nibble itself can #{action.to_s.humanize(capitalize: false)} this."
-      return "#{record.collection.humanize} is written in files. Change it there and deploy." if file_backed?(record)
+      ability = ability(record, action) or return "This happens automatically. It can't be done by hand."
+      return "#{record.collection.humanize} is kept in the site's files, so it can't be edited here. Ask a developer to change it." if file_backed?(record)
 
-      "You don't have permission to do that." unless can?(principal, ability, record)
+      "You don't have permission to do that. Ask an administrator if you need it." unless can?(principal, ability, record)
     end
 
     def can?(principal, ability, record = nil)

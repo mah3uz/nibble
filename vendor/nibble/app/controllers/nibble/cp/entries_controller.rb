@@ -110,7 +110,7 @@ module Nibble
 
       def refuse_file_backed
         target = @entry ? edit_cp_collection_entry_path(@collection.handle, @entry.id) : cp_collection_root_path(@collection.handle)
-        redirect_to target, alert: "#{@collection['title']} is written in files. Change it there and deploy."
+        redirect_to target, alert: "#{@collection['title']} is kept in the site's files, so it can't be edited here. Ask a developer to change it."
       end
 
       # A file has no draft, revision or workflow, so it gets the form and nothing that would act on a row.
@@ -174,7 +174,7 @@ module Nibble
       def sidebar_fields(entry)
         items = []
         if entry.collection_item["requires_slugs"] != false
-          items << { "handle" => "slug", "field" => { "type" => "slug", "display" => "Slug", "from" => "title", "width" => 100 } }
+          items << { "handle" => "slug", "field" => { "type" => "slug", "display" => "Slug", "instructions" => "The end of this page's web address, like /blog/my-post.", "from" => "title", "width" => 100 } }
         end
         if entry.dated?
           items << { "handle" => "published_at", "field" => { "type" => "date", "display" => "Publish date", "time_enabled" => true } }

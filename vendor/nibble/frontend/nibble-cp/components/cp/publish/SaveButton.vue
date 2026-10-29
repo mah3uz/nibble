@@ -85,8 +85,8 @@ function confirmPublish() {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>After saving</DropdownMenuLabel>
           <DropdownMenuRadioGroup v-model="afterSave">
-            <DropdownMenuRadioItem value="continue">Continue editing</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="listing">Go to listing</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="continue">Keep editing</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="listing">Go to the list</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="create_another">Create another</DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>

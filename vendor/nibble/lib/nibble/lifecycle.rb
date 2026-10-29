@@ -59,7 +59,7 @@ module Nibble
           return result(:invalid, record, errors: { "base" => [ veto ] })
         end
         if attrs.key?("lock_version") && attrs["lock_version"].to_i != record.lock_version
-          return result(:conflict, record, errors: { "lock_version" => [ "Someone saved this after you opened it." ] })
+          return result(:conflict, record, errors: { "lock_version" => [ "Someone else saved this while you were editing. Copy anything you want to keep, then reload to see their version." ] })
         end
 
         handler = handler_class.new(record, attrs, principal:, mode:, action:)
@@ -72,7 +72,7 @@ module Nibble
       rescue NeedsConfirmation => error
         result(:confirm, record, referrers: error.referrers)
       rescue ActiveRecord::StaleObjectError
-        result(:conflict, record, errors: { "lock_version" => [ "Someone saved this after you opened it." ] })
+        result(:conflict, record, errors: { "lock_version" => [ "Someone else saved this while you were editing. Copy anything you want to keep, then reload to see their version." ] })
       end
 
       def guard(action, callable = nil, &block) = guards[action.to_s] << (callable || block)
