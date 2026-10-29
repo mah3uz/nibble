@@ -52,6 +52,22 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     assert(messages.any? { |m| m.include?("'regex' message for locale 'fr'") })
   end
 
+  test "a required condition holds one condition key and names fields beside it" do
+    theme_file("forms/signup.yml", title: "Signup", success: { message: "Thanks!" }, fields: [
+      { handle: "by", field: { type: "text" } },
+      { handle: "good", field: { type: "text", required: { if: { by: "phone" } } } },
+      { handle: "none", field: { type: "text", required: {} } },
+      { handle: "two", field: { type: "text", required: { if: { by: "phone" }, unless: { by: "email" } } } },
+      { handle: "stray", field: { type: "text", required: { if: { nope: "x" } } } }
+    ])
+
+    messages = check.problems.map(&:to_s).grep(/required condition/)
+
+    assert_equal 3, messages.size
+    assert(messages.none? { |m| m.include?("'good'") })
+    assert(messages.any? { |m| m.include?("'stray'") && m.include?("'nope'") })
+  end
+
   test "a step message belongs to an integer field with a step and no other" do
     theme_file("forms/signup.yml", title: "Signup", success: { message: "Thanks!" }, fields: [
       { handle: "amount", field: { type: "integer", step: 5, messages: { step: "In fives" } } },

@@ -82,7 +82,7 @@ module Nibble
         conditions = Conditions.describe(field.config, prefix: field.prefix)
         config["conditions"] = conditions if conditions
         { "handle" => field.handle, "type" => field.type, "display" => field.display(locale), "instructions" => field.instructions(locale),
-          "required" => field.required? }.merge(config)
+          "required" => field.required_condition ? (Conditions.describe(field.required_condition, prefix: field.prefix) || false) : field.required? }.merge(config)
       end
     end
   end

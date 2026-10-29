@@ -13,7 +13,7 @@ module Nibble
       "instructions" => TEXT,
       "instructions_position" => ->(value) { %w[above below].include?(value) },
       "width" => ->(value) { WIDTHS.include?(value) },
-      "required" => BOOLEAN,
+      "required" => ->(value) { BOOLEAN.(value) || value.is_a?(Hash) },
       "validate" => ->(value) { value.is_a?(String) || (value.is_a?(Array) && value.all? { |rule| rule.is_a?(String) }) },
       "messages" => ->(value) { value.is_a?(Hash) && value.values.all? { |message| message.is_a?(String) || (message.is_a?(Hash) && message.values.all?(String)) } },
       "default" => ->(_value) { true },
@@ -77,6 +77,15 @@ module Nibble
     end
 
     def required? = get("required", false) == true || validation_rules.include?("required")
+    def required_condition = get("required").then { |value| value if value.is_a?(Hash) }
+
+    def required_for?(values, root_values: nil, path: nil)
+      return true if required?
+
+      condition = required_condition
+      !condition.nil? && Conditions.visible?(condition, values:, root_values:, path:, prefix:)
+    end
+
     def always_save? = get("always_save", false)
     def localizable? = get("localizable", false)
     def api? = get("api", true)
@@ -161,6 +170,7 @@ module Nibble
         "replicator_preview" => get("replicator_preview", true),
         "actions" => get("actions", true),
         **conditions,
+        **{ "required_when" => required_condition }.compact,
         "config" => type_config
       }
     end

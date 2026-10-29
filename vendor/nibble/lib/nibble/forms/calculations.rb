@@ -27,7 +27,7 @@ module Nibble
 
       def self.field_problems(field, fields)
         label = "field '#{field.handle}'"
-        problems = %w[required hidden].select { |key| field.get(key) == true }.map { |key| "#{label} is a calculation, which can't be #{key}" }
+        problems = %w[required hidden].select { |key| field.get(key).present? }.map { |key| "#{label} is a calculation, which can't be #{key}" }
         decimals = field.get("decimals")
         unless decimals.nil? || (decimals.is_a?(Integer) && decimals.between?(0, Formula::MAX_DIGITS))
           problems << "#{label} decimals must be a whole number from 0 to #{Formula::MAX_DIGITS}"

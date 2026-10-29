@@ -19,7 +19,7 @@ module Nibble
         path = "#{prefix}#{field.handle}"
         next unless field.always_save? || Conditions.visible?(field.config, values:, root_values:, path:, prefix: field.prefix)
 
-        list = [ *("required" if field.get("required") == true), *field.validation_rules, *Validation.explode(field.fieldtype.rules) ]
+        list = [ *("required" if field.required_for?(values, root_values:, path:)), *field.validation_rules, *Validation.explode(field.fieldtype.rules) ]
         parsed = list.uniq.map { |rule| Validation.parse(rule, prefix:, replacements:) }
         rules[path] = Entry.new(rules: parsed, attribute: field.display(locale), messages: field.get("messages", {}), toggle: field.type == "toggle")
         field.with_value(values[field.handle]).fieldtype.extra_rules(root_values:, prefix: "#{path}.", replacements:).each do |nested_path, entry|

@@ -72,6 +72,38 @@ class Nibble::ValidatorTest < ActiveSupport::TestCase
     assert errors(link, "type" => "external").key?("url")
   end
 
+  test "a field hidden by its condition keeps the value it was sent, validated or not" do
+    link = fields(field("type"), field("url", validate: "max:5", if: { type: "external" }), field("note", always_save: true, if: { type: "external" }))
+
+    result = Nibble::Validator.new(link).validate("type" => "entry", "url" => "https://example.test/long", "note" => "kept")
+
+    assert_empty result.errors
+    assert_equal [ "https://example.test/long", "kept" ], result.values.values_at("url", "note")
+  end
+
+  test "required can wait on a condition: blank passes while it fails and is refused while it passes" do
+    contact = fields(field("by"), field("phone", required: { if: { by: "phone" } }), field("other", required: { unless: { by: "phone" } }))
+
+    assert_empty errors(contact, "by" => "email", "other" => "x")
+    assert_equal [ "The Phone field is required." ], errors(contact, "by" => "phone", "other" => "x")["phone"]
+    assert_equal [ "The Other field is required." ], errors(contact, "by" => "email", "phone" => "1")["other"]
+    assert_empty errors(contact, "by" => "phone", "phone" => "0400")
+  end
+
+  test "a conditionally required toggle must be on once the condition passes" do
+    terms = fields(field("by"), { handle: "consent", field: { type: "toggle", required: { if: { by: "phone" } } } })
+
+    assert_empty errors(terms, "by" => "email", "consent" => false)
+    assert_equal [ "The Consent field is required." ], errors(terms, "by" => "phone", "consent" => false)["consent"]
+    assert_empty errors(terms, "by" => "phone", "consent" => true)
+  end
+
+  test "a conditionally required field that is itself hidden is not required" do
+    contact = fields(field("by"), field("phone", required: { if: { by: "phone" } }, unless: { by: "phone" }))
+
+    assert_empty errors(contact, "by" => "phone")
+  end
+
   test "computed fields are set by the server and never validated" do
     assert_empty errors(fields(field("total", required: true, visibility: "computed")), {})
   end

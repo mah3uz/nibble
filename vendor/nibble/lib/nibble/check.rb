@@ -85,6 +85,7 @@ module Nibble
           problem(source, "field '#{field.path}' uses unknown validation rule '#{name}'") unless Validation.known?(name)
         end
         check_messages(field, rule_names, source)
+        check_required_condition(field, fields, source)
         problem(source, "field '#{field.path}' is a calculation, which only a form can have") if field.type == Forms::Calculations::TYPE && !calculations
         if field.computed_default? && !Defaults.registered?(name = field.get("default").delete_prefix(Field::COMPUTED_DEFAULT_PREFIX))
           problem(source, "field '#{field.path}' has computed default '#{name}', which isn't registered")
@@ -101,7 +102,7 @@ module Nibble
       messages = field.get("messages")
       return unless messages.is_a?(Hash)
 
-      rule_names += [ "required" ] if field.get("required") == true
+      rule_names += [ "required" ] if field.get("required") == true || field.required_condition
       rule_names += [ "step" ] if field.type == "integer" && field.get("step")
       locales = @config.locales.map(&:code)
       messages.each do |rule, message|
@@ -111,6 +112,25 @@ module Nibble
         (message.keys.map(&:to_s) - locales).each do |code|
           problem(source, "field '#{field.path}' has a '#{rule}' message for locale '#{code}', which the site doesn't have")
         end
+      end
+    end
+
+    def check_required_condition(field, fields, source)
+      condition = field.required_condition or return
+      keys = condition.keys.map(&:to_s)
+      unless keys.size == 1 && Conditions::KEYS.include?(keys.first)
+        return problem(source, "field '#{field.path}' has a required condition that must hold exactly one of #{Conditions::KEYS.join(', ')}")
+      end
+
+      rules = condition.values.first
+      return if rules.is_a?(String)
+      return problem(source, "field '#{field.path}' has a required condition that must map field handles to the values to match") unless rules.is_a?(Hash)
+
+      rules.each_key do |handle|
+        name = handle.to_s
+        next if name.start_with?("$root.", "root.", "$parent.") || fields.has?(name.split(".").first)
+
+        problem(source, "field '#{field.path}' has a required condition on '#{name}', which isn't a field beside it")
       end
     end
 
