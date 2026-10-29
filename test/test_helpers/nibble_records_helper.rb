@@ -79,7 +79,7 @@ module NibbleRecordsHelper
       { handle: "email", field: { type: "text", input_type: "email", autocomplete: "email" } },
       { handle: "message", field: { type: "textarea", rows: 8 } },
       { handle: "agree", field: { type: "toggle", inline_label: "I agree to the terms", default: true } },
-      { handle: "arrival", field: { type: "date", time_enabled: true, earliest_date: "2026-01-01", latest_date: "2030-12-31", default: "computed:today" } },
+      { handle: "arrival", field: { type: "date", time_enabled: true, earliest_date: "2026-01-01", latest_date: "2030-12-31", default: "computed:arrival_day" } },
       { handle: "topics", field: { type: "select", multiple: true, max_items: 2, clearable: true, options: %w[a b c] } }
     ] },
     "forms/conditional.yml" => { title: "Conditional", fields: [

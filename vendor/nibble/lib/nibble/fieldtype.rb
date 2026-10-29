@@ -91,6 +91,7 @@ module Nibble
     def empty?(value) = value.nil? || ((value.is_a?(String) || value.is_a?(Array) || value.is_a?(Hash)) && value.empty?)
     def pre_process_index(raw) = raw
     def augment(raw) = raw
+    def display(_value) = nil
     def shallow_augment(raw) = augment(raw)
 
     def nested_fields = []

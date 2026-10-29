@@ -131,7 +131,8 @@ module Nibble
       end
 
       def display_value(field, value, locale = nil)
-        return field.fieldtype.display(value) if field.fieldtype.respond_to?(:display)
+        shown = field.fieldtype.display(value)
+        return shown unless shown.nil?
 
         labels = field.fieldtype.respond_to?(:options) ? field.fieldtype.options(locale).to_h { |option| [ option["value"].to_s, option["label"].to_s ] } : {}
         case value
