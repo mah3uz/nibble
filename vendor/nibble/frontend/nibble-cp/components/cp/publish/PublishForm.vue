@@ -93,6 +93,17 @@ async function destroy() {
   })
   if (ok && props.urls.trash) router.post(props.urls.trash)
 }
+
+async function duplicate() {
+  const ok =
+    !form.isDirty ||
+    (await confirm({
+      title: 'Duplicate the last saved version?',
+      description: "Your unsaved changes aren't copied. Save first if you want them in the copy.",
+      confirmText: 'Duplicate saved version',
+    }))
+  if (ok && props.urls.duplicate) router.post(props.urls.duplicate)
+}
 </script>
 
 <template>
@@ -141,7 +152,7 @@ async function destroy() {
             v-if="urls.duplicate && currentMeta.id"
             type="button"
             variant="outline"
-            @click="router.post(urls.duplicate)"
+            @click="duplicate"
           >
             <Copy /> Duplicate
           </Button>
