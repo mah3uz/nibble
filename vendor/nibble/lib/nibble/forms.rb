@@ -25,6 +25,8 @@ module Nibble
       "client.check_answers" => "Please check these answers:",
       "client.required_note" => "Fields marked * are required.",
       "client.required" => "(required)",
+      "client.resumed" => "We've brought back what you saved. Attach any files again.",
+      "client.not_chosen" => "Not chosen",
       "mail.submission.visitor_heading" => "Your submission",
       "mail.submission.staff_heading" => "New submission",
       "mail.submission.visitor_intro" => "Thanks for filling in %{title} on %{site}. Here's what you sent.",

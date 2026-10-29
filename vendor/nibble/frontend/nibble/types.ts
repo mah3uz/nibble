@@ -138,6 +138,9 @@ export type NibbleFormMessageKey =
   | 'check_answers'
   | 'required_note'
   | 'required'
+  | 'resumed'
+  | 'not_chosen'
+  | 'unavailable'
 
 export type NibbleForm<Values extends Record<string, unknown> = Record<string, NibbleFormValue>> = {
   readonly __values?: Values

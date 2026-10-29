@@ -5,7 +5,7 @@ module Nibble
         autocomplete rows inline_label time_enabled earliest_date latest_date max_items clearable formula decimals seconds earliest latest swatches allow_any].freeze
       OPTION_TYPES = %w[select radio checkboxes button_group].freeze
       LOCALIZED_CONFIG = %w[placeholder inline_label].freeze
-      CLIENT_MESSAGES = %w[too_large generic network choose send sending next checking back save_later step check_answers required_note required].freeze
+      CLIENT_MESSAGES = %w[too_large generic network choose send sending next checking back save_later step check_answers required_note required resumed not_chosen].freeze
       TIMESTAMP_FIELD = "_nibble_t".freeze
 
       module_function
@@ -28,7 +28,7 @@ module Nibble
           "steps" => form.steps?,
           "resume" => resume.definition,
           "success" => form.success(locale).slice("message", "redirect"),
-          "messages" => CLIENT_MESSAGES.to_h { |key| [ key, Forms.message("client.#{key}", locale) ] },
+          "messages" => CLIENT_MESSAGES.to_h { |key| [ key, Forms.message("client.#{key}", locale) ] }.merge("unavailable" => Forms.message("captcha_unavailable", locale)),
           "submit_label" => Localized.resolve(form.item["submit_label"], locale),
           "closed" => closed,
           "closed_message" => (Localized.resolve(form.closed_message, locale) if closed),

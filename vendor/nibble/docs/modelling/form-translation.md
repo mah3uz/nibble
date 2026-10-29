@@ -41,12 +41,12 @@ site's `config/locales/<locale>.yml`:
 |---|---|
 | `nibble.forms.rate_limited` | a visitor submits too often; takes `one` and `other` forms with `%{count}` minutes |
 | `nibble.forms.captcha_failed` | the CAPTCHA wasn't passed |
-| `nibble.forms.captcha_unavailable` | the form needs a CAPTCHA the site hasn't set up |
+| `nibble.forms.captcha_unavailable` | the form needs a CAPTCHA the site hasn't set up; the server refuses with it, and a theme shows it above a form it can't send |
 | `nibble.forms.client.too_large` | the browser can't send the files |
 | `nibble.forms.client.generic` | the answer had no message to show |
 | `nibble.forms.client.network` | the request didn't reach the site |
 | `nibble.forms.client.choose`, `send`, `sending`, `next`, `checking`, `back`, `save_later` | the labels crumbs' form shows: the empty choice of a select, the submit button (and while it works), Next (and while it checks), Back, and Save and finish later |
-| `nibble.forms.client.step`, `check_answers`, `required_note`, `required` | "Step %{step} of %{total}", the line above a list of errors, "Fields marked * are required." (the first `*` is drawn as the marker), and the hidden "(required)" read to screen readers |
+| `nibble.forms.client.step`, `check_answers`, `required_note`, `required`, `resumed`, `not_chosen` | "Step %{step} of %{total}", the line above a list of errors, "Fields marked * are required." (the first `*` is drawn as the marker), and the hidden "(required)" read to screen readers, the line shown when a saved form is opened again, and the label of a colour nobody has picked yet |
 | `nibble.forms.resume.saved` | a form was saved to finish later; takes `one` and `other` forms with `%{count}` days |
 | `nibble.forms.resume.email` | a save has no valid address in the `resume_email` field |
 | `nibble.forms.resume.failed` | the email with the link couldn't be sent |
