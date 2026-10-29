@@ -139,6 +139,7 @@ export function useNibbleForm<Values extends Record<string, unknown> = Record<st
   const messageEl = ref<HTMLElement | null>(null)
   const stepEl = ref<HTMLElement | null>(null)
   const saved = ref<string | null>(null)
+  const savedEl = ref<HTMLElement | null>(null)
   const enhanced = ref(false)
   const step = ref(0)
   const byHandle = new Map(definition.fields.map((field) => [field.handle, field]))
@@ -364,6 +365,7 @@ export function useNibbleForm<Values extends Record<string, unknown> = Record<st
         if (!response.ok) return refused(response, payload)
         resumeToken = payload.token ?? resumeToken
         saved.value = payload.message ?? null
+        void focus(savedEl)
       } finally {
         if (widgetId) (window as CaptchaWindow).turnstile?.reset(widgetId)
       }
@@ -421,6 +423,7 @@ export function useNibbleForm<Values extends Record<string, unknown> = Record<st
     next,
     back,
     saved,
+    savedEl,
     saveForLater,
     fieldName,
     accept,

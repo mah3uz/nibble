@@ -123,6 +123,34 @@ describe('crumbs ContactForm', () => {
     expect(html).toMatch(/<span>\$<\/span>\s*<input[^>]*id="visit-budget"[^>]*>\s*<span>per head<\/span>/)
   })
 
+  it('lets an input with prepend or append shrink inside its column, so a narrow screen never scrolls sideways', async () => {
+    const html = await render(
+      form({
+        fields: [
+          field('budget', { type: 'integer', prepend: '$', append: 'per head' }),
+          field('rate', { type: 'range', append: '%' }),
+        ],
+      }),
+    )
+
+    expect(tag(html, 'visit-budget')).toContain('w-0 min-w-0')
+    expect(tag(html, 'visit-rate')).toContain('w-0 min-w-0')
+    expect(html).toContain('grid-cols-[minmax(0,1fr)]')
+  })
+
+  it('looks disabled when the button is, and gives the saved message focus and a gap under section headings', async () => {
+    const html = await render(
+      form({
+        resume: { email: 'email', days: 7, token: null },
+        sections: [{ display: 'Details', instructions: 'Hello.', fields: ['name', 'budget', 'note'] }],
+      }),
+    )
+
+    expect(html).toMatch(/<button type="submit"[^>]*disabled:opacity-40/)
+    expect(html).toMatch(/<p[^>]*role="status" tabindex="-1"[^>]*empty:hidden/)
+    expect(html).toMatch(/<p class="mt-2 [^"]*">Hello\./)
+  })
+
   it('draws an integer field as a number input with min, max and step, so the browser agrees with the server', async () => {
     const html = await render(
       form({ fields: [field('amount', { type: 'integer', min: 2000, max: 10000, step: 500 })] }),
@@ -344,9 +372,9 @@ describe('crumbs ContactForm', () => {
     )
 
     expect(html).toMatch(/<p role="status"[^>]*>\s*Not taking messages today\./)
-    expect(html).toMatch(/<button type="submit"[^>]*disabled/)
+    expect(html).toMatch(/<button type="submit"[^>]*\sdisabled(="")?[\s>]/)
     expect(await render(form({ captcha: { provider: 'turnstile', site_key: 'k' } }))).not.toMatch(
-      /<button type="submit"[^>]*disabled/,
+      /<button type="submit"[^>]*\sdisabled(="")?[\s>]/,
     )
   })
 
@@ -379,6 +407,7 @@ describe('crumbs ContactForm', () => {
     const html = await render(form({ fields: [field('brand', { type: 'color', required: true })] }))
 
     expect(tag(html, 'visit-brand')).toContain('opacity-30')
+    expect(tag(html, 'visit-brand')).not.toContain('value=')
     expect(html).toContain('Not chosen')
   })
 

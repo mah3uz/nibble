@@ -394,7 +394,10 @@ describe('useNibbleForm steps and saving for later', () => {
     ])
     Object.assign(contact.values, { email: 'ada@example.test', cv: [new File(['%PDF'], 'cv.pdf')] })
 
+    const savedEl = { focus: vi.fn() }
+    contact.savedEl.value = savedEl as unknown as HTMLElement
     await contact.saveForLater()
+    expect(savedEl.focus).toHaveBeenCalled()
     expect(calls[0]!.url).toBe('/forms/contact/resume')
     expect(calls[0]!.body).toMatchObject({ email: 'ada@example.test', _nibble_page: '/apply' })
     expect(calls[0]!.body).not.toHaveProperty(['cv[]'])

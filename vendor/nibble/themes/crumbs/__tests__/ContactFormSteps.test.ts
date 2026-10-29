@@ -55,6 +55,6 @@ describe('crumbs ContactForm with steps', () => {
 
     const html = await render(form({ resume: { email: 'name', days: 7, token: null } }))
     expect(html).toMatch(/<button type="button"[^>]*>\s*Save and finish later\s*<\/button>/)
-    expect(html).toMatch(/<p role="status" class="text-sm empty:hidden">/)
+    expect(html).toMatch(/<p role="status" tabindex="-1" class="text-sm empty:hidden">/)
   })
 })
