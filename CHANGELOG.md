@@ -12,6 +12,8 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+## 0.22.0 — 2026-10-30 04:29 +0600
+
 This release is mostly forms and fields, and a plainer Control Plane. Four database migrations are added; they only
 add tables and columns, so they can be rolled back, but the snapshot taken before an upgrade is the surest way back.
 
