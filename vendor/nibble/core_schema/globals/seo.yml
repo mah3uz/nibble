@@ -12,7 +12,7 @@ blueprint:
               field:
                 type: text
                 default: "{title} · {site_name}"
-                instructions: "Page titles use this pattern. Tokens: {title}, {site_name}."
+                instructions: "Page titles follow this pattern. {title} is the page's title, {site_name} the site's name."
             - handle: default_description
               field: { type: textarea, character_limit: 160 }
             - handle: default_share_image

@@ -10,7 +10,7 @@ fields:
   - handle: excerpt
     field:
       type: textarea
-      instructions: Shown on listings and used as the fallback meta description.
+      instructions: Shown on listings and in search results when the SEO description is empty.
       character_limit: 300
       localizable: true
   - handle: body

@@ -65,6 +65,6 @@ fields:
               icon: video
               fields:
                 - handle: url
-                  field: { type: text, input_type: url, required: true, instructions: "A YouTube, Vimeo or other oEmbed URL." }
+                  field: { type: text, input_type: url, required: true, instructions: "The address of a YouTube or Vimeo video, or another embeddable page." }
                 - handle: caption
                   field: { type: text }
