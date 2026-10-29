@@ -35,7 +35,7 @@ class Nibble::Fieldtypes::ColorFieldtypeTest < ActiveSupport::TestCase
 
   test "with allow_any off only a swatch is accepted, whatever its case" do
     assert_nil errors(SWATCHES, "#ffaa00")
-    assert_equal [ "The selected Brand is invalid." ], errors(SWATCHES, "#000000")
+    assert_equal [ "Choose one of the options for Brand." ], errors(SWATCHES, "#000000")
     assert_nil errors({ swatches: %w[#1a2b3c] }, "#000000"), "swatches alone are suggestions"
   end
 

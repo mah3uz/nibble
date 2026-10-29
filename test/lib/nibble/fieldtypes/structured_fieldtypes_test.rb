@@ -98,7 +98,7 @@ class Nibble::Fieldtypes::StructuredFieldtypesTest < ActiveSupport::TestCase
     one_each = [ { "type" => "hero", "title" => "a" }, { "type" => "hero", "title" => "b" }, { "type" => "quote" } ]
 
     assert_empty errors({ type: "replicator", sets: }, one_each)
-    assert_equal [ "The Items field must not have more than 1 quote sets." ], errors({ type: "replicator", sets: }, one_each + [ { "type" => "quote" } ])["items"]
+    assert_equal [ "The Items field must not have more than 1 quote blocks." ], errors({ type: "replicator", sets: }, one_each + [ { "type" => "quote" } ])["items"]
     published = Nibble::Fields.new([ { handle: "items", field: { type: "replicator", sets: } } ], source: "test").to_publish_a.first
     assert_equal 1, published["config"]["sets"].first["sets"].find { |set| set["handle"] == "quote" }["max"]
   end

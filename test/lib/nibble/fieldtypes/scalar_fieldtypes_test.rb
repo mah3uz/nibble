@@ -37,7 +37,7 @@ class Nibble::Fieldtypes::ScalarFieldtypesTest < ActiveSupport::TestCase
     assert_nil fieldtype(:integer).process("")
     assert_equal 7, fieldtype(:integer).process("7")
     assert_match "at least 1", errors("integer", { min: 1 }, 0).first
-    assert_match "must be an integer", errors("integer", {}, "1.5").first
+    assert_match "must be a whole number", errors("integer", {}, "1.5").first
   end
 
   test "toggle: defaults to off, and stored strings become booleans" do
@@ -64,7 +64,7 @@ class Nibble::Fieldtypes::ScalarFieldtypesTest < ActiveSupport::TestCase
   end
 
   test "select rejects values that aren't options, unless additions are allowed" do
-    assert_match "selected Subject is invalid", errors("select", { options: %w[a b] }, "z").first
+    assert_match "Choose one of the options for Subject", errors("select", { options: %w[a b] }, "z").first
     assert_nil errors("select", { options: %w[a b], taggable: true }, "z")
     assert_match "not have more than 1 items", errors("select", { options: %w[a b], multiple: true, max_items: 1 }, %w[a b]).first
   end

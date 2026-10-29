@@ -50,7 +50,7 @@ class Nibble::Fieldtypes::MeasureFieldtypesTest < ActiveSupport::TestCase
     assert_match "not be greater than 5", errors("rating", {}, "6").first
     assert_match "not be greater than 3", errors("rating", { max: 3 }, "4").first
     assert_match "at least 1", errors("rating", {}, "0").first
-    assert_match "must be an integer", errors("rating", {}, "2.5").first
+    assert_match "must be a whole number", errors("rating", {}, "2.5").first
     assert_nil errors("rating", { max: 10 }, "10")
   end
 end

@@ -12,11 +12,11 @@ module Nibble
       "required_with" => "The %{attribute} field is required when %{values} is present.",
       "required_without" => "The %{attribute} field is required when %{values} is not present.",
       "accepted" => "The %{attribute} field must be accepted.",
-      "string" => "The %{attribute} field must be a string.",
+      "string" => "The %{attribute} field must be text.",
       "numeric" => "The %{attribute} field must be a number.",
-      "integer" => "The %{attribute} field must be an integer.",
+      "integer" => "The %{attribute} field must be a whole number.",
       "boolean" => "The %{attribute} field must be true or false.",
-      "array" => "The %{attribute} field must be an array.",
+      "array" => "The %{attribute} field must be a list.",
       "min.numeric" => "The %{attribute} field must be at least %{min}.",
       "min.string" => "The %{attribute} field must be at least %{min} characters.",
       "min.array" => "The %{attribute} field must have at least %{min} items.",
@@ -36,10 +36,10 @@ module Nibble
       "alpha" => "The %{attribute} field must only contain letters.",
       "alpha_num" => "The %{attribute} field must only contain letters and numbers.",
       "alpha_dash" => "The %{attribute} field must only contain letters, numbers, dashes, and underscores.",
-      "regex" => "The %{attribute} field format is invalid.",
-      "not_regex" => "The %{attribute} field format is invalid.",
-      "in" => "The selected %{attribute} is invalid.",
-      "not_in" => "The selected %{attribute} is invalid.",
+      "regex" => "The %{attribute} field isn't in the expected format.",
+      "not_regex" => "The %{attribute} field isn't in the expected format.",
+      "in" => "Choose one of the options for %{attribute}.",
+      "not_in" => "Choose one of the options for %{attribute}.",
       "lowercase" => "The %{attribute} field must be lowercase.",
       "uppercase" => "The %{attribute} field must be uppercase.",
       "starts_with" => "The %{attribute} field must start with one of the following: %{values}.",
@@ -58,9 +58,9 @@ module Nibble
       "different" => "The %{attribute} field and %{other} must be different.",
       "mimes" => "The %{attribute} field must be a file of type: %{values}.",
       "max_file_size" => "Each %{attribute} file must not be larger than %{max} MB.",
-      "max_of_set" => "The %{attribute} field must not have more than %{max} %{set} sets.",
+      "max_of_set" => "The %{attribute} field must not have more than %{max} %{set} blocks.",
       "records_exist" => "The %{attribute} field contains items that don't exist or aren't allowed here.",
-      "global_links" => "The %{attribute} field links to %{refs}, which isn't a web address field of a global set."
+      "global_links" => "The %{attribute} field links to %{refs}, which isn't a web address field of a site setting."
     }.freeze
 
     class << self
