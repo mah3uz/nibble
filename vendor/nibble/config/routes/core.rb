@@ -106,6 +106,7 @@ Rails.application.routes.draw do
           post :approve
           post :reject
           post :trash
+          post :duplicate
           post :revert
           delete :draft, action: :discard_draft
         end

@@ -347,6 +347,7 @@ module Nibble
         available << "unpublish" if entries? && Access.can?(user, ability("publish"), record) && %w[published scheduled].include?(record.status)
         available << "move" if entries? && item["structure"].is_a?(Hash) && Access.can?(user, ability("edit"), record)
         available.concat(assignable_taxonomies.keys.map { |handle| "assign_#{handle}" }) if entries? && Access.can?(user, ability("edit"), record)
+        available << "duplicate" if entries? && Access.can?(user, ability("create"))
         available << "trash" if Access.can?(user, ability("delete"), record)
         available
       end
@@ -370,6 +371,7 @@ module Nibble
         end
         list << move_action if entries? && item["structure"].is_a?(Hash) && Access.can?(user, ability("edit"))
         list.concat(assign_actions) if entries? && Access.can?(user, ability("edit"))
+        list << action("duplicate", "Duplicate", confirm: nil).merge("bulk" => false) if entries? && Access.can?(user, ability("create"))
         list << action("trash", "Move to trash", confirm: "Move the selected #{entries? ? "entries" : "items"} to the trash?", dangerous: true) if Access.can?(user, ability("delete"))
         list
       end

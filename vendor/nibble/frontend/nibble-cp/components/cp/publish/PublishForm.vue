@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router, usePage } from '@inertiajs/vue3'
-import { Trash2 } from '@lucide/vue'
+import { Copy, Trash2 } from '@lucide/vue'
 import { useMediaQuery } from '@vueuse/core'
 import { computed, ref, useTemplateRef } from 'vue'
 import PageHeader from '@/components/cp/page/PageHeader.vue'
@@ -137,6 +137,14 @@ async function destroy() {
             @approve="save('approve')"
             @reject="save('reject')"
           />
+          <Button
+            v-if="urls.duplicate && currentMeta.id"
+            type="button"
+            variant="outline"
+            @click="router.post(urls.duplicate)"
+          >
+            <Copy /> Duplicate
+          </Button>
           <Button v-if="can.delete && currentMeta.id" type="button" variant="destructive" @click="destroy">
             <Trash2 /> Move to trash
           </Button>

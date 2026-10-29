@@ -8,6 +8,8 @@ module Nibble
         return delete_redirects if params[:resource] == "redirects"
 
         model, item = resource
+        return duplicate(model, item) if params[:handle] == "duplicate" && item.kind == "collections"
+
         action = ACTIONS.fetch(params[:handle]) { params[:handle].to_s.start_with?("assign_") ? :assign_terms : raise(ActiveRecord::RecordNotFound) }
         records = model.kept.where(id: Array(params[:ids])).to_a
         raise NotAuthorized unless records.all? { |record| Nibble::Access.can?(Nibble::Current.user, ability(item, action), record) }
@@ -19,6 +21,16 @@ module Nibble
       end
 
       private
+
+      def duplicate(model, item)
+        authorize!("entries.#{item.handle}.create")
+        entry = model.kept.find_by(id: Array(params[:ids]).first) or raise ActiveRecord::RecordNotFound
+        authorize!("entries.#{item.handle}.view", entry)
+        result = Nibble::EntryDuplicate.call(entry, actor: Nibble::Current.user)
+        return redirect_back_or_to(cp_root_path, alert: result.errors.values.flatten.first) unless result.ok?
+
+        redirect_to "/cp/collections/#{item.handle}/entries/#{result.record.id}/edit", notice: "Duplicated. This is the copy."
+      end
 
       SUBMISSION_ACTIONS = {
         "mark_handled" => { handled_at: -> { Time.current }, handled_by_id: -> { Nibble::Current.user.id } },

@@ -99,7 +99,11 @@ module Nibble
     def localizable? = get("localizable", false)
     def display_only? = fieldtype_class.display_only
     def api? = !display_only? && get("api", true)
-    def duplicate? = get("duplicate", true)
+    def duplicate?
+      return get("duplicate") if [ true, false ].include?(get("duplicate"))
+
+      type != "slug" && validation_rules.none? { |rule| rule.to_s.split(":").first == "unique" }
+    end
     def computed? = visibility == "computed"
 
     def listable? = !display_only? && get("listable", "hidden") != false

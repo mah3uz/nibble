@@ -27,6 +27,7 @@ export type EditUrls = {
   reject: string | null
   discard: string | null
   trash: string | null
+  duplicate?: string | null
   preview: string | null
   versions: string | null
   comments: string | null

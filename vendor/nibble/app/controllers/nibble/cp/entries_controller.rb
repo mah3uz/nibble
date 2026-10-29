@@ -47,6 +47,15 @@ module Nibble
         redirect_to cp_collection_root_path(@collection.handle), notice: "Moved to the trash."
       end
 
+      def duplicate
+        authorize!(ability("view"), @entry)
+        authorize!(ability("create"))
+        result = Nibble::EntryDuplicate.call(@entry, actor: Nibble::Current.user)
+        return render_errors(@entry, result) unless result.ok?
+
+        redirect_to edit_cp_collection_entry_path(@collection.handle, result.record), notice: "Duplicated. This is the copy."
+      end
+
       def reorder
         authorize!(ability("edit"))
         Array(params[:order]).each_with_index do |row, position|
@@ -130,7 +139,7 @@ module Nibble
           draft: nil,
           source: { file: page.path.relative_path_from(Rails.root).to_s },
           can: { edit: false, publish: false, delete: false, review: false },
-          urls: { update: nil, publish: nil, unpublish: nil, submit: nil, approve: nil, reject: nil, discard: nil, trash: nil,
+          urls: { update: nil, publish: nil, unpublish: nil, submit: nil, approve: nil, reject: nil, discard: nil, trash: nil, duplicate: nil,
                   preview: nil, versions: nil, comments: nil, listing:, create_another: nil },
           parents: []
         }
@@ -246,16 +255,20 @@ module Nibble
       def urls(entry)
         base = "/cp/collections/#{@collection.handle}/entries"
         return { update: base, publish: nil, unpublish: nil, submit: nil, approve: nil, reject: nil, discard: nil,
-                 trash: nil, preview: nil, versions: nil, comments: nil,
+                 trash: nil, duplicate: nil, preview: nil, versions: nil, comments: nil,
                  listing: "/cp/collections/#{@collection.handle}", create_another: nil } unless entry.persisted?
 
         member = "#{base}/#{entry.id}"
         {
           update: member, publish: "#{member}/publish", unpublish: "#{member}/unpublish", submit: "#{member}/submit",
-          approve: "#{member}/approve", reject: "#{member}/reject", discard: "#{member}/draft", trash: "#{member}/trash",
+          approve: "#{member}/approve", reject: "#{member}/reject", discard: "#{member}/draft", trash: "#{member}/trash", duplicate: duplicate_url(member),
           preview: "#{member}/preview", versions: "#{member}/revisions", comments: "#{member}/comments",
           listing: "/cp/collections/#{@collection.handle}", create_another: "#{base}/new"
         }
+      end
+
+      def duplicate_url(member)
+        "#{member}/duplicate" if Nibble::Access.can?(Nibble::Current.user, ability("create"))
       end
 
       def parent_options(entry)
