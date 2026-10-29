@@ -16,7 +16,7 @@ module Nibble
           changes: changes, input: @approval.input.except("data", "tree", "content_base64"),
           other_sites: other_sites, expires_at: @approval.expires_at.utc.iso8601,
           result: @approval.result&.slice("result", "title", "status", "url", "cp_url", "filename", "handle"),
-          error: @approval.error&.slice("code", "message", "hint")
+          error: @approval.failure&.slice("code", "message", "hint")
         }
       end
 
@@ -40,7 +40,7 @@ module Nibble
           approval = found[id] or next { id:, status: "not_found" }
 
           approval = decide(approval) if approval.open?
-          { id:, status: approval.state, error: approval.error&.dig("message") }
+          { id:, status: approval.state, error: approval.failure&.dig("message") }
         end
         return render(json: { approvals: outcomes }) if request.format.json? && !request.inertia?
 

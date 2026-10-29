@@ -42,9 +42,45 @@ class Nibble::Cp::ApprovalsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "done", approval(asked.details["approval"]).status
     revisions = Nibble::Records::Revision.count
     assert_equal "published", publish(approval: asked.details["approval"])["status"], "a client that resends with the id gets the stored result"
-    assert_equal "published", publish["status"], "resending the same request answers from the approval"
-    assert_equal revisions, Nibble::Records::Revision.count, "neither resend changes anything again"
+    assert_equal revisions, Nibble::Records::Revision.count, "and nothing changes again"
+  end
+
+  test "a finished approval doesn't answer a new request for the same change" do
+    asked = publish
+    sign_in_as users(:admin)
+    decide(asked.details["approval"])
+    Nibble::Lifecycle.call(@entry.reload, :unpublish, {}, actor: users(:admin))
+
+    again = publish
+    assert_equal "approval_required", again.code, "publishing again is a new request, not a replay of the first"
+    assert_not_equal asked.details["approval"], again.details["approval"]
+    assert_not_equal "published", @entry.reload.status
+  end
+
+  test "an app retrying with its idempotency key gets the approved result, not a second request" do
+    asked = publish(idempotency_key: "publish-ready")
+    sign_in_as users(:admin)
+    decide(asked.details["approval"])
+    revisions = Nibble::Records::Revision.count
+
+    assert_equal "published", publish(idempotency_key: "publish-ready")["status"]
+    assert_equal "published", publish(idempotency_key: "publish-ready")["status"]
     assert_equal 1, @grant.approvals.count
+    assert_equal revisions, Nibble::Records::Revision.count
+  end
+
+  test "a change interrupted part way is reported as failed, never as still in progress" do
+    asked = publish
+    approval(asked.details["approval"]).update!(status: "approved", decided_at: 11.minutes.ago)
+
+    checked = run_op("get_approval", { "approval" => asked.details["approval"] })
+    assert_equal [ "failed", "interrupted" ], [ checked["status"], checked["error"]["code"] ]
+    assert_match "may not have been made", checked["error"]["message"]
+    sign_in_as users(:admin)
+    get "/cp/approvals/#{asked.details['approval']}"
+    props = JSON.parse(Nokogiri::HTML(response.body).at_css("script[data-page]").text)["props"]
+    assert_equal [ "failed", "interrupted" ], [ props["status"], props["error"]["code"] ]
+    assert_equal "approved", approval(asked.details["approval"]).status, "nothing retries it"
   end
 
   test "approving twice at once makes the change once" do

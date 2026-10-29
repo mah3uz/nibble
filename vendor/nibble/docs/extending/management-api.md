@@ -124,20 +124,24 @@ every permission again first. `get_approval` with the `approval` id says how it 
 ```
 
 `status` is `pending`, `approved` (being made), `done` with the operation's usual answer in `result`, `failed` with
-the error in `error`, `denied` or `expired`. An app sees only its own approvals.
+the error in `error`, `denied` or `expired`. A change interrupted while being made shows as `failed` with the code
+`interrupted` after ten minutes: it may not have been made, so check the record before asking again. An app sees only
+its own approvals.
 
-Sending the same request again never repeats it or asks twice. With or without its `approval` id, it answers from
-the approval: the stored result once it is `done`, the stored error once it has `failed`, `approval_required` while it
-waits, and once it is decided or expired:
+Sending the same request again while it waits answers `approval_required` with the same id; it never asks twice.
+Sending it with its `approval` id, or with the `idempotency_key` it was first sent with, answers from that approval:
+the stored result once it is `done`, the stored error once it has `failed`, and otherwise:
 
 | Code | Means |
 |---|---|
+| `approval_required` | the request is still waiting (sent with its `idempotency_key`) |
 | `approval_pending` | the `approval` sent hasn't been decided yet |
 | `approval_denied` | the person declined it; nothing changed |
-| `approval_expired` | nobody decided in time; send the request without `approval` to ask again |
+| `approval_expired` | nobody decided in time; send the request without `approval` or its key to ask again |
 | `approval_mismatch` | the `approval` sent belongs to another connection or a different request |
 
-All are HTTP 409.
+All are HTTP 409. Once an approval is finished, the same request sent without its id or key is a new request: it
+asks again.
 
 ## 7. Telling agents about the site
 

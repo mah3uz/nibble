@@ -5,7 +5,10 @@ module Nibble
 
     LIFETIME = 1.day
     STATUSES = %w[pending approved done failed denied].freeze
-    STANDING = %w[pending approved done].freeze
+    IN_FLIGHT = %w[pending approved].freeze
+    INTERRUPTED_AFTER = 10.minutes
+    INTERRUPTED = { "code" => "interrupted", "status" => 409,
+                    "message" => "making this change was interrupted, and it may not have been made; check the record before asking again" }.freeze
 
     belongs_to :grant, class_name: "Nibble::Grant"
 
@@ -22,12 +25,20 @@ module Nibble
 
     def open? = status == "pending" && !expired?
 
-    def state = status == "pending" && expired? ? "expired" : status
+    def interrupted? = status == "approved" && decided_at.present? && decided_at < INTERRUPTED_AFTER.ago
+
+    def state
+      return "expired" if status == "pending" && expired?
+
+      interrupted? ? "failed" : status
+    end
+
+    def failure = interrupted? ? INTERRUPTED : error
 
     def for?(operation, input) = self.operation == operation && digest == self.class.digest(operation, input)
 
     def summary
-      { "approval" => public_id, "status" => state, "operation" => operation, "result" => result, "error" => error,
+      { "approval" => public_id, "status" => state, "operation" => operation, "result" => result, "error" => failure,
         "expires_at" => expires_at.utc.iso8601 }
     end
   end

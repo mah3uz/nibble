@@ -72,14 +72,14 @@ module Nibble
       remembered(caller, key, operation, input) do
         next rehearse { operation.handler.call(input, caller) } if dry
         if approval.present? || (caller.principal.grant&.asks_approval? && operation.consequential?(input))
-          next approval!(operation, input, caller, approval) { rehearse { operation.handler.call(input, caller) } }
+          next approval!(operation, input, caller, approval, key) { rehearse { operation.handler.call(input, caller) } }
         end
 
         operation.handler.call(input, caller)
       end
     end
 
-    def approval!(operation, input, caller, approval_id)
+    def approval!(operation, input, caller, approval_id, key)
       grant = caller.principal.grant
       if approval_id.present?
         approval = grant&.approvals&.find_by(public_id: approval_id.to_s)
@@ -90,13 +90,23 @@ module Nibble
 
         return answer(approval, caller, asked: true)
       end
+      if key.present? && (approval = grant.approvals.find_by(idempotency_key: key))
+        raise Failure.new("idempotency_conflict", "this idempotency_key was used for a different request", status: :conflict) unless approval.for?(operation.name, input)
+
+        return answer(approval, caller)
+      end
 
       digest = Approval.digest(operation.name, input)
-      standing = -> { grant.approvals.where(operation: operation.name, digest:, status: Approval::STANDING).where("expires_at > ?", Time.current).order(:id).last }
-      approval = standing.call
+      in_flight = lambda do
+        grant.approvals.where(operation: operation.name, digest:, status: Approval::IN_FLIGHT).where("expires_at > ?", Time.current)
+          .order(id: :desc).find { |approval| !approval.interrupted? }
+      end
+      approval = in_flight.call
       unless approval
         preview = yield
-        approval = Approval.transaction { standing.call || grant.approvals.create!(operation: operation.name, input:, digest:, preview:) }
+        approval = Approval.transaction do
+          in_flight.call || grant.approvals.create!(operation: operation.name, input:, digest:, preview:, idempotency_key: key.presence)
+        end
         if approval.previously_new_record?
           Records::Notification.notify(grant.user_id, "apps.approval_requested", title: "#{grant.name}: #{operation.title}", approval: approval.public_id)
         end
@@ -109,7 +119,7 @@ module Nibble
       case approval.state
       when "done" then approval.result
       when "failed"
-        error = approval.error.to_h
+        error = approval.failure.to_h
         raise Failure.new(error["code"], error["message"], hint: error["hint"], details: error["details"], status: error["status"] || :unprocessable_content)
       when "denied"
         raise Failure.new("approval_denied", "#{name} declined this request", status: :conflict, details: { "approval" => approval.public_id },

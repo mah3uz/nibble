@@ -243,6 +243,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_101700) do
     t.json "error"
     t.datetime "expires_at", null: false
     t.integer "grant_id", null: false
+    t.string "idempotency_key"
     t.json "input", default: {}, null: false
     t.string "operation", null: false
     t.json "preview", default: {}, null: false
