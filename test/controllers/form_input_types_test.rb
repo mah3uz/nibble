@@ -93,9 +93,8 @@ class FormInputTypesTest < ActionDispatch::IntegrationTest
     field = definition["fields"].find { |item| item["handle"] == "consent" }
 
     assert_equal "I agree to the privacy policy and terms", field["inline_label"]
-    assert_includes field["inline_label_html"], %(<a href="/privacy" rel="noopener">privacy policy</a>)
+    assert_includes field["inline_label_html"], %(<a href="/privacy" rel="noopener noreferrer" target="_blank">privacy policy</a>)
     assert_not_includes field["inline_label_html"], "javascript"
-    assert_not_includes field["inline_label_html"], "target"
     assert_includes field["inline_label_html"], "terms"
   end
 
