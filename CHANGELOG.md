@@ -12,6 +12,8 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+## 0.21.3 — 2026-10-29 20:05 +0600
+
 ### What's new
 
 - **A stopped upgrade can be finished.** When an upgrade fails after the new release is swapped in, fix what it stopped
