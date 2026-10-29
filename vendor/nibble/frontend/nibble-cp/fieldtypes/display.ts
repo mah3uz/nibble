@@ -1,6 +1,15 @@
+import { inject, type InjectionKey, type Ref } from 'vue'
+
 export type DisplayConfig = Record<string, unknown>
 
 export const offersFullscreen = (config: DisplayConfig) => config.fullscreen !== false
+
+export const FULLSCREEN_LAYER: InjectionKey<Ref<boolean>> = Symbol('fullscreen layer')
+
+export function useOutsideFullscreenLayer() {
+  const layer = inject(FULLSCREEN_LAYER, null)
+  return () => !layer?.value
+}
 
 export const showsPreviews = (config: DisplayConfig) => config.previews !== false
 

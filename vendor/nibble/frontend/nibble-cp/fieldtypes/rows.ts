@@ -1,4 +1,4 @@
-import { onBeforeUnmount } from 'vue'
+import { onBeforeUnmount, onScopeDispose, useId, watch, type Ref } from 'vue'
 import { toast } from 'vue-sonner'
 
 export const UNDO_MS = 6000
@@ -17,6 +17,21 @@ export function restoreRow<T extends { _id: string }>(rows: T[], row: T, index: 
   return next
 }
 
+const layerToasters: string[] = []
+
+export function useLayerToaster(open: Ref<boolean>) {
+  const id = `layer-${useId()}`
+  const leave = () => {
+    const index = layerToasters.indexOf(id)
+    if (index >= 0) layerToasters.splice(index, 1)
+  }
+  watch(open, (isOpen) => (isOpen ? layerToasters.push(id) : leave()), { immediate: true })
+  onScopeDispose(leave)
+  return id
+}
+
+export const undoToasterId = () => layerToasters.at(-1)
+
 export function useUndoToast() {
   const shown = new Set<string | number>()
   onBeforeUnmount(() => shown.forEach((id) => toast.dismiss(id)))
@@ -24,6 +39,7 @@ export function useUndoToast() {
   return (message: string, undo: () => void) => {
     const id = toast(message, {
       duration: UNDO_MS,
+      toasterId: undoToasterId(),
       action: { label: 'Undo', onClick: undo },
       onDismiss: () => shown.delete(id),
       onAutoClose: () => shown.delete(id),

@@ -45,6 +45,7 @@ import {
 } from '../rich-text/globalLinks'
 import SetNodeView, { type SetNodeStorage } from '../rich-text/SetNodeView.vue'
 import type { PublishSetGroup } from '../types'
+import { offersFullscreen, useOutsideFullscreenLayer } from '../display'
 import { fieldtypeEmits, fieldtypeProps, useFieldtype } from '../useFieldtype'
 import RecordSearch from './RecordSearch.vue'
 import SetPicker from './SetPicker.vue'
@@ -234,13 +235,14 @@ onBeforeUnmount(() => {
 })
 
 defineFieldActions(
-  props.config.fullscreen === false
+  !offersFullscreen(props.config)
     ? []
     : [
         {
           title: 'Full screen',
           icon: () => (fullscreen.value ? 'fullscreen-close' : 'fullscreen-open'),
           run: toggleFullscreen,
+          visible: useOutsideFullscreenLayer(),
           visibleWhenReadOnly: true,
         },
       ],
@@ -505,11 +507,16 @@ function isActive(button: ToolbarButton) {
   return Array.isArray(button.active) ? editor.value.isActive(...button.active) : editor.value.isActive(button.active)
 }
 const visibleButtons = () => configured.value.filter((b) => !b.whenActive || editor.value?.isActive(b.whenActive))
-const bubbleButtons = computed(() =>
-  configured.value.filter((b) =>
-    ['bold', 'italic', 'underline', 'strikethrough', 'code', 'anchor', 'removeformat'].includes(b.name),
-  ),
-)
+const INLINE_BUTTONS = ['bold', 'italic', 'underline', 'strikethrough', 'code', 'anchor', 'removeformat']
+const bubbleButtons = computed(() => configured.value.filter((b) => INLINE_BUTTONS.includes(b.name)))
+function bubbleGroups() {
+  if (!floating) return [bubbleButtons.value]
+  const buttons = visibleButtons()
+  return [
+    buttons.filter((b) => INLINE_BUTTONS.includes(b.name)),
+    buttons.filter((b) => !INLINE_BUTTONS.includes(b.name)),
+  ].filter((group) => group.length)
+}
 const floatingButtons = computed(() =>
   configured.value.filter((b) =>
     ['h2', 'h3', 'unorderedlist', 'orderedlist', 'quote', 'codeblock', 'table', 'horizontalrule'].includes(b.name),
@@ -642,25 +649,36 @@ function showBubbleMenu({
           class="z-25"
           :options="{ placement: 'top', offset: 10 }"
         >
-          <div v-show="!linkOpen" class="nib-bubble-menu" role="toolbar" aria-label="Text formatting">
-            <Button
-              v-for="button in floating ? visibleButtons() : bubbleButtons"
-              :key="button.name"
-              type="button"
-              variant="ghost"
-              size="sm"
-              :class="[
-                'px-2! hover:bg-white/15 [&_svg]:opacity-100',
-                isActive(button) ? '[&_svg]:text-yellow-300' : '[&_svg]:text-white',
-              ]"
-              :aria-label="button.text"
-              :aria-pressed="isActive(button)"
-              :title="button.text"
-              @mousedown.prevent
-              @click="runBubbleButton(editor, button)"
+          <div
+            v-show="!linkOpen"
+            :class="['nib-bubble-menu', { 'max-w-80 flex-col rounded-xl! py-0.5': floating }]"
+            role="toolbar"
+            aria-label="Text formatting"
+          >
+            <div
+              v-for="(group, index) in bubbleGroups()"
+              :key="index"
+              :class="['flex flex-wrap', { 'border-t border-white/15': index > 0 }]"
             >
-              <CpIcon :name="button.svg" class="size-3.5!" />
-            </Button>
+              <Button
+                v-for="button in group"
+                :key="button.name"
+                type="button"
+                variant="ghost"
+                size="sm"
+                :class="[
+                  'px-2! hover:bg-white/15 [&_svg]:opacity-100',
+                  isActive(button) ? '[&_svg]:text-yellow-300' : '[&_svg]:text-white',
+                ]"
+                :aria-label="button.text"
+                :aria-pressed="isActive(button)"
+                :title="button.text"
+                @mousedown.prevent
+                @click="runBubbleButton(editor, button)"
+              >
+                <CpIcon :name="button.svg" class="size-3.5!" />
+              </Button>
+            </div>
           </div>
         </BubbleMenu>
         <FloatingMenu v-if="editor && !isReadOnly" :editor="editor" :options="{ placement: 'right', offset: 8 }">
@@ -707,7 +725,7 @@ function showBubbleMenu({
 
   <Popover v-model:open="linkOpen">
     <PopoverAnchor :reference="linkAnchor ?? linkButton" />
-    <PopoverContent class="z-50 w-96 space-y-4" @open-auto-focus.prevent>
+    <PopoverContent class="w-96 space-y-4" @open-auto-focus.prevent>
       <ToggleGroup
         type="single"
         variant="outline"

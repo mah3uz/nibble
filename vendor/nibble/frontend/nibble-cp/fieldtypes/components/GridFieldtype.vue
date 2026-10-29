@@ -5,7 +5,7 @@ import { computed, ref, useTemplateRef, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import PublishFields from '../../publish/PublishFields.vue'
-import { offersFullscreen } from '../display'
+import { offersFullscreen, useOutsideFullscreenLayer } from '../display'
 import { clone } from '../../lib/clone'
 import { rowId } from '../../lib/rowId'
 import { moveRow, restoreRow, useUndoToast } from '../rows'
@@ -43,6 +43,7 @@ defineFieldActions(
           title: 'Full screen',
           icon: () => (fullscreen.value ? 'fullscreen-close' : 'fullscreen-open'),
           run: () => (fullscreen.value = !fullscreen.value),
+          visible: useOutsideFullscreenLayer(),
           visibleWhenReadOnly: true,
         },
       ]
@@ -78,7 +79,7 @@ function moveTo(index: number, to: number) {
 
 <template>
   <div :id="id" class="space-y-2">
-    <FullscreenLayer v-model:open="fullscreen" :title="handle">
+    <FullscreenLayer v-model:open="fullscreen" :title="(config.display as string) || handle">
       <div ref="list" class="space-y-2">
         <div
           v-for="(row, index) in rows"

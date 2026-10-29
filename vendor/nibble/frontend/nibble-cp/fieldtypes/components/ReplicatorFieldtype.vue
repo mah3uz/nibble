@@ -5,7 +5,7 @@ import { toast } from 'vue-sonner'
 import { clone } from '../../lib/clone'
 import { rowId } from '../../lib/rowId'
 import { useSectionActions } from '../../publish/context'
-import { offersFullscreen, showsPreviews } from '../display'
+import { offersFullscreen, useOutsideFullscreenLayer, showsPreviews } from '../display'
 import { addableGroups, expandSet, hasRoom } from '../replicatorSets'
 import { moveRow, restoreRow, useUndoToast } from '../rows'
 import { copySet, pastedContent, pasteTarget, useCopiedSet } from '../setClipboard'
@@ -50,6 +50,7 @@ defineFieldActions(
           title: 'Full screen',
           icon: () => (fullscreen.value ? 'fullscreen-close' : 'fullscreen-open'),
           run: () => (fullscreen.value = !fullscreen.value),
+          visible: useOutsideFullscreenLayer(),
           visibleWhenReadOnly: true,
         },
       ]
@@ -141,7 +142,7 @@ function toggle(id: string) {
 
 <template>
   <div :id="id" class="space-y-2">
-    <FullscreenLayer v-model:open="fullscreen" :title="handle">
+    <FullscreenLayer v-model:open="fullscreen" :title="(config.display as string) || handle">
       <div v-if="rows.length > 1" class="flex justify-end gap-3 text-xs">
         <button
           type="button"
