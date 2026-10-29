@@ -15,13 +15,24 @@ import FindReplaceBar from '../../components/FindReplaceBar.vue'
 import LinkUrlInput from '../../components/LinkUrlInput.vue'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import { Switch } from '@/components/ui/switch'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { MarkdownPaste } from '@/lib/tiptap/markdownPaste'
 import { readingTime } from '@/lib/tiptap/readingTime'
 import { clone } from '../../lib/clone'
 import { rowId } from '../../lib/rowId'
 import { RichTextCodeBlock, RichTextImage, baseExtensions, setNode } from '../rich-text/extensions'
+import {
+  fetchGlobalLinks,
+  findGlobalField,
+  linkAttributes,
+  parseGlobalRef,
+  type GlobalLinkChoice,
+  type GlobalLinkSet,
+  type LinkDialog,
+} from '../rich-text/globalLinks'
 import SetNodeView, { type SetNodeStorage } from '../rich-text/SetNodeView.vue'
 import type { PublishSetGroup } from '../types'
 import { fieldtypeEmits, fieldtypeProps, useFieldtype } from '../useFieldtype'
@@ -217,17 +228,36 @@ const linkAnchor = ref<LinkAnchor | null>(null)
 const linkOpen = ref(false)
 const linkHref = ref('')
 const linkNewWindow = ref(false)
+const linkMode = ref<LinkDialog['mode']>('url')
+const globalChoice = ref<GlobalLinkChoice>({ set: '', field: '' })
+const globalSets = ref<GlobalLinkSet[]>([])
+const globalFields = computed(() => globalSets.value.find((set) => set.handle === globalChoice.value.set)?.fields ?? [])
+const globalField = computed(() => findGlobalField(globalSets.value, globalChoice.value))
 function openLink(anchor: LinkAnchor | null = null) {
   linkAnchor.value = anchor
   const attrs = editor.value?.getAttributes('link') ?? {}
+  const choice = parseGlobalRef(attrs.ref)
   linkHref.value = attrs.href ?? ''
+  linkMode.value = choice ? 'global' : 'url'
+  globalChoice.value = choice ?? { set: '', field: '' }
   linkNewWindow.value = attrs.target === '_blank' || props.config.target_blank === true
   linkOpen.value = true
+  fetchGlobalLinks().then((sets) => (globalSets.value = sets))
+}
+function chooseGlobalSet(set: string) {
+  globalChoice.value = { set, field: globalSets.value.find((item) => item.handle === set)?.fields[0]?.handle ?? '' }
 }
 function applyLink() {
+  const dialog = {
+    mode: linkMode.value,
+    href: linkHref.value,
+    choice: globalChoice.value,
+    newWindow: linkNewWindow.value,
+  }
+  const attributes = linkAttributes(dialog, globalSets.value)
   const chain = editor.value?.chain().focus().extendMarkRange('link')
-  if (!linkHref.value) chain?.unsetLink().run()
-  else chain?.setLink({ href: linkHref.value, target: linkNewWindow.value ? '_blank' : null }).run()
+  if (attributes) chain?.setLink(attributes).run()
+  else chain?.unsetLink().run()
   linkOpen.value = false
 }
 function removeLink() {
@@ -630,17 +660,65 @@ function showBubbleMenu({
   <Popover v-model:open="linkOpen">
     <PopoverAnchor :reference="linkAnchor ?? linkButton" />
     <PopoverContent class="z-50 w-96 space-y-4" @open-auto-focus.prevent>
-      <div class="space-y-2">
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        size="sm"
+        :model-value="linkMode"
+        aria-label="Link to"
+        @update:model-value="(value) => value && (linkMode = value as LinkDialog['mode'])"
+      >
+        <ToggleGroupItem value="url">URL</ToggleGroupItem>
+        <ToggleGroupItem value="global">Global</ToggleGroupItem>
+      </ToggleGroup>
+      <div v-if="linkMode === 'url'" class="space-y-2">
         <Label :for="`${toolbarTarget}-href`">URL</Label>
         <LinkUrlInput :id="`${toolbarTarget}-href`" v-model="linkHref" @submit="applyLink" />
       </div>
+      <template v-else>
+        <p v-if="!globalSets.length" class="text-sm text-gray-500">No global holds a web address yet.</p>
+        <template v-else>
+          <div class="space-y-2">
+            <Label :for="`${toolbarTarget}-global`">Global</Label>
+            <NativeSelect
+              :id="`${toolbarTarget}-global`"
+              class="w-full"
+              :model-value="globalChoice.set"
+              @update:model-value="(value) => chooseGlobalSet(String(value))"
+            >
+              <NativeSelectOption value="" disabled>Choose a global</NativeSelectOption>
+              <NativeSelectOption v-for="set in globalSets" :key="set.handle" :value="set.handle">
+                {{ set.title }}
+              </NativeSelectOption>
+            </NativeSelect>
+          </div>
+          <div class="space-y-2">
+            <Label :for="`${toolbarTarget}-global-field`">Field</Label>
+            <NativeSelect
+              :id="`${toolbarTarget}-global-field`"
+              v-model="globalChoice.field"
+              class="w-full"
+              :disabled="!globalFields.length"
+            >
+              <NativeSelectOption v-for="field in globalFields" :key="field.handle" :value="field.handle">
+                {{ field.display }}
+              </NativeSelectOption>
+            </NativeSelect>
+          </div>
+          <p v-if="globalField" class="truncate text-sm text-gray-500">
+            Links to {{ globalField.address || 'nothing yet: the field is empty' }}
+          </p>
+        </template>
+      </template>
       <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
         <Switch v-model="linkNewWindow" size="sm" />Open in new window
       </label>
       <div class="flex justify-end gap-2">
         <Button type="button" variant="ghost" size="sm" @click="linkOpen = false">Cancel</Button>
         <Button type="button" variant="outline" size="sm" @click="removeLink">Remove Link</Button>
-        <Button type="button" size="sm" @click="applyLink">Apply Link</Button>
+        <Button type="button" size="sm" :disabled="linkMode === 'global' && !globalField" @click="applyLink">
+          Apply Link
+        </Button>
       </div>
     </PopoverContent>
   </Popover>

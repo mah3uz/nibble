@@ -8,6 +8,7 @@ import { VueNodeViewRenderer } from '@tiptap/vue-3'
 import type { Component } from 'vue'
 import { lowlight } from '@/lib/highlight'
 import { PostHeading } from '@/lib/tiptap/extensions'
+import { GlobalLinkRef } from './globalLinks'
 
 export const RichTextCodeBlock = CodeBlockLowlight.configure({ lowlight, enableTabIndentation: true, tabSize: 2 })
 
@@ -34,6 +35,7 @@ export const baseExtensions = [
     listItem: false,
     link: { openOnClick: false, autolink: true, defaultProtocol: 'https' },
   }),
+  GlobalLinkRef,
   PostHeading,
   RichTextCodeBlock,
   ListItem.extend({ content: '(paragraph | heading) block*' }),
