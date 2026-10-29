@@ -736,7 +736,7 @@ function showBubbleMenu({
       >
         <ToggleGroupItem value="url">URL</ToggleGroupItem>
         <ToggleGroupItem v-if="linkCollections.length" value="entry">Page</ToggleGroupItem>
-        <ToggleGroupItem value="global">Site setting</ToggleGroupItem>
+        <ToggleGroupItem value="global">Site settings</ToggleGroupItem>
       </ToggleGroup>
       <div v-if="linkMode === 'entry'" class="space-y-2">
         <Label>Page</Label>
@@ -754,17 +754,19 @@ function showBubbleMenu({
         <LinkUrlInput :id="`${toolbarTarget}-href`" v-model="linkHref" @submit="applyLink" />
       </div>
       <template v-else>
-        <p v-if="!globalSets.length" class="text-sm text-gray-500">No site setting holds a web address yet.</p>
+        <p v-if="!globalSets.length" class="text-sm text-gray-500">
+          None of the site settings holds a web address yet.
+        </p>
         <template v-else>
           <div class="space-y-2">
-            <Label :for="`${toolbarTarget}-global`">Site setting</Label>
+            <Label :for="`${toolbarTarget}-global`">Group</Label>
             <NativeSelect
               :id="`${toolbarTarget}-global`"
               class="w-full"
               :model-value="globalChoice.set"
               @update:model-value="(value) => chooseGlobalSet(String(value))"
             >
-              <NativeSelectOption value="" disabled>Choose a site setting</NativeSelectOption>
+              <NativeSelectOption value="" disabled>Choose a group</NativeSelectOption>
               <NativeSelectOption v-for="set in globalSets" :key="set.handle" :value="set.handle">
                 {{ set.title }}
               </NativeSelectOption>
@@ -793,14 +795,14 @@ function showBubbleMenu({
       </label>
       <div class="flex justify-end gap-2">
         <Button type="button" variant="ghost" size="sm" @click="linkOpen = false">Cancel</Button>
-        <Button type="button" variant="outline" size="sm" @click="removeLink">Remove Link</Button>
+        <Button type="button" variant="outline" size="sm" @click="removeLink">Remove link</Button>
         <Button
           type="button"
           size="sm"
           :disabled="(linkMode === 'global' && !globalField) || (linkMode === 'entry' && !linkEntry?.url)"
           @click="applyLink"
         >
-          Apply Link
+          Apply link
         </Button>
       </div>
     </PopoverContent>
