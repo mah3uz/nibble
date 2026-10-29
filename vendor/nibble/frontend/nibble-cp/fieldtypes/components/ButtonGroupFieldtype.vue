@@ -20,7 +20,7 @@ function select(key: unknown) {
 
 const itemClass = cn(
   toggleVariants({ variant: 'outline' }),
-  'shrink-0 rounded-none border-s-0 px-3 first:rounded-s-lg first:border-s last:rounded-e-lg focus:z-10 focus-visible:z-10 data-[state=checked]:from-gray-100 data-[state=checked]:to-gray-100 data-[state=checked]:inset-shadow-sm/10 dark:data-[state=checked]:from-gray-950 dark:data-[state=checked]:to-gray-850 dark:data-[state=checked]:text-white',
+  'shrink-0 rounded-none border-s-0 px-3 first:rounded-s-lg first:border-s last:rounded-e-lg focus:z-10 focus-visible:z-10 data-[state=checked]:from-gray-100 data-[state=checked]:to-gray-100 data-[state=checked]:inset-shadow-sm/10 dark:data-[state=checked]:from-gray-950 dark:data-[state=checked]:to-gray-850 dark:data-[state=checked]:text-white disabled:opacity-100 disabled:data-[state=unchecked]:opacity-50 disabled:data-[state=checked]:font-semibold disabled:data-[state=checked]:from-gray-200 disabled:data-[state=checked]:to-gray-200 disabled:data-[state=checked]:text-gray-900 dark:disabled:data-[state=checked]:from-gray-700 dark:disabled:data-[state=checked]:to-gray-700',
 )
 </script>
 
