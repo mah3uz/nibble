@@ -13,6 +13,7 @@ const props = defineProps<{
   label: string
   disabled?: boolean
   id?: string
+  closeOnPick?: boolean
 }>()
 const emit = defineEmits<{ pick: [item: ItemSummary] }>()
 
@@ -34,6 +35,11 @@ const run = useDebounceFn(async () => {
     loading.value = false
   }
 }, 200)
+
+function choose(item: ItemSummary) {
+  emit('pick', item)
+  if (props.closeOnPick) open.value = false
+}
 
 watch(open, (isOpen) => isOpen && run())
 watch(query, () => open.value && run())
@@ -66,7 +72,7 @@ watch(query, () => open.value && run())
               :key="item.id"
               :value="item.id"
               :class="selectedIds.includes(item.id) && 'bg-blue-50 text-blue-600! dark:bg-blue-600 dark:text-blue-50!'"
-              @select="emit('pick', item)"
+              @select="choose(item)"
             >
               <img v-if="item.thumbnail" :src="item.thumbnail" alt="" class="size-8 rounded object-cover" />
               <span class="min-w-0 flex-1 truncate">{{ item.title }}</span>

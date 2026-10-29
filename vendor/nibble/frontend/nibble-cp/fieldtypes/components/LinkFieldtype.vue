@@ -73,6 +73,7 @@ const scope = computed(() =>
         :selected-ids="item ? [item.id] : []"
         :label="item?.title ?? chooseLabel(option)"
         :disabled="isReadOnly"
+        close-on-pick
         @pick="pick"
       />
       <span v-if="item?.url" class="truncate text-xs text-muted-foreground">{{ item.url }}</span>

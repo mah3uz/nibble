@@ -5,7 +5,7 @@ import { Markdown } from '@tiptap/markdown'
 import { AllSelection, NodeSelection, type EditorState } from '@tiptap/pm/state'
 import { EditorContent, VueNodeViewRenderer, useEditor } from '@tiptap/vue-3'
 import { BubbleMenu, FloatingMenu } from '@tiptap/vue-3/menus'
-import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, useId, useTemplateRef, watch } from 'vue'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
 import type { AssetRow } from '@/components/cp/assets/api'
 import AssetSelector from '@/components/cp/assets/AssetSelector.vue'
@@ -250,11 +250,13 @@ defineFieldActions(
 
 const floating = isFloatingToolbar(props.config)
 const toolbarTarget = `nib-${useId()}`
+const root = useTemplateRef<HTMLElement>('root')
 const linkButton = ref<HTMLElement>()
 type LinkAnchor = HTMLElement | { getBoundingClientRect: () => DOMRect }
 const linkAnchor = ref<LinkAnchor | null>(null)
 const linkOpen = ref(false)
 const linkHref = ref('')
+const hasLink = ref(false)
 const linkNewWindow = ref(false)
 const linkMode = ref<LinkDialog['mode'] | 'entry'>('url')
 const linkCollections = computed(() => (props.config.link_collections as string[]) ?? [])
@@ -268,6 +270,7 @@ function openLink(anchor: LinkAnchor | null = null) {
   const attrs = editor.value?.getAttributes('link') ?? {}
   const choice = parseGlobalRef(attrs.ref)
   linkHref.value = attrs.href ?? ''
+  hasLink.value = editor.value?.isActive('link') ?? false
   linkEntry.value = null
   linkMode.value = choice ? 'global' : 'url'
   globalChoice.value = choice ?? { set: '', field: '' }
@@ -552,7 +555,7 @@ function showBubbleMenu({
 
 <template>
   <Teleport to="body" :disabled="!fullscreen">
-    <div :id="id" :class="['nib antialiased', { 'nib-fullscreen': fullscreen }]">
+    <div :id="id" ref="root" :class="['nib antialiased', { 'nib-fullscreen': fullscreen }]">
       <header
         v-show="fullscreen"
         class="fixed inset-x-0 top-0 z-45 flex h-12 items-center justify-between bg-gray-50 px-4 shadow-ui-lg dark:border-b dark:border-white/10 dark:bg-gray-925 dark:shadow-none"
@@ -647,7 +650,12 @@ function showBubbleMenu({
           :editor="editor"
           :should-show="showBubbleMenu"
           class="z-25"
-          :options="{ placement: 'top', offset: 10 }"
+          :options="{
+            placement: 'top',
+            offset: 10,
+            flip: { boundary: root ?? undefined },
+            shift: { boundary: root ?? undefined, padding: 8 },
+          }"
         >
           <div
             v-show="!linkOpen"
@@ -725,7 +733,7 @@ function showBubbleMenu({
 
   <Popover v-model:open="linkOpen">
     <PopoverAnchor :reference="linkAnchor ?? linkButton" />
-    <PopoverContent class="w-96 space-y-4" @open-auto-focus.prevent>
+    <PopoverContent class="w-96 space-y-4" :collision-boundary="root" :collision-padding="8" @open-auto-focus.prevent>
       <ToggleGroup
         type="single"
         variant="outline"
@@ -745,6 +753,7 @@ function showBubbleMenu({
           :scope="{ collections: linkCollections }"
           :selected-ids="linkEntry ? [linkEntry.id] : []"
           :label="linkEntry?.title ?? 'Choose a page…'"
+          close-on-pick
           @pick="(item) => (linkEntry = item)"
         />
         <p v-if="linkEntry && !linkEntry.url" class="text-sm text-gray-500">This page has no address to link to.</p>
@@ -795,7 +804,7 @@ function showBubbleMenu({
       </label>
       <div class="flex justify-end gap-2">
         <Button type="button" variant="ghost" size="sm" @click="linkOpen = false">Cancel</Button>
-        <Button type="button" variant="outline" size="sm" @click="removeLink">Remove link</Button>
+        <Button type="button" variant="outline" size="sm" :disabled="!hasLink" @click="removeLink">Remove link</Button>
         <Button
           type="button"
           size="sm"
