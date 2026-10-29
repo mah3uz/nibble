@@ -21,8 +21,9 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 ### Changed
 
 - **A site's skill doesn't repeat "nibble" in its name.** A site called Nibble gets the skill `nibble`, one called
-  Nibble Docs gets `nibble-docs`, and any other site keeps `nibble-<site name>`. Run `nibble connect <site>` again
-  in the folder where you use it, and remove the folder under its old name from `.claude/skills` or `.codex/skills`.
+  Nibble Docs gets `nibble-docs`, and any other site keeps `nibble-<site name>`. In the folder where you use it, run
+  `nibble disconnect <site>` and then `nibble connect <site>` (the `nibble` command 0.3.4 or later), which replaces the
+  skill under its old name.
 
 ### What's fixed
 
