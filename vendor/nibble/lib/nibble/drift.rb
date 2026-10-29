@@ -27,6 +27,15 @@ module Nibble
       Records::SchemaSnapshot.create!(digest:, types:, created_at: Time.current)
     end
 
+    def field_types(schema: Nibble.schema) = Scan.new(schema, scan: false).types
+
+    def scope_of(args)
+      return "collections/#{args['collection']}" if args["collection"]
+      return "globals/#{args['global']}" if args["global"]
+
+      "taxonomies/#{args['taxonomy']}"
+    end
+
     def removed_parent(kind, handle, count)
       noun = kind == "globals" ? "global set" : kind.singularize
       Issue.new(source: "#{kind}/#{handle}", message: "#{noun} '#{handle}' was removed and #{count} #{'record'.pluralize(count)} still belong to it")
@@ -61,15 +70,17 @@ module Nibble
 
       def field?(scope, field)
         @operations.any? do |name, args|
-          next false unless scope == scope_of(args)
+          args = args["from"].to_h.stringify_keys if name == "move_field"
+          next false unless scope == Drift.scope_of(args)
 
           (name == "rename_field" && args["from"] == field) ||
-            (name == "move_to_taxonomy" && [ args["field"], args["to"] || args["taxonomy"] ].include?(field))
+            (name == "move_to_taxonomy" && [ args["field"], args["to"] || args["taxonomy"] ].include?(field)) ||
+            (%w[move_field remove_field].include?(name) && args["field"] == field)
         end
       end
 
       def blueprint?(scope, blueprint)
-        @operations.any? { |name, args| name == "change_blueprint" && scope == scope_of(args) && args["from"] == blueprint }
+        @operations.any? { |name, args| name == "change_blueprint" && scope == Drift.scope_of(args) && args["from"] == blueprint }
       end
 
       # The operations that exist to empty a collection of its records, so a migration written to answer this
@@ -82,27 +93,18 @@ module Nibble
             (name == "rename_collection" && args["from"] == handle)
         end
       end
-
-      private
-
-      def scope_of(args)
-        return "collections/#{args['collection']}" if args["collection"]
-        return "globals/#{args['global']}" if args["global"]
-
-        "taxonomies/#{args['taxonomy']}"
-      end
     end
 
     class Scan
       attr_reader :stranded, :held, :orphaned_parents, :orphaned_blueprints
 
-      def initialize(schema)
+      def initialize(schema, scan: true)
         @schema = schema
         @stranded = Hash.new(0)
         @held = Hash.new(0)
         @orphaned_parents = []
         @orphaned_blueprints = []
-        run
+        run if scan
       end
 
       def types

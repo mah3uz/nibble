@@ -1,7 +1,7 @@
 module Nibble
   module ContentMigrations
     module Operations
-      NAMES = %w[rename_field change_blueprint set_default move_to_taxonomy delete_collection rename_collection].freeze
+      NAMES = %w[rename_field change_blueprint set_default move_to_taxonomy delete_collection rename_collection move_field remove_field].freeze
       REMOVED = %w[delete_collection rename_collection].freeze
       COLUMNS = %w[title slug].freeze
 
@@ -19,7 +19,7 @@ module Nibble
 
         name, args = operation.first
         args = args.to_h.stringify_keys
-        item = target_item(args)
+        item = target_item(name.to_s == "move_field" ? ends(args).first : args)
         raise Error, "#{where}: needs a collection, taxonomy or global that exists" if item.nil? && REMOVED.exclude?(name.to_s)
 
         problem = public_send("#{name}_problem", args, item)
@@ -66,6 +66,29 @@ module Nibble
           data[to] = single ? ids.first : (Array(data[to]) + ids).uniq
           data.except(field)
         end
+      end
+
+      def move_field(args)
+        from, to = ends(args)
+        message = "move #{label(from)}.#{from['field']} to #{label(to)}.#{to['field']}"
+        left = []
+        count = if Drift.scope_of(from) == Drift.scope_of(to)
+          change_data(from, message) do |data, record|
+            case shift(data, data, from["field"], to["field"], args["overwrite"])
+            when :moved then data
+            when :left then left << record and nil
+            end
+          end.last
+        else
+          move_between_globals(from, to, args["overwrite"], message, left)
+        end
+        left = left.uniq.map { |record| "#{record.record_type} #{record.id} (#{record.locale})" }
+        [ left.empty? ? message : "#{message}, leaving #{left.join(', ')} where #{to['field']} already holds a value", count ]
+      end
+
+      def remove_field(args)
+        field = args["field"]
+        change_data(args, "remove #{label(args)}.#{field}") { |data| data.except(field) if data.key?(field) }
       end
 
       # Removed outright rather than trashed: there is no schema left to restore them under.
@@ -128,6 +151,31 @@ module Nibble
         "needs a value" unless args.key?("value")
       end
 
+      def move_field_problem(args, _item)
+        from, to = ends(args)
+        return "needs from and to, each naming a field" if from["field"].blank? || to["field"].blank?
+        return "needs a collection, taxonomy or global that exists to move to" unless target_item(to)
+
+        same = Drift.scope_of(from) == Drift.scope_of(to)
+        return "moves between the fields of one collection or taxonomy, or between globals" unless same || (from["global"] && to["global"])
+        return "from and to are the same field" if same && from["field"] == to["field"]
+
+        column = [ from, to ].find { |side| column?(side) }
+        return "#{column['field']} isn't a field that can be moved" if column
+
+        types = Drift.field_types
+        into = types.dig(Drift.scope_of(to), to["field"]) or return "#{to['field']} isn't a field of #{label(to)}"
+        was = types.dig(Drift.scope_of(from), from["field"]) || Records::SchemaSnapshot.latest&.types.to_h.dig(Drift.scope_of(from), from["field"])
+        "#{label(from)}.#{from['field']} is #{was} and #{label(to)}.#{to['field']} is #{into}; a value moves only to a field of its type" if was && was != into
+      end
+
+      def remove_field_problem(args, _item)
+        return "needs a field" if args["field"].blank?
+        return "#{args['field']} isn't a field that can be removed" if column?(args)
+
+        "#{args['field']} is still a field of #{label(args)}" if Drift.field_types.dig(Drift.scope_of(args), args["field"])
+      end
+
       def change_blueprint_problem(args, item)
         return "needs from and to" if args["from"].blank? || args["to"].blank?
 
@@ -152,6 +200,36 @@ module Nibble
           (changed || draft_changed) && saved(record, message)
         end
         [ message, count ]
+      end
+
+      def move_between_globals(from, to, overwrite, message, left)
+        scope(from).find_each.count do |source|
+          target = Records::GlobalSet.find_or_initialize_by(handle: to["global"], locale: source.locale)
+          data = source.data.to_h.deep_dup
+          into = target.data.to_h.deep_dup
+          case shift(data, into, from["field"], to["field"], overwrite)
+          when :left then left << source and false
+          when :moved
+            write(target, into, message) if into != target.data.to_h
+            write(source, data, message)
+          end
+        end
+      end
+
+      def shift(source, target, field, into, overwrite)
+        return unless source.key?(field)
+
+        value = source[field]
+        return :left unless value.nil? || overwrite == true || target[into] == value || target[into].nil? || target[into].try(:empty?)
+
+        source.delete(field)
+        target[into] = value unless value.nil?
+        :moved
+      end
+
+      def write(record, data, message)
+        record.new_record? ? record.update!(data:) : record.update_columns(data:, updated_at: Time.current)
+        saved(record, message)
       end
 
       def saved(record, message)
@@ -183,6 +261,10 @@ module Nibble
       end
 
       def label(args) = args["collection"] || args["global"] || args["taxonomy"]
+
+      def ends(args) = args.values_at("from", "to").map { |side| side.is_a?(Hash) ? side.stringify_keys : {} }
+
+      def column?(args) = !args["global"] && Drift::DRAFT_COLUMNS.include?(args["field"])
     end
   end
 end

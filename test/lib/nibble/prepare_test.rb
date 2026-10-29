@@ -45,6 +45,42 @@ class Nibble::PrepareTest < ActiveSupport::TestCase
     assert result.snapshot, "the schema this release runs on is recorded for the next type check"
   end
 
+  def global_schema(handle, fields)
+    path = @themes.join("crumbs/schema/globals/#{handle}.yml")
+    path.dirname.mkpath
+    path.write({ "title" => handle.capitalize, "blueprint" => { "title" => handle.capitalize, "tabs" => { "main" => { "sections" => [
+      { "fields" => fields.map { |field, type| { "handle" => field, "field" => { "type" => type } } } } ] } } } }.to_yaml)
+    Nibble.reset_schema!
+    Nibble::TypeGenerator.write!
+  end
+
+  # Without the move, the only ways past nibble:check were --allow-data-loss or editing rows by hand.
+  test "a field moved from one global to another takes its value along, and check passes after" do
+    global_schema("listing", "google_rating" => "integer", "name" => "text")
+    global_schema("social", "rating" => "integer")
+    listing = Nibble::Records::GlobalSet.new(handle: "listing", locale: "en")
+    assert Nibble::Lifecycle.call(listing, :save, { "google_rating" => 4, "name" => "Cafe" }, actor: Nibble::Principal.system).ok?
+    prepare
+    global_schema("listing", "name" => "text")
+    assert_not Nibble::Check.run.ok?, "the removed field's value is stranded"
+
+    migration("2026_10_01_move_rating", { "move_field" => { "from" => { "global" => "listing", "field" => "google_rating" },
+                                                            "to" => { "global" => "social", "field" => "rating" } } })
+    result = prepare
+
+    social = Nibble::Records::GlobalSet.find_by!(handle: "social", locale: "en")
+    assert_equal [ [ "move listing.google_rating to social.rating", 1 ] ], result.migrations.sole.counts
+    assert_equal 4, social.data["rating"]
+    assert_equal({ "name" => "Cafe" }, listing.reload.data)
+    assert Nibble::Check.run.ok?
+    assert_equal [ "move listing.google_rating to social.rating" ] * 2, [ listing, social ].map { |record| record.revisions.last.message }
+    assert_equal 4, listing.revisions.reverse_order.second.data["google_rating"], "the move can be undone from the history"
+
+    revisions = Nibble::Records::Revision.count
+    assert_empty prepare.migrations
+    assert_equal revisions, Nibble::Records::Revision.count
+  end
+
   test "a theme built for another major version stops preparing before anything is touched" do
     manifest = @themes.join("crumbs/theme.yml")
     manifest.write(YAML.safe_load_file(manifest).merge("nibble" => "^2").to_yaml)

@@ -67,6 +67,17 @@ class Nibble::DriftTest < ActiveSupport::TestCase
     assert_empty issues
   end
 
+  test "a pending migration that moves or removes the field covers it, and only that field" do
+    strand(create_entry("articles", { "title" => "A" }), "intro" => "Old", "legacy" => "Old")
+    migration("2026_10_01_move", { "move_field" => { "from" => { "collection" => "articles", "field" => "intro" },
+                                                     "to" => { "collection" => "articles", "field" => "summary" } } })
+
+    assert_equal [ "collections/articles: legacy was removed and 1 record still hold it; #{Nibble::Drift::HINT}" ], issues
+
+    migration("2026_10_02_remove", { "remove_field" => { "collection" => "articles", "field" => "legacy" } })
+    assert_empty issues
+  end
+
   test "a draft holding a removed field counts as stranded too" do
     article = publish_entry(create_entry("articles", { "title" => "Live" }))
     lifecycle(article.reload, :save, { "title" => "Edited" })

@@ -258,6 +258,149 @@ class Nibble::ContentMigrationsTest < ActiveSupport::TestCase
     end
   end
 
+  def move_rating(name, **options)
+    migration(name, { "move_field" => { "from" => { "global" => "listing", "field" => "google_rating" },
+                                        "to" => { "global" => "social", "field" => "rating" } }.merge(options.stringify_keys) })
+  end
+
+  # Overwriting would destroy what an editor already put in the new place, with no revision of the global it came
+  # from to say why; leaving it keeps both values and keeps nibble:check refusing until someone decides.
+  test "a move never overwrites a value already in the destination, and reports the record it left" do
+    global_schema("listing", "google_rating" => "integer", "name" => "text")
+    global_schema("social", "rating" => "integer")
+    in_two_locales do
+      english = save_global("listing", "en", "google_rating" => 4)
+      french = save_global("listing", "fr", "google_rating" => 5)
+      kept = save_global("social", "en", "rating" => 3)
+      global_schema("listing", "name" => "text")
+      move_rating("2026_10_07_move_rating")
+
+      results = run_migrations
+
+      label, count = results.first.counts.sole
+      assert_equal "move listing.google_rating to social.rating, leaving global #{english.id} (en) where rating already holds a value", label
+      assert_equal 1, count
+      assert_equal 3, kept.reload.data["rating"]
+      assert_equal 4, english.reload.data["google_rating"], "the value it couldn't move stays where it was"
+      assert_equal 5, Nibble::Records::GlobalSet.find_by!(handle: "social", locale: "fr").data["rating"], "a locale with no social set yet gets one"
+      assert_not french.reload.data.key?("google_rating")
+      assert_equal [ "globals/listing: google_rating was removed and 1 record still hold it; #{Nibble::Drift::HINT}" ],
+                   Nibble::Drift.issues.map { |issue| "#{issue.source}: #{issue.message}" }
+
+      move_rating("2026_10_08_overwrite_rating", overwrite: true)
+      run_migrations
+
+      assert_equal 4, kept.reload.data["rating"]
+      assert_not english.reload.data.key?("google_rating")
+      assert_equal 3, kept.revisions.reverse_order.second.data["rating"], "the value it replaced is still in the history"
+      assert_empty Nibble::Drift.issues
+    end
+  end
+
+  test "moving a value again changes nothing, so a repeated operation is harmless" do
+    global_schema("listing", "google_rating" => "integer")
+    global_schema("social", "rating" => "integer")
+    save_global("listing", "en", "google_rating" => 4)
+    move_rating("2026_10_07_move_rating")
+    run_migrations
+    revisions = Nibble::Records::Revision.count
+
+    move_rating("2026_10_08_move_rating_again")
+    results = run_migrations
+
+    assert_equal 0, results.first.counts.sole.last
+    assert_equal revisions, Nibble::Records::Revision.count
+    assert_equal 4, Nibble::Records::GlobalSet.find_by!(handle: "social").data["rating"]
+  end
+
+  test "a dry run of a move counts it and moves nothing" do
+    global_schema("listing", "google_rating" => "integer")
+    global_schema("social", "rating" => "integer")
+    listing = save_global("listing", "en", "google_rating" => 4)
+    move_rating("2026_10_07_move_rating")
+
+    results = run_migrations(dry_run: true)
+
+    assert_equal [ [ "move listing.google_rating to social.rating", 1 ] ], results.first.counts
+    assert_equal 4, listing.reload.data["google_rating"]
+    assert_nil Nibble::Records::GlobalSet.find_by(handle: "social")
+  end
+
+  test "a value moves between the fields of one collection, in its draft too" do
+    article = publish_entry(legacy(create_entry("articles", { "title" => "Live" }), "intro" => "Old"))
+    lifecycle(article.reload, :save, { "title" => "Edited" })
+    article.draft.update_columns(data: article.draft.data.merge("intro" => "Draft"))
+    migration("2026_10_07_move_intro", { "move_field" => { "from" => { "collection" => "articles", "field" => "intro" },
+                                                           "to" => { "collection" => "articles", "field" => "summary" } } })
+
+    run_migrations
+
+    assert_equal [ "Old", "Draft" ], [ article.reload.data["summary"], article.draft.data["summary"] ]
+    assert_not article.data.key?("intro")
+    assert_not article.draft.data.key?("intro")
+  end
+
+  test "a move is refused when its two ends couldn't hold the same value" do
+    global_schema("listing", "google_rating" => "integer")
+    global_schema("social", "rating" => "integer", "handle" => "text")
+    Nibble::Drift.record_snapshot!
+    global_schema("listing", {})
+    refusals = {
+      { "global" => "social", "field" => "handle" } => "listing.google_rating is integer and social.handle is text",
+      { "global" => "social", "field" => "stars" } => "stars isn't a field of social",
+      { "collection" => "articles", "field" => "summary" } => "moves between the fields of one collection or taxonomy, or between globals"
+    }
+
+    refusals.each_with_index do |(to, message), index|
+      FileUtils.rm_rf(@nibble_themes.join("records/schema/migrations"))
+      migration("2026_10_0#{index}_move", { "move_field" => { "from" => { "global" => "listing", "field" => "google_rating" }, "to" => to } })
+
+      assert_match message, assert_raises(Nibble::Error) { run_migrations }.message
+    end
+  end
+
+  test "a removed field's values are cleared from entries, drafts and globals, so nibble:check passes" do
+    global_schema("listing", "google_rating" => "integer", "name" => "text")
+    listing = save_global("listing", "en", "google_rating" => 4, "name" => "Cafe")
+    article = publish_entry(legacy(create_entry("articles", { "title" => "Live" }), "intro" => "Old"))
+    lifecycle(article.reload, :save, { "title" => "Edited" })
+    article.draft.update_columns(data: article.draft.data.merge("intro" => "Draft"))
+    global_schema("listing", "name" => "text")
+    assert_equal 2, Nibble::Drift.issues.size
+
+    migration("2026_10_07_remove", { "remove_field" => { "global" => "listing", "field" => "google_rating" } },
+              { "remove_field" => { "collection" => "articles", "field" => "intro" } })
+    results = run_migrations
+
+    assert_equal [ [ "remove listing.google_rating", 1 ], [ "remove articles.intro", 1 ] ], results.first.counts
+    assert_equal({ "name" => "Cafe" }, listing.reload.data)
+    assert_not article.reload.data.key?("intro")
+    assert_not article.draft.data.key?("intro")
+    assert_equal [ 4, nil ], listing.revisions.last(2).map { |revision| revision.data["google_rating"] }, "the history keeps the value to restore"
+    assert_equal "remove listing.google_rating", listing.revisions.last.message
+    assert_empty Nibble::Drift.issues
+
+    migration("2026_10_08_remove_again", { "remove_field" => { "global" => "listing", "field" => "google_rating" } })
+    assert_equal 0, run_migrations.first.counts.sole.last
+  end
+
+  test "a field still in the schema is never removed by a migration" do
+    article = create_entry("articles", { "title" => "One", "summary" => "Kept" })
+    migration("2026_10_07_remove", { "remove_field" => { "collection" => "articles", "field" => "summary" } })
+
+    error = assert_raises(Nibble::Error) { run_migrations }
+
+    assert_match "summary is still a field of articles", error.message
+    assert_equal "Kept", article.reload.data["summary"]
+  end
+
+  # A draft keeps an entry's columns beside its fields, so removing one by that name would empty the draft's status.
+  test "a draft's columns are never removed as though they were fields" do
+    migration("2026_10_07_remove", { "remove_field" => { "collection" => "articles", "field" => "status" } })
+
+    assert_match "status isn't a field that can be removed", assert_raises(Nibble::Error) { run_migrations }.message
+  end
+
   test "migrations run in date order across layers" do
     migration("2026_10_02_second", { "set_default" => { "collection" => "articles", "field" => "summary", "value" => "b" } })
     migration("2026_10_01_first", { "set_default" => { "collection" => "articles", "field" => "summary", "value" => "a" } })
