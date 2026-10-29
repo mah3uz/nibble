@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { useForm } from '@inertiajs/vue3'
-import { computed } from 'vue'
+import { Link, useForm } from '@inertiajs/vue3'
+import { CircleAlert, CircleCheck } from '@lucide/vue'
+import { computed, ref } from 'vue'
 import CpPanel from '@/components/cp/page/CpPanel.vue'
 import PageHeader from '@/components/cp/page/PageHeader.vue'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useBreadcrumbs } from '@/lib/breadcrumbs'
@@ -26,6 +27,27 @@ const props = defineProps<{
 
 const form = useForm({ decision: '' })
 const open = computed(() => props.status === 'pending')
+const STATUS: Record<string, string> = {
+  pending: 'Waiting',
+  approved: 'Being made',
+  done: 'Done',
+  failed: "Couldn't be made",
+  denied: 'Declined',
+  expired: 'Expired',
+}
+const upload = computed(() => (typeof props.input.upload === 'string' ? props.input.upload : null))
+const details = computed(() => Object.fromEntries(Object.entries(props.input).filter(([key]) => key !== 'upload')))
+const previewFailed = ref(false)
+const outcome = computed(() => {
+  const result = props.result
+  if (!result) return null
+  const text = (key: string) => (typeof result[key] === 'string' ? (result[key] as string) : null)
+  return {
+    summary: [text('result'), text('title') ?? text('filename') ?? text('handle')].filter(Boolean).join(': '),
+    cpUrl: text('cp_url'),
+    url: text('url'),
+  }
+})
 const show = (value: unknown) =>
   value === null || value === undefined ? '—' : typeof value === 'string' ? value : JSON.stringify(value, null, 2)
 
@@ -41,13 +63,39 @@ useBreadcrumbs([{ label: 'Connected apps', url: '/cp/account/apps' }, { label: '
   <div class="mx-auto max-w-4xl">
     <PageHeader :title="`${app} asks to: ${operation.title ?? 'make a change'}`">
       <template #meta>
-        <Badge variant="secondary">{{ status }}</Badge>
+        <Badge variant="secondary">{{ STATUS[status] ?? status }}</Badge>
       </template>
       <template v-if="open" #actions>
         <Button variant="outline" :disabled="form.processing" @click="decide('deny')">Decline</Button>
         <Button :disabled="form.processing" @click="decide('approve')">Approve</Button>
       </template>
     </PageHeader>
+
+    <Alert v-if="status === 'done'" class="mb-6">
+      <CircleCheck />
+      <AlertTitle>Approved and done</AlertTitle>
+      <AlertDescription>
+        <p v-if="outcome?.summary" class="first-letter:uppercase">{{ outcome.summary }}</p>
+        <p v-if="outcome?.cpUrl || outcome?.url" class="flex gap-3">
+          <Link v-if="outcome.cpUrl" :href="outcome.cpUrl" class="underline">Open it</Link>
+          <a v-if="outcome.url" :href="outcome.url" target="_blank" rel="noopener" class="underline"
+            >View on the site</a
+          >
+        </p>
+      </AlertDescription>
+    </Alert>
+    <Alert v-else-if="status === 'failed'" variant="destructive" class="mb-6">
+      <CircleAlert />
+      <AlertTitle>{{
+        error?.code === 'interrupted'
+          ? 'Approved, but it may not have been made'
+          : "Approved, but the change couldn't be made"
+      }}</AlertTitle>
+      <AlertDescription>
+        <p class="first-letter:uppercase">{{ error?.message }}</p>
+        <p v-if="error?.hint">{{ error.hint }}</p>
+      </AlertDescription>
+    </Alert>
 
     <Alert v-if="other_sites.length" class="mb-6">
       <AlertDescription>
@@ -66,7 +114,20 @@ useBreadcrumbs([{ label: 'Connected apps', url: '/cp/account/apps' }, { label: '
             <span v-else>{{ value ?? '—' }}</span>
           </dd>
         </template>
-        <template v-for="(value, key) in input" :key="key">
+        <template v-if="upload">
+          <dt class="text-gray-600 dark:text-gray-400">file</dt>
+          <dd>
+            <img
+              v-if="!previewFailed"
+              :src="`/cp/uploads/${upload}/preview`"
+              :alt="summary.filename ?? ''"
+              class="max-h-48 rounded-lg bg-gray-100 object-contain dark:bg-gray-800"
+              @error="previewFailed = true"
+            />
+            <span v-else>{{ summary.filename ?? 'An uploaded file' }}</span>
+          </dd>
+        </template>
+        <template v-for="(value, key) in details" :key="key">
           <dt class="text-gray-600 dark:text-gray-400">{{ key }}</dt>
           <dd class="break-all">{{ show(value) }}</dd>
         </template>
@@ -87,17 +148,14 @@ useBreadcrumbs([{ label: 'Connected apps', url: '/cp/account/apps' }, { label: '
       </div>
     </CpPanel>
 
-    <p class="text-sm text-gray-600 dark:text-gray-400">
+    <p v-if="!['done', 'failed'].includes(status)" class="text-sm text-gray-600 dark:text-gray-400">
       <template v-if="open"
         >Approving makes exactly this change, once. It can be approved until
         {{ new Date(expires_at).toLocaleString() }}.</template
       >
       <template v-else-if="status === 'approved'">Approved. The change is being made.</template>
-      <template v-else-if="status === 'done'">Done: the change was made.</template>
-      <template v-else-if="status === 'failed'"
-        >Approved, but the change couldn't be made: {{ error?.message }}</template
-      >
-      <template v-else>Nothing will happen.</template>
+      <template v-else-if="status === 'denied'">Declined. Nothing was changed.</template>
+      <template v-else-if="status === 'expired'">Nobody decided in time, so nothing was changed.</template>
     </p>
   </div>
 </template>

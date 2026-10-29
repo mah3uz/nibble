@@ -56,7 +56,8 @@ module Nibble
 
       def approval_row(approval)
         { id: approval.public_id, app: approval.grant.name, operation: Nibble::Operations.find(approval.operation)&.title,
-          title: approval.preview["title"] || approval.preview["handle"], created_at: approval.created_at.utc.iso8601 }
+          title: approval.preview["title"] || approval.preview["handle"] || approval.preview["filename"], upload: approval.input["upload"],
+          created_at: approval.created_at.utc.iso8601 }
       end
 
       def changes_access? = params.key?(:preset) || params.key?(:areas) || params.key?(:approval_mode)

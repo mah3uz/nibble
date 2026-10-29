@@ -157,6 +157,16 @@ class Nibble::Cp::ApprovalsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "draft", other.reload.status
   end
 
+  test "a waiting upload is listed by its filename, with its upload so the list can show a thumbnail" do
+    Nibble::Approval.create!(grant: @grant, operation: "upload_asset", input: { "upload" => "staged-id" }, digest: "x",
+      preview: { "filename" => "hero.png" })
+    sign_in_as users(:admin)
+
+    get "/cp/account/apps"
+    row = JSON.parse(Nokogiri::HTML(response.body).at_css("script[data-page]").text)["props"]["approvals"].sole
+    assert_equal [ "hero.png", "staged-id" ], row.values_at("title", "upload")
+  end
+
   test "people and administrators can see which apps wait for approval" do
     grant("everything", approval_mode: "off")
     sign_in_as users(:admin)

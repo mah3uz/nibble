@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { Link, router, useForm } from '@inertiajs/vue3'
 import { Plug, Terminal } from '@lucide/vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import ConnectionSettings, { type Connection } from '@/components/cp/agents/ConnectionSettings.vue'
+import { connectionEnds, lastUsed, PRESET_LABELS } from '@/components/cp/agents/connection'
 import CpPanel from '@/components/cp/page/CpPanel.vue'
 import PageHeader from '@/components/cp/page/PageHeader.vue'
 import { Badge } from '@/components/ui/badge'
@@ -9,25 +11,14 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { useBreadcrumbs } from '@/lib/breadcrumbs'
 import { useConfirm } from '@/lib/confirm'
-import { timeAgo } from '@/lib/format'
 
 type AreaRow = { key: string; title: string; group: string; values: Record<string, boolean> }
-type GrantRow = {
-  id: number
-  name: string
-  kind: string
-  preset: string
-  via: string | null
-  owner: { id: number; name: string; email: string }
-  created_at: string
-  last_used_at: string | null
-  last_used_ip: string | null
-  expires_at: string
-}
+type GrantRow = Connection & { owner: { id: number; name: string; email: string }; created_at: string }
 
 const props = defineProps<{
   enabled: boolean
   device_sign_in: boolean
+  approvals: 'choose' | 'always'
   areas: AreaRow[]
   columns: { value: string; label: string }[]
   roles: string[]
@@ -39,6 +30,7 @@ const confirm = useConfirm()
 const form = useForm({
   enabled: props.enabled,
   device_sign_in: props.device_sign_in,
+  approvals: props.approvals,
   areas: Object.fromEntries(props.areas.map((area) => [area.key, { ...area.values }])) as Record<
     string,
     Record<string, boolean>
@@ -46,7 +38,26 @@ const form = useForm({
 })
 const groups = computed(() => [...new Set(props.areas.map((area) => area.group))])
 const date = (value: string) => new Date(value).toLocaleDateString(undefined, { dateStyle: 'medium' })
-const ACCESS: Record<string, string> = { read: 'Read', draft: 'Draft', everything: 'Everything', custom: 'Custom' }
+const editing = ref<GrantRow | null>(null)
+const settingsOpen = ref(false)
+const APPROVALS = [
+  {
+    value: 'choose',
+    label: 'Each person chooses',
+    description:
+      'When connecting an app, its person decides whether it asks before live changes or makes them without asking.',
+  },
+  {
+    value: 'always',
+    label: 'Always ask',
+    description: 'Every app waits for approval before live changes, whatever its person chose.',
+  },
+]
+
+function edit(grant: GrantRow) {
+  editing.value = grant
+  settingsOpen.value = true
+}
 
 const save = () => form.patch('/cp/agent-access', { preserveScroll: true })
 
@@ -103,6 +114,32 @@ useBreadcrumbs([{ label: 'Agent access' }])
               <Link href="/cp/roles" class="underline">Change it in Roles</Link> with the “Connect apps” permission.
             </p>
           </div>
+        </CpPanel>
+
+        <CpPanel title="Approvals" description="Whether apps wait for a person before changes that go live.">
+          <fieldset class="space-y-2" :disabled="!form.enabled">
+            <legend class="sr-only">Approvals</legend>
+            <label
+              v-for="option in APPROVALS"
+              :key="option.value"
+              class="flex gap-3 rounded-lg border p-3 text-sm has-checked:border-gray-900 has-disabled:opacity-50 dark:has-checked:border-white"
+            >
+              <input
+                v-model="form.approvals"
+                type="radio"
+                name="approvals"
+                :value="option.value"
+                class="mt-0.5 accent-gray-900 dark:accent-white"
+              />
+              <span>
+                <span class="block font-medium">{{ option.label }}</span>
+                <span class="block text-gray-600 dark:text-gray-400">{{ option.description }}</span>
+              </span>
+            </label>
+          </fieldset>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            An app signed in with a code always asks. Tokens for scripts never do: nobody is there to approve.
+          </p>
         </CpPanel>
 
         <CpPanel
@@ -165,36 +202,47 @@ useBreadcrumbs([{ label: 'Agent access' }])
                   <Plug v-else class="size-4" />
                 </span>
                 <div class="min-w-0 flex-1">
-                  <div class="flex items-center gap-2">
-                    <span class="truncate font-medium text-gray-900 dark:text-gray-100">{{ grant.name }}</span>
-                    <Badge variant="secondary">{{ ACCESS[grant.preset] ?? grant.preset }}</Badge>
-                  </div>
+                  <p class="truncate font-medium text-gray-900 dark:text-gray-100" :title="grant.name">
+                    {{ grant.name }}
+                  </p>
                   <p class="truncate text-sm text-gray-600 dark:text-gray-400" :title="grant.owner.email">
                     {{ grant.owner.name }}
                   </p>
+                  <div class="mt-1.5 flex flex-wrap gap-1.5">
+                    <Badge variant="secondary">{{ PRESET_LABELS[grant.preset] ?? grant.preset }}</Badge>
+                    <Badge variant="secondary">{{ grant.asks_approval ? 'Asks first' : "Doesn't ask" }}</Badge>
+                  </div>
                 </div>
               </div>
               <dl class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
                 <dt class="text-gray-500">Last used</dt>
                 <dd class="text-gray-700 dark:text-gray-300">
                   <time v-if="grant.last_used_at" :datetime="grant.last_used_at" :title="date(grant.last_used_at)">{{
-                    timeAgo(grant.last_used_at)
+                    lastUsed(grant)
                   }}</time>
                   <template v-else>Never</template>
-                  <span v-if="grant.last_used_ip" class="text-gray-500"> · {{ grant.last_used_ip }}</span>
                 </dd>
-                <dt class="text-gray-500">Expires</dt>
+                <dt class="text-gray-500">Ends</dt>
                 <dd class="text-gray-700 dark:text-gray-300">
-                  <time :datetime="grant.expires_at" :title="date(grant.expires_at)">{{
-                    timeAgo(grant.expires_at)
-                  }}</time>
+                  <time :datetime="grant.expires_at" :title="date(grant.expires_at)">{{ connectionEnds(grant) }}</time>
                 </dd>
               </dl>
-              <Button variant="outline" size="sm" class="w-full" @click="revoke(grant)">Disconnect</Button>
+              <div class="grid grid-cols-2 gap-2">
+                <Button variant="outline" size="sm" @click="edit(grant)">Settings</Button>
+                <Button variant="outline" size="sm" @click="revoke(grant)">Disconnect</Button>
+              </div>
             </li>
           </ul>
         </CpPanel>
       </aside>
     </div>
+
+    <ConnectionSettings
+      v-model:open="settingsOpen"
+      :connection="editing"
+      url="/cp/agent-access/grants"
+      :site-approvals="approvals"
+      elevated
+    />
   </div>
 </template>

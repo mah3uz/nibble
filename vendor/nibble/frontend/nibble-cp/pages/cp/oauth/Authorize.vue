@@ -2,6 +2,7 @@
 import { useForm } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import AccessChooser, { type Area, type Preset } from '@/components/cp/agents/AccessChooser.vue'
+import ApprovalsChooser from '@/components/cp/agents/ApprovalsChooser.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,6 +16,7 @@ const props = defineProps<{
   presets: Preset[]
   areas: Area[]
   elevated: boolean
+  approvals: { choosable: boolean; default: string }
   client: {
     name: string
     known: string | null
@@ -33,10 +35,11 @@ const form = useForm({
   decision: 'approve',
   preset: firstAvailable?.value ?? 'read',
   areas: {} as Record<string, string[]>,
+  approvals: props.approvals.default,
 })
 const password = ref('')
 const passwordError = ref<string | null>(null)
-const needsPassword = computed(() => form.preset === 'everything' && !props.elevated)
+const needsPassword = computed(() => (form.preset === 'everything' || form.approvals === 'off') && !props.elevated)
 const title = computed(() => props.client.known ?? props.client.name)
 
 async function submit(decision: 'approve' | 'deny') {
@@ -88,6 +91,7 @@ async function submit(decision: 'approve' | 'deny') {
       </Alert>
 
       <AccessChooser v-model:preset="form.preset" v-model:selection="form.areas" :presets="presets" :areas="areas" />
+      <ApprovalsChooser v-if="approvals.choosable" v-model="form.approvals" />
 
       <div v-if="needsPassword" class="space-y-1.5">
         <Label for="consent-password">Confirm your password</Label>
@@ -95,6 +99,7 @@ async function submit(decision: 'approve' | 'deny') {
         <p v-if="passwordError" class="text-sm text-destructive">{{ passwordError }}</p>
       </div>
       <p v-if="form.errors.preset" class="text-sm text-destructive">{{ form.errors.preset }}</p>
+      <p v-if="form.errors.approvals" class="text-sm text-destructive">{{ form.errors.approvals }}</p>
 
       <div class="flex gap-2">
         <Button class="flex-1" :disabled="form.processing" @click="submit('approve')">Connect</Button>

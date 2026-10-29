@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { Link, router, useForm } from '@inertiajs/vue3'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import AccessChooser, { type Area, type Preset } from '@/components/cp/agents/AccessChooser.vue'
+import ConnectionSettings, { type Connection } from '@/components/cp/agents/ConnectionSettings.vue'
+import { PRESET_LABELS } from '@/components/cp/agents/connection'
 import CpPanel from '@/components/cp/page/CpPanel.vue'
 import DataTablePanel from '@/components/cp/page/DataTablePanel.vue'
 import PageHeader from '@/components/cp/page/PageHeader.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -23,25 +26,21 @@ import { useBreadcrumbs } from '@/lib/breadcrumbs'
 import { useConfirm } from '@/lib/confirm'
 import { elevate } from '@/lib/elevation'
 
-type App = {
-  id: number
-  name: string
-  kind: string
-  preset: string
-  via: string | null
-  host: string | null
-  verified: boolean
-  created_at: string
-  last_used_at: string | null
-  last_used_ip: string | null
-  expires_at: string
-}
+type App = Connection & { host: string | null; verified: boolean; created_at: string }
 
-type PendingApproval = { id: string; app: string; operation: string | null; title: string | null; created_at: string }
+type PendingApproval = {
+  id: string
+  app: string
+  operation: string | null
+  title: string | null
+  upload: string | null
+  created_at: string
+}
 
 const props = defineProps<{
   approvals: PendingApproval[]
   enabled: boolean
+  site_approvals: 'choose' | 'always'
   can_connect: boolean
   elevated: boolean
   apps: App[]
@@ -68,6 +67,62 @@ watch(showIssued, (open) => {
 const form = useForm({ name: '', preset: 'read', expires_in: '30', areas: {} as Record<string, string[]> })
 const date = (value: string) => new Date(value).toLocaleDateString(undefined, { dateStyle: 'medium' })
 const copy = (text: string) => navigator.clipboard.writeText(text)
+
+const editing = ref<App | null>(null)
+const settingsOpen = ref(false)
+function edit(app: App) {
+  editing.value = app
+  settingsOpen.value = true
+}
+
+const selected = ref<string[]>([])
+const deciding = ref<'approve' | 'deny' | null>(null)
+const decidingOpen = computed({ get: () => !!deciding.value, set: (open) => !open && (deciding.value = null) })
+const batchPassword = ref('')
+const batchError = ref<string | null>(null)
+const batchProcessing = ref(false)
+const noPreview = ref(new Set<string>())
+const allSelected = computed(() => props.approvals.length > 0 && selected.value.length === props.approvals.length)
+
+watch(
+  () => props.approvals,
+  (approvals) => (selected.value = selected.value.filter((id) => approvals.some((approval) => approval.id === id))),
+)
+
+function toggleAll(on: boolean) {
+  selected.value = on ? props.approvals.map((approval) => approval.id) : []
+}
+
+function toggle(id: string, on: boolean) {
+  selected.value = on ? [...selected.value, id] : selected.value.filter((item) => item !== id)
+}
+
+function askBatch(decision: 'approve' | 'deny') {
+  batchPassword.value = ''
+  batchError.value = null
+  deciding.value = decision
+}
+
+async function decideBatch() {
+  if (!deciding.value) return
+  batchProcessing.value = true
+  if (!props.elevated) {
+    batchError.value = await elevate(batchPassword.value)
+    if (batchError.value) return (batchProcessing.value = false)
+  }
+  router.post(
+    '/cp/approvals/batch',
+    { ids: selected.value, decision: deciding.value },
+    {
+      preserveScroll: true,
+      onSuccess: () => {
+        deciding.value = null
+        selected.value = []
+      },
+      onFinish: () => (batchProcessing.value = false),
+    },
+  )
+}
 
 async function create() {
   if (!props.elevated) {
@@ -131,19 +186,49 @@ useBreadcrumbs([{ label: 'Connected apps' }])
       </div>
     </CpPanel>
 
-    <CpPanel v-if="approvals.length" title="Waiting for your approval">
-      <ul class="divide-y divide-gray-100 rounded-xl bg-white shadow-ui-sm dark:divide-gray-800 dark:bg-gray-900">
-        <li v-for="approval in approvals" :key="approval.id">
+    <CpPanel v-if="approvals.length" title="Waiting for your approval" flush>
+      <template #actions>
+        <Button variant="outline" size="sm" :disabled="!selected.length" @click="askBatch('deny')"
+          >Decline selected</Button
+        >
+        <Button size="sm" :disabled="!selected.length" @click="askBatch('approve')">Approve selected</Button>
+      </template>
+      <label
+        class="flex items-center gap-3 border-b border-gray-100 px-4 py-2.5 text-sm text-gray-600 dark:border-gray-800 dark:text-gray-400"
+      >
+        <Checkbox :model-value="allSelected" @update:model-value="(on) => toggleAll(!!on)" />
+        {{ selected.length ? `${selected.length} of ${approvals.length} selected` : 'Select all' }}
+      </label>
+      <ul class="divide-y divide-gray-100 dark:divide-gray-800" role="list">
+        <li
+          v-for="approval in approvals"
+          :key="approval.id"
+          class="flex items-center gap-3 ps-4 text-sm hover:bg-gray-50 dark:hover:bg-gray-800/50"
+        >
+          <Checkbox
+            :model-value="selected.includes(approval.id)"
+            :aria-label="`Select ${approval.app}: ${approval.title ?? approval.operation ?? 'change'}`"
+            @update:model-value="(on) => toggle(approval.id, !!on)"
+          />
           <Link
             :href="`/cp/approvals/${approval.id}`"
-            class="flex items-center justify-between gap-4 p-4 text-sm hover:bg-gray-50 dark:hover:bg-gray-850"
+            class="flex min-w-0 flex-1 items-center justify-between gap-4 py-3 pe-4"
           >
-            <span>
-              <span class="font-medium">{{ approval.app }}</span> asks to
-              {{ (approval.operation ?? 'make a change').toLowerCase()
-              }}<template v-if="approval.title">: {{ approval.title }}</template>
+            <span class="flex min-w-0 items-center gap-3">
+              <img
+                v-if="approval.upload && !noPreview.has(approval.id)"
+                :src="`/cp/uploads/${approval.upload}/preview`"
+                alt=""
+                class="-my-1 size-8 shrink-0 rounded-md bg-gray-100 object-cover dark:bg-gray-800"
+                @error="noPreview.add(approval.id)"
+              />
+              <span class="min-w-0">
+                <span class="font-medium">{{ approval.app }}</span> asks to
+                {{ (approval.operation ?? 'make a change').toLowerCase()
+                }}<template v-if="approval.title">: {{ approval.title }}</template>
+              </span>
             </span>
-            <span class="text-gray-500">{{ date(approval.created_at) }}</span>
+            <span class="shrink-0 text-gray-500">{{ date(approval.created_at) }}</span>
           </Link>
         </li>
       </ul>
@@ -156,8 +241,8 @@ useBreadcrumbs([{ label: 'Connected apps' }])
           <th>Access</th>
           <th>Connected</th>
           <th>Last used</th>
-          <th>Expires</th>
-          <th class="w-28"></th>
+          <th>Ends</th>
+          <th class="w-44"></th>
         </tr>
       </thead>
       <tbody>
@@ -169,7 +254,10 @@ useBreadcrumbs([{ label: 'Connected apps' }])
             </span>
           </td>
           <td>
-            <Badge variant="secondary">{{ app.preset }}</Badge>
+            <div class="flex flex-wrap gap-1.5">
+              <Badge variant="secondary">{{ PRESET_LABELS[app.preset] ?? app.preset }}</Badge>
+              <Badge variant="secondary">{{ app.asks_approval ? 'Asks first' : "Doesn't ask" }}</Badge>
+            </div>
           </td>
           <td class="text-sm">{{ date(app.created_at) }}</td>
           <td class="text-sm">
@@ -177,11 +265,60 @@ useBreadcrumbs([{ label: 'Connected apps' }])
             <span v-if="app.last_used_ip" class="block text-xs text-gray-500">{{ app.last_used_ip }}</span>
           </td>
           <td class="text-sm">{{ date(app.expires_at) }}</td>
-          <td><Button variant="outline" size="sm" @click="disconnect(app)">Disconnect</Button></td>
+          <td>
+            <div class="flex justify-end gap-2">
+              <Button variant="outline" size="sm" @click="edit(app)">Settings</Button>
+              <Button variant="outline" size="sm" @click="disconnect(app)">Disconnect</Button>
+            </div>
+          </td>
         </tr>
       </tbody>
     </DataTablePanel>
     <p v-else-if="enabled && can_connect" class="text-sm text-gray-600 dark:text-gray-400">No apps connected yet.</p>
+
+    <ConnectionSettings
+      v-model:open="settingsOpen"
+      :connection="editing"
+      url="/cp/account/apps"
+      :site-approvals="site_approvals"
+      :elevated="elevated"
+    />
+
+    <Dialog v-model:open="decidingOpen">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>
+            {{ deciding === 'approve' ? 'Approve' : 'Decline' }} {{ selected.length }}
+            {{ selected.length === 1 ? 'request' : 'requests' }}?
+          </DialogTitle>
+          <DialogDescription>
+            <template v-if="deciding === 'approve'">
+              Each change is checked again and made at once. One that can't be made is left as it is, with the reason.
+            </template>
+            <template v-else>None of these changes will be made.</template>
+          </DialogDescription>
+        </DialogHeader>
+        <form v-if="!elevated" id="approvals-batch-form" class="space-y-1.5" @submit.prevent="decideBatch">
+          <Label for="approvals-batch-password">Confirm your password</Label>
+          <PasswordInput
+            id="approvals-batch-password"
+            v-model="batchPassword"
+            autocomplete="current-password"
+            required
+          />
+          <p v-if="batchError" class="text-sm text-destructive">{{ batchError }}</p>
+        </form>
+        <DialogFooter show-close-button>
+          <Button
+            :type="elevated ? 'button' : 'submit'"
+            :form="elevated ? undefined : 'approvals-batch-form'"
+            :disabled="batchProcessing"
+            @click="elevated && decideBatch()"
+            >{{ deciding === 'approve' ? 'Approve' : 'Decline' }}</Button
+          >
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
 
     <Dialog v-model:open="creating">
       <DialogContent>
