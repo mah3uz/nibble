@@ -153,6 +153,7 @@ offers the new version, and you choose.
 
 ```sh
 cd tidewater
+bin/rails db:prepare    # only on a fresh checkout; the installer has done it already
 bin/rails nibble:check
 ```
 

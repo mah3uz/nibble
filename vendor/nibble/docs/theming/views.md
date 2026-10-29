@@ -94,7 +94,9 @@ const props = defineProps<ViewProps['posts/show'] & { page: PostsPost }>()
 ```
 
 `ViewProps['posts/show']` types what the sidecar returns; `PostsPost` types the page. A field that does not exist
-is a type error. Check the whole theme with `npx vue-tsc -p tsconfig.app.json --noEmit` before it is a broken page.
+is a type error. Check the whole theme with `npx vue-tsc -p tsconfig.app.json --noEmit` before it is a broken page. It checks
+only what `tsconfig.app.json` includes, which is every `site/themes/*` unless you changed it; see
+[Type-checking a theme](index.md#type-checking-a-theme).
 
 > [!IMPORTANT]
 > A view never fetches its own content — no `fetch`, no API calls. Put what it needs in its sidecar, so Nibble

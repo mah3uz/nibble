@@ -47,9 +47,48 @@ thing you do is copy it:
 bin/rails nibble:generate:theme tidewater
 ```
 
-That copies `vendor/nibble/themes/crumbs` to `site/themes/tidewater`, renames its npm package to
-`@nibble-theme/tidewater`, registers it with npm and makes it the active theme in `config/nibble.yml`. Commit it with
-`package-lock.json`.
+On a fresh checkout, run `bin/rails db:prepare` first: `nibble:check` reports a database that is not set up.
+
+That copies `vendor/nibble/themes/crumbs` to `site/themes/tidewater`, rewrites `theme.yml` for the new handle, renames
+its npm package to `@nibble-theme/tidewater`, makes it the active theme in `config/nibble.yml`, and runs
+`npm install` so the lockfile knows the new workspace (`site/themes/*` is already a workspace of the site's
+`package.json`). Commit the theme with `package-lock.json`. It does not touch `tsconfig.app.json`; see
+[Type-checking](#type-checking-a-theme).
+
+### What a theme minimally needs
+
+- `theme.yml` with `name`, `handle` (the folder name), `version` and `nibble`. Section 2 lists every key.
+- `layouts/default.vue`, the frame around every page.
+- The views `nibble:check` requires: `pages/show`, `posts/show`, `posts/index`, `taxonomies/show`,
+  `taxonomies/index`, `search`, `errors/404` and `errors/500`.
+- `styles/theme.css`, the one stylesheet Nibble links.
+- A `views/sets/<set>.vue` for every block set the schema defines, if any page uses blocks.
+
+`nibble:check` names whatever is missing. A `package.json` is needed only if the theme has dependencies of its own.
+
+### Starting by hand, or by copying crumbs
+
+To start by hand, create `site/themes/<handle>/` with those files, set `theme: <handle>` in `config/nibble.yml`, and
+run `npm install` if the theme has a `package.json`, so the workspace is registered.
+
+To copy crumbs yourself, copy `vendor/nibble/themes/crumbs` and edit `theme.yml` and the package name as the
+generator does. Either way, the copy brings crumbs' `schema/` with it, and that schema is the site's from then on:
+
+- `forms/contact.yml`, a `contact` form with `captcha: true`, which `views/about.vue` draws through
+  `components/ContactForm.vue`. Remove the form, the `contact` query in `views/about.yml` and the component
+  together, or adapt them. With no CAPTCHA keys configured, `nibble:check` warns that the form refuses every
+  submission.
+- `taxonomies/authors.yml` and `topics.yml`, with the `blueprints/` for pages and posts. The `about`, `home`,
+  `posts/show`, `authors/show` and `topics/*` views read the authors and topics, so keep the schema or change those
+  views with it.
+
+### Does a theme outside the npm workspace work in production?
+
+Yes, if it lives at `site/themes/<handle>`. The Vite build and the server-rendering build locate the theme by that
+folder and point `@theme` at it; the workspace is not consulted. What the workspace does is install the theme's own
+`package.json` dependencies (`npm ci` in the image installs only workspaces and the root). A theme outside it works as
+long as it needs nothing beyond what the site's root `package.json` already installs; add any other dependency to the
+root `package.json`.
 
 From there, a first view of your own takes five steps:
 
@@ -152,8 +191,27 @@ theme always needs a restart.
 `npm run lint` checks your theme with ESLint, and `npm run format` lays it out with Prettier. Lint rejects an import
 of Nibble's internals (`@/*`, `~/*` and `vendor/nibble/frontend`), which is what keeps a theme swappable; `@nibble`,
 `@theme`, `@site/types`, `vue`, `@inertiajs/vue3`, relative paths and your own dependencies are fine. To type-check
-views, run `npx vue-tsc -p tsconfig.app.json --noEmit`. `bin/rails nibble:check` reports a missing required view or
+views, run `npx vue-tsc -p tsconfig.app.json --noEmit` (see below). `bin/rails nibble:check` reports a missing required view or
 layout, a set with no view, and generated types that are out of date.
+
+### Type-checking a theme
+
+`npx vue-tsc -p tsconfig.app.json --noEmit` checks only the files `tsconfig.app.json` includes. The installer writes
+it from `vendor/nibble/templates/tsconfig.app.json.erb`, and its `include` covers every theme in the site:
+
+```json
+"include": [
+  "vendor/nibble/frontend/**/*.ts",
+  "vendor/nibble/frontend/**/*.tsx",
+  "vendor/nibble/frontend/**/*.vue",
+  "site/themes/*/**/*.ts",
+  "site/themes/*/**/*.vue",
+  "site/types.d.ts"
+]
+```
+
+A theme in another folder is not checked until you add its pattern here. `paths` also maps `@theme/*` to the theme
+the installer was answered with; point it at your theme's folder if you started a different one.
 
 Outside production, every response carries an `X-Nibble-Queries` header: the number of queries the page ran, which is
 the quickest way to see a view's sidecar cost. A cached response carries `X-Nibble-Cache: hit`, and every response lists
