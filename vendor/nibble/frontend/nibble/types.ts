@@ -34,7 +34,7 @@ export type SeoProps = {
 }
 
 export type NibbleFormConditionOperator =
-  | 'equals' | 'not' | 'contains' | 'contains_any' | '===' | '!==' | '>' | '>=' | '<' | '<=' | 'custom'
+  'equals' | 'not' | 'contains' | 'contains_any' | '===' | '!==' | '>' | '>=' | '<' | '<=' | 'custom'
 
 export type NibbleFormConditions = {
   show: boolean
@@ -42,40 +42,59 @@ export type NibbleFormConditions = {
   rules: { field: string | null; operator: NibbleFormConditionOperator; value: string }[]
 }
 
-export type NibbleFormField = {
+type NibbleFormOption = { value: string; label: string }
+
+type NibbleFormFieldBase = {
   handle: string
-  type: string
   display: string
   instructions: string | null
   required: boolean
-  placeholder?: string
-  input_type?: string
-  character_limit?: number
   default?: unknown
   width?: number
-  multiple?: boolean
-  inline?: boolean
-  options?: { value: string; label: string }[]
-  max_files?: number
-  max_file_size?: number
-  extensions?: string[]
-  prepend?: string
-  append?: string
-  min?: number
-  max?: number
-  step?: number
-  autocomplete?: string
-  rows?: number
-  inline_label?: string
-  time_enabled?: boolean
-  earliest_date?: string
-  latest_date?: string
-  max_items?: number
-  clearable?: boolean
   conditions?: NibbleFormConditions
   hidden?: boolean
   value?: string | number | boolean
 }
+
+type NibbleFormFieldTypes = {
+  text: {
+    placeholder?: string
+    input_type?: string
+    character_limit?: number
+    autocomplete?: string
+    prepend?: string
+    append?: string
+  }
+  textarea: { placeholder?: string; character_limit?: number; rows?: number }
+  integer: { placeholder?: string; min?: number; max?: number; step?: number; prepend?: string; append?: string }
+  toggle: { inline_label?: string }
+  select: {
+    placeholder?: string
+    options: NibbleFormOption[]
+    multiple?: boolean
+    max_items?: number
+    clearable?: boolean
+  }
+  radio: { options: NibbleFormOption[]; inline?: boolean }
+  checkboxes: { options: NibbleFormOption[]; inline?: boolean }
+  date: { inline?: boolean; time_enabled?: boolean; earliest_date?: string; latest_date?: string }
+  files: { max_files?: number; max_file_size?: number; extensions?: string[] }
+}
+
+type NibbleFormFieldKey = {
+  [T in keyof NibbleFormFieldTypes]: keyof NibbleFormFieldTypes[T]
+}[keyof NibbleFormFieldTypes]
+
+export type NibbleFormFieldType = keyof NibbleFormFieldTypes
+
+// Every member lists the others' settings as undefined, so a theme can read one before narrowing on `type`.
+export type NibbleFormField = {
+  [T in NibbleFormFieldType]: NibbleFormFieldBase & { type: T } & NibbleFormFieldTypes[T] & {
+      [K in Exclude<NibbleFormFieldKey, keyof NibbleFormFieldTypes[T]>]?: undefined
+    }
+}[NibbleFormFieldType]
+
+export type NibbleFormValue = string | number | boolean | (string | number)[] | File[] | null
 
 export type NibbleFormSection = {
   display: string | null

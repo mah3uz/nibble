@@ -1,7 +1,8 @@
 import { router } from '@inertiajs/vue3'
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { passes } from '../nibble-cp/conditions'
 import { useLocale } from './composables'
-import type { NibbleForm, NibbleFormField } from './types'
+import type { NibbleForm, NibbleFormField, NibbleFormResult, NibbleFormValue } from './types'
 
 type Captcha = { provider: 'turnstile' | 'recaptcha'; site_key: string }
 
@@ -44,11 +45,45 @@ function loadScript(src: string) {
   return loading.get(src)!
 }
 
-function initialValue(field: NibbleFormField) {
-  if (field.default !== undefined && field.default !== null) return field.default
-  if (field.type === 'checkboxes' || field.type === 'files') return []
-  if (field.type === 'toggle') return false
-  return field.type === 'select' && field.multiple ? [] : ''
+function many(field: NibbleFormField) {
+  return field.type === 'checkboxes' || field.type === 'files' || (field.type === 'select' && field.multiple === true)
+}
+
+function initialValue(field: NibbleFormField): NibbleFormValue {
+  if (field.default !== undefined && field.default !== null) return field.default as NibbleFormValue
+  if (many(field)) return []
+  return field.type === 'toggle' ? false : ''
+}
+
+function refilled(field: NibbleFormField, result: NibbleFormResult | null): NibbleFormValue | undefined {
+  if (result?.status !== 'invalid' || field.type === 'files' || field.hidden) return undefined
+  const value = result.values?.[field.handle]
+  if (value === undefined || value === null) return undefined
+  if (field.type === 'toggle') return !['', '0', 'false', false, 0].includes(value as string)
+  if (many(field)) return Array.isArray(value) ? value : [value as string]
+  return value
+}
+
+export function isFieldVisible(field: NibbleFormField, values: Record<string, unknown>) {
+  const conditions = field.conditions
+  if (!conditions) return true
+  if (conditions.rules.some((rule) => rule.operator === 'custom' || !rule.field)) return true
+  const results = conditions.rules.map((rule) => passes({ ...rule, field: rule.field! }, values))
+  const passed = conditions.match === 'any' ? results.some(Boolean) : results.every(Boolean)
+  return conditions.show ? passed : !passed
+}
+
+export function fileLimits(field: NibbleFormField) {
+  if (field.type !== 'files') return null
+  const several = (field.max_files ?? 1) > 1
+  const types = field.extensions?.map((extension) => extension.toUpperCase()) ?? []
+  const parts = [
+    types.length > 1 ? `${types.slice(0, -1).join(', ')} or ${types.at(-1)}` : types[0],
+    field.max_file_size ? `up to ${field.max_file_size} MB${several ? ' each' : ''}` : null,
+    several ? `at most ${field.max_files} files` : 'one file',
+  ].filter(Boolean)
+  const text = parts.join(', ')
+  return `${text.charAt(0).toUpperCase()}${text.slice(1)}.`
 }
 
 function append(body: FormData, name: string, value: unknown) {
@@ -73,8 +108,10 @@ const FALLBACK_MESSAGES = {
 export function useNibbleForm(definition: NibbleForm) {
   const locale = useLocale()
   const text = (key: keyof typeof FALLBACK_MESSAGES) => definition.messages?.[key] ?? FALLBACK_MESSAGES[key]
-  const values = reactive<Record<string, unknown>>(
-    Object.fromEntries(definition.fields.map((field) => [field.handle, initialValue(field)])),
+  const values = reactive<Record<string, NibbleFormValue>>(
+    Object.fromEntries(
+      definition.fields.map((field) => [field.handle, refilled(field, definition.result) ?? initialValue(field)]),
+    ),
   )
   const trap = ref('')
   const errors = ref<Record<string, string>>(
@@ -84,12 +121,46 @@ export function useNibbleForm(definition: NibbleForm) {
   const message = ref<string | null>(sent.value ? (definition.result?.message ?? null) : null)
   const processing = ref(false)
   const captchaEl = ref<HTMLElement | null>(null)
+  const summaryEl = ref<HTMLElement | null>(null)
+  const messageEl = ref<HTMLElement | null>(null)
+  const byHandle = new Map(definition.fields.map((field) => [field.handle, field]))
 
   let widgetId: string | null = null
   let pendingToken: ((token: string | null) => void) | null = null
 
   function fieldName(field: NibbleFormField) {
-    return field.type === 'checkboxes' || field.type === 'files' || field.multiple ? `${field.handle}[]` : field.handle
+    return many(field) ? `${field.handle}[]` : field.handle
+  }
+
+  const isVisible = (field: NibbleFormField) => isFieldVisible(field, values)
+  const inputId = (field: NibbleFormField) => `${definition.handle}-${field.handle}`
+  const helpId = (field: NibbleFormField) => `${inputId(field)}-help`
+  const errorId = (field: NibbleFormField) => `${inputId(field)}-error`
+  const hasHelp = (field: NibbleFormField) => Boolean(field.instructions || fileLimits(field))
+
+  function describedBy(field: NibbleFormField) {
+    const ids = [hasHelp(field) && helpId(field), errors.value[field.handle] && errorId(field)].filter(Boolean)
+    return ids.length ? ids.join(' ') : undefined
+  }
+
+  const errorList = computed(() => {
+    const listed = new Map<string, { handle: string; label: string; message: string; href: string }>()
+    Object.entries(errors.value).forEach(([key, text]) => {
+      const field = byHandle.get(key.split('.')[0]!)
+      if (field && !listed.has(field.handle))
+        listed.set(field.handle, {
+          handle: field.handle,
+          label: field.display,
+          message: text,
+          href: `#${inputId(field)}`,
+        })
+    })
+    return [...listed.values()]
+  })
+
+  async function focus(el: typeof summaryEl) {
+    await nextTick()
+    el.value?.focus()
   }
 
   function accept(field: NibbleFormField) {
@@ -136,6 +207,8 @@ export function useNibbleForm(definition: NibbleForm) {
       : null
 
   onMounted(() => {
+    if (definition.result?.status === 'invalid') void focus(summaryEl)
+    else if (sent.value) void focus(messageEl)
     if (captcha?.provider === 'turnstile') void renderTurnstile(captcha)
     else if (captcha) void loadScript(SCRIPTS.recaptcha(captcha.site_key))
   })
@@ -160,7 +233,7 @@ export function useNibbleForm(definition: NibbleForm) {
 
     try {
       const body = new FormData()
-      definition.fields.forEach((field) => append(body, field.handle, values[field.handle]))
+      definition.fields.filter(isVisible).forEach((field) => append(body, field.handle, values[field.handle]))
       if (definition.honeypot) body.append(definition.honeypot, trap.value)
       body.append('_locale', locale.value)
       if (captcha) {
@@ -177,6 +250,7 @@ export function useNibbleForm(definition: NibbleForm) {
         if (redirect) return redirect.startsWith('/') ? router.visit(redirect) : window.location.assign(redirect)
         sent.value = true
         message.value = payload.message ?? null
+        void focus(messageEl)
       } else if (response.status === 413) {
         errors.value = { base: text('too_large') }
       } else {
@@ -187,9 +261,32 @@ export function useNibbleForm(definition: NibbleForm) {
       errors.value = { base: text('network') }
     } finally {
       processing.value = false
+      if (Object.keys(errors.value).length) void focus(summaryEl)
       if (widgetId) (window as CaptchaWindow).turnstile?.reset(widgetId)
     }
   }
 
-  return { values, trap, errors, sent, message, processing, captchaEl, fieldName, accept, setFiles, submit, reset }
+  return {
+    values,
+    trap,
+    errors,
+    errorList,
+    sent,
+    message,
+    processing,
+    captchaEl,
+    summaryEl,
+    messageEl,
+    fieldName,
+    accept,
+    setFiles,
+    submit,
+    reset,
+    isVisible,
+    inputId,
+    helpId,
+    errorId,
+    describedBy,
+    fileLimits,
+  }
 }

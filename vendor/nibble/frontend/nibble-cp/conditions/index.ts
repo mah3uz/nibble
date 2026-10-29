@@ -88,6 +88,10 @@ function splitRhs(handle: string, rhs: unknown, prefix: string | null): Conditio
 
 type Context = { values: Values; rootValues: Values; path: string | null }
 
+export function passes(condition: Condition, values: Values) {
+  return evaluate(condition, { values, rootValues: values, path: null })
+}
+
 function evaluate(condition: Condition, context: Context): boolean {
   if (condition.operator === 'custom') return passesCustom(prepareCustom(condition.value, condition.field), context)
 
