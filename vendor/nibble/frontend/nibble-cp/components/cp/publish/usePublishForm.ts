@@ -57,7 +57,8 @@ export function usePublishForm(options: UsePublishFormOptions) {
   })
 
   function save(commit: Commit, opts: { message?: string } = {}) {
-    const url = urlFor(commit)
+    const creating = meta.value.id == null
+    const url = creating ? urls.value.update : urlFor(commit)
     if (!url) return
 
     form.transform((data: Record<string, unknown>) => {
@@ -73,8 +74,12 @@ export function usePublishForm(options: UsePublishFormOptions) {
         syncFromProps()
         if (commit === 'save') afterSaveNavigate()
       },
+      // The commit itself needs the entry to exist, and a visit started before this one finishes would interrupt it.
+      onFinish: () => {
+        if (creating && commit !== 'save' && meta.value.id != null) save(commit, opts)
+      },
     }
-    if (meta.value.id == null) form.post(urls.value.update, visit)
+    if (creating) form.post(url, visit)
     else if (commit === 'save') form.patch(url, visit)
     else if (commit === 'discard') form.delete(url, visit)
     else form.post(url, visit)
