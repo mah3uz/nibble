@@ -229,7 +229,10 @@ Every form gets two protections without asking:
 
 - **A honeypot** — a hidden field people never fill in and bots usually do. Rename it with `spam.honeypot`, or turn
   it off with `honeypot: false`.
-- **Rate limiting** — five submissions a minute from one address by default.
+- **Rate limiting** — five accepted submissions a minute from one address by default. A post that fails validation
+  doesn't use up the visitor's attempts, so someone correcting a long form isn't locked out; an address that sends ten
+  times the limit of refused posts in the window is cut off too. A visitor over the limit is told how long to wait
+  ("Try again in 4 minutes.").
 
 A theme renders the honeypot as a visually hidden text input with `tabindex="-1"`, `autocomplete="off"` and
 `aria-hidden="true"`, so keyboards, screen readers and autofill pass it by. Keep its name meaningless: browsers and

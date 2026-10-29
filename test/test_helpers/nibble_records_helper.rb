@@ -89,7 +89,7 @@ module NibbleRecordsHelper
       { handle: "note", field: { type: "text", unless: { kind: [ "isnt personal", "empty" ] } } },
       { handle: "vip", field: { type: "toggle", if: "custom vip_only:gold" } }
     ] },
-    "forms/tracked.yml" => { title: "Tracked", fields: [
+    "forms/tracked.yml" => { title: "Tracked", spam: { rate_limit: { requests: 2, per_minutes: 10 } }, fields: [
       { handle: "name", field: { type: "text", required: true } },
       { handle: "source", field: { type: "text", hidden: true, prefill: { query: "utm_source" }, validate: [ "max:10" ] } },
       { handle: "channel", field: { type: "text", hidden: true, value: "web" } },

@@ -133,6 +133,37 @@ class FormsControllerTest < ActionDispatch::IntegrationTest
     assert_nil flash[:nibble_form]["values"]
   end
 
+  test "a visitor correcting a form isn't locked out: only accepted submissions use up the limit" do
+    8.times { submit :contact, VALID.except(:email) }
+    assert_response :unprocessable_entity
+
+    5.times { submit :contact, VALID }
+    assert_response :created
+    submit :contact, VALID
+    assert_response :too_many_requests
+    assert_equal 5, Submission.count
+  end
+
+  test "a flood of invalid posts is still cut off, at ten times the limit" do
+    50.times { submit :contact, VALID.except(:email) }
+    assert_response :unprocessable_entity
+
+    submit :contact, VALID
+    assert_response :too_many_requests
+  end
+
+  test "the refusal says how long to wait for the form's own window" do
+    2.times { submit :tracked, { name: "Ada" } }
+    submit :tracked, { name: "Ada" }
+
+    assert_response :too_many_requests
+    assert_match(/try again in (9|10) minutes\./, response.parsed_body["errors"]["base"].first)
+
+    submit :contact, VALID
+    5.times { submit :contact, VALID }
+    assert_equal "Too many submissions. Please try again in 1 minute.", response.parsed_body["errors"]["base"].first
+  end
+
   test "a form that doesn't store keeps nothing" do
     captcha(provider: "turnstile")
     stub_request(:post, TURNSTILE).to_return(body: { success: true }.to_json)

@@ -6,6 +6,7 @@ module Nibble
       end
 
       PREFILL_LIMIT = 500
+      REFUSED_LIMIT_FACTOR = 10
       SPAM_VALUE = [ String, Numeric, TrueClass, FalseClass ].freeze
 
       mattr_accessor :rate_limit_store, default: -> { Rails.cache }
@@ -27,7 +28,17 @@ module Nibble
       end
 
       def call
-        return result(:rate_limited, errors: { "base" => [ "Too many submissions. Please try again in a minute." ] }) if rate_limited?
+        if (wait = rate_limited)
+          minutes = [ (wait / 60.0).ceil, 1 ].max
+          return result(:rate_limited, errors: { "base" => [ "Too many submissions. Please try again in #{minutes} #{'minute'.pluralize(minutes)}." ] })
+        end
+
+        outcome = process
+        count(outcome.ok? ? "accepted" : "refused")
+        outcome
+      end
+
+      def process
         return spam! if @form.honeypot && @params[@form.honeypot].present?
         return result(:invalid, errors: { "base" => [ captcha_message ] }) unless captcha_passed?
 
@@ -88,14 +99,23 @@ module Nibble
         step_errors(fields, values).merge(errors)
       end
 
-      def rate_limited?
+      def rate_limited
         limit = @form.rate_limit
-        window = limit["per_minutes"].minutes
-        key = "nibble:forms:#{@form.handle}:#{@ip_hash || 'unknown'}:#{Time.current.to_i / window.to_i}"
-        store = rate_limit_store.call
-        count = store.increment(key, 1, expires_in: window) || (store.write(key, 1, expires_in: window) && 1)
-        count.to_i > limit["requests"]
+        { "accepted" => limit["requests"], "refused" => limit["requests"] * REFUSED_LIMIT_FACTOR }.each do |kind, ceiling|
+          return window_end - Time.current.to_i if rate_limit_store.call.read(rate_key(kind)).to_i >= ceiling
+        end
+        nil
       end
+
+      def count(kind)
+        store = rate_limit_store.call
+        key = rate_key(kind)
+        store.increment(key, 1, expires_in: window) || store.write(key, 1, expires_in: window)
+      end
+
+      def window = @form.rate_limit["per_minutes"].minutes
+      def window_end = (Time.current.to_i / window.to_i + 1) * window.to_i
+      def rate_key(kind) = "nibble:forms:#{@form.handle}:#{@ip_hash || 'unknown'}:#{kind}:#{Time.current.to_i / window.to_i}"
 
       def captcha_passed?
         return true unless @form.captcha?
