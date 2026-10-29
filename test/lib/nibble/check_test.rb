@@ -39,6 +39,27 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     Nibble::Integrations.define_singleton_method(:captcha, original) if original
   end
 
+  test "messages must belong to a rule the field has, and name locales the site has" do
+    theme_file("forms/signup.yml", title: "Signup", success: { message: "Thanks!" }, fields: [
+      { handle: "phone", field: { type: "text", validate: [ "regex:/^04/" ], messages: { regex: { en: "Mobile please", fr: "Mobile" }, min: "Too short" } } },
+      { handle: "name", field: { type: "text", required: true, messages: { required: "Say who you are" } } }
+    ])
+
+    messages = check.problems.map(&:to_s).grep(/phone|name/)
+
+    assert_equal 2, messages.size
+    assert(messages.any? { |m| m.include?("message for 'min'") })
+    assert(messages.any? { |m| m.include?("'regex' message for locale 'fr'") })
+  end
+
+  test "a message that isn't a string is refused" do
+    theme_file("forms/signup.yml", title: "Signup", success: { message: "Thanks!" }, fields: [
+      { handle: "phone", field: { type: "text", validate: [ "regex:/^04/" ], messages: { regex: 5 } } }
+    ])
+
+    assert(check.problems.any? { |problem| problem.to_s.include?("messages") && problem.to_s.include?("invalid value") })
+  end
+
   test "allow_private_networks is an error where it is ignored, and fine in development and test" do
     config = Nibble::Config.new({ "theme" => "check", "locales" => [ { "code" => "en", "default" => true } ], "outbound" => { "allow_private_networks" => true } }, themes_path: @themes)
 

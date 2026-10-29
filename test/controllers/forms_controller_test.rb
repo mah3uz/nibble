@@ -53,6 +53,13 @@ class FormsControllerTest < ActionDispatch::IntegrationTest
     assert_empty Submission.all
   end
 
+  test "a field's own message is what a visitor sees when its rule fails" do
+    submit :callback, { phone: "12345" }
+
+    assert_response :unprocessable_entity
+    assert_equal [ "Enter an Australian mobile number" ], response.parsed_body["errors"]["phone"]
+  end
+
   test "a filled honeypot looks like success to the bot but is kept only as spam" do
     submit :contact, VALID.merge(_nibble_hp: "http://spam.test")
 

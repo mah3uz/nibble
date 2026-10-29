@@ -74,6 +74,7 @@ terms. The collection lists which blueprints it allows; the first is the default
 | `instructions` | help text, shown below the label — `instructions_position: below` moves it under the input |
 | `required` | a value is needed to save |
 | `validate` | extra rules, such as `[max:200]` or `["required_with:{this}.button_label"]` |
+| `messages` | what to say when a rule fails, keyed by rule name — see below |
 | `default` | the value a new entry, term, global or row starts with; entries that already exist keep what they have, and [`set_default`](changing-schema.md#42-set_default) fills them |
 | `width` | how much of the row it takes: `25`, `33`, `50`, `66`, `75` or `100` |
 | `localizable` | the value differs per locale |
@@ -81,6 +82,26 @@ terms. The collection lists which blueprints it allows; the first is the default
 | `read_only` | shown but not editable |
 | `visibility` | `visible`, `read_only`, `hidden` or `computed` |
 | `api` | `false` leaves the field out of the generated TypeScript types — the value is still sent to pages and the API |
+
+A failed rule says "The Phone field format is invalid." unless the field gives its own wording. `messages` is keyed by
+the name of a rule the field has, and each value is a string or a map of locale code to string:
+
+```yaml
+field:
+  type: text
+  validate: ["regex:/^04\\d{8}$/", "min:2"]
+  messages:
+    regex: Enter an Australian mobile number
+    min:
+      en: At least %{min} characters
+      fr: Au moins %{min} caractères
+```
+
+A rule's message is used in the locale of the record or submission, then the site's default locale, then Nibble's own
+wording. It takes the same placeholders as the default (`%{attribute}`, `%{min}`, `%{max}`…), and `min`, `max`,
+`between` and `size` cover the number, text and list variants alike. Editors in the Control Plane, visitors on a form
+and connected apps see it. `nibble:check` refuses a message for a rule the field doesn't have, a value that isn't text,
+and a locale the site doesn't have.
 
 ## 3. The fieldtypes
 

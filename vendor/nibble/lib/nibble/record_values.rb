@@ -7,7 +7,7 @@ module Nibble
 
     def validate(values, full:)
       replacements = { "id" => @record.id.to_s, "locale" => @record.locale.to_s, "type" => @record.record_type }
-      result = Validator.new(@fields, replacements:, skip_required: !full).validate(values)
+      result = Validator.new(@fields, replacements:, skip_required: !full, locale: @record.locale).validate(values)
       result.errors
     end
 

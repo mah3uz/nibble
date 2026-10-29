@@ -47,6 +47,9 @@ success:
 Fields are declared exactly as in a [blueprint](blueprints.md), but a public form may only use `text`, `textarea`,
 `integer`, `toggle`, `select`, `radio`, `checkboxes`, `date` and `files`. `nibble:check` refuses anything else.
 
+A field's `messages` set the text a visitor sees when one of its rules fails, per locale if the site has several; see
+[Options every field takes](blueprints.md#2-options-every-field-takes).
+
 `text` and `integer` fields take `prepend` and `append`, short text a theme draws before and after the input
 (`prepend: $`, `append: per month`).
 

@@ -79,15 +79,32 @@ module Nibble
 
     def check_fields(fields, source)
       fields.each do |field|
-        (field.validation_rules + Validation.explode(field.fieldtype.rules)).each do |rule|
-          name = rule.to_s.split(":", 2).first
+        rule_names = (field.validation_rules + Validation.explode(field.fieldtype.rules)).map { |rule| rule.to_s.split(":", 2).first }
+        rule_names.each do |name|
           problem(source, "field '#{field.path}' uses unknown validation rule '#{name}'") unless Validation.known?(name)
         end
+        check_messages(field, rule_names, source)
         unless Operations::FieldSchema.known?(field)
           @warnings << Problem.new(source:, level: :warning,
             message: "field '#{field.path}' is a #{field.type}, which apps can't be told how to write: give the fieldtype a json_schema")
         end
         field.fieldtype.nested_fields.each { |nested| check_fields(nested, source) }
+      end
+    end
+
+    def check_messages(field, rule_names, source)
+      messages = field.get("messages")
+      return unless messages.is_a?(Hash)
+
+      rule_names += [ "required" ] if field.get("required") == true
+      locales = @config.locales.map(&:code)
+      messages.each do |rule, message|
+        problem(source, "field '#{field.path}' has a message for '#{rule}', which it has no rule for") unless rule_names.include?(rule)
+        next unless message.is_a?(Hash)
+
+        (message.keys.map(&:to_s) - locales).each do |code|
+          problem(source, "field '#{field.path}' has a '#{rule}' message for locale '#{code}', which the site doesn't have")
+        end
       end
     end
 

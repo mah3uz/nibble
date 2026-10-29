@@ -13,6 +13,7 @@ module Nibble
       "width" => ->(value) { WIDTHS.include?(value) },
       "required" => BOOLEAN,
       "validate" => ->(value) { value.is_a?(String) || (value.is_a?(Array) && value.all? { |rule| rule.is_a?(String) }) },
+      "messages" => ->(value) { value.is_a?(Hash) && value.values.all? { |message| message.is_a?(String) || (message.is_a?(Hash) && message.values.all?(String)) } },
       "default" => ->(_value) { true },
       "visibility" => ->(value) { VISIBILITIES.include?(value) },
       "read_only" => BOOLEAN,

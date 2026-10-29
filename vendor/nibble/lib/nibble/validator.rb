@@ -4,7 +4,9 @@ module Nibble
       def valid? = errors.empty?
     end
 
-    Entry = Data.define(:rules, :attribute)
+    Entry = Data.define(:rules, :attribute, :messages) do
+      def initialize(rules:, attribute:, messages: {}) = super
+    end
 
     ACCEPTED = [ "yes", "on", "1", 1, true, "true" ].freeze
     BOOLEANS = [ true, false, 0, 1, "0", "1" ].freeze
@@ -19,15 +21,16 @@ module Nibble
 
         list = [ *("required" if field.get("required") == true), *field.validation_rules, *Validation.explode(field.fieldtype.rules) ]
         parsed = list.uniq.map { |rule| Validation.parse(rule, prefix:, replacements:) }
-        rules[path] = Entry.new(rules: parsed, attribute: field.display)
+        rules[path] = Entry.new(rules: parsed, attribute: field.display, messages: field.get("messages", {}))
         field.with_value(values[field.handle]).fieldtype.extra_rules(root_values:, prefix: "#{path}.", replacements:).each do |nested_path, entry|
           rules[nested_path] = entry
         end
       end
     end
 
-    def initialize(fields, replacements: {}, skip_required: false)
+    def initialize(fields, replacements: {}, skip_required: false, locale: nil)
       @fields = fields
+      @locale = locale
       @replacements = replacements
       @skip_required = skip_required
     end
@@ -55,7 +58,7 @@ module Nibble
         next if @skip_required && implicit?(rule.name)
         next if !implicit?(rule.name) && blank_input?(value)
 
-        message = run(rule, value, root, names, entry.attribute) or next
+        message = run(rule, value, root, names, entry.attribute, entry.messages) or next
         messages << message
         break if implicit?(rule.name)
       end
@@ -64,9 +67,9 @@ module Nibble
 
     def implicit?(name) = Validation::IMPLICIT.include?(name) || Validation.custom_rule(name)&.dig(:implicit)
 
-    def run(rule, value, root, names, attribute)
+    def run(rule, value, root, names, attribute, messages = {})
       params = rule.params
-      message = ->(key, **extra) { Validation.message(key, attribute:, **extra) }
+      message = ->(key, **extra) { Validation.message(key, attribute:, override: messages[key.split(".").first], locale: @locale, **extra) }
       sized = ->(key, **extra) { message.("#{key}.#{size_type(value, names)}", **extra) }
 
       case rule.name

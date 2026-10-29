@@ -39,6 +39,26 @@ class Nibble::ValidatorTest < ActiveSupport::TestCase
     assert_equal [ "The Tags field must not have more than 2 items." ], errors(fields(field("tags", validate: [ "max:2" ])), "tags" => %w[a b c])["tags"]
   end
 
+  test "a field's own message replaces the default for its rule, with the same placeholders" do
+    plain = errors(fields(field("code", validate: [ "max:3" ], messages: { max: "%{attribute} is too long, %{max} at most" })), "code" => "abcd")
+    sized = errors(fields(field("amount", validate: [ "numeric", "min:500" ], messages: { min: "Amounts start at $%{min}" })), "amount" => 5)
+
+    assert_equal [ "Code is too long, 3 at most" ], plain["code"]
+    assert_equal [ "Amounts start at $500" ], sized["amount"]
+    assert_equal [ "The Code field must not be greater than 3 characters." ], errors(fields(field("code", validate: [ "max:3" ])), "code" => "abcd")["code"]
+    assert_equal [ "The Code field is required." ], errors(fields(field("code", required: true, messages: { max: "Nope" })), {})["code"]
+  end
+
+  test "a localized message follows the locale and falls back to the default locale's entry" do
+    defn = fields(field("amount", validate: [ "numeric", "min:2000" ], messages: { min: { en: "At least $2,000", fr: "Au moins 2 000 $" } }))
+    validate = ->(locale) { Nibble::Validator.new(defn, locale:).validate("amount" => 1).errors["amount"] }
+
+    assert_equal [ "Au moins 2 000 $" ], validate.("fr")
+    assert_equal [ "At least $2,000" ], validate.("en")
+    assert_equal [ "At least $2,000" ], validate.("de")
+    assert_equal [ "At least $2,000" ], validate.(nil)
+  end
+
   test "fields hidden by their conditions are neither validated nor blocking, unless always_save" do
     link = fields(
       field("type"),

@@ -41,6 +41,9 @@ module NibbleRecordsHelper
       { handle: "topic", field: { type: "select", options: { sales: "Sales team", support: "Support" } } },
       { handle: "message", field: { type: "textarea", required: true, validate: [ "max:500" ] } }
     ] },
+    "forms/callback.yml" => { title: "Callback", store: false, fields: [
+      { handle: "phone", field: { type: "text", validate: [ "regex:/^04\\d{8}$/" ], messages: { regex: "Enter an Australian mobile number" } } }
+    ] },
     "forms/signup.yml" => { title: "Signup", store: false, spam: { captcha: true }, success: { redirect: "/thanks" },
                             fields: [ { handle: "email", field: { type: "text", input_type: "email", required: true } } ] },
     "apis/crm.yml" => { base_url: "https://crm.example.test/v1", headers: { Authorization: "Bearer {secret.crm_token}" },

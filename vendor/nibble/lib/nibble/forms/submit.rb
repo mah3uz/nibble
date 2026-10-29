@@ -25,7 +25,7 @@ module Nibble
 
         fields = @form.fields
         values = @params.slice(*fields.handles)
-        errors = Validator.new(fields, replacements: { "type" => "form_submission" }).validate(values).errors
+        errors = Validator.new(fields, replacements: { "type" => "form_submission" }, locale: @locale).validate(values).errors
         return result(:invalid, errors:, values:) if errors.any?
 
         data, blob_ids = upload(fields, values)
