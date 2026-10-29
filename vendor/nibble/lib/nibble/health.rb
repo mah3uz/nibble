@@ -31,11 +31,11 @@ module Nibble
       pending = ActiveRecord::Base.connection_pool.migration_context.open.pending_migrations.size
       return [ "fail", "#{pending} database #{'migration'.pluralize(pending)} haven't run" ] if pending.positive?
 
-      [ "ok", "Reachable, schema up to date" ]
+      [ "ok", "Connected and up to date" ]
     end
 
     def queue
-      return [ "skip", "Solid Queue isn't running in this environment" ] unless Cp::JobsDashboard.available?
+      return [ "skip", "Background jobs aren't running here" ] unless Cp::JobsDashboard.available?
 
       workers = SolidQueue::Process.where(kind: "Worker").where(last_heartbeat_at: SolidQueue.process_alive_threshold.ago..).count
       return [ "fail", "No worker has checked in for #{SolidQueue.process_alive_threshold.inspect}" ] if workers.zero?
@@ -46,7 +46,7 @@ module Nibble
       end
 
       oldest = SolidQueue::ReadyExecution.group(:queue_name).minimum(:created_at).min_by { |_, at| at }
-      return [ "warn", "Work in #{oldest.first} has waited since #{oldest.last.utc.iso8601}" ] if oldest && oldest.last < QUEUE_LAG.ago
+      return [ "warn", "Background work has been waiting for #{ActionController::Base.helpers.time_ago_in_words(oldest.last)}" ] if oldest && oldest.last < QUEUE_LAG.ago
 
       failed = SolidQueue::FailedExecution.count
       return [ "warn", "#{failed} failed #{'job'.pluralize(failed)} waiting for a retry or discard" ] if failed.positive?
@@ -65,9 +65,9 @@ module Nibble
 
       url = URI.join(InertiaRails.configuration.ssr_url.presence || "http://localhost:13714", "/health")
       response = Net::HTTP.start(url.host, url.port, open_timeout: SSR_TIMEOUT, read_timeout: SSR_TIMEOUT) { |http| http.get(url.path) }
-      return [ "ok", "The SSR server answered" ] if response.is_a?(Net::HTTPSuccess)
+      return [ "ok", "The page renderer answered" ] if response.is_a?(Net::HTTPSuccess)
 
-      [ "fail", "The SSR server answered #{response.code}" ]
+      [ "fail", "The page renderer answered #{response.code}" ]
     end
   end
 end

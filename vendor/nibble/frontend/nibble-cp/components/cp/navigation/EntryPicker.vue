@@ -49,7 +49,7 @@ function pick(entry: NavEntry) {
               <div class="flex min-w-0 flex-1 flex-col">
                 <span class="truncate">{{ entry.title }}</span>
                 <span class="truncate text-xs text-muted-foreground"
-                  >{{ entry.path }}<template v-if="!entry.live"> · not live</template></span
+                  >{{ entry.path }}<template v-if="!entry.live"> · not live yet</template></span
                 >
               </div>
             </CommandItem>

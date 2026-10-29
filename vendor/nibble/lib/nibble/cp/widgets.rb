@@ -230,7 +230,7 @@ module Nibble
           end
           if Access.can?(user, "utilities.view") && JobsDashboard.available?
             SolidQueue::FailedExecution.includes(:job).order(created_at: :desc).limit(LIMIT).each do |failure|
-              items << { "title" => failure.job.class_name, "detail" => failure.message.to_s.lines.first.to_s.strip,
+              items << { "title" => failure.job.class_name.demodulize.delete_suffix("Job").underscore.humanize, "detail" => failure.message.to_s.lines.first.to_s.strip,
                          "kind" => "Job", "at" => failure.created_at.utc.iso8601, "url" => "/cp/utilities/jobs" }
             end
           end

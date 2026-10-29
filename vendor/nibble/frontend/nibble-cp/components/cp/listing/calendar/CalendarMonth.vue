@@ -68,7 +68,7 @@ const DOT: Record<string, string> = {
                 selected === day.key ? 'bg-blue-600 text-white' : '',
                 day.today ? 'text-ui-accent-text' : '',
               ]"
-              :aria-label="`Entries on ${day.key}`"
+              :aria-label="`Entries on ${new Date(`${day.key}T00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}`"
               @click.stop="$emit('select', day.key)"
             >
               {{ day.number }}

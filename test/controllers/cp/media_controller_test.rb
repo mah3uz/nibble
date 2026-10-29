@@ -172,7 +172,7 @@ class Nibble::Cp::MediaControllerTest < ActionDispatch::IntegrationTest
     body = json(:get, "/cp/media/#{asset.id}")
     assert_equal "Sunset", body["values"]["alt"]
     assert_equal [ [ "Holiday", "image" ] ], body["usage"].map { |use| use.values_at("title", "field") }
-    assert_equal "Root", body["folder_options"].first["label"]
+    assert_equal "Top level", body["folder_options"].first["label"]
   end
 
   test "trashed assets show in the trash, restore from it, and purging deletes the file" do

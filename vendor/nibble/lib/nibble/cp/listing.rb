@@ -280,7 +280,7 @@ module Nibble
         end
         list << move_action if entries? && item["structure"].is_a?(Hash) && Access.can?(user, ability("edit"))
         list.concat(assign_actions) if entries? && Access.can?(user, ability("edit"))
-        list << action("trash", "Move to trash", confirm: "Move the selected items to the trash?", dangerous: true) if Access.can?(user, ability("delete"))
+        list << action("trash", "Move to trash", confirm: "Move the selected #{entries? ? "entries" : "items"} to the trash?", dangerous: true) if Access.can?(user, ability("delete"))
         list
       end
 

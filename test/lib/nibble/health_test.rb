@@ -62,7 +62,7 @@ class Nibble::HealthTest < ActiveSupport::TestCase
 
   test "server rendering is healthy when its process answers, and failing when nothing does" do
     http_server(200) { |url| with_ssr(url) { assert_equal "ok", check("ssr").status } }
-    http_server(500) { |url| with_ssr(url) { assert_equal [ "fail", "The SSR server answered 500" ], check("ssr").to_h.values_at(:status, :message) } }
+    http_server(500) { |url| with_ssr(url) { assert_equal [ "fail", "The page renderer answered 500" ], check("ssr").to_h.values_at(:status, :message) } }
 
     closed = TCPServer.new("127.0.0.1", 0).then { |server| server.addr[1].tap { server.close } }
     with_ssr("http://127.0.0.1:#{closed}") { assert_match "ECONNREFUSED", check("ssr").message }

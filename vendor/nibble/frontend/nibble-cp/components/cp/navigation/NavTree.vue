@@ -66,7 +66,7 @@ useSortable(listRef, items, {
             <div class="flex flex-wrap items-center gap-2">
               <span class="truncate text-sm font-medium">{{ item.title }}</span>
               <span v-if="notLive(item)" class="inline-flex items-center gap-1 text-xs text-amber-600">
-                <AlertTriangle class="size-3" /> not live
+                <AlertTriangle class="size-3" /> not live yet
               </span>
             </div>
             <p class="truncate text-xs text-muted-foreground">{{ linkSummary(item) }}</p>

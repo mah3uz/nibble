@@ -45,7 +45,7 @@ module Nibble
       end
 
       def folder_options
-        [ { "value" => ROOT, "label" => "Root" } ] +
+        [ { "value" => ROOT, "label" => "Top level" } ] +
           Records::AssetFolder.order(:path).map { |item| { "value" => item.path, "label" => item.path } }
       end
 
@@ -90,7 +90,7 @@ module Nibble
         [
           { "handle" => "filename", "label" => "File", "sortable" => true, "visible" => true, "type" => "text" },
           { "handle" => "size", "label" => "Size", "sortable" => true, "visible" => true, "type" => "number" },
-          { "handle" => "updated_at", "label" => "Last Modified", "sortable" => true, "visible" => true, "type" => "date" },
+          { "handle" => "updated_at", "label" => "Last modified", "sortable" => true, "visible" => true, "type" => "date" },
           { "handle" => "width", "label" => "Width", "sortable" => false, "visible" => true, "type" => "number" },
           { "handle" => "height", "label" => "Height", "sortable" => false, "visible" => true, "type" => "number" },
           { "handle" => "duration", "label" => "Duration", "sortable" => false, "visible" => true, "type" => "number" }

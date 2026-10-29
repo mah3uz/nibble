@@ -71,7 +71,7 @@ function open(row: ListingRow) {
     </PageHeader>
 
     <CpListing v-if="listing" :listing="listing" @row-click="open" />
-    <CpPanel v-else-if="tree" title="Tree Structure" bare>
+    <CpPanel v-else-if="tree" title="Page order" bare>
       <EntryTree :nodes="tree" :collection="collection.handle" />
     </CpPanel>
 

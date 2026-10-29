@@ -276,7 +276,7 @@ function onKeydownCapture(event: KeyboardEvent) {
                   <div class="flex size-6 items-center justify-center p-1 text-gray-500">
                     <SearchIcon class="size-4" />
                   </div>
-                  No results found!
+                  No results.
                 </div>
               </div>
               <div v-else-if="loading && !groups.length" class="px-3 py-2">
