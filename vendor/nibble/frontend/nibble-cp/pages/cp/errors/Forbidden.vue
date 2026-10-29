@@ -6,7 +6,11 @@ import { Button } from '@/components/ui/button'
 </script>
 
 <template>
-  <EmptyState :icon="Lock" title="You don't have permission" description="Ask an administrator if you think this is a mistake.">
+  <EmptyState
+    :icon="Lock"
+    title="You don't have permission"
+    description="Ask an administrator if you think this is a mistake."
+  >
     <Button as-child><Link href="/cp">Back to dashboard</Link></Button>
   </EmptyState>
 </template>

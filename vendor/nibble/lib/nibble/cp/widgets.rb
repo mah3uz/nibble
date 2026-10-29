@@ -163,6 +163,10 @@ module Nibble
           end
         end
 
+        def verb_of(action) = VERBS[action]
+
+        public :subject_of, :verb_of
+
         def quick_links(user)
           links = collections(user).filter_map do |collection|
             next unless Access.can?(user, "entries.#{collection.handle}.create")

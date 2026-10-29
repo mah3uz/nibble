@@ -28,8 +28,8 @@ useBreadcrumbs([{ label: 'Utilities', url: '/cp/utilities' }, { label: 'Search' 
 
     <CpPanel title="Search indexes" flush>
       <template #actions>
-        <PanelFact label="Documents" :value="search.indexed" />
-        <PanelFact label="Live entries covered" :value="search.total" />
+        <PanelFact label="Items indexed" :value="search.indexed" />
+        <PanelFact label="Live items to cover" :value="search.total" />
       </template>
       <table class="w-full text-sm">
         <thead>

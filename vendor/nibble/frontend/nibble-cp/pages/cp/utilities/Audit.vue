@@ -13,6 +13,8 @@ type Row = {
   ip: string | null
   actor: string | null
   subject: string
+  subject_url: string | null
+  verb: string | null
   changed: string[]
 }
 
@@ -70,8 +72,14 @@ useBreadcrumbs([{ label: 'Utilities', url: '/cp/utilities' }, { label: 'Audit lo
               fresh.has(row.id) ? 'bg-amber-50 dark:bg-amber-400/10' : 'bg-transparent',
             ]"
           >
-            <span class="font-medium text-gray-900 dark:text-white">{{ verb(row.action) }}</span>
-            <span class="text-gray-600 dark:text-gray-400">{{ row.subject }}</span>
+            <span class="font-medium text-gray-900 dark:text-white">{{ row.verb ?? verb(row.action) }}</span>
+            <a
+              v-if="row.subject_url"
+              :href="row.subject_url"
+              class="text-gray-600 hover:underline dark:text-gray-400"
+              >{{ row.subject }}</a
+            >
+            <span v-else class="text-gray-600 dark:text-gray-400">{{ row.subject }}</span>
             <span v-if="row.changed.length" class="flex flex-wrap gap-1">
               <code
                 v-for="field in row.changed.slice(0, 6)"

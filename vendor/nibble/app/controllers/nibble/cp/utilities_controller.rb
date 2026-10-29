@@ -180,9 +180,11 @@ module Nibble
       def audit_rows(entries)
         actors = Nibble::User.where(id: entries.filter_map(&:actor_id)).index_by(&:id)
         entries.map do |entry|
+          title, url = entry.subject_type ? Nibble::Cp::Widgets.subject_of(entry) : [ nil, nil ]
           { id: entry.id, action: entry.action, at: entry.created_at.utc.iso8601, ip: entry.ip,
-            actor: actors[entry.actor_id]&.name, subject: [ entry.subject_type, entry.subject_id ].compact.join(" "),
-            changed: entry.changeset.keys.sort }
+            actor: actors[entry.actor_id]&.name, subject: title.to_s, subject_url: url,
+            verb: (entry.action == "record.trashed" ? "moved to the trash" : Nibble::Cp::Widgets.verb_of(entry.action))&.upcase_first,
+            changed: entry.changeset.keys.sort.map { |handle| handle.to_s.humanize } }
         end
       end
 

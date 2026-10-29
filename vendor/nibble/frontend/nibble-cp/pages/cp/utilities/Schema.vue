@@ -44,10 +44,14 @@ useBreadcrumbs([{ label: 'Utilities', url: '/cp/utilities' }, { label: 'Schema' 
       </template>
     </PageHeader>
 
-    <CpPanel title="nibble:check" :flush="checks.length > 0">
+    <CpPanel title="Schema check" description="The same checks as bin/rails nibble:check." :flush="checks.length > 0">
       <template #actions>
         <PanelFact label="Theme" :value="schema.theme ?? 'none'" />
-        <PanelFact label="Digest" :value="schema.digest" />
+        <PanelFact
+          label="Schema version"
+          :value="schema.digest"
+          title="A short code that changes whenever the schema does."
+        />
       </template>
       <p v-if="!checks.length" class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
         <span class="size-2 rounded-full bg-green-500" aria-hidden="true" />

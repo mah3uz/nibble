@@ -32,9 +32,7 @@ async function submit() {
             ><CpIcon name="key" class="size-5 text-gray-700 dark:text-gray-300"
           /></span>
           <h1 class="text-lg font-medium text-gray-900 dark:text-white">Confirm your password</h1>
-          <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Enter your password to carry on.
-          </p>
+          <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Enter your password to carry on.</p>
         </div>
         <div class="space-y-2">
           <Label for="confirm-password">Password</Label>

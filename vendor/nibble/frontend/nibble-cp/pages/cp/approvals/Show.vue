@@ -49,9 +49,7 @@ const KEY_LABELS: Record<string, string> = {
   locale: 'Language',
 }
 const keyLabel = (key: string) => KEY_LABELS[key] ?? key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')
-const details = computed(() =>
-  Object.fromEntries(Object.entries(props.input).filter(([key]) => !HIDDEN.includes(key))),
-)
+const details = computed(() => Object.fromEntries(Object.entries(props.input).filter(([key]) => !HIDDEN.includes(key))))
 const previewFailed = ref(false)
 const outcome = computed(() => {
   const result = props.result

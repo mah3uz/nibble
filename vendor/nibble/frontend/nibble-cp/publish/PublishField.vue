@@ -151,7 +151,9 @@ watch(describedBy, linkDescription, { flush: 'post' })
       @vue:mounted="linkDescription"
       @vue:updated="linkDescription"
     />
-    <p v-else class="text-sm text-red-600">This field can't be shown here ({{ field.component }}). Ask a developer to check its type.</p>
+    <p v-else class="text-sm text-red-600">
+      This field can't be shown here ({{ field.component }}). Ask a developer to check its type.
+    </p>
     <FieldDescription v-if="field.instructions && field.instructions_position === 'below'" :id="instructionsId"
       ><FieldInstructions :text="field.instructions"
     /></FieldDescription>
