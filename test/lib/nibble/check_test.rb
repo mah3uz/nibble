@@ -189,6 +189,29 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     assert_not_includes problems, "field 'phone' can't be encrypted"
   end
 
+  test "a form's limits must be ones Nibble can enforce: real times in order, a positive cap, and unique fields it can compare" do
+    fields = [ { handle: "email", field: { type: "text" } }, { handle: "topics", field: { type: "checkboxes", options: %w[a b] } } ]
+    theme_file("forms/broken.yml", title: "Broken", fields:, limits: { max_submissions: 0, opens_at: "next week", closes_at: "2026-11-01T09:00",
+                                                                       unique: [ "topics" ], closed_message: 5, seats: 3 })
+    theme_file("forms/backwards.yml", title: "Backwards", store: false, fields:,
+                                      limits: { opens_at: "2026-11-02T09:00", closes_at: "2026-11-01T09:00", max_submissions: 10, unique: [ "email" ] })
+    theme_file("forms/fine.yml", title: "Fine", fields:,
+                                 limits: { opens_at: "2026-11-01T09:00", closes_at: "2026-11-02", max_submissions: 100, unique: [ "email" ], closed_message: "Full." })
+
+    problems = check.problems.map(&:to_s).join("\n")
+    [
+      "forms/broken.yml: limits.seats isn't a limit; use max_submissions, opens_at, closes_at, closed_message or unique",
+      "forms/broken.yml: limits.max_submissions must be a positive whole number",
+      "forms/broken.yml: limits.opens_at must be a quoted date and time like \"2026-11-01T09:00\"",
+      "forms/broken.yml: limits.unique must list the form's text, number, single-choice or date fields",
+      "forms/broken.yml: limits.closed_message must be text",
+      "forms/backwards.yml: limits.closes_at must be after limits.opens_at",
+      "forms/backwards.yml: limits.max_submissions needs the form to store submissions, which is what it counts against",
+      "forms/backwards.yml: limits.unique needs the form to store submissions, which is what it counts against"
+    ].each { |message| assert_includes problems, message }
+    assert_not_includes problems, "fine.yml"
+  end
+
   test "a complete form passes, with safe defaults for the honeypot, rate limit and delivery mode" do
     theme_file("apis/crm.yml", base_url: "https://crm.example.test")
     theme_file("forms/contact.yml", title: "Contact", fields: [ { handle: "email", field: { type: "text", input_type: "email" } } ],

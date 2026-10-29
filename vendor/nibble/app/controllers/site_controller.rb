@@ -22,8 +22,9 @@ class SiteController < Nibble::ApplicationController
     @nibble_seo = page.seo
     count_queries(queries + more)
     render inertia: "theme/#{match.template}", props: props
+    uncacheable = tags.delete(Nibble::Dependencies::UNCACHEABLE)
     response.headers["Surrogate-Key"] = tags.sort.join(" ")
-    Nibble::PageCache.write(key, tags, body: response.body, content_type: response.content_type) if key && response.status == 200
+    Nibble::PageCache.write(key, tags, body: response.body, content_type: response.content_type) if key && !uncacheable && response.status == 200
   rescue StandardError => error
     raise if response.committed?
 

@@ -14,6 +14,10 @@ module Nibble
       "client.generic" => "Something went wrong. Please try again.",
       "client.network" => "Something went wrong. Please check your connection and try again."
     }.freeze
+    DEFAULT_CLOSED_MESSAGE = "This form isn't taking submissions right now.".freeze
+    LIMIT_KEYS = %w[max_submissions opens_at closes_at closed_message unique].freeze
+    SCHEDULE_LIMITS = %w[max_submissions opens_at closes_at].freeze
+    UNIQUE_FIELDTYPES = %w[text textarea integer select radio date].freeze
     AUTOFILL_NAMES = /name|mail|phone|tel|address|street|city|zip|postal|country|company|organi[sz]ation|website|url|homepage|user|login/i
 
     Form = Data.define(:item) do
@@ -56,6 +60,20 @@ module Nibble
         success.merge("message" => Notify::Template.new(form: self, locale:).render(message).to_s)
       end
       def retention_days = item["retention_days"]
+      def limits = item["limits"].is_a?(Hash) ? item["limits"] : {}
+      def unique = Array(limits["unique"])
+      def closed_message = limits["closed_message"].presence || DEFAULT_CLOSED_MESSAGE
+      def uncacheable? = limits.slice(*SCHEDULE_LIMITS).any?
+
+      def closed?(now = Time.current)
+        opens_at, closes_at = limits.values_at("opens_at", "closes_at").map { |value| Forms.time(value) }
+        (opens_at && now < opens_at) || (closes_at && now >= closes_at) || full?
+      end
+
+      def full?
+        max = limits["max_submissions"]
+        store? && max.is_a?(Integer) && Records::FormSubmission.kept.where(form: handle).count >= max
+      end
     end
 
     mattr_accessor :handlers, default: {}
@@ -69,6 +87,12 @@ module Nibble
       def message(key, locale, **values)
         default = MESSAGES.fetch(key)
         I18n.t("nibble.forms.#{key}", locale: Localized.i18n_locale(locale), default:, **values)
+      end
+
+      def time(value)
+        value.is_a?(String) ? Time.zone.iso8601(value) : nil
+      rescue ArgumentError
+        nil
       end
 
       def display_value(field, value, locale = nil)
@@ -98,6 +122,7 @@ module Nibble
         end
         problems.concat(Uploads.problems(form, schema:))
         problems.concat(spam_problems(form))
+        problems.concat(limit_problems(form, schema))
         handles = form.fields(schema:).handles
         form.notify.each_with_index { |notify, index| problems.concat(notify_problems(notify, index, handles)) }
         form.deliveries.each_with_index { |delivery, index| problems.concat(delivery_problems(delivery, index, schema)) }
@@ -109,7 +134,7 @@ module Nibble
       end
 
       def locale_problems(form, schema:, locales:)
-        texts = { "title" => form.item["title"], "success.message" => form.item["success"].to_h["message"] }
+        texts = { "title" => form.item["title"], "success.message" => form.item["success"].to_h["message"], "limits.closed_message" => form.item["limits"].to_h["closed_message"] }
         form.section_items.each_with_index do |section, index|
           texts.merge!("sections.#{index}.display" => section["display"], "sections.#{index}.instructions" => section["instructions"])
         end
@@ -166,6 +191,26 @@ module Nibble
         problems << "spam.retention_days must be a positive number of days" unless form.spam_retention_days.to_i.positive?
         problems
       end
+
+      def limit_problems(form, schema)
+        limits = form.limits
+        problems = (limits.keys - LIMIT_KEYS).map { |key| "limits.#{key} isn't a limit; use #{LIMIT_KEYS.to_sentence(last_word_connector: ' or ')}" }
+        problems << "limits.max_submissions must be a positive whole number" if limits.key?("max_submissions") && !(limits["max_submissions"].is_a?(Integer) && limits["max_submissions"].positive?)
+        times = %w[opens_at closes_at].select { |key| limits.key?(key) }.to_h { |key| [ key, Forms.time(limits[key]) ] }
+        times.each { |key, value| problems << "limits.#{key} must be a quoted date and time like \"2026-11-01T09:00\"" unless value }
+        problems << "limits.closes_at must be after limits.opens_at" if times.values.compact.size == 2 && times["closes_at"] <= times["opens_at"]
+        problems << "limits.closed_message must be text, or text per locale" if limits.key?("closed_message") && !(limits["closed_message"].is_a?(String) || (limits["closed_message"].is_a?(Hash) && limits["closed_message"].values.all?(String)))
+        fields = form.fields(schema:).all
+        unless limits["unique"].nil? || (limits["unique"].is_a?(Array) && limits["unique"].all? { |handle| unique_field?(fields[handle.to_s]) })
+          problems << "limits.unique must list the form's text, number, single-choice or date fields"
+        end
+        %w[max_submissions unique].each do |key|
+          problems << "limits.#{key} needs the form to store submissions, which is what it counts against" if limits.key?(key) && !form.store?
+        end
+        problems
+      end
+
+      def unique_field?(field) = field && UNIQUE_FIELDTYPES.include?(field.type) && field.get("multiple") != true
 
       def notify_problems(notify, index, handles)
         return [ "notify.#{index} must be a mapping with a `to` address" ] unless notify.is_a?(Hash) && notify["to"].present?

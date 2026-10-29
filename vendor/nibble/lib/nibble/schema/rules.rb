@@ -50,7 +50,7 @@ module Nibble
           required: %w[title],
           keys: {
             "title" => TEXT, "fields" => ARRAY, "sections" => ARRAY, "store" => BOOLEAN, "spam" => HASH, "notify" => ARRAY, "api" => ARRAY,
-            "handler" => STRING, "cp_notify" => BOOLEAN, "success" => HASH, "retention_days" => INTEGER
+            "handler" => STRING, "cp_notify" => BOOLEAN, "success" => HASH, "retention_days" => INTEGER, "limits" => HASH
           }
         },
         "apis" => {

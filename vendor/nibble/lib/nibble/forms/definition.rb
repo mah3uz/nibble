@@ -12,6 +12,8 @@ module Nibble
       def call(form, result: nil, params: {}, locale: nil)
         captcha = ({ "provider" => nil, "site_key" => nil }.merge(Integrations.captcha.to_h.slice("provider", "site_key"))) if form.captcha?
         fields = form.fields
+        closed = form.closed?
+        Dependencies.add(Dependencies::UNCACHEABLE) if form.uncacheable?
         {
           "handle" => form.handle,
           "title" => form.title(locale),
@@ -22,6 +24,8 @@ module Nibble
           "sections" => form.sections(locale:)&.map { |section| section.merge("fields" => section["fields"].handles) },
           "success" => form.success(locale).slice("message", "redirect"),
           "messages" => CLIENT_MESSAGES.to_h { |key| [ key, Forms.message("client.#{key}", locale) ] },
+          "closed" => closed,
+          "closed_message" => (Localized.resolve(form.closed_message, locale) if closed),
           "result" => (result if result.is_a?(Hash) && result["handle"] == form.handle)
         }
       end

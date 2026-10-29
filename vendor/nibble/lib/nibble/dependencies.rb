@@ -1,5 +1,7 @@
 module Nibble
   module Dependencies
+    UNCACHEABLE = "uncacheable".freeze
+
     class << self
       def track
         previous = Thread.current[:nibble_dependencies]

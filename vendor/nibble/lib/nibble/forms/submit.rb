@@ -39,6 +39,7 @@ module Nibble
       end
 
       def process
+        return closed if @form.closed?
         return spam! if @form.honeypot && @params[@form.honeypot].present?
         return result(:invalid, errors: { "base" => [ captcha_message ] }) unless captcha_passed?
 
@@ -61,6 +62,8 @@ module Nibble
         return result(:invalid, submission:, errors:, values:) if errors.any?
 
         data = fields.add_values(values).process.values.compact
+        duplicate = duplicate_errors(data)
+        return result(:invalid, submission:, errors: duplicate, values:) if duplicate
         return result(:not_spam, submission:) unless claim(submission, data, user:, ip:)
 
         outcome = deliver(submission, data)
@@ -165,13 +168,46 @@ module Nibble
       def store(data, blob_ids = [])
         return deliver(nil, data) unless @form.store?
 
+        refused = nil
+        # SQLite begins this as a write transaction, so two racing submissions can't both pass the limits.
         submission = Records::FormSubmission.transaction do
+          next if (refused = refusal(data))
+
           receive(data, deliveries:).tap do |record|
+            record.unique_keys.create!(unique_keys(data))
             record.files.attach(ActiveStorage::Blob.where(id: blob_ids).to_a) if blob_ids.any?
             announce(record)
           end
         end
+        if refused
+          ActiveStorage::Blob.where(id: blob_ids).find_each(&:purge)
+          return refused
+        end
+
         deliver(submission, data)
+      end
+
+      def refusal(data)
+        return closed if @form.full?
+
+        errors = duplicate_errors(data)
+        result(:invalid, errors:, values: data) if errors
+      end
+
+      def closed = result(:closed, errors: { "base" => [ @form.closed_message ] })
+
+      def unique_keys(data)
+        @form.unique.filter_map do |handle|
+          value = data[handle]
+          Records::FormSubmissionKey.for(@form.handle, handle, value) if value.present? && !value.is_a?(Array) && !value.is_a?(Hash)
+        end
+      end
+
+      def duplicate_errors(data)
+        taken = unique_keys(data).find { |key| Records::FormSubmissionKey.exists?(key) } or return
+        field = @form.fields.get(taken[:field])
+        { field.handle => [ Validation.message("unique", attribute: field.display, override: field.get("messages", {})["unique"], locale: @locale,
+          default: "The %{attribute} has already been used.") ] }
       end
 
       def claim(submission, data, user:, ip:)
@@ -179,6 +215,7 @@ module Nibble
           next false if Records::FormSubmission.where(id: submission.id, status: "spam").update_all(status: "received").zero?
 
           submission.reload.keep!(data, encrypt: @form.encrypted_handles, deliveries:)
+          submission.unique_keys.create!(unique_keys(data))
           announce(submission)
           Records::AuditEntry.create!(action: "form.not_spam", actor_type: "user", actor_id: user.id, subject_type: submission.record_type,
             subject_id: submission.id, changeset: { "form" => @form.handle, "status" => %w[spam received] }, ip:, created_at: Time.current)
@@ -202,7 +239,10 @@ module Nibble
           errors.merge!(outcome.errors) { |_, first, second| first + second } if outcome.rejected?
           enqueue(submission, data, index, attempt: 2) if outcome.status == "failed"
         end
-        return result(:invalid, submission:, errors:, values: data) if errors.any?
+        if errors.any?
+          submission&.unique_keys&.delete_all
+          return result(:invalid, submission:, errors:, values: data)
+        end
 
         follow_up(submission, data)
         result(:ok, submission:, values: data)

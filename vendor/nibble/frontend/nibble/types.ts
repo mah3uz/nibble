@@ -120,5 +120,7 @@ export type NibbleForm = {
   sections: NibbleFormSection[] | null
   success: { message?: string; redirect?: string }
   messages?: { too_large: string; generic: string; network: string }
+  closed?: boolean
+  closed_message?: string | null
   result: NibbleFormResult | null
 }

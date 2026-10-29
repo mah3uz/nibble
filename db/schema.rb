@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_29_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_170100) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -181,6 +181,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_170000) do
     t.integer "spam_retention_days"
     t.datetime "updated_at", null: false
     t.index ["form"], name: "index_form_retentions_on_form", unique: true
+  end
+
+  create_table "form_submission_keys", force: :cascade do |t|
+    t.string "digest", null: false
+    t.string "field", null: false
+    t.string "form", null: false
+    t.integer "form_submission_id", null: false
+    t.index ["form", "field", "digest"], name: "index_form_submission_keys_on_form_and_field_and_digest", unique: true
+    t.index ["form_submission_id"], name: "index_form_submission_keys_on_form_submission_id"
   end
 
   create_table "form_submission_notes", force: :cascade do |t|
@@ -627,6 +636,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_170000) do
   add_foreign_key "entries", "nibble_users", column: "author_id"
   add_foreign_key "entries", "nibble_users", column: "created_by_id"
   add_foreign_key "entries", "nibble_users", column: "updated_by_id"
+  add_foreign_key "form_submission_keys", "form_submissions", on_delete: :cascade
   add_foreign_key "form_submission_notes", "form_submissions", on_delete: :cascade
   add_foreign_key "global_sets", "global_sets", column: "origin_id"
   add_foreign_key "nibble_api_tokens", "nibble_users", column: "created_by_id", on_delete: :nullify

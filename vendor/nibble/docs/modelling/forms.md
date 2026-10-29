@@ -408,6 +408,35 @@ it slows as those submissions grow. If `secret_key_base` changes, encrypted valu
 > Ninety days suits a demo form: long enough for sales to follow up, short enough that the site does not become a
 > second, forgotten CRM.
 
+### 6.1 Limits and schedules
+
+```yaml
+limits:
+  opens_at: "2026-11-01T09:00"
+  closes_at: "2026-11-30T17:00"
+  max_submissions: 100
+  unique: [email]
+  closed_message: Registration has closed.
+```
+
+`opens_at` and `closes_at` are quoted dates and times in the site's time zone (`config.time_zone` in
+`config/application.rb`, UTC unless set), or carry their own offset (`"2026-11-01T09:00+10:00"`). Before `opens_at`,
+from `closes_at`, and once `max_submissions` submissions are stored, the form is closed: a submission is refused with
+`closed_message` as its `base` error ("This form isn't taking submissions right now." unless set), and the form's
+definition has `closed: true` and `closed_message`, so a theme can show the message instead of the form. Spam doesn't
+count towards `max_submissions`.
+
+`unique` lists fields whose value is accepted once: a second submission with the same value is refused with an error
+on that field, "The Email has already been used.", or the field's `messages.unique`. A value that looks like an email
+address matches whatever its case. Nibble keeps a keyed digest of each value, never the value, from when a submission
+is accepted, so `unique` covers submissions accepted after it is added. Deleting a submission frees its values; spam
+never holds one, and neither does a submission the form's API turned back. **Not spam** refuses a submission whose
+value has been used since. A `unique` field is a `text`, `textarea`, `integer`, `select`, `radio` or `date` field.
+
+`max_submissions` and `unique` need the form to store submissions. A page showing a form with `opens_at`, `closes_at`
+or `max_submissions` is rendered for each visit rather than kept in the page cache, so it opens and closes on time.
+`nibble:check` refuses a time it can't read, a `closes_at` before `opens_at`, and a key `limits` doesn't take.
+
 ## 7. Translating a form
 
 On a site with several [locales](../running/configuration.md), any of a form's visitor-facing text may be a map of
@@ -430,7 +459,7 @@ sections:
               label: { en: Sales, fr: Ventes }
 ```
 
-This works for the form's `title` and `success.message`, a section's `display` and `instructions`, and a field's
+This works for the form's `title`, `success.message` and `limits.closed_message`, a section's `display` and `instructions`, and a field's
 `display`, `instructions`, `placeholder`, `inline_label` and option `label`s. The theme receives the text for the
 page's locale, or the default locale's where a language is missing, or the first given. Option `value`s are the same in
 every language, so stored submissions are too. `bin/rails nibble:check` refuses a map that names a locale the site
@@ -468,4 +497,5 @@ the visitor submitted from: the form title, field labels and option labels in it
 | `store`, `cp_notify` | true / false |
 | a field's `encrypt` | true stores its value encrypted; not on `files`, nor with `store: false` |
 | `retention_days` | a positive number |
+| `limits` | `{ opens_at, closes_at, max_submissions, unique, closed_message }` |
 | `handler` | the name of a registered Ruby handler |

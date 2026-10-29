@@ -17,6 +17,7 @@ module Nibble
 
       has_many_attached :files
       has_many :outbound_requests, as: :owner, dependent: :delete_all
+      has_many :unique_keys, class_name: "Nibble::Records::FormSubmissionKey", dependent: :delete_all
       has_many :notes, -> { order(:created_at, :id) }, class_name: "Nibble::Records::FormSubmissionNote", dependent: :delete_all
 
       validates :form, presence: true
