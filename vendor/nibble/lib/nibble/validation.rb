@@ -87,11 +87,11 @@ module Nibble
         Rule.new(name:, params:)
       end
 
-      def message(key, override: nil, locale: nil, **values)
+      def message(key, override: nil, locale: nil, default: nil, **values)
         custom = custom_message(override, locale)
         return I18n.interpolate(custom, **values) if custom
 
-        I18n.t("nibble.validation.#{key}", default: MESSAGES.fetch(key), **values)
+        I18n.t("nibble.validation.#{key}", default: default || MESSAGES.fetch(key), **values)
       end
 
       private

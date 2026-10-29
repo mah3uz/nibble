@@ -75,6 +75,9 @@ module NibbleRecordsHelper
     "forms/pledge.yml" => { title: "Pledge", fields: [
       { handle: "amount", field: { type: "integer", min: 2000, max: 10_000, step: 500 } }
     ] },
+    "forms/worded_pledge.yml" => { title: "Worded pledge", fields: [
+      { handle: "amount", field: { type: "integer", min: 2000, step: 500, messages: { step: { en: "Steps of $%{step} from $%{min}", fr: "Par tranches de %{step}" } } } }
+    ] },
     "navigation/docs_menu.yml" => { title: "Docs menu", max_depth: 2, collections: [ "docs" ] }
   }.freeze
 
@@ -98,8 +101,8 @@ module NibbleRecordsHelper
     Nibble.boot!
   end
 
-  def configure_nibble_records(load_defaults: nil, outbound: {})
-    Nibble.config = Nibble::Config.new({ "theme" => "records", "url" => "https://example.com", "load_defaults" => load_defaults, "locales" => [ { "code" => "en", "default" => true } ], "reserved_paths" => [ "/cp" ],
+  def configure_nibble_records(load_defaults: nil, outbound: {}, locales: [ { "code" => "en", "default" => true } ])
+    Nibble.config = Nibble::Config.new({ "theme" => "records", "url" => "https://example.com", "load_defaults" => load_defaults, "locales" => locales, "reserved_paths" => [ "/cp" ],
                                          "outbound" => { "secrets" => [ "crm_token" ] }.merge(outbound),
                                          "assets" => { "presets" => { "card" => { "w" => 32, "h" => 16, "fit" => "crop", "srcset" => [ 16, 32 ] } } } },
       themes_path: @nibble_themes, site_schema_path: @nibble_themes.join("site_schema"), agents_path: @nibble_themes.join("agents"))

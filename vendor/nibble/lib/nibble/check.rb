@@ -98,6 +98,7 @@ module Nibble
       return unless messages.is_a?(Hash)
 
       rule_names += [ "required" ] if field.get("required") == true
+      rule_names += [ "step" ] if field.type == "integer" && field.get("step")
       locales = @config.locales.map(&:code)
       messages.each do |rule, message|
         problem(source, "field '#{field.path}' has a message for '#{rule}', which it has no rule for") unless rule_names.include?(rule)

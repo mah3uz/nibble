@@ -60,6 +60,15 @@ class FormsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "Enter an Australian mobile number" ], response.parsed_body["errors"]["phone"]
   end
 
+  test "a field's step message is what a visitor sees off the step, in the submission's locale" do
+    submit :worded_pledge, { amount: 2250 }
+    assert_equal [ "Steps of $500 from $2000" ], response.parsed_body["errors"]["amount"]
+
+    configure_nibble_records(locales: [ { "code" => "en", "default" => true }, { "code" => "fr" } ])
+    submit :worded_pledge, { amount: 2250, _locale: "fr" }
+    assert_equal [ "Par tranches de 500" ], response.parsed_body["errors"]["amount"]
+  end
+
   test "a filled honeypot looks like success to the bot, and keeps its values as spam so a wrongly caught enquiry can be read" do
     submit :contact, VALID.merge(_nibble_hp: "http://spam.test", admin: true, topic: { "$gt" => "" })
 

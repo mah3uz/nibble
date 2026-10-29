@@ -84,7 +84,7 @@ terms. The collection lists which blueprints it allows; the first is the default
 | `api` | `false` leaves the field out of the generated TypeScript types — the value is still sent to pages and the API |
 
 A failed rule says "The Phone field format is invalid." unless the field gives its own wording. `messages` is keyed by
-the name of a rule the field has, and each value is a string or a map of locale code to string:
+the name of a rule the field has (an `integer` field with a `step` also has `step`, which a form enforces), and each value is a string or a map of locale code to string:
 
 ```yaml
 field:

@@ -64,8 +64,8 @@ module Nibble
           from = field.get("min").to_i
           next if (values[field.handle].to_i - from) % step.to_i == 0
 
-          found[field.handle] = [ I18n.t("nibble.validation.step", attribute: field.display, step:, from:,
-            default: "The %{attribute} field must go up in steps of %{step} (from %{from}).") ]
+          found[field.handle] = [ Validation.message("step", attribute: field.display, override: field.get("messages", {})["step"], locale: @locale,
+            default: "The %{attribute} field must go up in steps of %{step} (from %{from}).", step:, min: from, from:) ]
         end
       end
 

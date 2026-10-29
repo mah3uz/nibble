@@ -52,6 +52,19 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     assert(messages.any? { |m| m.include?("'regex' message for locale 'fr'") })
   end
 
+  test "a step message belongs to an integer field with a step and no other" do
+    theme_file("forms/signup.yml", title: "Signup", success: { message: "Thanks!" }, fields: [
+      { handle: "amount", field: { type: "integer", step: 5, messages: { step: "In fives" } } },
+      { handle: "plain", field: { type: "integer", messages: { step: "In fives" } } },
+      { handle: "word", field: { type: "text", messages: { step: "In fives" } } }
+    ])
+
+    messages = check.problems.map(&:to_s).grep(/message for 'step'/)
+
+    assert_equal 2, messages.size
+    assert(messages.none? { |m| m.include?("amount") })
+  end
+
   test "a message that isn't a string is refused" do
     theme_file("forms/signup.yml", title: "Signup", success: { message: "Thanks!" }, fields: [
       { handle: "phone", field: { type: "text", validate: [ "regex:/^04/" ], messages: { regex: 5 } } }
