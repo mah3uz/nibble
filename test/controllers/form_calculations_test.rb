@@ -47,6 +47,16 @@ class FormCalculationsTest < ActionDispatch::IntegrationTest
     assert_equal [ 2.3, 4, 3, 30 ], data.values_at("weight", "effort", "stars", "measures")
   end
 
+  test "the Control Plane shows a stored total as the visitor saw it, with its decimals and thousands, not the bare number" do
+    submit quantity: "100", size: "25", delivery: "0"
+    sign_in_as users(:editor)
+
+    get "/cp/forms/quote/submissions/#{Submission.sole.id}"
+
+    props = JSON.parse(Nokogiri::HTML(response.body).at_css("script[data-page]").text)["props"]
+    assert_equal "2,500.00", props["values"]["total"]
+  end
+
   test "a rating above its max is refused rather than stored" do
     submit quantity: "1", size: "10", delivery: "0", stars: "6"
 

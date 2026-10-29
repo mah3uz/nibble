@@ -8,7 +8,7 @@ module Nibble
       self.localizable = false
       self.validatable = false
       self.defaultable = false
-      self.component_name = "integer"
+      self.component_name = "text"
       self.config_field_items = [
         { "display" => "Data and format", "fields" => {
           "formula" => { "type" => "text", "instructions" => "Like `{quantity} * {unit_price}`." },
@@ -21,16 +21,24 @@ module Nibble
       # A posted value is dropped here, on every path: Forms::Calculations adds the server's own afterwards.
       def process(_value) = nil
 
-      def display(value)
-        return nil unless value.is_a?(Numeric)
+      def pre_process(raw) = rounded(raw)
 
-        decimals = config("decimals")
-        number = ActiveSupport::NumberHelper.number_to_rounded(value, precision: decimals || 10, strip_insignificant_zeros: decimals.nil?, delimiter: ",")
-        "#{config('prepend')}#{number}#{config('append')}"
+      def display(value)
+        number = rounded(value)
+        "#{config('prepend')}#{number}#{config('append')}" if number
       end
 
       def json_schema = { "type" => "number", "readOnly" => true, "description" => "Calculated when the form is submitted; a value sent is ignored" }
       def ts_type = "number | null"
+
+      private
+
+      def rounded(value)
+        return nil unless value.is_a?(Numeric)
+
+        decimals = config("decimals")
+        ActiveSupport::NumberHelper.number_to_rounded(value, precision: decimals || 10, strip_insignificant_zeros: decimals.nil?, delimiter: ",")
+      end
     end
   end
 end
