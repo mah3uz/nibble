@@ -99,6 +99,21 @@ class Api::UploadsTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
+  test "an upload URL's token never reaches the log, as anyone holding it could send files as the app" do
+    post "/api/v1/operations/create_upload", params: { filename: "pixel.png" }, headers: { "Authorization" => "Bearer #{@token}" }, as: :json
+    url = URI(json.dig("data", "url"))
+    token = Rack::Utils.parse_query(url.query)["upload_token"]
+    log = StringIO.new
+    Rails.logger.broadcast_to(ActiveSupport::Logger.new(log))
+
+    send_file url.request_uri, token: nil
+    assert_response :created
+    assert_match "upload_token=[FILTERED]", log.string
+    assert_no_match token, log.string
+  ensure
+    Rails.logger.broadcasts.pop if log
+  end
+
   test "an upload URL stops working once its app is disconnected" do
     post "/api/v1/operations/create_upload", params: { filename: "pixel.png" }, headers: { "Authorization" => "Bearer #{@token}" }, as: :json
     url = URI(json.dig("data", "url"))

@@ -80,10 +80,10 @@ class Nibble::AssetsPurgeTest < ActiveSupport::TestCase
       abilities: Nibble::AgentAccess.preset("everything"))
     stage = ->(name) { file_fixture("photo.jpg").open { |file| Nibble::Assets::Staged.store(file, filename: name, grant:) } }
     abandoned = stage.("abandoned.jpg")
-    fresh = stage.("fresh.jpg")
     used = stage.("used.jpg").tap { |blob| create_asset({}, blob:) }
     stray = ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "stray.jpg")
-    [ abandoned, used, stray ].each { |blob| blob.update_columns(created_at: 2.days.ago) }
+    travel 2.days
+    fresh = stage.("fresh.jpg")
 
     Nibble::Jobs::PurgeTrash.perform_now
 

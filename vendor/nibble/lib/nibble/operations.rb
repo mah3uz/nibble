@@ -2,10 +2,13 @@ module Nibble
   # Everything an app or the CLI can do to a site, declared once. The management API and the MCP server are both
   # generated from this list, and every operation checks Policy through the principal it is given.
   module Operations
-    Operation = Data.define(:name, :title, :description, :input, :read_only, :destructive, :needs, :handler, :consequential) do
-      def initialize(consequential: false, **rest) = super(consequential:, **rest)
+    Operation = Data.define(:name, :title, :description, :input, :read_only, :destructive, :needs, :handler, :consequential, :held) do
+      def initialize(consequential: false, held: nil, **rest) = super(consequential:, held:, **rest)
 
       def consequential?(input) = consequential.respond_to?(:call) ? consequential.call(input) : consequential
+
+      # What an approval keeps in place of the input it was asked with; the digest stays the asked input's.
+      def held_input(input, caller) = held ? held.call(input, caller) : input
 
       def annotations = { "readOnlyHint" => read_only, "destructiveHint" => destructive, "idempotentHint" => read_only, "openWorldHint" => false }
 
@@ -72,7 +75,7 @@ module Nibble
       remembered(caller, key, operation, input) do
         next rehearse { operation.handler.call(input, caller) } if dry
         if approval.present? || (caller.principal.grant&.asks_approval? && operation.consequential?(input))
-          next approval!(operation, input, caller, approval, key) { rehearse { operation.handler.call(input, caller) } }
+          next approval!(operation, input, caller, approval, key) { |held| rehearse { operation.handler.call(held, caller) } }
         end
 
         operation.handler.call(input, caller)
@@ -103,9 +106,10 @@ module Nibble
       end
       approval = in_flight.call
       unless approval
-        preview = yield
+        held = operation.held_input(input, caller)
+        preview = yield(held)
         approval = Approval.transaction do
-          in_flight.call || grant.approvals.create!(operation: operation.name, input:, digest:, preview:, idempotency_key: key.presence)
+          in_flight.call || grant.approvals.create!(operation: operation.name, input: held, digest:, preview:, idempotency_key: key.presence)
         end
         if approval.previously_new_record?
           Records::Notification.notify(grant.user_id, "apps.approval_requested", title: "#{grant.name}: #{operation.title}", approval: approval.public_id)

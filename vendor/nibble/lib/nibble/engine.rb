@@ -29,6 +29,10 @@ module Nibble
       end
     end
 
+    initializer "nibble.filter_parameters" do |app|
+      app.config.filter_parameters += %i[upload_token]
+    end
+
     initializer "nibble.middleware" do |app|
       require_relative "../middleware/nibble_redirects_middleware"
       require_relative "../middleware/form_request_limit_middleware"

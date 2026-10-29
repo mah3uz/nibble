@@ -20,7 +20,7 @@ module Nibble
                          "upload id goes to upload_asset as upload. Use this for a file you have locally instead of content_base64.",
             input: Operations.schema({ "filename" => { "type" => "string", "description" => "The file's name, with its extension" } }, %w[filename])),
           Operation.new(name: "upload_asset", title: "Upload an asset", read_only: false, destructive: false, needs: %w[assets write],
-            handler: method(:upload), consequential: true,
+            handler: method(:upload), consequential: true, held: method(:held),
             description: "Make an asset from exactly one of: upload (an id from sending a file to create_upload's URL), url (a public " \
                          "web address the site fetches), or content_base64 (only for small files; it needs filename). Only the file " \
                          "types this site accepts, up to its size limit.",
@@ -69,34 +69,69 @@ module Nibble
       end
 
       def upload(input, caller)
-        sources = %w[upload url content_base64].select { |key| input.key?(key) }
-        unless sources.one?
-          raise Failure.new("invalid_input", "send exactly one of upload, url or content_base64",
-            hint: "Send a local file to create_upload's URL and pass its upload id, or pass a url the site can fetch.")
-        end
-
+        source = source!(input)
         Operations.require!(caller.principal, "assets.upload")
         attrs = { "folder" => input["folder"].to_s, "alt" => input["alt"], "title" => input["title"] }.compact
-        result = sources.first == "upload" ? from_upload(input, attrs, caller) : Nibble::Assets::Upload.call(blob_for(input), attrs, actor: caller.principal)
+        result = source == "upload" ? from_upload(input, attrs, caller) : Nibble::Assets::Upload.call(new_blob(input), attrs, actor: caller.principal)
         raise Failure.new("invalid", result.errors.values.flatten.first.to_s, details: { "errors" => result.errors }) unless result.ok?
 
         view(result.record).merge("result" => "uploaded", "site" => caller.site)
+      end
+
+      # Waiting for approval, the file is fetched or decoded once and held as an upload, so what the person sees is what is made.
+      def held(input, caller)
+        source = source!(input)
+        Operations.require!(caller.principal, "assets.upload")
+        grant = caller.principal.grant
+        if source == "upload"
+          blob = staged!(input["upload"], grant)
+        else
+          sent = file(input)
+          blob = Nibble::Assets::Staged.store(sent[:io], filename: sent[:filename], grant:)
+          input = input.except("url", "content_base64", "filename").merge("upload" => Nibble::Assets::Staged.id(blob))
+        end
+        Nibble::Assets::Staged.keep_until(blob, (Nibble::Approval::LIFETIME + 1.hour).from_now)
+        input
+      end
+
+      def source!(input)
+        sources = %w[upload url content_base64].select { |key| input.key?(key) }
+        return sources.first if sources.one?
+
+        raise Failure.new("invalid_input", "send exactly one of upload, url or content_base64",
+          hint: "Send a local file to create_upload's URL and pass its upload id, or pass a url the site can fetch.")
       end
 
       def from_upload(input, attrs, caller)
         raise Failure.new("invalid_input", "an upload keeps the filename it was sent with; leave filename out") if input.key?("filename")
 
         grant = caller.principal.grant
-        blob = Nibble::Assets::Staged.find(input["upload"], grant) or raise Failure.new("upload_not_found",
-          "that upload has expired, was used already, or wasn't sent by this connection", status: :not_found,
-          hint: "Send the file again with a new create_upload URL.")
-        Nibble::Assets::Staged.claim(blob)
+        blob = staged!(input["upload"], grant)
+        unless Nibble::Assets::Staged.claim(blob, grant)
+          raise Failure.new("upload_in_use", "another request is making an asset of this upload", status: :conflict,
+            hint: "list_assets shows it once that request is done.")
+        end
+
         Nibble::Assets::Upload.call(blob, attrs, actor: caller.principal).tap do |result|
           Nibble::Assets::Staged.release(blob, grant) unless result.ok?
         end
       end
 
-      def blob_for(input)
+      def staged!(id, grant)
+        found = Nibble::Assets::Staged.lookup(id, grant)
+        return found if found.is_a?(ActiveStorage::Blob)
+
+        if found == :expired
+          raise Failure.new("upload_expired", "that upload has expired, and its file is gone", status: :gone,
+            hint: "Send the file again with a new create_upload URL.")
+        end
+        raise Failure.new("upload_not_found", "that upload was used already, or wasn't sent by this connection", status: :not_found,
+          hint: "Send the file again with a new create_upload URL.")
+      end
+
+      def new_blob(input) = ActiveStorage::Blob.create_and_upload!(**file(input))
+
+      def file(input)
         input.key?("url") ? fetched(input["url"], input["filename"]) : decoded(input["content_base64"], input["filename"])
       end
 
@@ -107,7 +142,7 @@ module Nibble
         limit = Nibble.config.max_upload_bytes
         raise Failure.new("too_large", "the file is larger than #{limit / 1.megabyte} MB", status: :content_too_large) if content.bytesize > limit
 
-        ActiveStorage::Blob.create_and_upload!(io: StringIO.new(content), filename:)
+        { io: StringIO.new(content), filename: }
       rescue ArgumentError
         raise Failure.new("invalid_input", "content_base64 isn't valid base64")
       end
@@ -119,7 +154,7 @@ module Nibble
           max_bytes: Nibble.config.max_upload_bytes)
         raise Failure.new("fetch_failed", "#{url} answered #{response.status}") unless response.ok?
 
-        ActiveStorage::Blob.create_and_upload!(io: StringIO.new(response.body), filename:)
+        { io: StringIO.new(response.body), filename: }
       rescue URI::InvalidURIError, Outbound::Refused, Outbound::Failed => error
         raise Failure.new("fetch_failed", "the site couldn't fetch #{url}: #{error.message}",
           hint: "Use a public http or https address, or send the file to create_upload's URL instead.")

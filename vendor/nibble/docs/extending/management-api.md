@@ -94,7 +94,10 @@ curl -T photo.jpg -H "Authorization: Bearer $TOKEN" "https://example.com/api/v1/
 The type and size are checked before anything is kept: an unaccepted type is `415 unsupported_type`, a file over
 the limit `413 too_large`, and a request without `Content-Length` `411 length_required`. A sent file has no address
 and is no asset yet. Only the connection that sent it can pass its `upload` to `upload_asset`, once, within a day;
-the nightly clean-up deletes it after that.
+the nightly clean-up deletes it after that, unless an approval is still waiting on it.
+
+When `upload_asset` waits for approval, a `url` is fetched and `content_base64` decoded once, and the approval holds
+the file as an upload: the person approves the file that will be made, and nothing is fetched again.
 
 An MCP client never shows its token to the agent, so `create_upload` (with `filename`) answers with a `url` that
 carries its own permission for 15 minutes, with `method`, `max_bytes`, `accepted_types` and `expires_in`. PUT the
