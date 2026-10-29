@@ -8,7 +8,7 @@ module Nibble
       self.selectable_in_forms = true
       self.index_component_name = "tags"
       self.config_field_items = [
-        { "display" => "Selection & Options", "fields" => { "options" => { "type" => "list", "default" => [] } } },
+        { "display" => "Selection and options", "fields" => { "options" => { "type" => "list", "default" => [] } } },
         { "display" => "Appearance", "fields" => { "inline" => { "type" => "toggle", "default" => false } } }
       ]
 

@@ -10,7 +10,7 @@ module Nibble
       self.contract_samples = [ [ { "type" => "paragraph", "content" => [ { "type" => "text", "text" => "Hi" } ] } ], nil ]
       self.keywords = %w[rich text editor wysiwyg html]
       self.config_field_items = [
-        { "display" => "Editor Settings", "fields" => {
+        { "display" => "Editor settings", "fields" => {
           "buttons" => { "type" => "list", "default" => DEFAULT_BUTTONS },
           "toolbar_mode" => { "type" => "select", "default" => "fixed", "options" => %w[fixed floating] },
           "smart_typography" => { "type" => "toggle", "default" => false, "width" => 50 },
@@ -35,7 +35,7 @@ module Nibble
           "collapse" => { "type" => "toggle", "default" => false, "width" => 50 },
           "previews" => { "type" => "toggle", "default" => true, "width" => 50 }
         } },
-        { "display" => "Data & Format", "fields" => {
+        { "display" => "Data and format", "fields" => {
           "remove_empty_nodes" => { "type" => "select", "default" => false, "options" => [ false, true, "trim" ] },
           "inline" => { "type" => "toggle", "default" => false, "width" => 50 },
           "inline_hard_breaks" => { "type" => "toggle", "default" => false, "width" => 50, "if" => { "inline" => true } }

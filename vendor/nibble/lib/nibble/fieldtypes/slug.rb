@@ -5,7 +5,7 @@ module Nibble
       self.contract_samples = [ "hello-world" ]
       self.selectable_in_forms = false
       self.config_field_items = [
-        { "display" => "Input Behavior", "fields" => {
+        { "display" => "Input behavior", "fields" => {
           "generate" => { "type" => "toggle", "default" => true, "width" => 50 },
           "from" => { "type" => "text", "default" => "title", "width" => 50 },
           "separator" => { "type" => "text", "default" => "-", "width" => 50 },

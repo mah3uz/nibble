@@ -4,7 +4,7 @@ module Nibble
       self.categories = %w[relationship]
       self.contract_samples = [ "https://example.com", "entry::1", nil ]
       self.config_field_items = [
-        { "display" => "Input Behavior", "fields" => {
+        { "display" => "Input behavior", "fields" => {
           "default_option" => { "type" => "select", "width" => 50 },
           "collections" => { "type" => "list", "default" => [] },
           "taxonomies" => { "type" => "list", "default" => [] }

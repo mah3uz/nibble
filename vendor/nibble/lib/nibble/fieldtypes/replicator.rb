@@ -7,7 +7,7 @@ module Nibble
       self.contract_samples = [ [ { "id" => "set00001", "type" => "hero" } ] ]
       self.keywords = %w[builder page blocks sets]
       self.config_field_items = [
-        { "display" => "Manage Sets", "fields" => { "sets" => { "type" => "list" } } },
+        { "display" => "Manage blocks", "fields" => { "sets" => { "type" => "list" } } },
         { "display" => "Appearance", "fields" => {
           "collapse" => { "type" => "select", "default" => false, "options" => [ false, true, "accordion" ], "width" => 50 },
           "previews" => { "type" => "toggle", "default" => true, "width" => 50 },
@@ -17,7 +17,7 @@ module Nibble
           "insert_below" => { "type" => "toggle", "default" => true, "width" => 50 },
           "tab_count" => { "type" => "toggle", "default" => false, "width" => 50 }
         } },
-        { "display" => "Boundaries & Limits", "fields" => { "max_sets" => { "type" => "integer" } } }
+        { "display" => "Boundaries and limits", "fields" => { "max_sets" => { "type" => "integer" } } }
       ]
 
       def pre_process(value)

@@ -17,7 +17,7 @@ module Nibble
           "time_zone" => { "type" => "text", "width" => 50, "if" => { "time_enabled" => true },
                            "instructions" => "An IANA time zone such as Europe/London, or site for the site's own" }
         } },
-        { "display" => "Boundaries & Limits", "fields" => {
+        { "display" => "Boundaries and limits", "fields" => {
           "earliest_date" => { "type" => "date", "width" => 50 },
           "latest_date" => { "type" => "date", "width" => 50 }
         } }

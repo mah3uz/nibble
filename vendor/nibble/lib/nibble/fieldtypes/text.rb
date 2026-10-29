@@ -7,7 +7,7 @@ module Nibble
       self.contract_samples = [ "Hello", nil ]
       self.selectable_in_forms = true
       self.config_field_items = [
-        { "display" => "Input Behavior", "fields" => {
+        { "display" => "Input behavior", "fields" => {
           "input_type" => { "type" => "select", "default" => "text", "options" => INPUT_TYPES, "width" => 50 },
           "character_limit" => { "type" => "integer", "width" => 50 },
           "autocomplete" => { "type" => "text", "width" => 50 }

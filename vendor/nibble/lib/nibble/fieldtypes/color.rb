@@ -7,7 +7,7 @@ module Nibble
       self.contract_samples = [ "#1a2b3c", nil ]
       self.selectable_in_forms = true
       self.config_field_items = [
-        { "display" => "Selection & Options", "fields" => {
+        { "display" => "Selection and options", "fields" => {
           "swatches" => { "type" => "list", "default" => [] },
           "allow_any" => { "type" => "toggle", "default" => true }
         } }

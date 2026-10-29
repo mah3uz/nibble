@@ -10,7 +10,7 @@ module Nibble
       self.defaultable = false
       self.component_name = "integer"
       self.config_field_items = [
-        { "display" => "Data & Format", "fields" => {
+        { "display" => "Data and format", "fields" => {
           "formula" => { "type" => "text", "instructions" => "Like `{quantity} * {unit_price}`." },
           "decimals" => { "type" => "integer", "min" => 0, "max" => Forms::Formula::MAX_DIGITS, "width" => 33 },
           "prepend" => { "type" => "text", "width" => 33 },

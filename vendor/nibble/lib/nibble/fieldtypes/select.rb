@@ -9,7 +9,7 @@ module Nibble
       self.selectable_in_forms = true
       self.index_component_name = "tags"
       self.config_field_items = [
-        { "display" => "Selection & Options", "fields" => {
+        { "display" => "Selection and options", "fields" => {
           "options" => { "type" => "list", "default" => [], "width" => 50 },
           "taggable" => { "type" => "toggle", "default" => false, "width" => 50 }
         } },
@@ -18,11 +18,11 @@ module Nibble
           "clearable" => { "type" => "toggle", "default" => false, "width" => 50 },
           "searchable" => { "type" => "toggle", "default" => true, "width" => 50 }
         } },
-        { "display" => "Boundaries & Limits", "fields" => {
+        { "display" => "Boundaries and limits", "fields" => {
           "multiple" => { "type" => "toggle", "default" => false, "width" => 50 },
           "max_items" => { "type" => "integer", "width" => 50, "if" => { "multiple" => true } }
         } },
-        { "display" => "Data & Format", "fields" => {
+        { "display" => "Data and format", "fields" => {
           "cast_booleans" => { "type" => "toggle", "default" => false, "width" => 50 }
         } }
       ]

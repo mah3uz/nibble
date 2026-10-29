@@ -9,13 +9,13 @@ module Nibble
       self.keywords = %w[markdown text prose docs]
       self.selectable_in_forms = true
       self.config_field_items = [
-        { "display" => "Editor Settings", "fields" => {
+        { "display" => "Editor settings", "fields" => {
           "placeholder" => { "type" => "text", "width" => 50 },
           "character_limit" => { "type" => "integer", "width" => 50 },
           "rows" => { "type" => "integer", "default" => 12, "width" => 50 },
           "preview" => { "type" => "toggle", "default" => true, "width" => 50 }
         } },
-        { "display" => "Data & Format", "fields" => {
+        { "display" => "Data and format", "fields" => {
           "sanitize" => { "type" => "toggle", "default" => false },
           "image_preset" => { "type" => "text", "default" => "content", "width" => 50 }
         } }

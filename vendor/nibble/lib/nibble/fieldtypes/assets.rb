@@ -8,7 +8,7 @@ module Nibble
       self.categories = %w[media relationship]
       self.keywords = %w[image images file files upload media]
       self.config_field_items = [
-        { "display" => "Input Behavior", "fields" => {
+        { "display" => "Input behavior", "fields" => {
           "folder" => { "type" => "text", "width" => 50 },
           "restrict" => { "type" => "toggle", "default" => false, "width" => 50 },
           "allow_uploads" => { "type" => "toggle", "default" => true, "width" => 50 },
@@ -16,7 +16,7 @@ module Nibble
           "alt" => { "type" => "select", "default" => "optional", "options" => ALT_MODES, "width" => 50 },
           "preset" => { "type" => "text", "width" => 50 }
         } },
-        { "display" => "Boundaries & Limits", "fields" => {
+        { "display" => "Boundaries and limits", "fields" => {
           "min_files" => { "type" => "integer", "width" => 50 },
           "max_files" => { "type" => "integer", "width" => 50 },
           "allowed_types" => { "type" => "list", "default" => [] }

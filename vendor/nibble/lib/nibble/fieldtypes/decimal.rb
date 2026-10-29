@@ -11,7 +11,7 @@ module Nibble
           "prepend" => { "type" => "text", "width" => 50 },
           "append" => { "type" => "text", "width" => 50 }
         } },
-        { "display" => "Data & Format", "fields" => {
+        { "display" => "Data and format", "fields" => {
           "decimals" => { "type" => "integer", "default" => 2, "min" => 0, "max" => 10, "width" => 25 },
           "min" => { "type" => "text", "input_type" => "number", "width" => 25 },
           "max" => { "type" => "text", "input_type" => "number", "width" => 25 },

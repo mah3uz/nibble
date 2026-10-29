@@ -10,7 +10,7 @@ module Nibble
       self.config_field_items = [
         { "display" => "Appearance", "fields" => { "placeholder" => { "type" => "text" } } },
         { "display" => "Timepicker", "fields" => { "seconds" => { "type" => "toggle", "default" => false } } },
-        { "display" => "Boundaries & Limits", "fields" => {
+        { "display" => "Boundaries and limits", "fields" => {
           "earliest" => { "type" => "time", "width" => 50 },
           "latest" => { "type" => "time", "width" => 50 }
         } }

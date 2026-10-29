@@ -8,9 +8,9 @@ module Nibble
       self.selectable_in_forms = true
       self.index_component_name = "tags"
       self.config_field_items = [
-        { "display" => "Selection & Options", "fields" => { "options" => { "type" => "list", "default" => [] } } },
+        { "display" => "Selection and options", "fields" => { "options" => { "type" => "list", "default" => [] } } },
         { "display" => "Appearance", "fields" => { "inline" => { "type" => "toggle", "default" => false } } },
-        { "display" => "Data & Format", "fields" => { "cast_booleans" => { "type" => "toggle", "default" => false } } }
+        { "display" => "Data and format", "fields" => { "cast_booleans" => { "type" => "toggle", "default" => false } } }
       ]
 
       def multiple? = false

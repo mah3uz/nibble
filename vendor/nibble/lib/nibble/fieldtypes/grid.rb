@@ -11,7 +11,7 @@ module Nibble
           "reorderable" => { "type" => "toggle", "default" => true, "width" => 50 },
           "fullscreen" => { "type" => "toggle", "default" => true, "width" => 50 }
         } },
-        { "display" => "Boundaries & Limits", "fields" => {
+        { "display" => "Boundaries and limits", "fields" => {
           "min_rows" => { "type" => "integer", "width" => 50 },
           "max_rows" => { "type" => "integer", "width" => 50 }
         } }

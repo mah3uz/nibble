@@ -6,7 +6,7 @@ module Nibble
       self.contract_samples = [ 1, 4, nil ]
       self.selectable_in_forms = true
       self.config_field_items = [
-        { "display" => "Data & Format", "fields" => {
+        { "display" => "Data and format", "fields" => {
           "max" => { "type" => "integer", "default" => 5, "min" => 2, "max" => 10, "width" => 33 }
         } }
       ]

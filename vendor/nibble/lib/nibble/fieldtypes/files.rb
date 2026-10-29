@@ -12,7 +12,7 @@ module Nibble
       self.keywords = %w[file upload attachment]
       self.contract_samples = [ [ { "id" => 1, "filename" => "cv.pdf", "size" => 2048, "content_type" => "application/pdf" } ], nil ]
       self.config_field_items = [
-        { "display" => "Boundaries & Limits", "fields" => {
+        { "display" => "Boundaries and limits", "fields" => {
           "max_files" => { "type" => "integer", "default" => 1, "width" => 50 },
           "max_file_size" => { "type" => "integer", "default" => 10, "instructions" => "In megabytes.", "width" => 50 },
           "extensions" => { "type" => "list", "default" => DEFAULT_EXTENSIONS }
