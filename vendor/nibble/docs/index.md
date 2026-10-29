@@ -40,6 +40,15 @@ links:
 - title: Running a site
   link: /docs/running
   text: Configuration, people, deployment, backups, upgrades and the Control Plane's maintenance screens.
+- title: Reference
+  link: /docs/reference
+  text: Every field option, validation rule and condition, looked up by name.
+- title: Extending Nibble
+  link: /docs/extending
+  text: Hooks, emails, the Content and Management APIs, and Control Plane screens of your own.
+- title: Contributing
+  link: /docs/contributing
+  text: How Nibble is built, its invariants and tests, and how a release is made.
 ---
 
 # Nibble Guides
