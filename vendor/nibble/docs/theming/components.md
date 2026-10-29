@@ -160,6 +160,11 @@ const demo = useNibbleForm(props.form)
 | `fieldName(field)` | the input `name` Nibble expects |
 | `setFiles`, `accept` | for `files` fields |
 
+Each field carries its settings, such as `placeholder`, `options`, and `prepend` and `append` to draw beside the
+input. A form split into sections also has `form.sections`, each with a `display`, `instructions` and the handles of
+its `fields`; it is `null` for a form with one list. `form.captcha` has a `null` provider when the form asks for a
+CAPTCHA the site hasn't set up. See [Forms](../modelling/forms.md).
+
 > [!WARNING]
 > This short example renders every field as a text input and leaves out the CAPTCHA widget, so it only works for a
 > form without `captcha: true`. The theme you copied from `crumbs` has `components/ContactForm.vue`, which handles

@@ -34,7 +34,8 @@ sort: title:asc
 api: true
 ```
 
-- `route` gives each term a page: *Cash flow* lives at `/topics/cash-flow`.
+- `route` gives each term a page: *Cash flow* lives at `/topics/cash-flow`. Adding or changing it later moves the
+  terms already there on the next `bin/rails nibble:prepare`, as for [entries](collections.md#22-changing-a-route).
 - `index_route` gives the taxonomy a page listing its terms, at `/topics`.
 - `blueprints` are the fields a term has, exactly as for entries — an author has a bio and a website.
 

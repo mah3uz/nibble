@@ -19,7 +19,7 @@ This page collects them by what you are doing.
 
 ```sh
 bin/dev                          # the site on :3100, the Control Plane at /cp
-bin/rails nibble:check           # schema, theme, roles, settings, migrations, ejected files
+bin/rails nibble:check           # schema, theme, roles, settings, migrations, routes, ejected files
 bin/rails nibble:build           # site/content and the schema, with no database; regenerates types
 bin/rails nibble:version         # the release this site runs
 bin/rails nibble                 # every command, under the release and what it runs on
