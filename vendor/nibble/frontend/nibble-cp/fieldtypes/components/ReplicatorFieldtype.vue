@@ -5,11 +5,13 @@ import { toast } from 'vue-sonner'
 import { clone } from '../../lib/clone'
 import { rowId } from '../../lib/rowId'
 import { useSectionActions } from '../../publish/context'
+import { offersFullscreen, showsPreviews } from '../display'
 import { addableGroups, expandSet, hasRoom } from '../replicatorSets'
 import { moveRow, restoreRow, useUndoToast } from '../rows'
 import { copySet, pastedContent, pasteTarget, useCopiedSet } from '../setClipboard'
 import type { PublishSetGroup } from '../types'
 import { fieldtypeEmits, fieldtypeProps, useFieldtype } from '../useFieldtype'
+import FullscreenLayer from './FullscreenLayer.vue'
 import ReplicatorSet from './ReplicatorSet.vue'
 import SetPicker from './SetPicker.vue'
 
@@ -17,7 +19,7 @@ type Row = Record<string, unknown> & { _id: string; type: string; enabled?: bool
 
 const props = defineProps(fieldtypeProps)
 const emit = defineEmits(fieldtypeEmits)
-const { update, updateMeta, isReadOnly, expose } = useFieldtype(emit, props)
+const { update, updateMeta, isReadOnly, defineFieldActions, expose } = useFieldtype(emit, props)
 defineExpose(expose)
 
 const groups = computed(() => (props.config.sets as PublishSetGroup[]) ?? [])
@@ -33,11 +35,26 @@ const canAdd = computed(() => !isReadOnly.value && (!max.value || rows.value.len
 const addable = computed(() => addableGroups(groups.value, rows.value))
 const showAdd = computed(() => canAdd.value && addable.value.length > 0)
 const sectionActions = useSectionActions()
-const addInHeader = computed(() => props.config.button_position === 'header' && !!sectionActions)
+const addInHeader = computed(() => props.config.button_position === 'header' && !!sectionActions && !fullscreen.value)
 const collapsed = ref(new Set<string>((props.meta.collapsed as string[]) ?? []))
 const accordion = computed(() => props.config.collapse === 'accordion')
 const copied = useCopiedSet()
 const offerUndo = useUndoToast()
+const fullscreen = ref(false)
+const previews = computed(() => showsPreviews(props.config))
+
+defineFieldActions(
+  offersFullscreen(props.config)
+    ? [
+        {
+          title: 'Full screen',
+          icon: () => (fullscreen.value ? 'fullscreen-close' : 'fullscreen-open'),
+          run: () => (fullscreen.value = !fullscreen.value),
+          visibleWhenReadOnly: true,
+        },
+      ]
+    : [],
+)
 
 const listRef = useTemplateRef<HTMLElement>('list')
 useSortable(listRef, rows, {
@@ -124,66 +141,69 @@ function toggle(id: string) {
 
 <template>
   <div :id="id" class="space-y-2">
-    <div v-if="rows.length > 1" class="flex justify-end gap-3 text-xs">
-      <button
-        type="button"
-        class="text-muted-foreground underline underline-offset-2 hover:text-foreground"
-        @click="collapsed = new Set(rows.map((row) => row._id))"
-      >
-        Collapse all
-      </button>
-      <button
-        v-if="!accordion"
-        type="button"
-        class="text-muted-foreground underline underline-offset-2 hover:text-foreground"
-        @click="collapsed = new Set()"
-      >
-        Expand all
-      </button>
-    </div>
-    <div ref="list" class="space-y-2">
-      <ReplicatorSet
-        v-for="(row, index) in rows"
-        :key="row._id"
-        :row="row"
-        :set="sets.find((set) => set.handle === row.type)"
-        :groups="addable"
-        :collapsed="collapsed.has(row._id)"
-        :read-only="isReadOnly"
-        :can-add="showAdd && config.insert_below !== false"
-        :can-duplicate="canAdd && sets.some((set) => set.handle === row.type && hasRoom(set, rows))"
-        menu
-        :can-move-up="!isReadOnly && index > 0"
-        :can-move-down="!isReadOnly && index < rows.length - 1"
-        :field-path-prefix="`${fieldPathPrefix}.${index}`"
-        :meta-path-prefix="`${metaPathPrefix}.existing.${row._id}`"
-        @toggle="toggle(row._id)"
-        @duplicate="duplicate(index)"
-        @remove="remove(index)"
-        @move="(delta) => move(index, index + delta)"
-        @copy="copy(row)"
-        @enable="(enabled) => setEnabled(index, enabled)"
-        @add-below="(handle) => addSet(handle, index + 1)"
-        @paste-below="paste(index + 1)"
-      />
-    </div>
-    <p v-if="addInHeader && !rows.length" class="text-sm text-muted-foreground">Nothing added yet.</p>
-    <Teleport v-if="showAdd && addInHeader" defer :to="`#${sectionActions}`">
+    <FullscreenLayer v-model:open="fullscreen" :title="handle">
+      <div v-if="rows.length > 1" class="flex justify-end gap-3 text-xs">
+        <button
+          type="button"
+          class="text-muted-foreground underline underline-offset-2 hover:text-foreground"
+          @click="collapsed = new Set(rows.map((row) => row._id))"
+        >
+          Collapse all
+        </button>
+        <button
+          v-if="!accordion"
+          type="button"
+          class="text-muted-foreground underline underline-offset-2 hover:text-foreground"
+          @click="collapsed = new Set()"
+        >
+          Expand all
+        </button>
+      </div>
+      <div ref="list" class="space-y-2">
+        <ReplicatorSet
+          v-for="(row, index) in rows"
+          :key="row._id"
+          :row="row"
+          :set="sets.find((set) => set.handle === row.type)"
+          :groups="addable"
+          :collapsed="collapsed.has(row._id)"
+          :previews="previews"
+          :read-only="isReadOnly"
+          :can-add="showAdd && config.insert_below !== false"
+          :can-duplicate="canAdd && sets.some((set) => set.handle === row.type && hasRoom(set, rows))"
+          menu
+          :can-move-up="!isReadOnly && index > 0"
+          :can-move-down="!isReadOnly && index < rows.length - 1"
+          :field-path-prefix="`${fieldPathPrefix}.${index}`"
+          :meta-path-prefix="`${metaPathPrefix}.existing.${row._id}`"
+          @toggle="toggle(row._id)"
+          @duplicate="duplicate(index)"
+          @remove="remove(index)"
+          @move="(delta) => move(index, index + delta)"
+          @copy="copy(row)"
+          @enable="(enabled) => setEnabled(index, enabled)"
+          @add-below="(handle) => addSet(handle, index + 1)"
+          @paste-below="paste(index + 1)"
+        />
+      </div>
+      <p v-if="addInHeader && !rows.length" class="text-sm text-muted-foreground">Nothing added yet.</p>
+      <Teleport v-if="showAdd && addInHeader" defer :to="`#${sectionActions}`">
+        <SetPicker
+          :groups="addable"
+          can-paste
+          :label="(config.button_label as string) || undefined"
+          @pick="(handle) => addSet(handle)"
+          @paste="paste()"
+        />
+      </Teleport>
       <SetPicker
+        v-else-if="showAdd"
         :groups="addable"
         can-paste
         :label="(config.button_label as string) || undefined"
         @pick="(handle) => addSet(handle)"
         @paste="paste()"
       />
-    </Teleport>
-    <SetPicker
-      v-else-if="showAdd"
-      :groups="addable"
-      can-paste
-      :label="(config.button_label as string) || undefined"
-      @pick="(handle) => addSet(handle)"
-      @paste="paste()"
-    />
+    </FullscreenLayer>
   </div>
 </template>

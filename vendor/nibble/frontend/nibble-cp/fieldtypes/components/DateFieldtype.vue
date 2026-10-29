@@ -7,6 +7,7 @@ import { fromIso, toIsoWithOffset } from '../../lib/datetime'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { dateWidthClass } from '../display'
 import { fieldtypeEmits, fieldtypeProps, useFieldtype } from '../useFieldtype'
 
 const props = defineProps(fieldtypeProps)
@@ -58,7 +59,8 @@ function onFieldChange(next: DateValue | undefined) {
         :granularity="timeEnabled ? (config.time_seconds_enabled ? 'second' : 'minute') : 'day'"
         hide-time-zone
         :disabled="isReadOnly"
-        class="flex h-10 w-full items-center overflow-x-auto overflow-y-hidden rounded-lg border border-gray-300 bg-white px-2 leading-[1.375rem] text-gray-600 shadow-ui-sm focus-within:focus-outline dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 data-disabled:border-dashed data-disabled:shadow-none"
+        :class="dateWidthClass(config)"
+        class="flex h-10 items-center overflow-x-auto overflow-y-hidden rounded-lg border border-gray-300 bg-white px-2 leading-[1.375rem] text-gray-600 shadow-ui-sm focus-within:focus-outline dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 data-disabled:border-dashed data-disabled:shadow-none"
         @update:model-value="onFieldChange"
       >
         <PopoverTrigger

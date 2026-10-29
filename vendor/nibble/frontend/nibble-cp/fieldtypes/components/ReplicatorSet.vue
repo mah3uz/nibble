@@ -26,24 +26,28 @@ import {
 } from '@/components/ui/dropdown-menu'
 import PublishFields from '../../publish/PublishFields.vue'
 import { useContainer } from '../../publish/context'
-import { setPreview } from '../replicatorSets'
+import { collapsedPreview } from '../replicatorSets'
 import type { PublishSet, PublishSetGroup } from '../types'
 import SetPicker from './SetPicker.vue'
 
-const props = defineProps<{
-  row: Record<string, unknown> & { _id: string; type: string; enabled?: boolean }
-  set: PublishSet | undefined
-  groups: PublishSetGroup[]
-  collapsed: boolean
-  readOnly: boolean
-  canAdd: boolean
-  canDuplicate: boolean
-  menu?: boolean
-  canMoveUp?: boolean
-  canMoveDown?: boolean
-  fieldPathPrefix: string
-  metaPathPrefix: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    row: Record<string, unknown> & { _id: string; type: string; enabled?: boolean }
+    set: PublishSet | undefined
+    groups: PublishSetGroup[]
+    collapsed: boolean
+    previews?: boolean
+    readOnly: boolean
+    canAdd: boolean
+    canDuplicate: boolean
+    menu?: boolean
+    canMoveUp?: boolean
+    canMoveDown?: boolean
+    fieldPathPrefix: string
+    metaPathPrefix: string
+  }>(),
+  { previews: true },
+)
 const emit = defineEmits<{
   toggle: []
   duplicate: []
@@ -56,7 +60,7 @@ const emit = defineEmits<{
 }>()
 const { errors } = useContainer()
 
-const preview = computed(() => setPreview(props.set?.fields ?? [], props.row))
+const preview = computed(() => collapsedPreview(props.set?.fields ?? [], props.row, props.previews))
 const name = computed(() => props.set?.display ?? props.row.type)
 const toggleLabel = computed(() => (props.collapsed && preview.value ? `${name.value}: ${preview.value}` : name.value))
 const hasError = computed(() => Object.keys(errors.value).some((path) => path.startsWith(`${props.fieldPathPrefix}.`)))

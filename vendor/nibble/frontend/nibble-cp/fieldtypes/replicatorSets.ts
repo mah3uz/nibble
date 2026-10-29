@@ -26,6 +26,10 @@ export function activeCount(rows: SetRow[] | null | undefined) {
 
 const CHOICES = ['select', 'radio', 'button_group']
 
+export function collapsedPreview(fields: PublishField[], row: Record<string, unknown>, previews: boolean) {
+  return previews ? setPreview(fields, row) : ''
+}
+
 export function setPreview(fields: PublishField[], row: Record<string, unknown>, limit = 60) {
   const text = fields
     .filter((field) => field.replicator_preview)

@@ -309,7 +309,7 @@ A date, or a date and time. Stores `YYYY-MM-DD`, or with `time_enabled` a UTC da
 | `time_zone` | an IANA name such as `Europe/London`, or `site` | — | with `time_enabled`, the clock the person types on, read with the offset that zone has on that date. `site` is the zone the site is set to (`config.time_zone` in `config/application.rb`). Without it, a date-time is stored in UTC and shown in the site's zone |
 | `earliest_date`, `latest_date` | date | — | the first and last date accepted, both included; midnight in `time_zone` when it has one |
 | `inline` | `true`, `false` | `false` | draws the calendar open instead of behind an input |
-| `full_width` | `true`, `false` | `false` | accepted; the Control Plane doesn't act on it |
+| `full_width` | `true`, `false` | `false` | stretches the input across the whole field instead of keeping it compact |
 
 A time the clocks skip when they go forward, such as 02:30 on the night summer time starts, is refused with the
 message key `local_time`. A time they repeat when they go back is the first of the two. Adding a zone to a field that
@@ -578,7 +578,7 @@ Rows of the same fields, such as opening hours or a price list. Stores a list of
 | `add_row` | text | — | the label of the button that adds a row |
 | `reorderable` | `true`, `false` | `true` | rows can be dragged into order |
 | `min_rows`, `max_rows` | whole number | — | the fewest and most rows accepted |
-| `fullscreen` | `true`, `false` | `true` | accepted; the Control Plane doesn't act on it |
+| `fullscreen` | `true`, `false` | `true` | adds a button to the field header that opens the rows in a full-screen editing layer; `false` hides it |
 
 ```yaml
 field:
@@ -606,8 +606,8 @@ what each can carry are in [Pages built from blocks](../modelling/blueprints.md#
 | `insert_below` | `true`, `false` | `true` | `false` leaves out the button on each block that adds another beneath it |
 | `tab_count` | `true`, `false` | `false` | shows how many blocks are switched on beside the tab's name |
 | `collapse` | `false`, `true`, `accordion` | `false` | `true` opens the editor with every block folded; `accordion` also keeps one open at a time |
-| `previews` | `true`, `false` | `true` | accepted; the Control Plane doesn't act on it |
-| `fullscreen` | `true`, `false` | `true` | accepted; the Control Plane doesn't act on it |
+| `previews` | `true`, `false` | `true` | shows a collapsed block's text preview beside its name; `false` shows only the name |
+| `fullscreen` | `true`, `false` | `true` | adds a button to the field header that opens the blocks in a full-screen editing layer; `false` hides it |
 
 ```yaml
 field:
