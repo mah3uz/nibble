@@ -69,13 +69,15 @@ export function parseFormula(source: string): Formula {
 
   function expression(): Node {
     let node = term()
-    while (operator() === '+' || operator() === '-') node = { kind: 'op', op: advance()!.text, left: node, right: term() }
+    while (operator() === '+' || operator() === '-')
+      node = { kind: 'op', op: advance()!.text, left: node, right: term() }
     return node
   }
 
   function term(): Node {
     let node = unary()
-    while (operator() === '*' || operator() === '/') node = { kind: 'op', op: advance()!.text, left: node, right: unary() }
+    while (operator() === '*' || operator() === '/')
+      node = { kind: 'op', op: advance()!.text, left: node, right: unary() }
     return node
   }
 
@@ -111,7 +113,8 @@ export function parseFormula(source: string): Formula {
     const args = [expression()]
     while (accept(',')) args.push(expression())
     expect(')')
-    if (args.length < arity[0] || args.length > arity[1]) throw new FormulaError(`${name} takes ${arity.join(' or ')} values`)
+    if (args.length < arity[0] || args.length > arity[1])
+      throw new FormulaError(`${name} takes ${[...new Set(arity)].join(' or ')} values`)
     return { kind: 'call', name, args }
   }
 

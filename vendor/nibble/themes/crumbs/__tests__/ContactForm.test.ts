@@ -11,7 +11,18 @@ vi.mock('../../../frontend/nibble/composables', async () => {
   return { useLocale: () => ref('en') }
 })
 
-const PUBLIC_FIELDTYPES = ['text', 'textarea', 'integer', 'toggle', 'select', 'radio', 'checkboxes', 'date', 'files']
+const PUBLIC_FIELDTYPES = [
+  'text',
+  'textarea',
+  'integer',
+  'toggle',
+  'select',
+  'radio',
+  'checkboxes',
+  'date',
+  'files',
+  'calculation',
+]
 
 const field = (handle: string, extra: Record<string, unknown> = {}) =>
   ({ handle, type: 'text', display: handle, instructions: null, required: false, ...extra }) as NibbleFormField
@@ -88,6 +99,7 @@ describe('crumbs ContactForm', () => {
       field('day', { type: 'date', earliest_date: '2026-11-01', latest_date: '2026-12-31' }),
       field('arrival', { type: 'date', time_enabled: true, earliest_date: '2026-11-01' }),
       field('files', { type: 'files', extensions: ['pdf', 'jpg'], max_file_size: 5, max_files: 3 }),
+      field('total', { type: 'calculation', formula: '{guests} * 10' }),
     ]
     const html = await render(form({ fields }))
 
@@ -114,6 +126,23 @@ describe('crumbs ContactForm', () => {
     expect(tag(html, 'visit-files')).toMatch(/type="file"(?=[^>]*accept=".pdf,.jpg")(?=[^>]*multiple)/)
     expect(tag(html, 'visit-files-help')).toBeTruthy()
     expect(html).toContain('PDF or JPG, up to 5 MB each, at most 3 files.')
+    expect(tag(html, 'visit-total')).toMatch(/^<output/)
+  })
+
+  it('shows a calculation as read-only output that screen readers hear change, and posts nothing for it', async () => {
+    const html = await render(
+      form({
+        fields: [
+          field('quantity', { type: 'integer', default: 3 }),
+          field('unit_price', { type: 'integer', hidden: true, value: 400, default: 400 }),
+          field('total', { type: 'calculation', formula: '{quantity} * {unit_price} + 50', decimals: 2, prepend: '$' }),
+        ],
+      }),
+    )
+
+    expect(html).toMatch(/<label for="visit-total"[^>]*>\s*total/)
+    expect(html).toMatch(/<output id="visit-total" aria-live="polite"[^>]*>\$1,250\.00<\/output>/)
+    expect(tag(html, 'visit-total')).not.toContain('name=')
   })
 
   it('sends a hidden field without drawing a label for it', async () => {

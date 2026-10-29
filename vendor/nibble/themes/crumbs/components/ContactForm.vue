@@ -207,6 +207,14 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
               :aria-invalid="invalid(field)"
               class="w-full border-b border-current bg-transparent px-1 py-3"
             />
+            <output
+              v-else-if="field.type === 'calculation'"
+              :id="contact.inputId(field)"
+              aria-live="polite"
+              :aria-describedby="contact.describedBy(field)"
+              class="block min-h-12 border-b border-current/40 px-1 py-3 tabular-nums"
+              >{{ contact.calculatedText(field) }}</output
+            >
             <div v-else class="flex items-baseline gap-2 border-b border-current">
               <span v-if="field.prepend">{{ field.prepend }}</span>
               <input

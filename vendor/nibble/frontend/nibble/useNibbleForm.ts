@@ -2,6 +2,7 @@ import { router } from '@inertiajs/vue3'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { passes } from '../nibble-cp/conditions'
 import { useLocale } from './composables'
+import { calculate, formatCalculation } from './formula'
 import type { NibbleForm, NibbleFormField, NibbleFormResult, NibbleFormValue } from './types'
 
 type Captcha = { provider: 'turnstile' | 'recaptcha'; site_key: string }
@@ -133,6 +134,9 @@ export function useNibbleForm(definition: NibbleForm) {
   }
 
   const isVisible = (field: NibbleFormField) => isFieldVisible(field, values)
+  const calculations = computed(() => calculate(definition.fields, values, isVisible))
+  const calculated = (field: NibbleFormField) => calculations.value.get(field.handle) ?? null
+  const calculatedText = (field: NibbleFormField) => formatCalculation(field, calculated(field), locale.value)
   const inputId = (field: NibbleFormField) => `${definition.handle}-${field.handle}`
   const helpId = (field: NibbleFormField) => `${inputId(field)}-help`
   const errorId = (field: NibbleFormField) => `${inputId(field)}-error`
@@ -284,6 +288,8 @@ export function useNibbleForm(definition: NibbleForm) {
     submit,
     reset,
     isVisible,
+    calculated,
+    calculatedText,
     inputId,
     helpId,
     errorId,
