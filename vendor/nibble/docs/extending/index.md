@@ -37,7 +37,7 @@ Most things people want to add are a schema change, not code:
 | a new kind of content | a [collection](../modelling/collections.md) |
 | a new field | a line in a [blueprint](../modelling/blueprints.md) |
 | a new block on landing pages | a set in a replicator, and a `.vue` file |
-| a form that reaches your CRM | an [`api` delivery](../modelling/forms.md#5-sending-submissions-to-another-system) |
+| a form that reaches your CRM | an [`api` delivery](../modelling/form-delivery.md#2-sending-submissions-to-another-system) |
 | figures or a feed from another system, kept up to date | a [scheduled task](../modelling/scheduled-tasks.md) |
 | to tell another system something changed | a webhook, set up in the Control Plane |
 

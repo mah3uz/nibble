@@ -482,7 +482,7 @@ submission is listed under **Forms → Book a demo**, and sales gets an email ti
 
 > [!WARNING]
 > Before this form is public, turn on spam protection. Every form is rate-limited and has a hidden honeypot field,
-> but a CAPTCHA is what stops a determined bot. See [Forms](../modelling/forms.md#4-spam).
+> but a CAPTCHA is what stops a determined bot. See [Forms](../modelling/form-spam-and-privacy.md#1-spam).
 
 ## 8. Before the first deploy
 

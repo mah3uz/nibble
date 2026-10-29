@@ -143,7 +143,7 @@ The handler is given one argument, the task's context:
 | Method | What it does |
 |---|---|
 | `update_global(handle, values, locale: nil)` | saves `values` over the global's stored ones, in the site's default locale unless you name another, through the same checks and history as an editor's save; raises `Nibble::Error` when they aren't valid |
-| `connection(handle)` | the [API connection](../modelling/forms.md#51-api-connections) of that name, with `get(path, **options)`, `post(path, body:, **options)` and `request(method, path, **options)`, each returning the response (`status`, `ok?`, `json`, `body`) |
+| `connection(handle)` | the [API connection](../modelling/form-delivery.md#22-api-connections) of that name, with `get(path, **options)`, `post(path, body:, **options)` and `request(method, path, **options)`, each returning the response (`status`, `ok?`, `json`, `body`) |
 | `last_success_at` | when the task's last successful run started, or `nil` |
 | `task` | the task: `handle`, `title`, `schedule` |
 | `logger` | the application's logger |

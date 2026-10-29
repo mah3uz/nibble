@@ -24,7 +24,7 @@ After reading this guide, you will know:
 |---|---|---|
 | **Invitation** | someone is given an account in **Users** | the new user |
 | **Password reset** | someone asks for one on the sign-in screen, or an admin sends one | that user |
-| **Form submission** | a form with a `notify` list is submitted | the addresses in [`notify`](../modelling/forms.md#3-emailing-submissions) |
+| **Form submission** | a form with a `notify` list is submitted | the addresses in [`notify`](../modelling/form-delivery.md#1-emailing-submissions) |
 | **Notification** | a review is requested, an entry is approved or sent back, someone is mentioned, a form is submitted, a webhook is turned off | the person it is for, unless they turned email notifications off |
 
 Every email comes from the **Sender name** and **Sender address** in **Globals → Integrations**, and names the site with

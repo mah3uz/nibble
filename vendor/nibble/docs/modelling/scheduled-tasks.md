@@ -61,7 +61,7 @@ cannot read.
 
 ## 2. Fetching figures into a global
 
-A `fetch` calls an API and saves what it answers. Name an [API connection](forms.md#51-api-connections) with `use:`
+A `fetch` calls an API and saves what it answers. Name an [API connection](form-delivery.md#22-api-connections) with `use:`
 and a `path`, or give a whole `url:`:
 
 ```yaml
