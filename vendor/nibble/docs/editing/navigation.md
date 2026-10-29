@@ -1,11 +1,11 @@
 ---
 id: editing-navigation
-title: Navigation
+title: Build and arrange the site's menus
 description: Build and arrange the site's menus — links to pages, typed URLs, nesting, and menus built from files.
-order: 4
+order: 6
 ---
 
-# Navigation
+# Build and arrange the site's menus
 
 A navigation is a menu: the links across the top of Tidewater's site, the footer, a sidebar. Which menus exist is part
 of the site's setup; what is in them is yours.
@@ -24,7 +24,7 @@ Open **Navigation** in the sidebar and choose a menu. Tidewater's main menu has 
 ![The main menu in the navigation editor](../../images/cp/navigation.png)
 
 - **Add link** adds one at the bottom; **Add sub-link** adds one beneath another.
-- Drag a link by its handle to move it. Drag it under another to nest it — as deep as the menu allows.
+- Drag a link by the grip icon on its left to move it. Drag it under another to nest it — as deep as the menu allows.
 - The pencil edits a link; the bin removes it.
 - **Save** puts the menu on the site. There is no separate publish step for menus.
 

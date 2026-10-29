@@ -1,13 +1,14 @@
 ---
 id: editing-entries
-title: Entries
-description: Find, write and organise pages and posts — the listing, the editor, URLs, nesting and the trash.
+title: Write and organise pages and posts
+description: Find, write and organise pages and posts — the listing, the editor, blocks, URLs, nesting and deleting.
 order: 1
 ---
 
-# Entries
+# Write and organise pages and posts
 
-An entry is one piece of content: a landing page, a blog post, a customer story. This guide follows you writing
+An entry is one piece of content: a landing page, a blog post, a customer story. A collection is a group of entries of
+the same kind, such as Pages or Blog. This guide follows you writing
 Tidewater's announcement of payment reminders.
 
 After reading this guide, you will know:
@@ -25,7 +26,7 @@ Open a collection in the sidebar — **Blog** — and its entries are listed.
 ![The blog's listing](../../images/cp/blog-listing.png)
 
 - **Search** narrows the list by title as you type.
-- **Filters** narrow it by status, blueprint, locale, author or topic. **Save view** keeps a combination you use
+- **Filters** narrow it by status, kind of page, language, author or topic. **Save view** keeps a combination you use
   often as a tab beside **All** and **Drafts**.
 - The **columns** button, on the right, chooses which fields are shown. Your choice is remembered.
 - The **download** button beside it exports the list as a CSV file.
@@ -47,7 +48,8 @@ editor opens:
 
 ![A page open in the editor](../../images/cp/page-editor.png)
 
-The fields come from the entry's **blueprint**, written for this site. Tidewater's posts have:
+The fields come from the kind of page you chose. Whoever built the site decides which fields each kind has.
+Tidewater's posts have:
 
 | Where | Holds |
 |---|---|
@@ -59,31 +61,42 @@ On a narrow screen the right-hand column folds into a tab of its own, called **D
 
 Below it, **Notes** is for the team: leave one, and `@mention` someone to tell them. Notes never reach the site.
 
-Fields with a red asterisk are required. The form tells you what is missing when you save, rather than failing
-silently.
+Fields with a red asterisk (*) are required. The form tells you what is missing when you save, rather than failing
+silently. Some fields are only required in some cases, depending on what you filled in elsewhere on the page. The asterisk
+appears on them when they become required, and goes when they don't.
 
 Some fields worth knowing by name:
 
 | Field | What to expect |
 |---|---|
 | **Rich text** | a full editor: headings, lists, links, images, tables, code and find-and-replace |
-| **Markdown** | plain Markdown, with a Preview button that shows exactly what the site will render |
+| **Markdown** | plain text with simple symbols for headings and bold (Markdown), with a Preview button that shows exactly what the site will render |
 | **Assets** | opens the media library, so you choose an image rather than upload another copy |
-| **Entries** / **Terms** | a picker for other entries or terms — an author, a topic, related posts |
+| **Entries**, or a label list such as **Topics** | a picker for other entries or labels — an author, a topic, related posts. To make a new label, see [Categories and tags](categories-and-tags.md) |
 | **Page blocks** | build a page from blocks in any order: text, quote, call to action, image, gallery, pricing |
 
-Each block's **⋯** menu has **Move up** and **Move down**, for ordering without dragging, and **Copy block**. A copied
-block can be pasted into any entry whose blocks field has the same kind of block: **Add block** then offers
-**Paste**. Removing a block, or a row of a table such as opening hours, shows **Undo** for a few seconds.
+### Working with blocks
+
+A block is one building piece of a page: a quote, an image, a pricing table. Use the add button under the blocks
+to add one, and fill it in.
+
+- **Move a block.** Open the **⋯** menu on the block and choose **Move up** or **Move down**.
+- **Copy a block.** Choose **Copy block** in the same menu. You see "Block copied".
+- **Paste a block.** Open another entry, or another place on the page. The add button then offers **Paste**. It only
+  appears when that field has the same kind of block. The pasted block is a separate copy, so changing it
+  does not change the first.
+- **Undo a removal.** Choose the bin on a block to remove it. For a few seconds the message "Block removed" offers
+  **Undo**. Removing a row of a table field, such as opening hours, works the same way ("Row removed"). After the
+  message goes, the block is gone unless you [restore an earlier version](publishing.md#5-revisions).
 
 > [!IMPORTANT]
 > **Saving does not publish.** Save as often as you like; the site does not change until you publish. See
-> [Drafts and publishing](publishing.md) — it is the one thing most worth understanding on your first day.
+> [Save, preview and publish](publishing.md) — it is the one thing most worth understanding on your first day.
 
 ## 3. URLs
 
-An entry's address comes from two things: the pattern its collection uses — Tidewater's blog is `/blog/{slug}` — and
-the entry's **slug**, the readable part. The slug is filled in from the title as you type, and you can change it in the
+An entry's address comes from two things: the pattern its collection uses — Tidewater's blog addresses look like
+`/blog/introducing-payment-reminders` — and the entry's **slug**, the readable part. The slug is filled in from the title as you type, and you can change it in the
 column on the right.
 
 **Change the slug of an entry that is already live, and Nibble records a redirect from the old address to the new one.**
@@ -109,8 +122,7 @@ The page whose slug is `home`, at the top level, is the site's home page.
 **Tools → Trash**, where it can be restored — URL and all — until the trash is emptied, 30 days later unless the site
 says otherwise.
 
-The trash shows one kind at a time — entries, terms or assets, chosen with **Kind** — a page at a time, newest first.
-**Restore** puts an item back; **Delete** removes it for good. An item that other records still refer to says so.
+See [Restore something you deleted](trash.md) for restoring it, or deleting it for good.
 
 A page with pages under it cannot be trashed until they are moved or trashed first.
 

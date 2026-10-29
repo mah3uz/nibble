@@ -1,12 +1,12 @@
 ---
 id: editing-publishing
-title: Drafts and publishing
-description: Saving is not publishing — drafts, live preview, publishing, scheduling, review, revisions and
-  unpublishing.
+title: Save, preview and publish
+description: Saving is not publishing — drafts, live preview, publishing, scheduling, review, revisions,
+  unpublishing and what to do if a save goes wrong.
 order: 2
 ---
 
-# Drafts and publishing
+# Save, preview and publish
 
 The most important idea in the Control Plane: **saving is not publishing.** This guide follows your post
 announcing payment reminders from first draft to the site, and back.
@@ -101,3 +101,14 @@ counted — see [Redirects and SEO](redirects-and-seo.md).
 Publishing updates the site immediately. Pages are cached for speed, and publishing clears exactly the pages that
 used what changed — the post itself, the blog listing, the home page if the post appears there, the feed. You never
 have to think about the cache, and you should never have to wait for it.
+
+## 8. If a save goes wrong
+
+If your connection drops or the browser closes before a save, Nibble keeps your unsaved work in that browser. Open
+the entry again and a banner says "Unsaved changes from" a date and time "were kept in this browser". Choose
+**Restore** to put them back in the form, or **Discard** to drop them. If the page was saved by someone else since, the
+banner warns you that restoring puts your older changes back over theirs.
+
+When an entry has a draft saved by you or a colleague, a banner at the top tells you who made it and when. It offers
+**Preview**, **Discard** and **Publish changes**. If the live version changed after the draft was started, the banner
+says so, and **View history** shows what changed.
