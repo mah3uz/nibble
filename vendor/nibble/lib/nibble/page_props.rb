@@ -55,7 +55,7 @@ module Nibble
     def present_page(presenter)
       return presenter.present([ @match.record ]).first if @match.record
       return { "collection" => @match.collection.handle, "title" => @match.collection["title"] } if @match.collection
-      return { "title" => "Page not found" } unless @match.taxonomy
+      return { "title" => @match.template == "errors/500" ? "Something went wrong" : "Page not found" } unless @match.taxonomy
 
       { "taxonomy" => @match.taxonomy.handle, "title" => @match.taxonomy["title"] }
     end

@@ -222,10 +222,26 @@ class NibbleSiteTest < ActionDispatch::IntegrationTest
     end
     assert_response :internal_server_error
     assert_equal "theme/errors/500", page_props["component"]
+    assert_nil page_props["props"]["site"], "an error page that cannot load the site's props still renders, without them"
 
     get "/blog"
     assert_response :success
     assert_nil response.headers["X-Nibble-Cache"]
+  end
+
+  test "the 500 page gets the site's shared props so it looks like the rest of the site" do
+    original = Nibble::Presenter.method(:new)
+    calls = 0
+    Nibble::Presenter.define_singleton_method(:new) { |**args| (calls += 1) == 1 ? raise("view query exploded") : original.call(**args) }
+    begin
+      get "/blog"
+    ensure
+      Nibble::Presenter.singleton_class.remove_method(:new)
+    end
+    assert_response :internal_server_error
+    assert_equal "theme/errors/500", page_props["component"]
+    assert page_props["props"]["site"], "site props are present"
+    assert page_props["props"]["seo"]
   end
 
   test "redirect rules run before routing: exact, wildcard, query kept, hits counted" do

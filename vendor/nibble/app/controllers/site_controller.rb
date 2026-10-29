@@ -61,7 +61,18 @@ class SiteController < Nibble::ApplicationController
   def server_error(error)
     Rails.logger.error("[nibble] rendering #{@nibble_view || request.path} failed: #{error.class}: #{error.message}")
     Rails.error.report(error, handled: true, context: { view: @nibble_view, path: request.path })
-    render inertia: "theme/errors/500", props: {}, status: :internal_server_error
+    render inertia: "theme/errors/500", props: error_page_props, status: :internal_server_error
+  end
+
+  def error_page_props
+    locale = Nibble::Routing.locale_for(request.path)
+    match = Nibble::Routing::Match.new(kind: :error, record: nil, taxonomy: nil, collection: nil, locale:, template: "errors/500", redirect: nil)
+    page = Nibble::PageProps.new(match, request_path: request.path).build
+    @nibble_seo = page.seo
+    page.props
+  rescue StandardError
+    @nibble_seo = nil
+    {}
   end
 
   def cacheable?
