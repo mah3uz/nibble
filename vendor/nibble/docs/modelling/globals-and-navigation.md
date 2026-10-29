@@ -14,6 +14,7 @@ across the top. Globals and navigation hold those.
 After reading this guide, you will know:
 
 - Which globals Nibble ships, and how to declare one of your own.
+- How a rich-text link can follow an address kept in a global.
 - How to declare a menu and limit what it can link to.
 - How a menu can be built from a folder of files instead.
 - How a theme reads both.
@@ -66,6 +67,30 @@ Add `localizable: true` when the values differ per language.
 > Globals are the wrong place for secrets. Every page receives every global except `integrations` — which Nibble
 > keeps out of the page because it holds keys — so anything in your own global can end up in a visitor's browser.
 > API keys belong in [credentials or the environment](../running/configuration.md#6-environment-and-credentials).
+
+### 1.2 Linking to a global from rich text
+
+An address used on many pages — the application form, the booking page — can live in one global field, and every
+rich-text link to it follows that field. Give the global a field that holds an address: a `text` field with
+`input_type: url`, or a `link` field.
+
+```yaml
+            - handle: apply_url
+              field: { type: text, input_type: url }
+```
+
+In the rich-text link dialog, choose **Global**, then the global and the field. The dialog shows the address the
+field holds now. When someone changes the field, every page that links to it shows the new address, without its
+entries being saved again.
+
+The link keeps the address it had when the entry was saved beside its reference, `global:site.apply_url`, so an
+export carries a working link. When the page renders, the field's current value is checked like any other link: if
+it is empty or isn't a web, email, phone or on-site address, the words show without a link. A link reads the global
+in the site's default language. Saving refuses a link to a global or field that doesn't exist, and so does a
+package import; a link whose field is later taken out of the schema shows the address it was saved with.
+
+Apps writing Markdown through the [management API](../extending/management-api.md) write the same link as
+`[Apply](global:site.apply_url)`, and read it back that way.
 
 ## 2. Navigation
 

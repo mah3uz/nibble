@@ -119,7 +119,8 @@ The ones worth knowing properly:
 
 **`rich_text`** is the full editor — headings, lists, links, images, tables, code blocks and find-and-replace. It is
 stored as structured data, not HTML, and rendered to safe HTML on the server. Your theme never sees raw markup it
-has to trust.
+has to trust. A link can point at a [global field](globals-and-navigation.md#12-linking-to-a-global-from-rich-text)
+instead of an address, and follows that field when it changes.
 
 **`markdown`** is a textarea with a Preview button, rendered by the server exactly as your theme will receive it.
 Turn on `sanitize` when the text could come from someone you do not trust.

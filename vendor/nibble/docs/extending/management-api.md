@@ -119,8 +119,10 @@ file there with no `Authorization` header: `curl -T photo.jpg "<url>"`.
 - **Values follow `describe_schema`.** Unknown fields and arguments are refused with the names that would work.
 - **Rich text is Markdown**, at any depth: a `rich_text` field in a replicator set or a grid row, however deeply
   nested, is written and read the same way as one at the top. Images are `![alt](asset:ID)`; links may be web,
-  email, phone or site paths only. Content Markdown can't hold comes back as editor JSON, and nodes sent as nodes
-  are kept as they are.
+  email, phone or site paths, or `global:<set>.<field>` to follow a
+  [global field that holds an address](../modelling/globals-and-navigation.md#12-linking-to-a-global-from-rich-text),
+  such as `[Apply](global:site.apply_url)`. Content Markdown can't hold comes back as editor JSON, and nodes sent as
+  nodes are kept as they are.
 - **`describe_schema` lists every set.** A replicator's `items` is a `oneOf` with one schema per set: `type` as a
   `const` (the set's handle) beside the set's fields. A grid's `items` lists its fields. Three levels of nesting are
   described; deeper ones are plain objects.
