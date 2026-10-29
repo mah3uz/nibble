@@ -22,7 +22,7 @@ module Nibble
 
         render inertia: "cp/globals/Edit", props: {
           title: item["title"],
-          breadcrumbs: [ { label: "Globals", url: cp_globals_path }, { label: item["title"] } ],
+          breadcrumbs: [ { label: "Site settings", url: cp_globals_path }, { label: item["title"] } ],
           resource_key: "global",
           blueprint: blueprint.to_publish_h,
           values: fields.pre_process.values,

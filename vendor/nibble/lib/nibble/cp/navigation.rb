@@ -45,7 +45,7 @@ module Nibble
           globals = schema.globals.select { |global| Access.can?(user, "globals.#{global.handle}.edit") }
           if globals.any?
             children = globals.map { |global| item(global["title"], "/cp/globals/#{global.handle}/edit", "globals") }
-            items << item("Globals", "/cp/globals", "globals", children:)
+            items << item("Site settings", "/cp/globals", "globals", children:)
           end
           menus = schema.navigations.select { |menu| Access.can?(user, "navigation.#{menu.handle}.edit") }
           if menus.any?

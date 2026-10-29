@@ -6,7 +6,7 @@ const OPTIONS = [
     value: 'ask',
     label: 'Ask before live changes',
     description:
-      'Publishing, trashing, and changes to terms, globals, navigation or assets wait for you to approve them.',
+      'Publishing, trashing, and changes to terms, site settings, navigation or assets wait for you to approve them.',
   },
   {
     value: 'off',

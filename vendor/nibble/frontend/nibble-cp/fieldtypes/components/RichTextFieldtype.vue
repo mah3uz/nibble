@@ -669,24 +669,24 @@ function showBubbleMenu({
         @update:model-value="(value) => value && (linkMode = value as LinkDialog['mode'])"
       >
         <ToggleGroupItem value="url">URL</ToggleGroupItem>
-        <ToggleGroupItem value="global">Global</ToggleGroupItem>
+        <ToggleGroupItem value="global">Site setting</ToggleGroupItem>
       </ToggleGroup>
       <div v-if="linkMode === 'url'" class="space-y-2">
         <Label :for="`${toolbarTarget}-href`">URL</Label>
         <LinkUrlInput :id="`${toolbarTarget}-href`" v-model="linkHref" @submit="applyLink" />
       </div>
       <template v-else>
-        <p v-if="!globalSets.length" class="text-sm text-gray-500">No global holds a web address yet.</p>
+        <p v-if="!globalSets.length" class="text-sm text-gray-500">No site setting holds a web address yet.</p>
         <template v-else>
           <div class="space-y-2">
-            <Label :for="`${toolbarTarget}-global`">Global</Label>
+            <Label :for="`${toolbarTarget}-global`">Site setting</Label>
             <NativeSelect
               :id="`${toolbarTarget}-global`"
               class="w-full"
               :model-value="globalChoice.set"
               @update:model-value="(value) => chooseGlobalSet(String(value))"
             >
-              <NativeSelectOption value="" disabled>Choose a global</NativeSelectOption>
+              <NativeSelectOption value="" disabled>Choose a site setting</NativeSelectOption>
               <NativeSelectOption v-for="set in globalSets" :key="set.handle" :value="set.handle">
                 {{ set.title }}
               </NativeSelectOption>
