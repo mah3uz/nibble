@@ -72,9 +72,26 @@ unless someone needs it, and even then an app signed in this way can never have 
 
 Some changes don't wait for a person to publish them, or can't be quietly undone: publishing, unpublishing or
 trashing an entry, and any change to terms, globals, navigation or assets. When a connected app asks to make one,
-Nibble first checks it would succeed, then holds it and tells the app to ask its person. The person sees exactly what
-would change — with a warning if it links to another site — confirms their password, and approves it. The app then
-makes that change, once.
+Nibble first checks it would succeed, then holds it and notifies the person the app acts for. They see exactly what
+would change — with a warning if it links to another site — confirm their password, and approve or decline it.
+Approving makes the change there and then, once. The app has nothing more to send; it can ask how it went.
+
+Nibble checks everything again when the change is approved, not only when it was asked for. If the app was
+disconnected, the person's role or this page's settings no longer allow it, or someone changed the same thing in the
+meantime, the change fails, nothing is altered, and the approval shows why. A request nobody decides on expires after
+a day.
+
+Under **Connected apps**, a person can approve or decline several waiting requests at once, with one password
+confirmation.
+
+Whether an app waits is chosen when it is connected:
+
+- **Ask before live changes**, the default.
+- **Make changes without asking**, which needs the person's password confirmed. The app then makes these changes
+  directly, still within its access.
+
+On this page, **Approvals** decides whether people may make that choice. **Each person chooses** lets them;
+**Always ask** makes every app wait, whatever its person chose. An app signed in with a code always asks.
 
 Tokens a person creates for their own scripts (under **Connected apps**) don't wait: nobody is there to approve.
 
@@ -84,7 +101,8 @@ The sidebar of the Agent access page lists every connected app on the site: whos
 last used and from where, and when it expires. **Disconnect** ends it immediately.
 
 Each person sees their own under **Connected apps** in their account menu, and gets a notification whenever a new
-app is connected to their account. An app's sign-in lasts 90 days at most, and ends after 30 days unused.
+app is connected to their account. An app stays connected while it is used: each use moves its expiry to 90 days
+ahead, and one left unused for 30 days has to sign in again. A script token ends when it was set to.
 
 ## 6. What stays protected
 

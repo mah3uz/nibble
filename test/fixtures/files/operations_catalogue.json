@@ -66,6 +66,20 @@
       "openWorldHint": false
     }
   },
+  "get_approval": {
+    "arguments": [
+      "approval"
+    ],
+    "required": [
+      "approval"
+    ],
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
   "get_asset": {
     "arguments": [
       "id"

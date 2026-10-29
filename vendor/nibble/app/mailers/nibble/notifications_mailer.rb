@@ -9,6 +9,7 @@ module Nibble
       "webhook.disabled" => "A webhook was turned off after repeated failures",
       "apps.connected" => "A new app was connected to your account",
       "apps.approval_requested" => "An app is waiting for your approval",
+      "apps.approval_failed" => "A change you approved couldn't be made",
       "task.failed" => "A scheduled task started failing"
     }.freeze
 

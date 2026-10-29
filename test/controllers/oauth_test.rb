@@ -30,9 +30,9 @@ class Nibble::OauthTest < ActionDispatch::IntegrationTest
                                       code_challenge_method: "S256", state: "s1" }.merge(extra)
   end
 
-  def approve(preset: "draft", **options)
+  def approve(preset: "draft", approvals: nil, **options)
     ask(**options)
-    post "/oauth/authorize", params: { request_id: props["request_id"], decision: "approve", preset: }
+    post "/oauth/authorize", params: { request_id: props["request_id"], decision: "approve", preset:, approvals: }.compact
     query(response.location)
   end
 
@@ -185,6 +185,29 @@ class Nibble::OauthTest < ActionDispatch::IntegrationTest
     assert_equal 0, Nibble::Grant.count
   end
 
+  test "an app asks before live changes unless its person, with a confirmed password, says it needn't" do
+    approve
+    assert_equal "ask", Nibble::Grant.last.approval_mode
+
+    Nibble::Current.session.update!(elevated_at: 20.minutes.ago)
+    ask
+    post "/oauth/authorize", params: { request_id: props["request_id"], decision: "approve", preset: "draft", approvals: "off" }
+    assert_equal 1, Nibble::Grant.count
+
+    Nibble::Current.session.update!(elevated_at: Time.current)
+    approve(approvals: "off")
+    assert_equal "off", Nibble::Grant.last.approval_mode
+  end
+
+  test "when the site always asks, an app can't be let off" do
+    Nibble::AgentAccess.update!(approvals: "always")
+    ask
+    assert_not props["approvals"]["choosable"]
+    post "/oauth/authorize", params: { request_id: props["request_id"], decision: "approve", preset: "draft", approvals: "off" }
+
+    assert_equal 0, Nibble::Grant.count
+  end
+
   test "people whose role can't connect apps are told so and nothing is granted" do
     sign_in_as users(:editor)
     ask
@@ -278,6 +301,10 @@ class Nibble::OauthTest < ActionDispatch::IntegrationTest
 
     post "/cp/device", params: { code: device["user_code"].downcase }
     assert_not props["presets"].find { |preset| preset["value"] == "everything" }["available"]
+    assert_not props["approvals"]["choosable"], "a phished code must not skip approvals"
+    post "/oauth/authorize", params: { request_id: props["request_id"], decision: "approve", preset: "read", approvals: "off" }
+    assert_equal 0, Nibble::Grant.count
+    post "/cp/device", params: { code: device["user_code"].downcase }
     post "/oauth/authorize", params: { request_id: props["request_id"], decision: "approve", preset: "read" }
 
     travel 6.seconds do

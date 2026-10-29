@@ -59,7 +59,7 @@ None of those needs a seam, and all of them are easier to live with. Reach for a
 | `site/cp/slots/*.vue` | the Control Plane's logo, sidebar and scripts | [Customising the Control Plane](control-plane.md) |
 | `Gemfile` | gems of your own | [Ruby hooks and events](hooks.md#1-your-own-code) |
 | `/api/v1/operations` and `/mcp` | changing content from another program or an AI agent, as a person | [The management API and MCP](management-api.md) |
-| `site/agents/*.md` | telling agents your site's editorial rules | [The management API and MCP](management-api.md#6-telling-agents-about-the-site) |
+| `site/agents/*.md` | telling agents your site's editorial rules | [The management API and MCP](management-api.md#7-telling-agents-about-the-site) |
 | `bin/rails nibble:dev:mcp` | an agent building your theme or code | [Building with an agent](building-with-agents.md) |
 
 ## 4. What does not exist yet

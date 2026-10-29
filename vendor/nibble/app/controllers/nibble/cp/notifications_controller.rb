@@ -34,7 +34,7 @@ module Nibble
       def url_for_subject(item)
         return "/cp/forms/#{item.data['form']}/submissions/#{item.subject_id}" if item.kind == "form.submitted" && item.subject_id
         return "/cp/webhooks/#{item.subject_id}/edit" if item.kind == "webhook.disabled"
-        return "/cp/approvals/#{item.data['approval']}" if item.kind == "apps.approval_requested" && item.data["approval"]
+        return "/cp/approvals/#{item.data['approval']}" if item.kind.start_with?("apps.approval_") && item.data["approval"]
         return "/cp/account/apps" if item.kind == "apps.connected"
         return "/cp/utilities/tasks" if item.kind == "task.failed"
         return nil unless item.subject_type == Nibble::Records::Entry.record_type

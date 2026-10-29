@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_29_000300) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_101700) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -240,12 +240,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_000300) do
     t.datetime "created_at", null: false
     t.datetime "decided_at"
     t.string "digest", null: false
+    t.json "error"
     t.datetime "expires_at", null: false
     t.integer "grant_id", null: false
     t.json "input", default: {}, null: false
     t.string "operation", null: false
     t.json "preview", default: {}, null: false
     t.string "public_id", null: false
+    t.json "result"
     t.string "status", default: "pending", null: false
     t.datetime "updated_at", null: false
     t.index ["grant_id", "status"], name: "index_nibble_approvals_on_grant_id_and_status"
@@ -269,6 +271,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_000300) do
 
   create_table "nibble_grants", force: :cascade do |t|
     t.json "abilities", default: [], null: false
+    t.string "approval_mode", default: "ask", null: false
     t.datetime "created_at", null: false
     t.datetime "expires_at", null: false
     t.string "kind", null: false

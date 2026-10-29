@@ -31,6 +31,18 @@ class Api::OperationsTest < ActionDispatch::IntegrationTest
     assert_equal Nibble::MANAGEMENT_API_VERSION, json["meta"]["api_version"]
   end
 
+  test "an app that keeps working stays connected, but a script token ends when it was set to" do
+    @grant.update!(expires_at: 2.days.from_now)
+    script = Nibble::Grant.create!(user: users(:editor), kind: "ci", name: "Script", preset: "read", abilities: Nibble::AgentAccess.preset("read"),
+      via: "token", expires_at: 2.days.from_now)
+
+    get "/api/v1/operations/whoami", headers: headers
+    get "/api/v1/operations/whoami", headers: headers(Nibble::OauthToken.issue(script, "ci", resource: "https://example.com/api/v1", expires_at: script.expires_at))
+
+    assert_in_delta Nibble::Grant::LIFETIME.from_now, @grant.reload.expires_at, 1.minute
+    assert_in_delta 2.days.from_now, script.reload.expires_at, 1.minute
+  end
+
   test "a token meant for the MCP endpoint doesn't open the API" do
     mcp = Nibble::OauthToken.issue(@grant, "access", resource: "https://example.com/mcp")
 

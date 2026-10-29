@@ -4,7 +4,8 @@ module Nibble
     self.table_name = "nibble_approvals"
 
     LIFETIME = 1.day
-    STATUSES = %w[pending approved denied used].freeze
+    STATUSES = %w[pending approved done failed denied].freeze
+    STANDING = %w[pending approved done].freeze
 
     belongs_to :grant, class_name: "Nibble::Grant"
 
@@ -21,8 +22,13 @@ module Nibble
 
     def open? = status == "pending" && !expired?
 
-    def usable_for?(grant, operation, input)
-      status == "approved" && !expired? && grant_id == grant.id && self.operation == operation && digest == self.class.digest(operation, input)
+    def state = status == "pending" && expired? ? "expired" : status
+
+    def for?(operation, input) = self.operation == operation && digest == self.class.digest(operation, input)
+
+    def summary
+      { "approval" => public_id, "status" => state, "operation" => operation, "result" => result, "error" => error,
+        "expires_at" => expires_at.utc.iso8601 }
     end
   end
 end

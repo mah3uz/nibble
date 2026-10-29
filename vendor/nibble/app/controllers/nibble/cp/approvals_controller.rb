@@ -1,30 +1,61 @@
 module Nibble
   module Cp
     class ApprovalsController < BaseController
-      before_action :load_approval
+      BATCH = 50
+
+      before_action :load_approval, except: :batch
       before_action :require_elevated_page, only: :show
-      before_action :require_elevated_session, only: :update
+      before_action :require_elevated_session, only: %i[update batch]
 
       def show
         operation = Nibble::Operations.find(@approval.operation)
         render inertia: "cp/approvals/Show", props: {
-          id: @approval.public_id, status: @approval.expired? && @approval.status == "pending" ? "expired" : @approval.status,
+          id: @approval.public_id, status: @approval.state,
           app: @approval.grant.name, operation: described(operation),
           summary: @approval.preview.slice("title", "status", "url", "collection", "taxonomy", "handle", "filename"),
           changes: changes, input: @approval.input.except("data", "tree", "content_base64"),
-          other_sites: other_sites, expires_at: @approval.expires_at.utc.iso8601
+          other_sites: other_sites, expires_at: @approval.expires_at.utc.iso8601,
+          result: @approval.result&.slice("result", "title", "status", "url", "cp_url", "filename", "handle"),
+          error: @approval.error&.slice("code", "message", "hint")
         }
       end
 
       def update
         return redirect_to("/cp/approvals/#{@approval.public_id}", alert: "This request was already decided or has expired.") unless @approval.open?
 
-        approved = params[:decision] == "approve"
-        @approval.update!(status: approved ? "approved" : "denied", decided_at: Time.current)
-        redirect_to "/cp/approvals/#{@approval.public_id}", notice: approved ? "Approved. Tell #{@approval.grant.name} to carry on." : "Declined."
+        approval = decide(@approval)
+        path = "/cp/approvals/#{approval.public_id}"
+        case approval.status
+        when "done" then redirect_to path, notice: "Approved and done."
+        when "failed" then redirect_to path, alert: "Approved, but the change couldn't be made: #{approval.error['message']}"
+        when "denied" then redirect_to path, notice: "Declined."
+        else redirect_to path, alert: "This request was already decided or has expired."
+        end
+      end
+
+      def batch
+        ids = Array(params[:ids]).map(&:to_s).uniq.first(BATCH)
+        found = Nibble::Approval.includes(:grant).where(public_id: ids).select { |approval| approval.grant.user_id == Nibble::Current.user.id }.index_by(&:public_id)
+        outcomes = ids.map do |id|
+          approval = found[id] or next { id:, status: "not_found" }
+
+          approval = decide(approval) if approval.open?
+          { id:, status: approval.state, error: approval.error&.dig("message") }
+        end
+        return render(json: { approvals: outcomes }) if request.format.json? && !request.inertia?
+
+        counts = outcomes.group_by { |outcome| outcome[:status] }.transform_values(&:size)
+        redirect_back_or_to "/cp/account/apps", notice: counts.map { |status, count| "#{count} #{status}" }.join(", ")
       end
 
       private
+
+      def decide(approval)
+        return Nibble::Operations.carry_out(approval, site: Nibble::Oauth.issuer(request), ip: request.remote_ip) if params[:decision] == "approve"
+
+        Nibble::Approval.where(id: approval.id, status: "pending").update_all(status: "denied", decided_at: Time.current, updated_at: Time.current)
+        approval.reload
+      end
 
       def load_approval
         @approval = Nibble::Approval.includes(:grant).find_by!(public_id: params[:id])

@@ -9,6 +9,7 @@ module Nibble
         grants = Nibble::Current.user.grants.includes(:oauth_client).order(created_at: :desc)
         render inertia: "cp/account/Apps", props: {
           enabled: AgentAccess.enabled?,
+          site_approvals: AgentAccess.approvals,
           can_connect: Nibble::Access.can?(Nibble::Current.user, "apps.connect"),
           elevated: elevated?,
           apps: grants.select(&:active?).map { |grant| row(grant) },
@@ -57,8 +58,8 @@ module Nibble
 
       def row(grant)
         client = grant.oauth_client
-        { id: grant.id, name: grant.name, kind: grant.kind, preset: grant.preset, via: grant.via,
-          host: client&.id_host, verified: client.nil? || client.verified?, created_at: grant.created_at.utc.iso8601,
+        { id: grant.id, name: grant.name, kind: grant.kind, preset: grant.preset, via: grant.via, approvals: grant.approval_mode,
+          asks_approval: grant.asks_approval?, host: client&.id_host, verified: client.nil? || client.verified?, created_at: grant.created_at.utc.iso8601,
           last_used_at: grant.last_used_at&.utc&.iso8601, last_used_ip: grant.last_used_ip, expires_at: grant.expires_at.utc.iso8601 }
       end
     end

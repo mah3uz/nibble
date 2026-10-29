@@ -39,13 +39,19 @@ module Nibble
         return refuse("Your role can't connect apps. Ask an administrator.") unless Nibble::Access.can?(Nibble::Current.user, "apps.connect")
 
         preset = params[:preset].to_s
-        abilities = Consent.new(Nibble::Current.user, device: device.present?).abilities(preset, params[:areas]&.to_unsafe_h)
+        consent = Consent.new(Nibble::Current.user, device: device.present?)
+        abilities = consent.abilities(preset, params[:areas]&.to_unsafe_h)
         if preset == "everything" && !elevated?
           return redirect_back_or_to cp_root_path, inertia: { errors: { preset: "Confirm your password to give an app everything you can do." } }
         end
 
+        approval_mode = consent.approval_mode(params[:approvals].to_s)
+        if approval_mode == "off" && !elevated?
+          return redirect_back_or_to cp_root_path, inertia: { errors: { approvals: "Confirm your password to let an app make changes without asking." } }
+        end
+
         grant = Grant.create!(user: Nibble::Current.user, oauth_client: client, kind: "app", name: client.known_name || client.name,
-          preset:, abilities:, via: device ? "device" : "browser")
+          preset:, abilities:, approval_mode:, via: device ? "device" : "browser")
         forget(params[:request_id])
         Nibble::Records::Notification.notify(Nibble::Current.user.id, "apps.connected", title: grant.name)
         return finish_device(device, grant) if device
@@ -82,6 +88,7 @@ module Nibble
       def consent_props(client, id, redirect_host:, device: nil)
         consent = Consent.new(Nibble::Current.user, device: device.present?)
         { request_id: id, site: Nibble::Oauth.site_name, presets: consent.presets, areas: consent.areas, elevated: elevated?,
+          approvals: { choosable: consent.approvals_choosable?, default: "ask" },
           client: { name: client.name, known: client.known_name, client_id: client.client_id, id_host: client.id_host,
                     redirect_host:, loopback: client.loopback_only?, verified: client.verified? },
           device: device && { code: device.display_code, ip: device.requested_ip } }

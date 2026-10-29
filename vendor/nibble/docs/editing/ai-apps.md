@@ -40,7 +40,7 @@ The app sends you to the site to sign in, then asks what it may do:
 |---|---|
 | **Read** | see the content you can see, and change nothing |
 | **Draft** | create entries and change drafts, and send them for review; nothing goes live |
-| **Everything I can do** | anything your role allows within the site's settings; each publish or live change waits for you |
+| **Everything I can do** | anything your role allows within the site's settings |
 | **Custom** | only what you tick, area by area |
 
 The screen shows the app's name and the address it sends you back to. If you didn't start this from an app you
@@ -53,8 +53,13 @@ trust, choose **Cancel**.
 
 With **Everything I can do**, an app that asks to publish, unpublish or trash something, or to change menus, globals,
 terms or files, is told to wait for you. You get a notification; the app shows you a link. The page shows what would
-change, and warns if the change links to another site. Confirm your password and **Approve**, and the app makes that
-exact change, once — or **Decline** and nothing happens.
+change, and warns if the change links to another site. Confirm your password and **Approve**, and Nibble makes that
+exact change, once — or **Decline** and nothing happens. If the change can no longer be made, because someone edited
+the same thing or the app's access changed, the page says why and nothing is altered. **Connected apps** lists the
+requests waiting for you, and several can be approved at once.
+
+When connecting an app you may let it make these changes without asking, after confirming your password. The site
+can require every app to ask, and an app signed in with a code always does.
 
 ## 3. Seeing what an app did
 
@@ -64,7 +69,7 @@ them can be restored, as with your own edits.
 ## 4. Disconnecting
 
 **Connected apps** lists each app with what it may do and when it was last used. **Disconnect** stops it at once. An
-app you haven't used for 30 days is disconnected by itself.
+app you haven't used for 30 days has to sign in again; one you keep using stays connected.
 
 ## 5. Tokens for scripts
 

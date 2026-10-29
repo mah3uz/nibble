@@ -19,7 +19,11 @@ module Nibble
           Operation.new(name: "describe_schema", title: "Describe fields", read_only: true, destructive: false, needs: nil,
             handler: method(:describe_schema),
             description: "The fields of a collection, taxonomy, global set or navigation menu, with the JSON Schema each value is written against. Read it before creating or changing content.",
-            input: Operations.schema({ "kind" => { "type" => "string", "enum" => KINDS }, "handle" => { "type" => "string" } }, %w[kind handle]))
+            input: Operations.schema({ "kind" => { "type" => "string", "enum" => KINDS }, "handle" => { "type" => "string" } }, %w[kind handle])),
+          Operation.new(name: "get_approval", title: "Check an approval", read_only: true, destructive: false, needs: nil,
+            handler: method(:approval),
+            description: "How a request that waited for its person went: pending, approved, done with its result, failed with its error, denied or expired.",
+            input: Operations.schema({ "approval" => { "type" => "string", "description" => "The approval id from an approval_required answer." } }, %w[approval]))
         ]
       end
 
@@ -35,6 +39,11 @@ module Nibble
             [ area.key, files?(area.key) ? [] : columns ]
           end.reject { |_, columns| columns.empty? }
         }
+      end
+
+      def approval(input, caller)
+        approval = caller.principal.grant&.approvals&.find_by(public_id: input["approval"])
+        approval&.summary or raise Failure.new("not_found", "this connection has no approval #{input['approval']}", status: :not_found)
       end
 
       def guide(_input, caller) = AgentGuide.document(site: Nibble::Oauth.site_name, url: caller.site)

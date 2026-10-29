@@ -18,6 +18,7 @@ After reading this guide, you will know:
 - How an app signs in.
 - The operations, and the rules every change follows.
 - What errors look like, and how to act on them.
+- How a change waits for a person, and how to follow it.
 
 Agent access must be [turned on](../running/agent-access.md); until then these endpoints answer 404.
 
@@ -55,7 +56,7 @@ Send the token in the `Authorization` header. A token in a URL is refused.
 
 | Group | Operations |
 |---|---|
-| Site | `whoami`, `describe_site`, `describe_schema`, `get_guide` |
+| Site | `whoami`, `describe_site`, `describe_schema`, `get_guide`, `get_approval` |
 | Entries | `list_entries`, `get_entry`, `create_entry`, `update_entry`, `transition_entry`, `list_revisions` |
 | Terms | `list_terms`, `get_term`, `create_term`, `update_term`, `transition_term` |
 | Globals and navigation | `get_global`, `update_global`, `get_navigation`, `update_navigation` |
@@ -84,8 +85,8 @@ A token sees only the operations it may use. There is no search operation: searc
   draft, for the person signed in there.
 - **`idempotency_key`** makes a retry safe: the same key returns the first answer instead of repeating the change.
 - **Entries change as drafts.** Publishing is a separate operation.
-- **Consequential changes wait for a person** when an app makes them: the answer is `approval_required` with an
-  `approval_url`; once approved, send the same request with `approval`.
+- **Consequential changes wait for a person** when an app makes them, unless the person let it make them without
+  asking. See [Approvals](#6-approvals).
 - **Nothing is deleted.** Trashed records can be restored.
 
 ## 5. Errors
@@ -101,7 +102,44 @@ carry the same fields:
 
 `code` is stable; `hint` says what to do next.
 
-## 6. Telling agents about the site
+## 6. Approvals
+
+Publishing, unpublishing, trashing, and changes that are live at once — terms, globals, navigation, assets — wait for
+the person an app acts for, unless they connected it to make changes without asking. A script token never waits.
+
+The first answer is `approval_required` (HTTP 409):
+
+```json
+{ "code": "approval_required", "message": "Ada has to approve this before it happens",
+  "details": { "approval": "appr_…", "approval_url": "https://example.com/cp/approvals/appr_…",
+               "expires_at": "2026-10-30T09:00:00Z" } }
+```
+
+Show the person `approval_url`. There is nothing more to send: when they approve, Nibble makes the change, checking
+every permission again first. `get_approval` with the `approval` id says how it went:
+
+```json
+{ "approval": "appr_…", "status": "done", "operation": "transition_entry",
+  "result": { "id": 42, "status": "published", "…": "…" }, "error": null, "expires_at": "2026-10-30T09:00:00Z" }
+```
+
+`status` is `pending`, `approved` (being made), `done` with the operation's usual answer in `result`, `failed` with
+the error in `error`, `denied` or `expired`. An app sees only its own approvals.
+
+Sending the same request again never repeats it or asks twice. With or without its `approval` id, it answers from
+the approval: the stored result once it is `done`, the stored error once it has `failed`, `approval_required` while it
+waits, and once it is decided or expired:
+
+| Code | Means |
+|---|---|
+| `approval_pending` | the `approval` sent hasn't been decided yet |
+| `approval_denied` | the person declined it; nothing changed |
+| `approval_expired` | nobody decided in time; send the request without `approval` to ask again |
+| `approval_mismatch` | the `approval` sent belongs to another connection or a different request |
+
+All are HTTP 409.
+
+## 7. Telling agents about the site
 
 Agents get a guide to the site — how to work, its content model — as the MCP server's instructions, as a skill
 through MCP's Skills extension, and from `get_guide`. It's written from the schema and from the site's own notes in

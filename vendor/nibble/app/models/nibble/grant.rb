@@ -5,6 +5,7 @@ module Nibble
 
     KINDS = %w[app ci].freeze
     PRESETS = %w[read draft everything custom].freeze
+    APPROVAL_MODES = %w[ask off].freeze
     LIFETIME = 90.days
     TOUCH_EVERY = 1.minute
 
@@ -16,6 +17,7 @@ module Nibble
 
     validates :kind, inclusion: { in: KINDS }
     validates :preset, inclusion: { in: PRESETS }
+    validates :approval_mode, inclusion: { in: APPROVAL_MODES }
     validates :name, presence: true, length: { maximum: 100 }
     validate :abilities_are_grantable
 
@@ -27,6 +29,8 @@ module Nibble
 
     def covers?(ability) = Access.matches?(abilities, ability.to_s)
 
+    def asks_approval? = kind == "app" && (approval_mode == "ask" || via == "device" || AgentAccess.approvals == "always")
+
     def revoke!
       transaction do
         update!(revoked_at: Time.current) if revoked_at.nil?
@@ -37,7 +41,9 @@ module Nibble
     def used!(ip)
       return if last_used_at && last_used_at > TOUCH_EVERY.ago
 
-      update_columns(last_used_at: Time.current, last_used_ip: ip)
+      attrs = { last_used_at: Time.current, last_used_ip: ip }
+      attrs[:expires_at] = [ expires_at, LIFETIME.from_now ].max if kind == "app" && active?
+      update_columns(attrs)
     end
 
     private

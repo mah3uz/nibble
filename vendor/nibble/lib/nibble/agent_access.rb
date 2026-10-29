@@ -9,6 +9,7 @@ module Nibble
       "draft" => READ + %w[entries.*.create entries.*.edit entries.*.edit_own],
       "everything" => %w[entries.* terms.* globals.* navigation.* assets.* workflow.*]
     }.freeze
+    APPROVALS = %w[choose always].freeze
     COLUMNS = { "read" => "Read", "write" => "Write", "publish" => "Publish", "delete" => "Delete" }.freeze
     Area = Data.define(:key, :title, :group, :columns)
     ENTRY_COLUMNS = { "view" => "read", "create" => "write", "edit" => "write", "edit_own" => "write",
@@ -24,10 +25,13 @@ module Nibble
 
     def device_sign_in? = enabled? && settings["device_sign_in"] == true
 
-    def update!(enabled: nil, device_sign_in: nil, areas: nil)
+    def approvals = settings["approvals"] == "always" ? "always" : "choose"
+
+    def update!(enabled: nil, device_sign_in: nil, approvals: nil, areas: nil)
       current = settings
       current["enabled"] = enabled unless enabled.nil?
       current["device_sign_in"] = device_sign_in unless device_sign_in.nil?
+      current["approvals"] = approvals if APPROVALS.include?(approvals)
       if areas
         known = areas(schema: Nibble.schema).index_by(&:key)
         current["areas"] = current["areas"].to_h.merge(areas.to_h.slice(*known.keys).to_h do |key, values|

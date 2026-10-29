@@ -12,7 +12,7 @@ type Change = { field: string; before: unknown; after: unknown }
 
 const props = defineProps<{
   id: string
-  status: 'pending' | 'approved' | 'denied' | 'used' | 'expired'
+  status: 'pending' | 'approved' | 'done' | 'failed' | 'denied' | 'expired'
   app: string
   operation: { title: string | null; description: string | null }
   summary: Record<string, string | null>
@@ -20,6 +20,8 @@ const props = defineProps<{
   input: Record<string, unknown>
   other_sites: string[]
   expires_at: string
+  result: Record<string, unknown> | null
+  error: { code: string; message: string; hint?: string } | null
 }>()
 
 const form = useForm({ decision: '' })
@@ -87,11 +89,14 @@ useBreadcrumbs([{ label: 'Connected apps', url: '/cp/account/apps' }, { label: '
 
     <p class="text-sm text-gray-600 dark:text-gray-400">
       <template v-if="open"
-        >Approving lets {{ app }} make exactly this change, once, until
+        >Approving makes exactly this change, once. It can be approved until
         {{ new Date(expires_at).toLocaleString() }}.</template
       >
-      <template v-else-if="status === 'approved'">Approved. {{ app }} can now make this change.</template>
-      <template v-else-if="status === 'used'">Done: {{ app }} made this change.</template>
+      <template v-else-if="status === 'approved'">Approved. The change is being made.</template>
+      <template v-else-if="status === 'done'">Done: the change was made.</template>
+      <template v-else-if="status === 'failed'"
+        >Approved, but the change couldn't be made: {{ error?.message }}</template
+      >
       <template v-else>Nothing will happen.</template>
     </p>
   </div>

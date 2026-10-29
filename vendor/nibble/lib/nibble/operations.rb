@@ -71,36 +71,97 @@ module Nibble
       approval = input.delete("approval")
       remembered(caller, key, operation, input) do
         next rehearse { operation.handler.call(input, caller) } if dry
+        if approval.present? || (caller.principal.grant&.asks_approval? && operation.consequential?(input))
+          next approval!(operation, input, caller, approval) { rehearse { operation.handler.call(input, caller) } }
+        end
 
-        approved!(operation, input, caller, approval) { rehearse { operation.handler.call(input, caller) } }
         operation.handler.call(input, caller)
       end
     end
 
-    def approved!(operation, input, caller, approval_id)
+    def approval!(operation, input, caller, approval_id)
       grant = caller.principal.grant
-      return unless grant&.kind == "app" && operation.consequential?(input)
-
       if approval_id.present?
-        approval = Approval.find_by(public_id: approval_id.to_s)
-        claimed = approval&.usable_for?(grant, operation.name, input) && Approval.where(id: approval.id, status: "approved").update_all(status: "used", updated_at: Time.current) == 1
-        return if claimed
+        approval = grant&.approvals&.find_by(public_id: approval_id.to_s)
+        unless approval&.for?(operation.name, input)
+          raise Failure.new("approval_mismatch", "that approval was given to another connection or for a different request", status: :conflict,
+            hint: "An approval is for exactly the request it was given for. Send this request without approval to ask for it.")
+        end
 
-        raise Failure.new("approval_not_valid", "that approval isn't approved, has expired, or was given for a different request", status: :conflict,
-          hint: "An approval works once, for exactly the request it was given for. Send the request without approval to ask again.")
+        return answer(approval, caller, asked: true)
       end
 
       digest = Approval.digest(operation.name, input)
-      approval = grant.approvals.where(status: "pending", digest:).where("expires_at > ?", Time.current).first
+      standing = -> { grant.approvals.where(operation: operation.name, digest:, status: Approval::STANDING).where("expires_at > ?", Time.current).order(:id).last }
+      approval = standing.call
       unless approval
-        approval = grant.approvals.create!(operation: operation.name, input:, digest:, preview: yield)
-        Records::Notification.notify(grant.user_id, "apps.approval_requested", title: "#{grant.name}: #{operation.title}",
+        preview = yield
+        approval = Approval.transaction { standing.call || grant.approvals.create!(operation: operation.name, input:, digest:, preview:) }
+        if approval.previously_new_record?
+          Records::Notification.notify(grant.user_id, "apps.approval_requested", title: "#{grant.name}: #{operation.title}", approval: approval.public_id)
+        end
+      end
+      answer(approval, caller)
+    end
+
+    def answer(approval, caller, asked: false)
+      name = approval.grant.user.name
+      case approval.state
+      when "done" then approval.result
+      when "failed"
+        error = approval.error.to_h
+        raise Failure.new(error["code"], error["message"], hint: error["hint"], details: error["details"], status: error["status"] || :unprocessable_content)
+      when "denied"
+        raise Failure.new("approval_denied", "#{name} declined this request", status: :conflict, details: { "approval" => approval.public_id },
+          hint: "Nothing was changed. Don't ask again unless #{name} wants you to.")
+      when "expired"
+        raise Failure.new("approval_expired", "nobody approved this request in time", status: :conflict, details: { "approval" => approval.public_id },
+          hint: "Nothing was changed. Send the request again without approval to ask again.")
+      else
+        url = "#{caller.site}/cp/approvals/#{approval.public_id}"
+        code, message = asked ? [ "approval_pending", "#{name} hasn't approved this yet" ] : [ "approval_required", "#{name} has to approve this before it happens" ]
+        raise Failure.new(code, message, status: :conflict,
+          details: { "approval" => approval.public_id, "approval_url" => url, "expires_at" => approval.expires_at.utc.iso8601 },
+          hint: "Ask #{name} to open #{url}. Nothing more to send: when #{name} approves, Nibble makes the change. get_approval says how it went.")
+      end
+    end
+
+    def carry_out(approval, site:, ip:)
+      claimed = Approval.where(id: approval.id, status: "pending").where("expires_at > ?", Time.current)
+        .update_all(status: "approved", decided_at: Time.current, updated_at: Time.current) == 1
+      return approval.reload unless claimed
+
+      approval.reload
+      grant = approval.grant
+      caller = Caller.new(principal: Principal.new(user: grant.user, grant:), site:, ip:)
+      begin
+        approval.update!(status: "done", result: carried_out(approval, caller))
+      rescue Failure => failure
+        approval.update!(status: "failed", error: failure.to_h.merge("status" => Rack::Utils.status_code(failure.status)))
+      rescue StandardError => error
+        Rails.error.report(error)
+        approval.update!(status: "failed", error: { "code" => "error", "message" => "something went wrong making this change", "status" => 500 })
+      end
+      if approval.status == "failed"
+        Records::Notification.notify(grant.user_id, "apps.approval_failed", title: "#{grant.name}: #{find(approval.operation)&.title}",
           approval: approval.public_id)
       end
-      url = "#{caller.site}/cp/approvals/#{approval.public_id}"
-      raise Failure.new("approval_required", "#{grant.user.name} has to approve this before it happens", status: :conflict,
-        details: { "approval" => approval.public_id, "approval_url" => url, "expires_at" => approval.expires_at.utc.iso8601 },
-        hint: "Ask the person to open #{url} and approve it, then send the same request again with approval: \"#{approval.public_id}\".")
+      approval
+    end
+
+    def carried_out(approval, caller)
+      grant = caller.principal.grant
+      unless grant.active? && AgentAccess.enabled?
+        raise Failure.new("connection_ended", "the app was disconnected, or its connection ended, before this was approved", status: :forbidden)
+      end
+
+      operation = find(approval.operation)
+      unless operation && possible?(caller.principal, operation.needs)
+        raise Failure.new("forbidden", "this connection can no longer #{operation&.title&.downcase || 'do that'}", status: :forbidden,
+          hint: "The person's role, the app's access, or the site's Agent access settings changed since it was asked.")
+      end
+
+      operation.handler.call(check(operation, approval.input), caller)
     end
 
     def check(operation, input)

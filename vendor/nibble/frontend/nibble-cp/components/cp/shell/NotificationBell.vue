@@ -25,6 +25,7 @@ const LINES: Record<string, string> = {
   'webhook.disabled': 'Turned off after repeated failures:',
   'apps.connected': 'New app connected to your account:',
   'apps.approval_requested': 'Waiting for your approval:',
+  'apps.approval_failed': 'An approved change failed:',
   'task.failed': 'A scheduled task failed:',
 }
 
@@ -37,6 +38,7 @@ const ICONS: Record<string, string> = {
   'webhook.disabled': 'webhooks',
   'apps.connected': 'key',
   'apps.approval_requested': 'fingerprint',
+  'apps.approval_failed': 'fingerprint',
   'task.failed': 'calendar',
 }
 

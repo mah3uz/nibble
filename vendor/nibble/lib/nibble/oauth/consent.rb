@@ -5,7 +5,7 @@ module Nibble
       PRESETS = {
         "read" => [ "Read", "See the content you can see. Change nothing." ],
         "draft" => [ "Draft", "Create entries and edit drafts, and send them for review. Nothing goes live." ],
-        "everything" => [ "Everything I can do", "Anything your role allows within the site's agent settings. Publishing, trashing and live changes each wait for your approval." ],
+        "everything" => [ "Everything I can do", "Anything your role allows within the site's agent settings." ],
         "custom" => [ "Custom", "Choose area by area." ]
       }.freeze
 
@@ -40,6 +40,16 @@ module Nibble
 
           AgentAccess.abilities_for(area, column)
         end.uniq
+      end
+
+      def approvals_choosable? = !@device && AgentAccess.approvals == "choose"
+
+      def approval_mode(choice)
+        choice = choice.presence || "ask"
+        raise Error.new("invalid_request", "choose whether changes wait for your approval") unless Grant::APPROVAL_MODES.include?(choice)
+        raise Error.new("invalid_request", "changes always wait for your approval on this site") if choice == "off" && !approvals_choosable?
+
+        choice
       end
 
       private
