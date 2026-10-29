@@ -148,12 +148,7 @@ async function duplicate() {
             @approve="save('approve')"
             @reject="save('reject')"
           />
-          <Button
-            v-if="urls.duplicate && currentMeta.id"
-            type="button"
-            variant="outline"
-            @click="duplicate"
-          >
+          <Button v-if="urls.duplicate && currentMeta.id" type="button" variant="outline" @click="duplicate">
             <Copy /> Duplicate
           </Button>
           <Button v-if="can.delete && currentMeta.id" type="button" variant="destructive" @click="destroy">
