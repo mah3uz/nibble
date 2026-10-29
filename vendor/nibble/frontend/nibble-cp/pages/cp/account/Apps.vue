@@ -66,6 +66,8 @@ watch(showIssued, (open) => {
 
 const form = useForm({ name: '', preset: 'read', expires_in: '30', areas: {} as Record<string, string[]> })
 const date = (value: string) => new Date(value).toLocaleDateString(undefined, { dateStyle: 'medium' })
+const host = computed(() => new URL(props.endpoints.mcp).host)
+const connectCommand = computed(() => `nibble connect ${host.value}`)
 const copy = (text: string) => navigator.clipboard.writeText(text)
 
 const editing = ref<App | null>(null)
@@ -170,19 +172,33 @@ useBreadcrumbs([{ label: 'Connected apps' }])
       </p>
     </CpPanel>
     <CpPanel v-else title="Connect an app">
-      <div class="space-y-2 rounded-xl bg-white p-5 text-sm shadow-ui-sm dark:bg-gray-900">
-        <p>Add this address to Claude, ChatGPT, Codex, Cursor or any app that speaks MCP:</p>
-        <div class="flex items-center gap-2">
-          <code class="grow rounded-lg bg-gray-100 px-3 py-2 font-mono break-all dark:bg-gray-850">{{
-            endpoints.mcp
-          }}</code>
-          <Button variant="outline" size="sm" @click="copy(endpoints.mcp)">Copy</Button>
+      <div class="space-y-4 rounded-xl bg-white p-5 text-sm shadow-ui-sm dark:bg-gray-900">
+        <div class="space-y-2">
+          <p class="font-medium">From a terminal</p>
+          <div class="flex items-center gap-2">
+            <code class="grow rounded-lg bg-gray-100 px-3 py-2 font-mono break-all dark:bg-gray-850">{{
+              connectCommand
+            }}</code>
+            <Button variant="outline" size="sm" @click="copy(connectCommand)">Copy</Button>
+          </div>
+          <p class="text-gray-600 dark:text-gray-400">
+            Sets up Claude Code, Codex and Cursor for this site.
+            <a href="https://nibble.ink/docs/running/cli#6-ai-apps" target="_blank" rel="noopener" class="underline"
+              >About the nibble command</a
+            >
+          </p>
         </div>
-        <p class="text-gray-600 dark:text-gray-400">
-          The app sends you here to sign in and choose what it may do. From a terminal, run
-          <code class="font-mono">nibble auth login {{ endpoints.mcp.replace(/\/mcp$/, '') }}</code
-          >.
-        </p>
+        <div class="space-y-2">
+          <p class="font-medium">In Claude or ChatGPT</p>
+          <p>Add this address in the app's settings:</p>
+          <div class="flex items-center gap-2">
+            <code class="grow rounded-lg bg-gray-100 px-3 py-2 font-mono break-all dark:bg-gray-850">{{
+              endpoints.mcp
+            }}</code>
+            <Button variant="outline" size="sm" @click="copy(endpoints.mcp)">Copy</Button>
+          </div>
+          <p class="text-gray-600 dark:text-gray-400">The app sends you here to sign in and choose what it may do.</p>
+        </div>
       </div>
     </CpPanel>
 
