@@ -63,7 +63,7 @@ module Nibble
     def ssr
       return [ "skip", "Server rendering is off in this environment" ] unless InertiaRails.configuration.ssr_enabled
 
-      url = URI.join(InertiaRails.configuration.ssr_url.presence || "http://localhost:13714", "/health")
+      url = URI.join(InertiaRails.configuration.ssr_url.presence || "http://localhost:#{ENV.fetch('INERTIA_SSR_PORT', 13714)}", "/health")
       response = Net::HTTP.start(url.host, url.port, open_timeout: SSR_TIMEOUT, read_timeout: SSR_TIMEOUT) { |http| http.get(url.path) }
       return [ "ok", "The page renderer answered" ] if response.is_a?(Net::HTTPSuccess)
 

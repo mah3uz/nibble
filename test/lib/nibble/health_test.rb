@@ -69,6 +69,18 @@ class Nibble::HealthTest < ActiveSupport::TestCase
     with_ssr(nil, enabled: false) { assert_equal "skip", check("ssr").status }
   end
 
+  test "when the dev server leaves no renderer URL, the check asks the configured port" do
+    was = ENV["INERTIA_SSR_PORT"]
+    ENV["INERTIA_SSR_PORT"] = TCPServer.new("127.0.0.1", 0).then { |server| server.addr[1].tap { server.close } }.to_s
+    with_ssr(nil) { assert_match "ECONNREFUSED", check("ssr").message }
+    http_server(200) do |url|
+      ENV["INERTIA_SSR_PORT"] = URI(url).port.to_s
+      with_ssr(nil) { assert_equal "ok", check("ssr").status }
+    end
+  ensure
+    ENV["INERTIA_SSR_PORT"] = was
+  end
+
   test "without Solid Queue the queue check steps aside rather than failing" do
     assert_equal "skip", check("queue").status
   end
