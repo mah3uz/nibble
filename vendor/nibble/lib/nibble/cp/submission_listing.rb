@@ -37,10 +37,10 @@ module Nibble
       end
 
       def to_csv
-        visible = columns.select { |column| column["visible"] }
+        every = all_columns
         CSV.generate do |csv|
-          csv << CsvCells.row(visible.map { |column| column["label"] })
-          relation.find_each { |record| csv << CsvCells.row(visible.map { |column| csv_value(cell(record, column["handle"])) }) }
+          csv << CsvCells.row(every.map { |column| column["label"] })
+          relation.find_each { |record| csv << CsvCells.row(every.map { |column| csv_value(cell(record, column["handle"])) }) }
         end
       end
 
@@ -62,13 +62,17 @@ module Nibble
 
       def fields = @fields ||= form.fields.all.values.reject(&:display_only?)
 
-      def columns
+      def all_columns
         field_columns = fields.each_with_index.map do |field, index|
           { "handle" => field.handle, "label" => field.display, "sortable" => false, "visible" => index < VISIBLE_FIELDS,
             "type" => field.type == "files" ? "list" : Listing::TYPES.fetch(field.type, "text") }
         end
+        [ DATE_COLUMN ] + field_columns + [ STATUS_COLUMN ]
+      end
+
+      def columns
         saved = Nibble::UserPreferences.get(user, "listings.#{preference_key}.columns").presence
-        ([ DATE_COLUMN ] + field_columns + [ STATUS_COLUMN ]).map do |column|
+        all_columns.map do |column|
           column.merge("visible" => saved ? saved.include?(column["handle"]) : column["visible"])
         end
       end

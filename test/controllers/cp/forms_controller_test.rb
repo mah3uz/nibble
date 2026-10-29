@@ -72,14 +72,18 @@ class Nibble::Cp::FormsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "Grace" ], props["listing"]["rows"].map { |row| row["name"] }
   end
 
-  test "submissions export to CSV, all of them or only what the listing is filtered to" do
+  test "submissions export to CSV with every field whatever columns the listing shows, all of them or only what it is filtered to" do
     contact({ "name" => "Grace" })
     contact({ "name" => "Ada" })
 
     get "/cp/forms/contact.csv"
     rows = CSV.parse(response.body)
-    assert_equal [ "Date", "Name", "Email", "Topic", "Status" ], rows.first
+    assert_equal [ "Date", "Name", "Email", "Topic", "Message", "Status" ], rows.first
     assert_equal 3, rows.size
+
+    Nibble::UserPreferences.set!(users(:editor), "listings.forms_contact.columns", %w[name])
+    get "/cp/forms/contact.csv"
+    assert_equal [ "Date", "Name", "Email", "Topic", "Message", "Status" ], CSV.parse(response.body).first
 
     get "/cp/forms/contact.csv", params: { q: "grace" }
     assert_equal [ "Grace" ], CSV.parse(response.body, headers: true).map { |row| row["Name"] }

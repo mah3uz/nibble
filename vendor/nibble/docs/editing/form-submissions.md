@@ -48,7 +48,7 @@ see them. Handling, unread and notes need permission to edit the form's submissi
 ## 2. Exporting
 
 **Export Submissions** downloads the lot as a spreadsheet file (CSV) that Excel or Google Sheets opens — for an event's sign-ups, or a month of
-demo requests for someone who does not use the Control Plane.
+demo requests for someone who does not use the Control Plane. The file has every field of the form in the form's order, plus the date and status, whichever columns the list shows; a search or filter narrows which submissions it holds.
 
 Exports and deletes are recorded in the audit log with who did them, which form and how many submissions.
 
