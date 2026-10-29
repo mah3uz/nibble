@@ -129,6 +129,8 @@ add tables and columns, so they can be rolled back, but the snapshot taken befor
   that locale names only a language, such as `en`, the browser's region for it decides the style, so an Australian
   browser sees day/month/year and an American one month/day/year; a site that declares no locale follows the
   browser. Until now every Control Plane wrote Australian dates.
+- **Default validation messages name the field once:** "Your name is required." rather than "The Your name field is
+  required.". Their keys are unchanged, so a site's own `messages:` and translations still apply.
 - **Date fields are compact** unless `full_width: true`, or the date-time has a `time_zone`.
 - **Relationship fields with 25 or fewer choices show a dropdown** and offer **Create a new …**.
 - **`nibble:check` reports more:** records holding a switched-off required toggle, saved text failing an email, URL or
