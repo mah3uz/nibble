@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3'
+import { Link, router } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import CpListing from '@/components/cp/listing/CpListing.vue'
 import type { ListingProps, ListingRow } from '@/components/cp/listing/types'
@@ -15,9 +15,19 @@ import {
 } from '@/components/ui/dialog'
 
 const props = defineProps<{
-  form: { handle: string; title: string; store: boolean; can_export: boolean }
+  form: { handle: string; title: string; store: boolean; spam: number; can_export: boolean }
   listing: ListingProps
 }>()
+
+const status = computed(() => props.listing.filters.find((filter) => filter.handle === 'status')?.value ?? null)
+const tabs = computed(() => [
+  { label: 'All but spam', url: `/cp/forms/${props.form.handle}`, active: !status.value },
+  {
+    label: `Spam (${props.form.spam})`,
+    url: `/cp/forms/${props.form.handle}?status=spam`,
+    active: status.value === 'spam',
+  },
+])
 
 const exporting = ref(false)
 const scope = ref<'all' | 'filtered'>('all')
@@ -61,6 +71,24 @@ function open(row: ListingRow) {
       This form doesn't store submissions. They're only delivered and emailed.
     </p>
 
+    <div
+      v-if="form.store"
+      class="-mb-2 flex flex-wrap items-center gap-x-4 border-b border-gray-200 text-sm text-gray-500 dark:border-gray-700"
+    >
+      <Link
+        v-for="tab in tabs"
+        :key="tab.label"
+        :href="tab.url"
+        :aria-current="tab.active ? 'page' : undefined"
+        :class="[
+          'relative translate-y-px px-2 py-1 hover:text-gray-600 dark:hover:text-gray-400',
+          tab.active &&
+            'text-gray-900 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-black dark:text-gray-200 dark:after:bg-white',
+        ]"
+        >{{ tab.label }}</Link
+      >
+    </div>
+
     <CpListing :listing="listing" :exportable="false" @row-click="open">
       <template #cell-created_at="{ row, value }">
         <span :class="row.unread ? 'font-semibold' : ''">{{
@@ -83,7 +111,7 @@ function open(row: ListingRow) {
           <fieldset>
             <legend class="mb-1.5 block text-sm font-medium">Submissions</legend>
             <label class="flex items-center gap-2 text-sm">
-              <input v-model="scope" type="radio" value="all" /> All submissions
+              <input v-model="scope" type="radio" value="all" /> All but spam
             </label>
             <label class="mt-2 flex items-start gap-2 text-sm" :class="{ 'opacity-50': !hasFilteredScope }">
               <input v-model="scope" type="radio" value="filtered" :disabled="!hasFilteredScope" class="mt-1" />

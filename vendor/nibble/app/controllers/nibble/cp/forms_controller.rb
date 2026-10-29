@@ -24,7 +24,7 @@ module Nibble
         end
 
         render inertia: "cp/forms/Show", props: {
-          form: { handle: form.handle, title: form.title || form.handle.humanize, store: form.store?,
+          form: { handle: form.handle, title: form.title || form.handle.humanize, store: form.store?, spam: listing.spam_count,
                   can_export: Nibble::Access.can?(Nibble::Current.user, "forms.#{form.handle}.export") },
           listing: listing.props
         }

@@ -47,7 +47,7 @@ class Nibble::Cp::FormsControllerTest < ActionDispatch::IntegrationTest
     assert_response :forbidden
   end
 
-  test "a form's listing hides spam unless asked, searches submitted values, and pages newest first" do
+  test "a form's listing is all but spam unless asked, says how much spam there is, searches submitted values, and pages newest first" do
     contact({ "name" => "Grace" }, created_at: 2.days.ago)
     contact({ "name" => "Ada" }, created_at: 1.day.ago)
     contact({ "name" => "Spammer" }, status: "spam")
@@ -56,6 +56,10 @@ class Nibble::Cp::FormsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "cp/forms/Show", page["component"]
     listing = props["listing"]
     assert_equal [ "Ada", "Grace" ], listing["rows"].map { |row| row["name"] }
+    status = listing["filters"].find { |filter| filter["handle"] == "status" }
+    assert_equal [ "All but spam", "Spam (1)" ], [ status["all_label"], status["options"].find { |option| option["value"] == "spam" }["label"] ],
+      "the default view must not claim to be every submission while it hides spam"
+    assert_equal 1, props["form"]["spam"]
     assert_equal %w[created_at name email topic message status], listing["columns"].map { |column| column["handle"] }
     assert_equal "Sales team", listing["rows"].first["topic"]
     assert_equal [ "/cp/forms/contact/submissions/#{Submission.find_by!(status: 'received', created_at: ...1.5.days.ago).id}" ],

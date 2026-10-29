@@ -46,7 +46,7 @@ function toggleMulti(filter: ListingFilter, value: string, checked: boolean) {
         >
           <SelectTrigger :id="`filter-${filter.handle}`" :aria-label="filter.label"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem :value="ALL">All</SelectItem>
+            <SelectItem :value="ALL">{{ filter.all_label ?? 'All' }}</SelectItem>
             <SelectItem v-for="option in filter.options" :key="option.value" :value="option.value">{{
               option.label
             }}</SelectItem>

@@ -16,6 +16,7 @@ export type ListingFilter = {
   type: 'select' | 'multi_select' | 'boolean'
   options: { value: string; label: string }[]
   value: string | string[] | null
+  all_label?: string
 }
 
 export type ListingActionField = {

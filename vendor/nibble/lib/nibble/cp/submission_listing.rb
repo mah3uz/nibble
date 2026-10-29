@@ -44,6 +44,8 @@ module Nibble
         end
       end
 
+      def spam_count = @spam_count ||= Records::FormSubmission.where(form: form.handle, status: "spam").count
+
       def relation
         scope = Records::FormSubmission.where(form: form.handle)
         scope = params[:status].present? ? scope.where(status: params[:status]) : scope.kept
@@ -70,8 +72,10 @@ module Nibble
       end
 
       def filters
-        [ { "handle" => "status", "label" => "Status", "type" => "select", "value" => params[:status],
-            "options" => Records::FormSubmission::STATUSES.map { |status| { "value" => status, "label" => status.humanize } } } ]
+        options = Records::FormSubmission::STATUSES.map do |status|
+          { "value" => status, "label" => status == "spam" ? "Spam (#{spam_count})" : status.humanize }
+        end
+        [ { "handle" => "status", "label" => "Status", "type" => "select", "value" => params[:status], "all_label" => "All but spam", "options" => options } ]
       end
 
       def row(record)
