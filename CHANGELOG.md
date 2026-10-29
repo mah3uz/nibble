@@ -12,6 +12,8 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+## 0.21.2 — 2026-10-29 18:40 +0600
+
 ### What's new
 
 - **A block's count can have a default.** `limit: { from: $set.count, default: 3 }` (and the same for
