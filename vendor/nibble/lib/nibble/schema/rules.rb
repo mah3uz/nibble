@@ -46,9 +46,9 @@ module Nibble
           keys: { "title" => STRING, "max_depth" => INTEGER, "collections" => STRINGS, "taxonomies" => STRINGS }
         },
         "forms" => {
-          required: %w[title fields],
+          required: %w[title],
           keys: {
-            "title" => STRING, "fields" => ARRAY, "store" => BOOLEAN, "spam" => HASH, "notify" => ARRAY, "api" => ARRAY,
+            "title" => STRING, "fields" => ARRAY, "sections" => ARRAY, "store" => BOOLEAN, "spam" => HASH, "notify" => ARRAY, "api" => ARRAY,
             "handler" => STRING, "cp_notify" => BOOLEAN, "success" => HASH, "retention_days" => INTEGER
           }
         },

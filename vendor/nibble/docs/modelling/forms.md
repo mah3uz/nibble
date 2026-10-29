@@ -47,6 +47,31 @@ success:
 Fields are declared exactly as in a [blueprint](blueprints.md), but a public form may only use `text`, `textarea`,
 `integer`, `toggle`, `select`, `radio`, `checkboxes`, `date` and `files`. `nibble:check` refuses anything else.
 
+`text` and `integer` fields take `prepend` and `append`, short text a theme draws before and after the input
+(`prepend: $`, `append: per month`).
+
+A long form can be split into sections instead of one `fields` list. Each section has a `display`, optional
+`instructions` and its own `fields`, declared the same way:
+
+```yaml
+title: Book a demo
+sections:
+  - display: Your details
+    instructions: So we know who to call.
+    fields:
+      - handle: name
+        field: { type: text, display: Your name, required: true }
+      - handle: email
+        field: { type: text, input_type: email, display: Work email, required: true }
+  - display: Your team
+    fields:
+      - handle: team_size
+        field: { type: integer, display: People, append: seats }
+```
+
+Sections only change how a theme lays the form out. Submissions, validation, storage and notifications see one
+list of fields in order. Give `fields` or `sections`, not both; `nibble:check` reports it.
+
 `success` is either a `message` shown in place of the form, or a `redirect` to a thank-you page:
 
 ```yaml
@@ -115,6 +140,10 @@ spam:
 
 Then choose the provider — Cloudflare Turnstile or Google reCAPTCHA — and paste its keys under
 **Globals → Integrations**. The theme's form component renders the widget from the form's definition.
+
+A theme receives `captcha` on the form: `null` when the form has no `captcha: true`, `{ provider, site_key }` when the
+keys are set, and `{ provider: null, site_key: null }` when the form asks for a CAPTCHA but Integrations has no keys.
+`useNibbleForm` loads no widget for the last case, and a theme can draw a placeholder or a notice there.
 
 > [!WARNING]
 > With `captcha: true` and no keys in Integrations, submissions cannot be verified and are refused. Add the keys
@@ -230,7 +259,8 @@ personal details for years. `store: false` keeps nothing at all — the email an
 
 | Key | Notes |
 |---|---|
-| `title`, `fields` | **required** |
+| `title` | **required** |
+| `fields`, `sections` | **one is required**; `sections` is a list of `{ display, instructions, fields }` |
 | `success` | `{ message }` or `{ redirect }` |
 | `notify` | a list of `{ to, reply_to, fields }` |
 | `api` | a list of `{ url or use, path, method, format, body, mode, errors, error_fields, retry }`; `errors` is `{ status, path, field, message }`, and a connection in `site/schema/apis/` takes `base_url`, `headers`, `timeout`, `errors` and `retry` |

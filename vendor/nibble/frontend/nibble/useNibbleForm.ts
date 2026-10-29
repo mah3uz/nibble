@@ -3,7 +3,7 @@ import { onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useLocale } from './composables'
 import type { NibbleForm, NibbleFormField } from './types'
 
-type Captcha = NonNullable<NibbleForm['captcha']>
+type Captcha = { provider: 'turnstile' | 'recaptcha'; site_key: string }
 
 type Turnstile = {
   render: (el: HTMLElement, options: Record<string, unknown>) => string
@@ -123,9 +123,14 @@ export function useNibbleForm(definition: NibbleForm) {
     })
   }
 
+  const captcha: Captcha | null =
+    definition.captcha?.provider && definition.captcha.site_key
+      ? { provider: definition.captcha.provider, site_key: definition.captcha.site_key }
+      : null
+
   onMounted(() => {
-    if (definition.captcha?.provider === 'turnstile') void renderTurnstile(definition.captcha)
-    else if (definition.captcha) void loadScript(SCRIPTS.recaptcha(definition.captcha.site_key))
+    if (captcha?.provider === 'turnstile') void renderTurnstile(captcha)
+    else if (captcha) void loadScript(SCRIPTS.recaptcha(captcha.site_key))
   })
 
   onBeforeUnmount(() => {
@@ -151,8 +156,8 @@ export function useNibbleForm(definition: NibbleForm) {
       definition.fields.forEach((field) => append(body, field.handle, values[field.handle]))
       if (definition.honeypot) body.append(definition.honeypot, trap.value)
       body.append('_locale', locale.value)
-      if (definition.captcha) {
-        const token = await captchaToken(definition.captcha)
+      if (captcha) {
+        const token = await captchaToken(captcha)
         if (token) body.append('_captcha', token)
       }
 

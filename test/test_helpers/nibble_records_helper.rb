@@ -61,6 +61,13 @@ module NibbleRecordsHelper
       { handle: "name", field: { type: "text" } },
       { handle: "cv", field: { type: "files", required: true, max_files: 2, max_file_size: 1, extensions: %w[pdf docx csv png] } }
     ] },
+    "forms/visit.yml" => { title: "Visit", success: { message: "See you." }, sections: [
+      { display: "Your details", instructions: "So we can greet you.", fields: [
+        { handle: "name", field: { type: "text", required: true } },
+        { handle: "budget", field: { type: "integer", prepend: "$", append: "per head" } }
+      ] },
+      { display: "The visit", fields: [ { handle: "note", field: { type: "textarea" } } ] }
+    ] },
     "navigation/docs_menu.yml" => { title: "Docs menu", max_depth: 2, collections: [ "docs" ] }
   }.freeze
 

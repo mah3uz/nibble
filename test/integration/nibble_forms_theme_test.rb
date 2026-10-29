@@ -18,8 +18,8 @@ class NibbleFormsThemeTest < ActionDispatch::IntegrationTest
     get "/about"
     assert_response :success
 
-    assert_equal [ "contact", "/forms/contact", "_nibble_hp", nil ], contact.values_at("handle", "action", "honeypot", "captcha"),
-      "CAPTCHA is off until the site configures a provider"
+    assert_equal [ "contact", "/forms/contact", "_nibble_hp", { "provider" => nil, "site_key" => nil } ], contact.values_at("handle", "action", "honeypot", "captcha"),
+      "the form wants a CAPTCHA, which the theme is told is not set up yet"
     email, topic, attachment = contact["fields"]
     assert_equal({ "handle" => "email", "type" => "text", "display" => "Email", "instructions" => nil, "required" => true,
                    "input_type" => "email", "placeholder" => "you@example.com" }, email.except("character_limit"))

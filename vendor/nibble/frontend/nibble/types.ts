@@ -50,6 +50,14 @@ export type NibbleFormField = {
   max_files?: number
   max_file_size?: number
   extensions?: string[]
+  prepend?: string
+  append?: string
+}
+
+export type NibbleFormSection = {
+  display: string | null
+  instructions: string | null
+  fields: string[]
 }
 
 export type NibbleFormResult = {
@@ -64,8 +72,9 @@ export type NibbleForm = {
   title: string | null
   action: string
   honeypot: string | null
-  captcha: { provider: 'turnstile' | 'recaptcha'; site_key: string } | null
+  captcha: { provider: 'turnstile' | 'recaptcha' | null; site_key: string | null } | null
   fields: NibbleFormField[]
+  sections: NibbleFormSection[] | null
   success: { message?: string; redirect?: string }
   result: NibbleFormResult | null
 }

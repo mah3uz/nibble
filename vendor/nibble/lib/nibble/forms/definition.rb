@@ -1,23 +1,30 @@
 module Nibble
   module Forms
     module Definition
-      FIELD_CONFIG = %w[placeholder input_type character_limit default width multiple inline max_files max_file_size extensions].freeze
+      FIELD_CONFIG = %w[placeholder input_type character_limit default width multiple inline max_files max_file_size extensions prepend append].freeze
       OPTION_TYPES = %w[select radio checkboxes].freeze
 
       module_function
 
       def call(form, result: nil)
-        captcha = form.captcha? ? Integrations.captcha : nil
+        captcha = ({ "provider" => nil, "site_key" => nil }.merge(Integrations.captcha.to_h.slice("provider", "site_key"))) if form.captcha?
         {
           "handle" => form.handle,
           "title" => form.title,
           "action" => "/forms/#{form.handle}",
           "honeypot" => form.honeypot,
-          "captcha" => captcha&.slice("provider", "site_key"),
+          "captcha" => captcha,
           "fields" => form.fields.all.values.map { |field| field_definition(field) },
+          "sections" => sections(form),
           "success" => form.success.slice("message", "redirect"),
           "result" => (result if result.is_a?(Hash) && result["handle"] == form.handle)
         }
+      end
+
+      def sections(form)
+        form.sections&.map do |section|
+          { "display" => section["display"], "instructions" => section["instructions"], "fields" => section["fields"].handles }
+        end
       end
 
       def field_definition(field)

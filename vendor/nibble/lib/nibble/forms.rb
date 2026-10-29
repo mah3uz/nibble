@@ -9,7 +9,23 @@ module Nibble
     Form = Data.define(:item) do
       def handle = item.handle
       def title = item["title"]
-      def fields(schema: Nibble.schema) = Fields.new(item["fields"], schema:, source: item.path, key: "fields")
+      def sectioned? = item["sections"].present? && item["fields"].nil?
+      def section_items = Array(item["sections"]).map { |section| section.is_a?(Hash) ? section : {} }
+
+      def fields(schema: Nibble.schema)
+        return Fields.new(item["fields"], schema:, source: item.path, key: "fields") unless sectioned?
+
+        Fields.new(section_items.flat_map { |section| Array(section["fields"]) }, schema:, source: item.path, key: "sections")
+      end
+
+      def sections(schema: Nibble.schema)
+        return unless sectioned?
+
+        section_items.map do |section|
+          section.slice("display", "instructions").merge("fields" => Fields.new(section["fields"], schema:, source: item.path, key: "sections"))
+        end
+      end
+
       def store? = item["store"] != false
       def spam = item["spam"].to_h
       def honeypot = spam["honeypot"] == false ? nil : spam["honeypot"].presence || DEFAULT_HONEYPOT
@@ -43,7 +59,7 @@ module Nibble
       end
 
       def problems(form, schema:)
-        problems = []
+        problems = section_problems(form)
         form.fields(schema:).all.each_value do |field|
           problems << "field '#{field.handle}' uses '#{field.type}', which can't be used on a public form" unless PUBLIC_FIELDTYPES.include?(field.type)
           problems << "field handle '#{field.handle}' clashes with the honeypot" if field.handle == form.honeypot
@@ -60,6 +76,16 @@ module Nibble
       end
 
       private
+
+      def section_problems(form)
+        return [ "give `fields` or `sections`, not both" ] if !form.item["fields"].nil? && !form.item["sections"].nil?
+        return [ "needs `fields` or `sections`" ] if form.item["fields"].nil? && form.item["sections"].nil?
+
+        Array(form.item["sections"]).each_index.filter_map do |index|
+          section = form.item["sections"][index]
+          "sections.#{index} needs a `fields` list" unless section.is_a?(Hash) && section["fields"].is_a?(Array)
+        end
+      end
 
       def spam_problems(form)
         problems = []

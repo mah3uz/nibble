@@ -1,0 +1,65 @@
+require "test_helper"
+
+class Nibble::Forms::DefinitionTest < ActiveSupport::TestCase
+  include NibbleRecordsHelper
+
+  def definition(handle) = Nibble::Forms::Definition.call(Nibble::Forms.find(handle))
+
+  def problems(content)
+    item = Nibble::Schema::Item.new(kind: :forms, handle: "x", parent: nil, path: "x.yml", layer: :site, data: content.deep_stringify_keys)
+    Nibble::Forms.problems(Nibble::Forms::Form.new(item:), schema: Nibble.schema)
+  end
+
+  def submit(params) = Nibble::Forms::Submit.call(Nibble::Forms.find("visit"), params, ip: "203.0.113.1", user_agent: "test", locale: "en")
+
+  test "a sectioned form hands the theme every field in order, flat as before, and the sections as lists of handles" do
+    visit = definition("visit")
+
+    assert_equal %w[name budget note], visit["fields"].map { |field| field["handle"] }
+    assert_equal [
+      { "display" => "Your details", "instructions" => "So we can greet you.", "fields" => %w[name budget] },
+      { "display" => "The visit", "instructions" => nil, "fields" => %w[note] }
+    ], visit["sections"]
+  end
+
+  test "a flat form has no sections, so a theme can tell it from a sectioned one" do
+    assert_nil definition("contact")["sections"]
+  end
+
+  test "prepend and append reach the theme, so it can draw them beside the input" do
+    budget = definition("visit")["fields"].find { |field| field["handle"] == "budget" }
+
+    assert_equal [ "$", "per head" ], budget.values_at("prepend", "append")
+  end
+
+  test "a required field inside a section is enforced and a valid submission is stored, as for a flat form" do
+    result = submit("note" => "hi")
+    assert_equal :invalid, result.status
+    assert_equal [ "name" ], result.errors.keys
+
+    result = submit("name" => "Ada", "budget" => "5", "note" => "hi")
+    assert_equal :ok, result.status
+    assert_equal({ "name" => "Ada", "budget" => 5, "note" => "hi" }, result.submission.data)
+  end
+
+  test "captcha is nil unless the form asks for one, empty while the keys are missing, and filled once they are set" do
+    assert_nil definition("contact")["captcha"]
+    assert_equal({ "provider" => nil, "site_key" => nil }, definition("signup")["captcha"])
+    result = Nibble::Forms::Submit.call(Nibble::Forms.find("signup"), { "email" => "a@example.test", "_captcha" => "x" }, ip: "203.0.113.1", user_agent: "test", locale: "en")
+    assert_equal :invalid, result.status, "a form with no keys still refuses everyone"
+
+    record = Nibble::Records::GlobalSet.find_or_initialize_by(handle: "integrations", locale: "en")
+    values = { "captcha_provider" => "turnstile", "captcha_site_key" => "site-1", "captcha_secret_key" => { "plain" => "s" } }
+    assert Nibble::Lifecycle.call(record, :save, values, actor: Nibble::Principal.system).ok?
+    assert_equal({ "provider" => "turnstile", "site_key" => "site-1" }, definition("signup")["captcha"])
+  end
+
+  test "giving both fields and sections, a section without fields, or neither is a problem" do
+    field = { handle: "a", field: { type: "text" } }
+
+    assert_includes problems(title: "X", fields: [ field ], sections: [ { fields: [ field ] } ]), "give `fields` or `sections`, not both"
+    assert_includes problems(title: "X", sections: [ { display: "One" } ]), "sections.0 needs a `fields` list"
+    assert_includes problems(title: "X"), "needs `fields` or `sections`"
+    assert_empty problems(title: "X", sections: [ { display: "One", fields: [ field ] } ])
+  end
+end
