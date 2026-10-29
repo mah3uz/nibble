@@ -100,7 +100,7 @@ site's zone name; a visitor's local time is read in it), a
 [calculation](#11-calculations) may name one whose options are all numbers. A field's `default` arrives resolved, so `default: computed:today` is today's
 date.
 
-A form field takes the same [conditions](blueprints.md#6-conditional-fields) as a blueprint field. Nibble skips a hidden
+A form field takes the same [conditions](../reference/conditions.md) as a blueprint field. Nibble skips a hidden
 field's rules when a submission arrives, and it sends the theme each field's condition as `conditions`:
 
 ```json

@@ -60,16 +60,18 @@ them. [Forms](../modelling/forms.md) explains each in use.
 
 ### Defaults
 
-A `default` is a literal value, or `computed:<name>` to resolve it when a record is made. Nibble ships no computed
-default of its own: a site registers one in an initializer, and `nibble:check` refuses a name nobody registered.
-
-```ruby
-# config/initializers/defaults.rb
-Nibble::Defaults.register("today") { Date.current.iso8601 }
-```
+A `default` is a literal value, or `computed:<name>` to resolve it when a record is made. Nibble has one built in,
+`computed:today`, the current date in the site's time zone as `YYYY-MM-DD`:
 
 ```yaml
 field: { type: date, default: computed:today }
+```
+
+A site registers its own in an initializer, and `nibble:check` refuses a name nobody registered:
+
+```ruby
+# config/initializers/defaults.rb
+Nibble::Defaults.register("quarter") { "Q#{(Time.zone.today.month - 1) / 3 + 1}" }
 ```
 
 A default fills a new record, and rows added later in a grid or replicator. Records that already exist keep what they
@@ -112,6 +114,9 @@ A single line. Stores text, or a number when `input_type` is `number`. **Public 
 | `number` | a number, stored as a number | `numeric` | `numeric` |
 
 A field's own `regex:` rule replaces the `tel` check, so a site can ask for the numbers it takes.
+
+`nibble:check` warns when saved entries, terms or global sets hold an email, URL or phone that fails its check, with how many and
+the first few ids; they can't be saved again until the value is corrected.
 
 ```yaml
 field: { type: text, input_type: email, required: true, character_limit: 120 }

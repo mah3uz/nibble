@@ -81,7 +81,10 @@ terms. The collection lists which blueprints it allows; the first is the default
 | `listable` | `true` shows it as a column in the listing, `hidden` offers it in the column picker, `false` never |
 | `read_only` | shown but not editable, and kept as it is on every save — see below; `{ if: … }` makes it read-only while a condition passes |
 | `visibility` | `visible`, `read_only`, `hidden` or `computed` |
-| `api` | `false` leaves the field out of the generated TypeScript types and the Content API's responses — pages still receive the value, so read it with a cast |
+| `api` | `false` leaves the field out of the generated TypeScript types and the Content API; a page still receives it |
+
+The [field reference](../reference/fieldtypes.md#options-every-field-takes) lists these and the rest, such as `width`
+and `always_save`, with their defaults. The notes below cover the ones that need explaining.
 
 A `default` of `computed:<name>` is worked out each time it is used. Nibble has one built in, `computed:today`, the
 current date in the site's time zone as `YYYY-MM-DD`. A site registers its own in an initializer, and `nibble:check`
@@ -141,142 +144,38 @@ and a locale the site doesn't have.
 
 ## 3. The fieldtypes
 
+Every fieldtype, what it stores and each option it takes is listed in the
+[fieldtype reference](../reference/fieldtypes.md).
+
 | Group | Types |
 |---|---|
-| Text | `text`, `textarea`, `code`, `rich_text`, `markdown`, `slug`, `secret` |
-| Numbers and dates | `integer`, `decimal`, `range`, `rating`, `date`, `time` |
-| Choice | `select`, `radio`, `button_group`, `checkboxes`, `toggle`, `list`, `color` |
-| Relationships | `entries`, `terms`, `relationship`, `link` |
-| Files | `assets`, `files` |
-| Repeating | `grid`, `replicator` |
-| Whole page | `seo` |
-| Display only | `note` |
+| Text | [`text`](../reference/fieldtypes.md#text), [`textarea`](../reference/fieldtypes.md#textarea), [`code`](../reference/fieldtypes.md#code), [`rich_text`](../reference/fieldtypes.md#rich_text), [`markdown`](../reference/fieldtypes.md#markdown), [`slug`](../reference/fieldtypes.md#slug), [`secret`](../reference/fieldtypes.md#secret) |
+| Numbers and dates | [`integer`](../reference/fieldtypes.md#integer), [`decimal`](../reference/fieldtypes.md#decimal), [`range`](../reference/fieldtypes.md#range), [`rating`](../reference/fieldtypes.md#rating), [`date`](../reference/fieldtypes.md#date), [`time`](../reference/fieldtypes.md#time), [`calculation`](../reference/fieldtypes.md#calculation) |
+| Choice | [`select`](../reference/fieldtypes.md#select), [`radio`](../reference/fieldtypes.md#radio), [`button_group`](../reference/fieldtypes.md#button_group), [`checkboxes`](../reference/fieldtypes.md#checkboxes), [`toggle`](../reference/fieldtypes.md#toggle), [`list`](../reference/fieldtypes.md#list), [`color`](../reference/fieldtypes.md#color) |
+| Relationships | [`entries`](../reference/fieldtypes.md#entries), [`terms`](../reference/fieldtypes.md#terms), [`link`](../reference/fieldtypes.md#link) |
+| Files | [`assets`](../reference/fieldtypes.md#assets), [`files`](../reference/fieldtypes.md#files) |
+| Repeating | [`grid`](../reference/fieldtypes.md#grid), [`replicator`](../reference/fieldtypes.md#replicator) |
+| Whole page | [`seo`](../reference/fieldtypes.md#seo) |
+| Display only | [`note`](../reference/fieldtypes.md#note) |
 
-The ones worth knowing properly:
+A few choices come up in nearly every blueprint:
 
-**`text`** takes an `input_type`: `text` (the default), `email`, `url`, `tel`, `number`, `date`, `month`, `week`,
-`time`, `color`, `password` or `hidden`, which sets the input a theme draws. Three of them check the value when it is
-saved, in a blueprint and on a [public form](forms.md) alike, and a blank value always passes:
-
-| `input_type` | Accepts | Message key |
-|---|---|---|
-| `email` | an email address | `email` |
-| `url` | an absolute `http://` or `https://` address | `url` |
-| `tel` | digits, spaces and `+ ( ) . -`, with at least three digits | `phone` |
-
-A field's own `validate: [ "regex:/^04\d{8}$/" ]` replaces the phone check, so a site can ask for the numbers it
-takes. Each rule's wording comes from the field's `messages` under the key above, per locale if the site has several
-(see [Options every field takes](#2-options-every-field-takes)). `nibble:check` warns when saved entries, terms or
-global sets hold an email, URL or phone that fails its check, with how many and the first few ids; they can't be saved
-again until the value is corrected. The other options of a `text` field are `character_limit`, `autocomplete`,
-`placeholder`, `prepend` and `append`.
-
-**`toggle`** is a switch; its `inline_label` is the text beside it, and `inline_label_when_true` replaces that text
-while it is on. `inline_label` may hold Markdown links, such as `I agree to the [privacy policy](/privacy)`, per
-locale like any label. A link may go to a web, email or phone address or a page on the site; anything else, such as
-`javascript:`, is shown as plain text. Nothing else in the label becomes markup. See the
-[consent checkbox recipe](forms.md#13-a-consent-checkbox).
-
-**`note`** shows text and holds no value. Its `text` is Markdown, per locale if the site has several: paragraphs,
-emphasis, lists and links to web, email, phone or site addresses are kept, and everything else, including raw HTML,
-headings and images, is dropped. The Control Plane draws it as a muted block across the form, and a public form passes
-it to the theme as `text_html`. A note is never stored, exported, emailed, searched, listed in the content API, or
-offered to connected apps to write. It can't be `required`, `hidden`, `encrypt`ed or have a `default`; `nibble:check`
-refuses those.
-
-```yaml
-- handle: pricing_hint
-  field:
-    type: note
-    text: |
-      Prices include **GST**. See the [price list](/prices) for what is covered.
-```
-
-**`rich_text`** is the full editor — headings, lists, links, images, tables, code blocks and find-and-replace. It is
-stored as structured data, not HTML, and rendered to safe HTML on the server. Your theme never sees raw markup it
-has to trust. A link can point at a [global field](globals-and-navigation.md#12-linking-to-a-global-from-rich-text)
-instead of an address, and follows that field when it changes.
-
-**`markdown`** is a textarea with a Preview button, rendered by the server exactly as your theme will receive it.
-Turn on `sanitize` when the text could come from someone you do not trust.
-
-**`assets`** opens the media library. `max_files: 1` makes it a single image, `alt: required` insists on alt text,
-and `preset: hero` names the [image size](../running/configuration.md#5-image-presets) your theme receives.
-
-**`entries`** and **`terms`** open a picker and store a reference, not a copy — rename or move the target and the
-reference still finds it. `max_items: 1` makes a single choice.
-
-**`integer`** is a whole number. It takes `min`, `max`, `step`, `placeholder`, and `prepend` and `append`, text the input
-shows before and after the number.
-
-**`decimal`** is a number with a fixed number of places, such as a price. `decimals` (0 to 10, default 2) is how many
-places it keeps: a value is rounded half away from zero to that many places when it is saved, so `2.675` is stored as
-`2.68` and `-2.675` as `-2.68`. It is always stored as a number, never a string. `min` and `max` refuse a value outside
-them. `step` is what the input moves by (default the smallest step `decimals` allows, such as `0.01`); it is a hint to the
-input, not a rule. `placeholder`, `prepend` and `append` work as they do on `integer`. A form's submission list, emails and export show
-the value with exactly `decimals` places.
-
-**`range`** is a slider that stores a number, shown beside the slider as it moves. `min` (default 0), `max` (default 100)
-and `step` (default 1) set the scale, `prepend` and `append` are drawn around the value, and `default` is where it starts.
-The value is stored as a whole number when `min`, `max` and `step` are all whole, and as a decimal otherwise. A value
-outside `min` and `max` is refused.
-
-**`rating`** is a row of stars. `max` (2 to 10, default 5) is how many. It stores a whole number from 1 to `max`, or nothing
-when it has not been rated; an editor clears it by choosing the same star again. A value outside 1 to `max` is refused.
-Arrow keys move between the stars, and each star is named for a screen reader, such as "3 of 5".
-
-**`select`**, **`radio`** and **`checkboxes`** hold a fixed list written in the blueprint. For a list your editors
-manage themselves, use a taxonomy with a `terms` field, or an `entries` field with `mode: select`, instead of
-options.
-
-**`date`** with `time_enabled: true` takes a `time_zone`: an IANA name such as `Europe/London`, or `site` for the
-zone the site is set to (`config.time_zone` in `config/application.rb`). The person then types a time on that zone's
-clock, read with the offset that zone has on that date (`+10:00` in Sydney's winter, `+11:00` in its summer), and
-stored in UTC like any date-time, so a field sorts by the moment whatever zone it has. A page receives it in the zone,
-with that offset (`2026-07-15T09:00:00+10:00`), and the Control Plane shows and edits it on the zone's clock, naming
-the zone beside the input. A time the clocks
-skip when they go forward, such as 02:30 on the night summer time starts, is refused with a message saying so. A time
-they repeat when they go back is the first of the two, before the change. `earliest_date` and `latest_date` are
-midnight in that zone. Without `time_zone`, a date-time is stored in UTC and shown in the site's zone. Adding a zone
-to a field that already has values keeps them unchanged: each is the same moment, shown in the new zone. `nibble:check` refuses a zone it doesn't know.
-
-**`button_group`** is a `radio` drawn as a row of joined buttons, for a few short choices such as sizes. It takes the
-same `options` and `cast_booleans`, stores the same value and reaches a page the same way, so a field can switch
-between the two without touching its content. The arrow keys move between its buttons as they move between radios.
-
-**`time`** is a time of day on the 24-hour clock, stored as `"14:30"`. Its options:
-
-| Option | |
-|---|---|
-| `seconds` | `true` stores seconds too, as `"14:30:05"`; off by default, when seconds a browser sends are dropped |
-| `earliest`, `latest` | the earliest and latest time accepted, both included, such as `"09:00"` and `"17:30"` |
-| `placeholder` | text shown in the empty input |
-
-Write times in quotes: YAML reads an unquoted `09:00` as a number, and `nibble:check` refuses it. Anything but a
-24-hour time is refused, so `9:30`, `24:00` and `noon` never reach a page.
-
-**`color`** is a colour, stored as lowercase `#rrggbb`; a value typed in capitals is stored in lowercase, and
-anything else (`#fff`, `red`, a colour with transparency) is refused. Its options:
-
-| Option | |
-|---|---|
-| `swatches` | a list of colours offered as buttons, each written as `#rrggbb` |
-| `allow_any` | `true` (the default) also offers a colour picker and a box for the hex value; `false` accepts only a swatch |
-| `default` | the colour a new entry starts with; with `allow_any: false` it must be one of the swatches |
-
-On a public form, a browser's colour input always holds a colour, so an optional `color` field drawn as one and
-posted without JavaScript arrives as `#000000` when the visitor didn't pick. With JavaScript, `useNibbleForm` posts
-nothing until they do. Swatch radios (`allow_any: false`) post nothing either way.
-
-**`link`** accepts a URL or a link to an entry, and follows the entry if it moves.
-
-**`code`** is an editor for HTML, with line numbers and highlighting, for snippets pasted from another tool.
-
-**`secret`** stores its value encrypted, and never shows it again in full — for an API key a site setting needs.
-
-**`grid`** is a table of rows with the same fields — opening hours, a price list.
-
-**`replicator`** is a list of blocks, each a different shape. It is how landing pages are built.
+- **Text.** `text` is one line; `textarea` is several; `rich_text` is the full editor, stored as structured data and
+  rendered to safe HTML on the server, so a theme never receives markup it has to trust. `markdown` is for text an
+  editor would rather write as Markdown. An `input_type` of `email`, `url` or `tel` on a `text` field also checks the
+  value; see [`text`](../reference/fieldtypes.md#text).
+- **Pictures and files.** `assets` opens the media library. `max_files: 1` makes it a single image, `alt: required`
+  insists on alt text, and `preset: hero` names the [image size](../running/configuration.md#5-image-presets) your
+  theme receives. `files` is for visitors' uploads on a [public form](forms.md).
+- **Choosing from a fixed list.** `select`, `radio`, `button_group` and `checkboxes` hold a list written in the
+  blueprint. For a list your editors manage themselves, use a taxonomy with a `terms` field, or an `entries` field,
+  instead of options.
+- **Relationships.** `entries` and `terms` open a picker and store a reference, not a copy: rename or move the target
+  and the reference still finds it. `max_items: 1` makes a single choice. `link` accepts a URL or a link to an entry
+  and follows the entry if it moves.
+- **Numbers.** `integer` and `decimal` take `min` and `max`; `decimal` keeps a fixed number of places, such as a price.
+- **Repeating.** `grid` is a table of rows with the same fields, such as opening hours or a price list. `replicator`
+  is a list of blocks, each a different shape; it is how landing pages are built, in the next section.
 
 ## 4. Pages built from blocks
 
@@ -397,40 +296,16 @@ A field can appear only when another has a certain value. Tidewater's page hero 
   field: { type: text, input_type: url, if: { hero_kind: video } }
 ```
 
-The form shows and hides them as the editor works, and validation follows: a hidden field is never required. The
-keys are `if`, `unless`, `show_when` and `hide_when`, and each has an `_any` form — `if_any` — that passes when any
-one condition matches rather than all of them.
+The form shows and hides them as the editor works, and validation follows: a hidden field is never required. The keys
+are `if`, `unless`, `show_when` and `hide_when`, and each has an `_any` form — `if_any` — that passes when any one rule
+matches rather than all of them.
 
-### Required only sometimes
-
-`required` takes a condition in place of `true`: exactly one of those keys, with the rules a field uses to show itself.
-The field is required while the condition passes against the values being saved, and optional while it fails:
-
-```yaml
-- handle: contact_by
-  field: { type: radio, options: { phone: Phone, email: Email }, default: email }
-- handle: phone
-  field: { type: text, required: { if: { contact_by: phone } } }
-```
-
-The Control Plane draws the `*` beside Phone only while Contact by is Phone. A field its own conditions hide is never
-required, whatever its `required` says. A conditionally required `toggle` must be switched on once the condition passes.
-`nibble:check` refuses a `required` condition with no key or several, and one naming a field that isn't beside it. Its
-warning about saved records with a required toggle switched off covers only `required: true`.
-
-### What a hidden field keeps
-
-A condition decides whether a field is validated; it never removes the value. When a condition hides a field, Nibble
-skips that field's rules, so nothing in it is required or checked, and the value already saved with the record stays:
-
-- Saving an entry, term or global set from the Control Plane sends the values of hidden fields along with the rest, and
-  stores them as sent. Hiding a field does not clear it, and showing it again brings back what was there.
-- The API and agents write whatever values they are given; a hidden field's value is stored and not checked.
-- A public form submission is the same: the hidden field's rules are skipped and a posted value is stored, emailed and
-  delivered as posted. Only [calculations](forms.md#11-calculations) ignore a hidden field, counting it as 0.
-- `always_save: true` on a field keeps its rules running while a condition hides it, so a hidden `required` field is still
-  required and its other rules still apply. It makes no difference to what is stored, because values are stored either
-  way.
+A rule can compare as well as match: `employees: ">= 10"`, `extras: contains delivery`, `notes: not empty`. A field can
+name one outside its own row with `$root.` or `$parent.`, and `required` and `read_only` take a condition too.
+`required: { if: { contact_by: phone } }` makes a field required only while the condition passes. A condition never
+removes a hidden field's value; `always_save: true` keeps its rules running while it is hidden. The
+[conditions reference](../reference/conditions.md) has the full syntax, every operator, custom conditions and what a
+hidden field keeps.
 
 ## 7. Generated types
 
