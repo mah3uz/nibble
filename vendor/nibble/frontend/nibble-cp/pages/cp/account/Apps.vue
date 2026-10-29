@@ -187,18 +187,20 @@ useBreadcrumbs([{ label: 'Connected apps' }])
     </CpPanel>
 
     <CpPanel v-if="approvals.length" title="Waiting for your approval" flush>
-      <template #actions>
-        <Button variant="outline" size="sm" :disabled="!selected.length" @click="askBatch('deny')"
-          >Decline selected</Button
-        >
-        <Button size="sm" :disabled="!selected.length" @click="askBatch('approve')">Approve selected</Button>
-      </template>
-      <label
-        class="flex items-center gap-3 border-b border-gray-100 px-4 py-2.5 text-sm text-gray-600 dark:border-gray-800 dark:text-gray-400"
+      <div
+        class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-gray-100 px-4 py-2.5 dark:border-gray-800"
       >
-        <Checkbox :model-value="allSelected" @update:model-value="(on) => toggleAll(!!on)" />
-        {{ selected.length ? `${selected.length} of ${approvals.length} selected` : 'Select all' }}
-      </label>
+        <label class="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+          <Checkbox :model-value="allSelected" @update:model-value="(on) => toggleAll(!!on)" />
+          {{ selected.length ? `${selected.length} of ${approvals.length} selected` : 'Select all' }}
+        </label>
+        <div class="flex gap-2">
+          <Button variant="outline" size="sm" :disabled="!selected.length" @click="askBatch('deny')"
+            >Decline selected</Button
+          >
+          <Button size="sm" :disabled="!selected.length" @click="askBatch('approve')">Approve selected</Button>
+        </div>
+      </div>
       <ul class="divide-y divide-gray-100 dark:divide-gray-800" role="list">
         <li
           v-for="approval in approvals"
