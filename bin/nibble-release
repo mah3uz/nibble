@@ -34,6 +34,9 @@ parser.parse!
 version = ARGV.first or fail!(parser.help)
 fail!("#{version} isn't a version like 1.2.3") unless version.match?(/\A\d+\.\d+\.\d+\z/)
 repository = VERSION_FILE.read[/REPOSITORY = "([^"]+)"/, 1]
+# Pushing through the remote's name moves its tracking branch too, so `git status` doesn't read "ahead" afterwards.
+same_repository = ->(url) { url.to_s.sub(/\.git\z/, "").sub(%r{\Agit@([^:]+):}, 'https://\1/') == repository.sub(/\.git\z/, "").sub(%r{\Agit@([^:]+):}, 'https://\1/') }
+push_remote = `git -C #{ROOT} remote`.split.find { |name| same_repository.(`git -C #{ROOT} remote get-url --push #{name}`.strip) } || repository
 
 # The archive is what a site installs, so it is packed from the tagged tree and published beside the tag.
 def publish(version, notes, repository, assumed)
@@ -100,13 +103,13 @@ system("git", "-C", ROOT.to_s, "tag", "-a", "v#{version}", "--cleanup=verbatim",
 puts "tagged v#{version}"
 
 if confirm?("push main and v#{version} to #{repository}?", push)
-  if system("git", "-C", ROOT.to_s, "push", repository, "main", "--follow-tags")
+  if system("git", "-C", ROOT.to_s, "push", push_remote, "main", "--follow-tags")
     publish(version, notes, repository, push)
   else
     warn "could not push"
   end
 else
-  puts "not pushed. When ready: git push #{repository} main --follow-tags, then bin/nibble-release #{version} --pack"
+  puts "not pushed. When ready: git push #{push_remote} main --follow-tags, then bin/nibble-release #{version} --pack"
 end
 
 # nibble.ink serves the feed every Control Plane reads, from a site/ that isn't tracked here.
