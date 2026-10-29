@@ -32,4 +32,13 @@ class Nibble::Cp::LinkSuggestionsTest < ActionDispatch::IntegrationTest
 
     assert_empty suggestions, "a suggestion the editor can't turn into a working href is worse than none"
   end
+
+  test "the link dialog offers each global field that holds an address, with the address it holds now" do
+    use_site_addresses(apply_url: "https://example.com/apply")
+
+    get "/cp/link_suggestions/globals"
+
+    site = JSON.parse(response.body)["globals"].find { |item| item["handle"] == "site" }
+    assert_equal [ [ "apply_url", "https://example.com/apply" ], [ "booking", "" ] ], site["fields"].map { |field| field.values_at("handle", "address") }
+  end
 end

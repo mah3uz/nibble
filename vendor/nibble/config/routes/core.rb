@@ -117,6 +117,7 @@ Rails.application.routes.draw do
     delete "notifications", to: "notifications#destroy", as: :clear_notifications
     get "search", to: "search#index", as: :search
     get "link_suggestions", to: "link_suggestions#index", as: :link_suggestions
+    get "link_suggestions/globals", to: "link_suggestions#globals", as: :global_link_suggestions
     resources :blueprints, only: %i[index show], param: :handle, constraints: { handle: /[^\/]+/ }
     resources :globals, only: %i[index edit update], param: :handle
     post "globals/:handle", to: "globals#update"

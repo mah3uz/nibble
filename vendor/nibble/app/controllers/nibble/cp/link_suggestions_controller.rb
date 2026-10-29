@@ -7,6 +7,10 @@ module Nibble
         render json: { suggestions: suggestions }
       end
 
+      def globals
+        render json: { globals: Nibble::GlobalLinks.choices }
+      end
+
       private
 
       def suggestions

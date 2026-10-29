@@ -50,7 +50,7 @@ class Nibble::GlobalLinksTest < ActiveSupport::TestCase
     assert_equal "<p><a>Home</a></p>", render(link("Home", {}))
   end
 
-  test "only a global field that holds an address can be linked to, and never the integrations settings" do
+  test "only a global field that holds an address can be linked to" do
     assert Nibble::GlobalLinks.field("global:site.apply_url")
     assert_nil Nibble::GlobalLinks.field("global:site.name"), "a plain text field isn't an address"
     assert_nil Nibble::GlobalLinks.field("global:integrations.captcha_secret_key")
@@ -73,6 +73,42 @@ class Nibble::GlobalLinksTest < ActiveSupport::TestCase
 
     refute result.ok?
     assert_match "global:site.gone", result.errors.values.flatten.join
+  end
+
+  test "a package carries the reference out and back in, with the address the importing site holds" do
+    create_entry("articles", { "title" => "Apply", "blocks" => [ { "type" => "rich_text", "text" => [ { "type" => "paragraph", "content" => [
+      link("Apply", "href" => "/", "ref" => "global:site.apply_url")
+    ] } ] } ] })
+    dir = Pathname(Dir.mktmpdir("nibble-export"))
+    Nibble::Packages::Exporter.new(dir).call
+    exported = YAML.safe_load_file(dir.join("collections/articles/en/apply.yml"), permitted_classes: [ Date, Time ])
+    assert_equal "global:site.apply_url", exported.dig("blocks", 0, "text", 0, "content", 0, "marks", 0, "attrs", "ref")
+
+    Nibble::Records::Entry.delete_all
+    @site.update!(data: @site.data.merge("apply_url" => "https://elsewhere.example/apply"))
+    report = Nibble::Packages::Importer.new(dir).call
+    assert report.ok?, report.errors.join("\n")
+
+    attrs = Nibble::Records::Entry.find_by!(slug: "apply").values.dig("blocks", 0, "text", 0, "content", 0, "marks", 0, "attrs")
+    assert_equal({ "href" => "https://elsewhere.example/apply", "ref" => "global:site.apply_url" }, attrs)
+  ensure
+    FileUtils.rm_rf(dir) if dir
+  end
+
+  test "importing content that links to a missing global field reports it before anything is written" do
+    dir = Pathname(Dir.mktmpdir("nibble-package"))
+    path = dir.join("collections/articles/en/broken.yml")
+    path.dirname.mkpath
+    path.write({ "title" => "Broken", "status" => "draft", "blocks" => [ { "type" => "rich_text", "text" => [ { "type" => "paragraph", "content" => [
+      link("Apply", "href" => "/", "ref" => "global:site.gone")
+    ] } ] } ] }.to_yaml)
+
+    report = Nibble::Packages::Importer.new(dir).call
+
+    assert_match "global:site.gone", report.errors.join("\n")
+    assert_nil Nibble::Records::Entry.find_by(slug: "broken")
+  ensure
+    FileUtils.rm_rf(dir) if dir
   end
 
   test "Markdown writes a global link by its reference and reads it back the same" do
