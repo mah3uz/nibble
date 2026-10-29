@@ -94,6 +94,14 @@ class Nibble::Cp::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "Kept draft" ], rows.drop(1).map(&:first), "exporting rows the filter excluded would mislead"
   end
 
+  test "an entry title that starts like a formula exports as text" do
+    create_entry("articles", { "title" => "=cmd|' /C calc'!A0" })
+
+    get "/cp/collections/articles.csv"
+
+    assert_equal [ "'=cmd|' /C calc'!A0" ], CSV.parse(response.body, headers: true).map { |row| row["Title"] }
+  end
+
   test "the editor sends the blueprint, the values and what the user may do" do
     entry = create_entry("articles", { "title" => "Editable" })
 

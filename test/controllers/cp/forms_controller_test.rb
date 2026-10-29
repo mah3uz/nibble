@@ -85,6 +85,17 @@ class Nibble::Cp::FormsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "Grace" ], CSV.parse(response.body, headers: true).map { |row| row["Name"] }
   end
 
+  test "a submitted value that starts like a formula exports as text, so opening the file in a spreadsheet can't run it" do
+    formulas = [ '=HYPERLINK("http://evil","x")', "+1", "-2+3", "@SUM(A1)" ]
+    formulas.each { |name| Submission.create!(form: "visit", data: { "name" => name, "budget" => -5 }) }
+
+    get "/cp/forms/visit.csv"
+    rows = CSV.parse(response.body, headers: true)
+
+    assert_equal formulas.map { |name| "'#{name}" }.sort, rows.map { |row| row["Name"] }.sort
+    assert_equal [ "-5" ], rows.map { |row| row["Budget"] }.uniq, "a negative number is a number, not a formula"
+  end
+
   test "opening a submission marks it read and shows it as a read-only form, with its files and deliveries" do
     submission = contact({ "topic" => "support" }, deliveries: [ { "key" => "api.0", "target" => "crm", "mode" => "sync", "status" => "failed",
                                                                    "attempts" => 3, "error" => "HTTP 503" } ])

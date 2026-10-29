@@ -24,11 +24,11 @@ module Nibble
       def to_csv
         visible = columns.select { |column| column["visible"] }
         CSV.generate do |csv|
-          csv << visible.map { |column| column["label"] }
+          csv << CsvCells.row(visible.map { |column| column["label"] })
           (files? ? file_records : relation.find_each).each do |record|
             fields = record.blueprint_fields
             values = record.values
-            csv << visible.map { |column| csv_value(cell(record, fields, values, column["handle"])) }
+            csv << CsvCells.row(visible.map { |column| csv_value(cell(record, fields, values, column["handle"])) })
           end
         end
       end

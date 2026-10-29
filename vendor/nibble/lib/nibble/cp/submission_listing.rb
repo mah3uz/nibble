@@ -39,8 +39,8 @@ module Nibble
       def to_csv
         visible = columns.select { |column| column["visible"] }
         CSV.generate do |csv|
-          csv << visible.map { |column| column["label"] }
-          relation.find_each { |record| csv << visible.map { |column| csv_value(cell(record, column["handle"])) } }
+          csv << CsvCells.row(visible.map { |column| column["label"] })
+          relation.find_each { |record| csv << CsvCells.row(visible.map { |column| csv_value(cell(record, column["handle"])) }) }
         end
       end
 
