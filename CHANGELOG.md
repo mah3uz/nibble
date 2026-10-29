@@ -89,6 +89,13 @@ add tables and columns, so they can be rolled back, but the snapshot taken befor
 - **Guides for the people who run a site.** Webhooks, the Utilities screens, every `nibble:check` message, every
   environment variable and task, the page cache and CDN, sign-in lockout and recovery, and administering from the
   Control Plane without a terminal.
+- **`bin/rails nibble:dev:setup` asks which AI tools to set up** — Claude Code, Codex or Cursor, those found on this
+  computer chosen by default — and writes only into the site's folder. `--tools claude,codex` answers without asking.
+  Codex gets a project `.codex/config.toml` and the skills, like Claude Code.
+- **The Connected apps screen shows `nibble connect <site>`,** which sets up Claude Code, Codex and Cursor in the
+  folder it runs in, with the site's MCP server and skill. It needs the `nibble` command 0.3.0 or later.
+- **Apps are told more about each field.** A field's description says when it is shown, required or read-only, and the
+  bundled schema, theming and extending skills cover the new fieldtypes, forms and reference pages.
 - **Guides for editors, and routes in.** Settings, categories and tags, the trash, your account and two-factor
   sign-in, and form submissions, with start-here routes by audience and every guide listed on the docs home.
 
@@ -97,6 +104,10 @@ add tables and columns, so they can be rolled back, but the snapshot taken befor
 - **Crumbs ships a fallback `default` view,** and `nibble:check` warns when a collection's entries resolve to a view
   the theme lacks. A set without a view is a warning, since its blocks render nothing.
 - **The 500 page gets the site's shared props,** falling back to empty ones if loading them fails.
+- **Publish works on a new entry,** creating and publishing it in one click, and a new entry in a collection that
+  needs review offers **Submit for review**.
+- **Apps are no longer told a field hidden by its condition isn't saved;** it keeps what's sent, and only its rules
+  are skipped.
 - **The Backups screen links to the restore section** of the backups guide.
 - **The health check asks the page renderer on the configured port.**
 - **`nibble:generate:form` writes `required: true`.**
@@ -154,6 +165,10 @@ add tables and columns, so they can be rolled back, but the snapshot taken befor
     submission keys for `limits.unique` and saved forms (`form_partials`). `bin/rails nibble:upgrade` runs them. They
     only add tables and columns, so `bin/rails db:rollback` can undo them, which drops what they hold.
 12. **`site/types.d.ts` gains form value types.** `bin/rails nibble:upgrade` regenerates it; commit the new file.
+13. **AI apps you connected with `nibble` 0.2.0 were set up for your whole account,** so a site's tools and guide load
+    in every project. Update `nibble` to 0.3.0, run `nibble disconnect <site>` once, then `nibble connect <site>` in
+    the folder where you work on that site. If you ran `codex mcp add nibble-dev`, remove it with
+    `codex mcp remove nibble-dev` and run `bin/rails nibble:dev:setup` again to choose your tools.
 
 ## 0.21.4 — 2026-10-29 21:30 +0600
 
