@@ -42,6 +42,9 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## 0.22.0 — 2026-10-30 04:29 +0600
 
+> **Forms that calculate, hold and report.** A public form can total a quote, open and close itself, catch spam and
+> notify the right people, and its submissions are handled in the Control Plane like any other work.
+
 This release is mostly forms and fields, and a plainer Control Plane. Four database migrations are added; they only
 add tables and columns, so they can be rolled back, but the snapshot taken before an upgrade is the surest way back.
 
@@ -313,6 +316,9 @@ add tables and columns, so they can be rolled back, but the snapshot taken befor
 
 ## 0.21.0 — 2026-10-29 14:51 +0600
 
+> **Approving an app's change makes it.** Each connection chooses whether to ask first, and its access can be changed
+> after it is connected.
+
 ### What's new
 
 - **Approving a change makes it.** When a connected app's change waits for approval, approving it in the Control Plane
@@ -358,6 +364,9 @@ add tables and columns, so they can be rolled back, but the snapshot taken befor
   updating. Nibble's own `nibble` command and MCP clients need nothing.
 
 ## 0.20.0 — 2026-10-29 03:37 +0600
+
+> **A site runs its own chores on a schedule.** Fetch figures from an API, import a feed of jobs or call your own Ruby
+> every few hours, and carry a package's images and files with its content.
 
 ### What's new
 
