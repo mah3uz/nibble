@@ -173,14 +173,16 @@ changes. With `sets`, a page receives a list of text and set blocks instead of o
 | `collapse` | `true`, `false` | `false` | with `sets`, the editor opens with every block folded |
 | `placeholder` | text | — | text shown in the empty editor |
 | `character_limit` | whole number | — | the most characters of text accepted, not counting markup or blocks. The editor shows `N / limit` and stops at the limit, and a save over it is refused. Content already saved over a newly set limit can't be saved until it is shortened |
-| `toolbar_mode` | `fixed`, `floating` | `fixed` | accepted; the Control Plane doesn't act on it |
-| `smart_typography` | `true`, `false` | `false` | accepted; the Control Plane doesn't act on it |
-| `enable_input_rules`, `enable_paste_rules` | `true`, `false` | `true` | accepted; the Control Plane doesn't act on them |
-| `link_noopener`, `link_noreferrer` | `true`, `false` | `false` | accepted; the Control Plane doesn't act on them |
-| `link_collections` | list of collection handles | — | accepted; the Control Plane doesn't act on it |
-| `always_show_set_button` | `true`, `false` | `false` | accepted; the Control Plane doesn't act on it |
-| `previews` | `true`, `false` | `true` | accepted; the Control Plane doesn't act on it |
-| `inline_hard_breaks` | `true`, `false` | `false` | accepted, and offered only with `inline: true`; the Control Plane doesn't act on it |
+| `toolbar_mode` | `fixed`, `floating` | `fixed` | `fixed` keeps the toolbar above the editor; `floating` has no fixed toolbar and shows the formatting buttons in a menu over the selected text |
+| `smart_typography` | `true`, `false` | `false` | turns straight quotes into curly ones, `--` into dashes and `...` into an ellipsis as people type. Off by default because it rewrites what editors type, such as `(c)` into ©. |
+| `enable_input_rules` | `true`, `false` | `true` | `false` turns off the Markdown-style typing shortcuts, such as `# ` for a heading or `- ` for a list |
+| `enable_paste_rules` | `true`, `false` | `true` | `false` turns off the transforms applied to pasted text, such as turning a pasted Markdown link into a link |
+| `link_noopener` | `true`, `false` | `true` | adds `rel="noopener"` to links that start with `http://` or `https://` in the field's rendered HTML. Links on the site, email and phone links are unchanged. Safer for visitors, and it costs nothing |
+| `link_noreferrer` | `true`, `false` | `false` | adds `rel="noreferrer"` to the same links (`rel="noopener noreferrer"` with `link_noopener`), so the other site isn't told where the visitor came from. Off by default so a site keeps the referrer data its analytics rely on |
+| `link_collections` | list of collection handles | every collection with a `route` | the collections whose entries the link dialog offers under Page. A collection without a route has no address to link to. [`nibble:check`](../running/commands.md) reports a handle that names no collection |
+| `always_show_set_button` | `true`, `false` | `false` | with `sets`, shows an Add block button under the text at all times, which adds the block at the end. Without it, blocks are added from the toolbar button and from the plus button that appears beside an empty line |
+| `previews` | `true`, `false` | `true` | with `sets`, a folded block shows a preview of its fields beside its name; `false` shows only the name |
+| `inline_hard_breaks` | `true`, `false` | `false` | with `inline: true`, Enter inserts a line break (stored and rendered as `<br>`) instead of starting a new paragraph, which an inline field doesn't keep. Has no effect without `inline` |
 
 ```yaml
 field: { type: rich_text, buttons: [h2, h3, bold, italic, anchor], word_count: true }
