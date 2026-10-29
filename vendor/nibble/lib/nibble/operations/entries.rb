@@ -88,19 +88,19 @@ module Nibble
 
         entry = Records::Entry.new(collection: collection.handle, blueprint:, locale: Operations.locale!(input["locale"]))
         attrs = Editable.incoming(entry.blueprint_fields, input["data"], columns: WRITABLE)
-        written(Operations.lifecycle!(entry, :create, attrs, caller), caller, "created")
+        written(Operations.change!(entry, :create, attrs, caller), caller, "created")
       end
 
       def update(input, caller)
         entry = find!(input)
         attrs = Editable.incoming(entry.blueprint_fields, input["data"], columns: WRITABLE).merge("lock_version" => input["lock_version"])
-        written(Operations.lifecycle!(entry, :save, attrs, caller), caller, entry.live? ? "saved as a draft" : "saved")
+        written(Operations.change!(entry, :save, attrs, caller), caller, entry.live? ? "saved as a draft" : "saved")
       end
 
       def transition(input, caller)
         entry = find!(input, trashed: input["action"] == "restore")
         attrs = input.slice("lock_version", "published_at", "comment", "revision_id").compact
-        written(Operations.lifecycle!(entry, input["action"], attrs, caller), caller, input["action"])
+        written(Operations.change!(entry, input["action"], attrs, caller), caller, input["action"])
       end
 
       def revisions(input, caller)
@@ -112,9 +112,10 @@ module Nibble
         end }
       end
 
-      def written(entry, caller, what)
+      def written(result, caller, what)
+        entry = result.record
         Editable.entry(entry.reload, site: caller.site).merge("result" => what, "site" => caller.site,
-          "preview_url" => "#{caller.site}/cp/collections/#{entry.collection}/entries/#{entry.id}/preview")
+          "preview_url" => "#{caller.site}/cp/collections/#{entry.collection}/entries/#{entry.id}/preview", **Operations.ignored(result))
       end
 
       def find!(input, trashed: false)

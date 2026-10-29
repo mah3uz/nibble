@@ -47,7 +47,8 @@ module Nibble
       def update_global(input, caller)
         set = global!(input["handle"], input["locale"])
         attrs = Editable.incoming(set.blueprint_fields, input["data"]).merge("lock_version" => input["lock_version"])
-        Editable.global(Operations.lifecycle!(set, :save, attrs, caller).reload).merge("result" => "saved", "site" => caller.site)
+        result = Operations.change!(set, :save, attrs, caller)
+        Editable.global(result.record.reload).merge("result" => "saved", "site" => caller.site, **Operations.ignored(result))
       end
 
       def get_navigation(input, caller)

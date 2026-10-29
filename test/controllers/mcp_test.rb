@@ -54,6 +54,20 @@ class Nibble::McpTest < ActionDispatch::IntegrationTest
     assert_not listed.key?("unavailable"), "an agent should only ever be offered tools it can call"
   end
 
+  test "an MCP app can't change a read-only field in a row either, and is told which it ignored" do
+    use_read_only_notes
+    note = create_entry("notes", { "title" => "Note", "code" => "SYS-1", "rows" => [ { "id" => "row1", "label" => "A", "checksum" => "c1" } ] })
+
+    saved = rpc("tools/call", { name: "update_entry", arguments: { id: note.id, lock_version: note.lock_version,
+      data: { title: "Renamed", code: "HACKED", rows: [ { id: "row1", label: "B", checksum: "forged" } ] } } })["result"]
+
+    assert_not saved["isError"]
+    assert_equal %w[code rows.0.checksum], saved.dig("structuredContent", "ignored")
+    values = note.reload.values
+    assert_equal [ "Renamed", "SYS-1" ], values.values_at("title", "code")
+    assert_equal [ "B", "c1" ], values["rows"].first.values_at("label", "checksum")
+  end
+
   test "a tool call acts as the person, and a refusal comes back as a result the agent can read" do
     created = rpc("tools/call", { name: "create_entry", arguments: { collection: "articles", data: { title: "Via MCP" } } })["result"]
     assert_not created["isError"]

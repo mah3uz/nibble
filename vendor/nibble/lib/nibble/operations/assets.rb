@@ -168,7 +168,8 @@ module Nibble
       def update(input, caller)
         asset = find!(input["id"])
         attrs = Editable.incoming(asset.blueprint_fields, input["data"], columns: WRITABLE).merge("lock_version" => input["lock_version"])
-        view(Operations.lifecycle!(asset, :save, attrs, caller).reload).merge("result" => "saved", "site" => caller.site)
+        result = Operations.change!(asset, :save, attrs, caller)
+        view(result.record.reload).merge("result" => "saved", "site" => caller.site, **Operations.ignored(result))
       end
 
       def transition(input, caller)

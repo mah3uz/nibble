@@ -66,6 +66,18 @@ class Api::OperationsTest < ActionDispatch::IntegrationTest
     assert_equal "draft", json.dig("data", "status")
   end
 
+  test "a token can't change a read-only field: the other fields save, and the answer lists what was ignored" do
+    use_read_only_notes
+    note = create_entry("notes", { "title" => "Note", "code" => "SYS-1" })
+
+    post "/api/v1/operations/update_entry", params: { id: note.id, lock_version: note.lock_version, data: { title: "Renamed", code: "HACKED" } },
+      headers:, as: :json
+
+    assert_response :success
+    assert_equal [ "code" ], json.dig("data", "ignored")
+    assert_equal [ "Renamed", "SYS-1" ], note.reload.values.values_at("title", "code")
+  end
+
   test "reads work as GET, but a change is never made by a GET" do
     create_entry("articles", { "title" => "Listed" })
 

@@ -264,9 +264,11 @@ module Nibble
       end
     end
 
-    def lifecycle!(record, action, attrs, caller)
+    def lifecycle!(record, action, attrs, caller) = change!(record, action, attrs, caller).record
+
+    def change!(record, action, attrs, caller)
       result = Lifecycle.call(record, action, attrs, actor: caller.principal)
-      return result.record if result.ok?
+      return result if result.ok?
 
       if result.forbidden?
         raise Failure.new("forbidden", result.errors["base"].to_a.first || "you can't do that", status: :forbidden,
@@ -284,6 +286,8 @@ module Nibble
 
       raise Failure.new("invalid", result.errors.values.flatten.first.to_s, details: { "errors" => result.errors }, hint: "Fix the fields in details.errors and try again.")
     end
+
+    def ignored(result) = result.ignored.any? ? { "ignored" => result.ignored } : {}
 
     def page_input(extra = {})
       { "page" => { "type" => "integer", "minimum" => 1, "description" => "Page number, from 1" },

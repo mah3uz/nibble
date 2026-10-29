@@ -50,21 +50,23 @@ module Nibble
         taxonomy = taxonomy!(input["taxonomy"])
         term = Records::Term.new(taxonomy: taxonomy.handle, blueprint: Array(taxonomy["blueprints"]).first, locale: Operations.locale!(input["locale"]))
         attrs = Editable.incoming(term.blueprint_fields, input["data"], columns: Editable::TERM_COLUMNS)
-        written(Operations.lifecycle!(term, :create, attrs, caller), caller, "created")
+        written(Operations.change!(term, :create, attrs, caller), caller, "created")
       end
 
       def update(input, caller)
         term = find!(input["id"])
         attrs = Editable.incoming(term.blueprint_fields, input["data"], columns: Editable::TERM_COLUMNS).merge("lock_version" => input["lock_version"])
-        written(Operations.lifecycle!(term, :save, attrs, caller), caller, "saved")
+        written(Operations.change!(term, :save, attrs, caller), caller, "saved")
       end
 
       def transition(input, caller)
         term = find!(input["id"], trashed: input["action"] == "restore")
-        written(Operations.lifecycle!(term, input["action"], input.slice("lock_version", "revision_id").compact, caller), caller, input["action"])
+        written(Operations.change!(term, input["action"], input.slice("lock_version", "revision_id").compact, caller), caller, input["action"])
       end
 
-      def written(term, caller, what) = Editable.term(term.reload, site: caller.site).merge("result" => what, "site" => caller.site)
+      def written(result, caller, what)
+        Editable.term(result.record.reload, site: caller.site).merge("result" => what, "site" => caller.site, **Operations.ignored(result))
+      end
 
       def summary(term) = { "id" => term.id, "title" => term.title, "slug" => term.slug, "uri" => term.uri }
 
