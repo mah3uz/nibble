@@ -62,8 +62,9 @@ In order, it:
 5. **Snapshots the database** into `storage/upgrades/`, and prints the exact command that puts it back. Copy that
    line somewhere; it is your way home.
 6. **Replaces `vendor/nibble`**, keeping the old one in `tmp/nibble-<version>`.
-7. **Installs gems and npm packages**, and runs `bin/rails nibble:prepare` — database migrations and content
-   migrations.
+7. **Installs gems and npm packages**, writes `site/types.d.ts` again from the new release, and runs
+   `bin/rails nibble:prepare` — database migrations and content migrations. Commit the new `site/types.d.ts` with the
+   rest of the upgrade.
 8. **Asks about generated files** whose template has moved on — see below.
 9. **Shows what changed in screens you ejected.**
 
@@ -89,7 +90,21 @@ answers your install recorded and asks:
 **Screens you ejected.** For each one whose original changed, it shows the difference between the old release's copy
 and the new one. Nothing is applied for you; decide what to carry across.
 
-## 5. Undoing it
+## 5. When it stops part-way
+
+If something fails after `vendor/nibble` was replaced — a migration, or `nibble:check` finding a problem in your own
+files — the upgrade stops and says what failed. The new release is in place, but `config/nibble.yml` still names the
+old one. Fix what it stopped on, then finish it:
+
+```sh
+bin/rails nibble:upgrade --resume
+```
+
+`--resume` carries on from installing gems, using the snapshot and the old release it already kept. Running
+`bin/rails nibble:upgrade` again without it is refused while an upgrade is unfinished, because starting over would
+replace the copy that is your way back. `bin/rails nibble:version` warns too.
+
+## 6. Undoing it
 
 The command prints the way back if it stops after replacing the folder. At any point afterwards:
 
@@ -103,7 +118,7 @@ When your site is in git, `git checkout .` undoes the rest.
 > Some migrations cannot be undone by code. The release notes say so when that is the case, and then the snapshot is
 > the only way back. Do not delete it until you are sure.
 
-## 6. When it refuses: Nibble's files changed in place
+## 7. When it refuses: Nibble's files changed in place
 
 An upgrade replaces `vendor/nibble` whole, so it refuses to go ahead when a file there no longer matches the release it
 came from — your change would be lost without a word. Find out which files those are before you start:
@@ -120,7 +135,7 @@ It warns about every file of Nibble's changed in place. If you meant to change o
 > Keep every change in `site/`, `config/`, `app/` and your own theme — all of which are the site's — and an upgrade
 > never has anything to refuse. Tidewater's site is built that way throughout.
 
-## 7. A site that is behind
+## 8. A site that is behind
 
 If several releases have come out since yours, take them **one at a time**:
 

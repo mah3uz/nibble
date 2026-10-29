@@ -44,6 +44,8 @@ def next_release(root, into)
   File.write(nibble, File.read(nibble).sub(/VERSION = "[^"]+"/, %(VERSION = "#{version}")))
   File.write(File.join(into, "vendor/nibble/templates/config/nibble.yml.erb"), "# A template that moved on.\n", mode: "a")
   File.write(File.join(into, SCREEN), "<!-- a screen that moved on -->\n", mode: "a")
+  generator = File.join(into, "vendor/nibble/lib/nibble/type_generator.rb")
+  File.write(generator, File.read(generator).sub("Do not edit.", "Do not edit. Types that moved on."))
   File.write(File.join(into, "vendor/nibble/db/migrate/#{Time.now.utc.strftime('%Y%m%d%H%M%S')}_create_release_smoke_marks.rb"), <<~RUBY)
     class CreateReleaseSmokeMarks < ActiveRecord::Migration[8.1]
       def change = create_table(:release_smoke_marks)
@@ -117,8 +119,24 @@ check refused.include?("vendor/nibble/lib/nibble/search.rb was changed here"), "
 check record(site).dig("install", "version") == first.version, "a refused upgrade still moved the site on"
 git(site, "revert", "--no-edit", "HEAD")
 
-puts "$ bin/rails nibble:upgrade"
-output, status = Open3.capture2e(upgrade, "bin/rails", "nibble:upgrade", chdir: site)
+# A problem in the site's own files stops the upgrade after the swap; fixing it and running the upgrade again finishes it.
+broken = File.join(site, "site/schema/forms/broken.yml")
+FileUtils.mkdir_p(File.dirname(broken))
+File.write(broken, { "title" => "Broken", "fields" => [ { "handle" => "email", "field" => { "type" => "text" } } ], "handler" => "nowhere" }.to_yaml)
+git(site, "add", "-A")
+git(site, "commit", "-qm", "a form nibble:check refuses")
+stopped, status = Open3.capture2e(upgrade, "bin/rails", "nibble:upgrade", chdir: site)
+check !status.success? && stopped.include?("run bin/rails nibble:upgrade --resume to finish"), "a stopped upgrade didn't say how to finish it:\n#{stopped}"
+check File.read(File.join(site, "site/types.d.ts")).include?("Types that moved on.") && stopped.include?("site/types.d.ts changed"),
+  "types the new release generates differently weren't rewritten by the upgrade"
+check record(site).dig("install", "version") == first.version, "a stopped upgrade recorded the new release"
+FileUtils.rm(broken)
+denied, status = Open3.capture2e(upgrade, "bin/rails", "nibble:upgrade", chdir: site)
+check !status.success? && denied.include?("didn't finish") && denied.include?("--resume"), "starting a stopped upgrade again wasn't refused:\n#{denied}"
+check File.directory?(File.join(site, "tmp/nibble-#{first.version}")), "a refused re-run lost the previous release"
+
+puts "$ bin/rails nibble:upgrade --resume"
+output, status = Open3.capture2e(upgrade, "bin/rails", "nibble:upgrade", "--resume", chdir: site)
 puts output
 check status.success?, "the upgrade failed"
 check File.read(File.join(site, "vendor/nibble/VERSION")).include?("version: #{second.version}"), "vendor/nibble isn't #{second.version}"
@@ -129,6 +147,7 @@ check Dir.exist?(File.join(site, "tmp/nibble-#{first.version}")), "the previous 
 check Dir.glob(File.join(site, "storage/upgrades/*-#{first.version}.sqlite3")).any?, "the database wasn't snapshotted"
 check output.include?("config/nibble.yml — our template has moved on"), "the template that moved on wasn't offered"
 check output.include?("site/cp/pages/cp/Dashboard.vue — ours changed since you copied it"), "the stale ejection wasn't reported"
+check output.include?("finishing the upgrade from #{first.version} to #{second.version}"), "--resume didn't pick up where the upgrade stopped:\n#{output}"
 run!({}, "sha256sum", "--quiet", "-c", "MANIFEST", chdir: File.join(site, "vendor/nibble"))
 run!({}, "bin/rails", "runner", <<~'RUBY', chdir: site)
   abort "the new release's migration didn't run" unless ActiveRecord::Base.connection.table_exists?(:release_smoke_marks)

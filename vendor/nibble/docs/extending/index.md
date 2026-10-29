@@ -26,7 +26,7 @@ notices.
 > [!IMPORTANT]
 > `bin/rails nibble:check` warns about every file of Nibble's you have changed in place. That list is exactly what the
 > next upgrade will refuse on. See
-> [Upgrading](../running/upgrading.md#6-when-it-refuses-nibbles-files-changed-in-place).
+> [Upgrading](../running/upgrading.md#7-when-it-refuses-nibbles-files-changed-in-place).
 
 ## 2. Before you reach for one
 

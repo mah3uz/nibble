@@ -10,13 +10,14 @@ require "yaml"
 module ReleaseUpgrade
   private
 
-  def take_release(version, passed_on)
+  def take_release(version, passed_on, resume: false)
     $stdout.sync = true
     # Refuse before anything else: a deployed environment would fail on its own credentials rather than say why.
     environment = ENV["RAILS_ENV"] || ENV["RACK_ENV"] || "development"
     fail!("upgrade on a workstation and deploy the result; never in place on #{environment}") unless environment == "development"
 
     root = Pathname(APP_PATH).dirname.parent
+    finish_unfinished(root, version, passed_on, resume)
     if system("git", "-C", root.to_s, "rev-parse", "--is-inside-work-tree", out: File::NULL, err: File::NULL)
       dirty = IO.popen([ "git", "-C", root.to_s, "status", "--porcelain" ], &:read).strip
       fail!("the working tree isn't clean; commit or stash first, so git can show what the upgrade changed") unless dirty.empty?
@@ -32,6 +33,25 @@ module ReleaseUpgrade
     incoming = work.glob("nibble-*/").first or fail!("#{archive.basename} holds no release")
     puts "handing over to #{incoming.basename}"
     exec(RbConfig.ruby, incoming.join("bin/upgrade").to_s, *passed_on, chdir: root.to_s)
+  end
+
+  # Swapped in but never recorded: the kept previous release says the upgrade stopped after the swap. Starting again would
+  # swap a second time over the copy that is the way back, so only --resume carries on, from where it stopped.
+  def finish_unfinished(root, version, passed_on, resume)
+    recorded = NibbleHelp.recorded.to_h["version"]
+    running = NibbleHelp.running
+    unfinished = recorded && recorded != running && root.join("tmp/nibble-#{recorded}").directory?
+    fail!("there is no unfinished upgrade to resume") if resume && !unfinished
+    return unless unfinished
+
+    unless resume
+      fail!("the upgrade from #{recorded} to #{running} didn't finish. Fix the problem it stopped on, then run " \
+            "bin/rails nibble:upgrade --resume to finish it; or go back: rm -rf vendor/nibble && mv tmp/nibble-#{recorded} vendor/nibble, " \
+            "git checkout site/types.d.ts, and restore the database from storage/upgrades")
+    end
+    fail!("--resume finishes the upgrade to #{running}; it can't take #{version}") if version && version.delete_prefix("v") != running
+    puts "finishing the upgrade from #{recorded} to #{running}"
+    exec(RbConfig.ruby, root.join("vendor/nibble/bin/upgrade").to_s, "--resume", *passed_on, chdir: root.to_s)
   end
 
   # A local archive, with its SHA256SUMS beside it, stands in for a download: for trying a release before it is out.

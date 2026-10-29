@@ -30,7 +30,7 @@ module NibbleHelp
   def header(shell)
     install = recorded
     site = if install.nil? then "no install record"
-    elsif install["version"] != running then "records #{install['version']}: an upgrade to #{running} didn't finish"
+    elsif install["version"] != running then "records #{install['version']}: an upgrade to #{running} didn't finish; bin/rails nibble:upgrade --resume finishes it"
     else "on #{install['version']} since #{install['at']}"
     end
     theme = ENV["NIBBLE_THEME"].to_s.strip.then { |named| named.empty? ? settings[/^\s*theme:\s*["']?([a-z0-9_-]+)/, 1] || "crumbs" : named }

@@ -12,10 +12,27 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+### What's new
+
+- **A stopped upgrade can be finished.** When an upgrade fails after the new release is swapped in, fix what it stopped
+  on and run `bin/rails nibble:upgrade --resume`: it carries on from installing gems, with the snapshot and the old
+  release it already kept.
+
 ### What's fixed
 
+- **An upgrade no longer stops when the new release generates different types.** It writes `site/types.d.ts` again
+  right after the swap, so `nibble:check` no longer refuses it as out of date. Commit the new file with the upgrade.
+
+  **Upgrade:** a site whose upgrade to 0.21.2 stopped at "generated types are out of date" finishes it from the site's
+  root with `bin/rails nibble:schema:types`, `bin/rails nibble:prepare`, then
+  `bin/rails nibble:upgrade:finish tmp/nibble-<the version you came from>`, before taking this release.
 - **Pasted Markdown keeps its headings.** A `#` or `#####` heading pasted into a rich-text field became a paragraph
   with Tiptap 3.32; it now becomes the nearest heading the editor allows, h2 or h4.
+
+### Changed
+
+- **`bin/rails nibble:upgrade` refuses while an upgrade is unfinished,** and says how to finish it with `--resume` or go
+  back, instead of starting over and replacing the old release kept as the way back.
 
 ### Security
 

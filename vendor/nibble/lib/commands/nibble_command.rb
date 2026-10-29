@@ -73,14 +73,15 @@ class NibbleCommand < Rails::Command::Base
   def version
     puts NibbleHelp.running
     recorded = NibbleHelp.recorded&.fetch("version", nil)
-    warn "config/nibble.yml records #{recorded}: an upgrade to #{NibbleHelp.running} didn't finish" if recorded && recorded != NibbleHelp.running
+    warn "config/nibble.yml records #{recorded}: an upgrade to #{NibbleHelp.running} didn't finish; bin/rails nibble:upgrade --resume finishes it" if recorded && recorded != NibbleHelp.running
   end
 
   desc "upgrade [VERSION]", "Take a Nibble release (the latest by default): check it, snapshot, swap it in, migrate"
   option :force, type: :boolean, desc: "Replace Nibble's files even where they were changed here"
   option :allow_data_loss, type: :boolean, desc: "Carry on even when the schema no longer covers some stored data"
+  option :resume, type: :boolean, desc: "Finish an upgrade that stopped after the new release was swapped in"
   def upgrade(version = nil)
-    take_release(version, [ ("--force" if options[:force]), ("--allow-data-loss" if options[:allow_data_loss]) ].compact)
+    take_release(version, [ ("--force" if options[:force]), ("--allow-data-loss" if options[:allow_data_loss]) ].compact, resume: options[:resume])
   end
 
   desc "install", "Set up this site: settings, deploy files, database, first admin"
