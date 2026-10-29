@@ -182,7 +182,8 @@ useBreadcrumbs([{ label: 'Connected apps' }])
             <Button variant="outline" size="sm" @click="copy(connectCommand)">Copy</Button>
           </div>
           <p class="text-gray-600 dark:text-gray-400">
-            Sets up Claude Code, Codex and Cursor for this site.
+            Run it in the folder where you will use this site's tools. It sets up Claude Code, Codex and Cursor in that
+            folder only, and refuses another Nibble site's folder.
             <a href="https://nibble.ink/docs/running/cli#6-ai-apps" target="_blank" rel="noopener" class="underline"
               >About the nibble command</a
             >
