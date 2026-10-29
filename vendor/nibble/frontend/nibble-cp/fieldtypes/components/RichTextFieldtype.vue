@@ -565,7 +565,7 @@ function showBubbleMenu({
               v-if="hasSets"
               :groups="groups"
               icon-only
-              label="Add set"
+              label="Add block"
               @pick="(handle) => insertSet(handle)"
             />
           </div>
@@ -643,7 +643,7 @@ function showBubbleMenu({
               v-if="hasSets"
               :groups="groups"
               icon-only
-              label="Add set"
+              label="Add block"
               @pick="(handle) => insertSet(handle)"
             />
           </div>

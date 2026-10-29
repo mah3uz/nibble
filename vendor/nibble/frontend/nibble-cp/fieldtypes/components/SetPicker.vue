@@ -63,9 +63,9 @@ function paste() {
         variant="outline"
         :size="iconOnly ? 'icon-sm' : 'sm'"
         :disabled="disabled"
-        :aria-label="iconOnly ? (label ?? 'Add set') : undefined"
+        :aria-label="iconOnly ? (label ?? 'Add block') : undefined"
       >
-        <Plus /><template v-if="!iconOnly">{{ label || 'Add set' }}</template>
+        <Plus /><template v-if="!iconOnly">{{ label || 'Add block' }}</template>
       </Button>
     </PopoverTrigger>
     <PopoverContent align="start" class="w-64 p-0">

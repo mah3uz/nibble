@@ -90,7 +90,7 @@ const hasError = computed(() => Object.keys(errors.value).some((path) => path.st
         :disabled="readOnly"
         icon-only
         :can-paste="menu"
-        label="Add set below"
+        label="Add block below"
         @pick="(handle) => emit('addBelow', handle)"
         @paste="emit('pasteBelow')"
       />
@@ -99,7 +99,7 @@ const hasError = computed(() => Object.keys(errors.value).some((path) => path.st
         size="icon-sm"
         variant="ghost"
         :disabled="readOnly"
-        :aria-label="row.enabled === false ? 'Enable set' : 'Disable set'"
+        :aria-label="row.enabled === false ? 'Turn block on' : 'Turn block off'"
         @click="emit('enable', row.enabled === false)"
       >
         <EyeOff v-if="row.enabled === false" /><Eye v-else />
@@ -109,7 +109,7 @@ const hasError = computed(() => Object.keys(errors.value).some((path) => path.st
         size="icon-sm"
         variant="ghost"
         :disabled="readOnly || !canDuplicate"
-        aria-label="Duplicate set"
+        aria-label="Duplicate block"
         @click="emit('duplicate')"
         ><Copy
       /></Button>
@@ -118,7 +118,7 @@ const hasError = computed(() => Object.keys(errors.value).some((path) => path.st
         size="icon-sm"
         variant="ghost"
         :disabled="readOnly"
-        aria-label="Remove set"
+        aria-label="Remove block"
         @click="emit('remove')"
         ><Trash2
       /></Button>
@@ -144,7 +144,7 @@ const hasError = computed(() => Object.keys(errors.value).some((path) => path.st
         :meta-path-prefix="metaPathPrefix"
         :read-only="readOnly"
       />
-      <p v-else class="text-sm text-red-600">This set type "{{ row.type }}" no longer exists in the schema.</p>
+      <p v-else class="text-sm text-red-600">This block type is no longer available, so it can't be edited. Remove it, or ask a developer to bring it back.</p>
     </div>
   </div>
 </template>
