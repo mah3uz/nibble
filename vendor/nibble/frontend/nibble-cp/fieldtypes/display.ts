@@ -15,3 +15,10 @@ export const showsPreviews = (config: DisplayConfig) => config.previews !== fals
 
 export const dateWidthClass = (config: DisplayConfig) =>
   config.full_width === true || (config.time_enabled === true && !!config.time_zone) ? 'w-full' : 'w-full max-w-xs'
+
+export const decimalText = (value: unknown, decimals: number | undefined) =>
+  typeof value === 'number'
+    ? value.toFixed(Math.min(Math.max(decimals ?? 2, 0), 10))
+    : value == null
+      ? ''
+      : String(value)
