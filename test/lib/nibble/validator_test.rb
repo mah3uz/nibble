@@ -19,7 +19,7 @@ class Nibble::ValidatorTest < ActiveSupport::TestCase
   test "required fields reject nil, blank strings and empty lists" do
     title = fields(field("title", required: true))
 
-    assert_equal [ "The Title field is required." ], errors(title, {})["title"]
+    assert_equal [ "Title is required." ], errors(title, {})["title"]
     assert errors(title, "title" => "   ").key?("title")
     assert_empty errors(title, "title" => "Hello")
   end
@@ -28,15 +28,15 @@ class Nibble::ValidatorTest < ActiveSupport::TestCase
     summary = fields(field("summary", validate: "min:10|email"))
 
     assert_empty errors(summary, {}), "an empty optional field must not fail min/email"
-    assert_equal [ "The Summary field must be at least 10 characters.", "The Summary field must be a valid email address." ],
+    assert_equal [ "Summary must be at least 10 characters.", "Summary must be a valid email address." ],
       errors(summary, "summary" => "short")["summary"]
   end
 
   test "size rules measure characters, numbers or item counts depending on the value" do
     assert errors(fields(field("code", validate: [ "max:3" ])), "code" => "abcd").key?("code")
     assert_empty errors(fields(field("rating", validate: [ "numeric", "max:5" ])), "rating" => "4.5")
-    assert_equal [ "The Rating field must not be greater than 5." ], errors(fields(field("rating", validate: [ "numeric", "max:5" ])), "rating" => 9)["rating"]
-    assert_equal [ "The Tags field must not have more than 2 items." ], errors(fields(field("tags", validate: [ "max:2" ])), "tags" => %w[a b c])["tags"]
+    assert_equal [ "Rating must not be greater than 5." ], errors(fields(field("rating", validate: [ "numeric", "max:5" ])), "rating" => 9)["rating"]
+    assert_equal [ "Tags must not have more than 2 items." ], errors(fields(field("tags", validate: [ "max:2" ])), "tags" => %w[a b c])["tags"]
   end
 
   test "a field's own message replaces the default for its rule, with the same placeholders" do
@@ -45,8 +45,8 @@ class Nibble::ValidatorTest < ActiveSupport::TestCase
 
     assert_equal [ "Code is too long, 3 at most" ], plain["code"]
     assert_equal [ "Amounts start at $500" ], sized["amount"]
-    assert_equal [ "The Code field must not be greater than 3 characters." ], errors(fields(field("code", validate: [ "max:3" ])), "code" => "abcd")["code"]
-    assert_equal [ "The Code field is required." ], errors(fields(field("code", required: true, messages: { max: "Nope" })), {})["code"]
+    assert_equal [ "Code must not be greater than 3 characters." ], errors(fields(field("code", validate: [ "max:3" ])), "code" => "abcd")["code"]
+    assert_equal [ "Code is required." ], errors(fields(field("code", required: true, messages: { max: "Nope" })), {})["code"]
   end
 
   test "a localized message follows the locale and falls back to the default locale's entry" do
@@ -85,8 +85,8 @@ class Nibble::ValidatorTest < ActiveSupport::TestCase
     contact = fields(field("by"), field("phone", required: { if: { by: "phone" } }), field("other", required: { unless: { by: "phone" } }))
 
     assert_empty errors(contact, "by" => "email", "other" => "x")
-    assert_equal [ "The Phone field is required." ], errors(contact, "by" => "phone", "other" => "x")["phone"]
-    assert_equal [ "The Other field is required." ], errors(contact, "by" => "email", "phone" => "1")["other"]
+    assert_equal [ "Phone is required." ], errors(contact, "by" => "phone", "other" => "x")["phone"]
+    assert_equal [ "Other is required." ], errors(contact, "by" => "email", "phone" => "1")["other"]
     assert_empty errors(contact, "by" => "phone", "phone" => "0400")
   end
 
@@ -94,7 +94,7 @@ class Nibble::ValidatorTest < ActiveSupport::TestCase
     terms = fields(field("by"), { handle: "consent", field: { type: "toggle", required: { if: { by: "phone" } } } })
 
     assert_empty errors(terms, "by" => "email", "consent" => false)
-    assert_equal [ "The Consent field is required." ], errors(terms, "by" => "phone", "consent" => false)["consent"]
+    assert_equal [ "Consent is required." ], errors(terms, "by" => "phone", "consent" => false)["consent"]
     assert_empty errors(terms, "by" => "phone", "consent" => true)
   end
 
@@ -113,7 +113,7 @@ class Nibble::ValidatorTest < ActiveSupport::TestCase
     consent = fields({ handle: "consent", field: { type: "toggle", required: true } })
 
     [ false, "false", "0", 0, nil ].each do |off|
-      assert_equal [ "The Consent field is required." ], errors(consent, "consent" => off)["consent"], "#{off.inspect} is off"
+      assert_equal [ "Consent is required." ], errors(consent, "consent" => off)["consent"], "#{off.inspect} is off"
     end
     [ true, "true", "1", "on" ].each { |on| assert_empty errors(consent, "consent" => on), "#{on.inspect} is on" }
     assert_empty errors(fields({ handle: "consent", field: { type: "toggle" } }), "consent" => false)
@@ -123,7 +123,7 @@ class Nibble::ValidatorTest < ActiveSupport::TestCase
   test "required_if compares against another field, including booleans" do
     video = fields(field("has_video"), field("video_url", validate: [ "required_if:has_video,true", "url" ]))
 
-    assert_equal [ "The Video url field is required when has video is true." ], errors(video, "has_video" => true)["video_url"]
+    assert_equal [ "Video url is required when has video is true." ], errors(video, "has_video" => true)["video_url"]
     assert_empty errors(video, "has_video" => false)
     assert errors(video, "has_video" => true, "video_url" => "not a url")["video_url"].first.include?("valid URL")
   end
@@ -157,7 +157,7 @@ class Nibble::ValidatorTest < ActiveSupport::TestCase
     event = fields(field("starts_at", validate: [ "date" ]), field("ends_at", validate: [ "after:starts_at" ]))
 
     assert_empty errors(event, "starts_at" => "2026-10-01 10:00", "ends_at" => "2026-10-01 12:00")
-    assert_equal [ "The Ends at field must be a date after starts_at." ], errors(event, "starts_at" => "2026-10-01 10:00", "ends_at" => "2026-09-30")["ends_at"]
+    assert_equal [ "Ends at must be a date after starts_at." ], errors(event, "starts_at" => "2026-10-01 10:00", "ends_at" => "2026-09-30")["ends_at"]
     assert errors(fields(field("expires", validate: [ "after:tomorrow" ])), "expires" => Time.current.iso8601).key?("expires")
   end
 

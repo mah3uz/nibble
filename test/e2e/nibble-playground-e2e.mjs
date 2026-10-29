@@ -57,7 +57,7 @@ check('conditional field starts hidden', (await field('cta_label').count()) === 
 await page.getByTestId('validate').click()
 await page.getByTestId('status').waitFor()
 check('empty submission is invalid', (await page.getByTestId('status').textContent()).includes('error'))
-check('title shows its required error', (await field('title').getByText('The Title field is required.').count()) === 1)
+check('title shows its required error', (await field('title').getByText('Title is required.').count()) === 1)
 
 await field('title').locator('input').fill('Hello Nibble World')
 await settle()

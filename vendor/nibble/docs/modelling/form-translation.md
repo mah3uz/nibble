@@ -53,7 +53,7 @@ site's `config/locales/<locale>.yml`:
 | `nibble.forms.resume.too_large` | there is too much to save |
 | `nibble.forms.resume.expired` | a link has expired or its form was sent |
 
-A field's failed rules say "The Courriel field is required." in the field's `display` for the visitor's language; the
+A field's failed rules say "Courriel is required." in the field's `display` for the visitor's language; the
 sentence itself is translated through `nibble.validation.*`, or by the field's own [`messages`](forms.md#1-declaring-a-form).
 The client messages reach the theme as the definition's `messages`, which `useNibbleForm` shows; a theme draws its own
 labels from them too.

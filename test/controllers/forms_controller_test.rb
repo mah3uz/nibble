@@ -74,7 +74,7 @@ class FormsControllerTest < ActionDispatch::IntegrationTest
 
     post "/forms/consent", params: { agree: "false" }, headers: { "Accept" => "application/json" }
     assert_response :unprocessable_entity
-    assert_equal [ "The Agree field is required." ], response.parsed_body["errors"]["agree"]
+    assert_equal [ "Agree is required." ], response.parsed_body["errors"]["agree"]
     submit :consent, { agree: false }
     assert_response :unprocessable_entity
     assert_empty Submission.all
@@ -249,7 +249,7 @@ class FormsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "sent", flash[:nibble_form]["status"]
 
     post "/forms/contact", params: VALID.except(:email), headers: { "Referer" => "http://www.example.com/contact" }
-    assert_equal({ "email" => "The email field is required." }.keys, flash[:nibble_form]["errors"].keys)
+    assert_equal({ "email" => "email is required." }.keys, flash[:nibble_form]["errors"].keys)
 
     captcha(provider: "turnstile")
     stub_request(:post, TURNSTILE).to_return(body: { success: true }.to_json)

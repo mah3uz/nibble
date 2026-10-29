@@ -55,7 +55,7 @@ on a public form). `{type}` is how a rule can refer to the kind of record it is 
 
 ### Message keys
 
-When a rule fails, Nibble says something like "The Phone field format is invalid." The **Message key** column below
+When a rule fails, Nibble says something like "Phone isn't in the expected format." The **Message key** column below
 is the name under which that wording is kept. `min`, `max`, `between` and `size` have a wording for numbers, text and
 lists, and pick by the value: a list or a group of values is measured by its count, a value checked by `numeric` or
 `integer` by its number, and anything else by its length in characters.
@@ -214,7 +214,7 @@ message keys, and a field's `messages` can reword them.
 
 ## Changing a rule's message
 
-A failed rule says, for example, "The Phone field format is invalid." A field's `messages` rewords it, keyed by the
+A failed rule says, for example, "Phone isn't in the expected format." A field's `messages` rewords it, keyed by the
 message key of a rule the field has. Each value is text, or a map of locale code to text:
 
 ```yaml

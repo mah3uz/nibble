@@ -82,7 +82,7 @@ module Nibble
           next if (values[field.handle].to_i - from) % step.to_i == 0
 
           found[field.handle] = [ Validation.message("step", attribute: field.display(@locale), override: field.get("messages", {})["step"], locale: @locale,
-            default: "The %{attribute} field must go up in steps of %{step} (from %{from}).", step:, min: from, from:) ]
+            default: "%{attribute} must go up in steps of %{step} (from %{from}).", step:, min: from, from:) ]
         end
       end
 
@@ -229,7 +229,7 @@ module Nibble
         taken = unique_keys(data).find { |key| Records::FormSubmissionKey.exists?(key) } or return
         field = @form.fields.get(taken[:field])
         { field.handle => [ Validation.message("unique", attribute: field.display, override: field.get("messages", {})["unique"], locale: @locale,
-          default: "The %{attribute} has already been used.") ] }
+          default: "%{attribute} has already been used.") ] }
       end
 
       def claim(submission, data, user:, ip:)

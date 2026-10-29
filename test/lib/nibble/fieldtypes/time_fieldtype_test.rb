@@ -38,8 +38,8 @@ class Nibble::Fieldtypes::TimeFieldtypeTest < ActiveSupport::TestCase
   test "earliest and latest bound the time, inclusively, and say the bound they broke" do
     config = { earliest: "09:00", latest: "17:30" }
 
-    assert_equal [ "The Opens field must be 09:00 or later." ], errors(config, "08:59")
-    assert_equal [ "The Opens field must be 17:30 or earlier." ], errors(config, "17:30:01")
+    assert_equal [ "Opens must be 09:00 or later." ], errors(config, "08:59")
+    assert_equal [ "Opens must be 17:30 or earlier." ], errors(config, "17:30:01")
     assert_nil errors(config, "09:00")
     assert_nil errors(config, "17:30")
   end

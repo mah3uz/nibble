@@ -96,7 +96,7 @@ Nibble::Defaults.register("quarter") { "Q#{(Time.zone.today.month - 1) / 3 + 1}"
 
 A `required` toggle has to be switched on: an entry can't be published, and a term or global set can't be saved, while
 it is off. A toggle that may be left off is not required. The `accepted` rule (`validate: [accepted]`) asks the same of
-any field, taking `true`, `1`, `"1"`, `"yes"`, `"on"` and `"true"`, and says "The Terms field must be accepted."
+any field, taking `true`, `1`, `"1"`, `"yes"`, `"on"` and `"true"`, and says "Terms must be accepted."
 `nibble:check` warns, per collection, taxonomy and global set, how many records hold a required toggle that is off, so
 they can be switched on, or the field made optional, before someone next saves them.
 
@@ -122,7 +122,7 @@ the field read-only while it passes on the values being saved:
 `nibble:check` refuses a `read_only` that isn't `true`, `false` or a map with exactly one of `if`, `if_any`, `unless`,
 `unless_any`, `show_when`, `show_when_any`, `hide_when` or `hide_when_any`.
 
-A failed rule says "The Phone field format is invalid." unless the field gives its own wording. `messages` is keyed by
+A failed rule says "Phone isn't in the expected format." unless the field gives its own wording. `messages` is keyed by
 the name of a rule the field has (an `integer` field with a `step` also has `step`, which a form enforces), and each value is a string or a map of locale code to string:
 
 ```yaml

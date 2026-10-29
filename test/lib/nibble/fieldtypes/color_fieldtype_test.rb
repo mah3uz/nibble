@@ -29,7 +29,7 @@ class Nibble::Fieldtypes::ColorFieldtypeTest < ActiveSupport::TestCase
 
   test "anything but six hex digits is refused, so a theme never prints a value a stylesheet can't read" do
     [ "#fff", "ffaa00", "red", "#ffaa0080", "rgb(0,0,0)", "#gg0000" ].each do |value|
-      assert_equal [ "The Brand field must be a colour written as #rrggbb, such as #1a2b3c." ], errors({}, value), value
+      assert_equal [ "Brand must be a colour written as #rrggbb, such as #1a2b3c." ], errors({}, value), value
     end
   end
 

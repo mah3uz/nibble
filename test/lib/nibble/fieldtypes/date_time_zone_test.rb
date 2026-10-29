@@ -41,7 +41,7 @@ class Nibble::Fieldtypes::DateTimeZoneTest < ActiveSupport::TestCase
   end
 
   test "a time the clocks skip is refused, and the hour after it is accepted" do
-    assert_equal [ "The Starts field is a time the clocks skip in Australia/Sydney. Choose a time outside the hour they go forward." ],
+    assert_equal [ "Starts is a time the clocks skip in Australia/Sydney. Choose a time outside the hour they go forward." ],
       errors(SYDNEY, "2026-10-04T02:30")
     assert_nil errors(SYDNEY, "2026-10-04T03:30")
     assert_equal "2026-10-03T16:30:00Z", fieldtype(SYDNEY).process("2026-10-04T03:30")

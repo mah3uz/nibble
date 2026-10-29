@@ -50,7 +50,7 @@ Fields are declared exactly as in a [blueprint](blueprints.md), but a public for
 `color`, `files`, [`calculation`](#11-calculations) and [`note`](#14-notes).
 `nibble:check` refuses anything else.
 
-A consent box is a `required` toggle. A submission with it unticked is refused with "The Consent field is required.",
+A consent box is a `required` toggle. A submission with it unticked is refused with "Consent is required.",
 or the field's `messages.required`:
 
 ```yaml
@@ -64,7 +64,7 @@ or the field's `messages.required`:
         required: Please tick the box so we can reply
 ```
 
-`validate: [accepted]` refuses an unticked box too, saying "The Consent field must be accepted."
+`validate: [accepted]` refuses an unticked box too, saying "Consent must be accepted."
 
 A field's `messages` set the text a visitor sees when one of its rules fails, per locale if the site has several; see
 [Options every field takes](blueprints.md#2-options-every-field-takes).

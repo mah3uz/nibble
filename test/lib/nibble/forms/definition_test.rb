@@ -105,7 +105,7 @@ class Nibble::Forms::DefinitionTest < ActiveSupport::TestCase
 
     refused = pledge.(2250)
     assert_equal :invalid, refused.status
-    assert_equal [ "The Amount field must go up in steps of 500 (from 2000)." ], refused.errors["amount"]
+    assert_equal [ "Amount must go up in steps of 500 (from 2000)." ], refused.errors["amount"]
     assert_equal :ok, pledge.("2500").status
   end
 

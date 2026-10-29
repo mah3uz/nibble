@@ -28,7 +28,7 @@ class Nibble::RequiredToggleTest < ActiveSupport::TestCase
 
     result = publish(entry)
     assert_not result.ok?
-    assert_equal [ "The Reviewed field is required." ], result.errors["reviewed"]
+    assert_equal [ "Reviewed is required." ], result.errors["reviewed"]
 
     lifecycle(entry, :save, "title" => "Privacy", "reviewed" => true, "featured" => false)
     assert publish(entry.reload).ok?
@@ -39,7 +39,7 @@ class Nibble::RequiredToggleTest < ActiveSupport::TestCase
     result = lifecycle(Nibble::Records::GlobalSet.new(handle: "legal", locale: "en"), :save, "approved" => false)
 
     assert_not result.ok?
-    assert_equal [ "The Approved field is required." ], result.errors["approved"]
+    assert_equal [ "Approved is required." ], result.errors["approved"]
   end
 
   # Records saved before required meant "on" fail their next save; the check names them without stopping a deploy.

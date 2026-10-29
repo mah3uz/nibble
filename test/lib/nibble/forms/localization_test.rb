@@ -49,7 +49,7 @@ class Nibble::Forms::LocalizationTest < ActiveSupport::TestCase
   test "an error names the field as the visitor's language does" do
     result = Nibble::Forms::Submit.call(Nibble::Forms.find("greeting"), {}, ip: "203.0.113.1", user_agent: "test", locale: "fr")
 
-    assert_equal [ "The Courriel field is required." ], result.errors["email"]
+    assert_equal [ "Courriel is required." ], result.errors["email"]
   end
 
   test "a site translates a refusal under nibble.forms, and gets English where it has not" do

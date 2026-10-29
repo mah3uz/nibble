@@ -75,7 +75,7 @@ class FormInputTypesTest < ActionDispatch::IntegrationTest
 
   test "the phone rule has its own message" do
     submit("tel" => "abc")
-    assert_equal "The Tel field must be a valid phone number.", errors["tel"].first
+    assert_equal "Tel must be a valid phone number.", errors["tel"].first
   end
 
   test "a blueprint save refuses a bad email, URL or phone and accepts good ones and blanks" do
