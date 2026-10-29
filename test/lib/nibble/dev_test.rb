@@ -185,12 +185,95 @@ class Nibble::DevSetupTest < ActiveSupport::TestCase
     end
   end
 
+  test "removing setup leaves nothing behind that setup created" do
+    Dir.mktmpdir do |dir|
+      root = Pathname(dir)
+      Nibble::Dev::Setup.run(root:, tools: Nibble::Dev::Setup::TOOLS)
+
+      removed = Nibble::Dev::Setup.remove(root:)
+
+      assert_empty root.children
+      assert_includes removed, "removed .mcp.json"
+      assert_includes removed, "removed .codex/config.toml"
+      assert_empty Nibble::Dev::Setup.remove(root:), "a second removal finds nothing"
+    end
+  end
+
+  test "removing setup keeps another server, other permissions and the file that holds them" do
+    Dir.mktmpdir do |dir|
+      root = Pathname(dir)
+      root.join(".mcp.json").write({ "mcpServers" => { "other" => { "command" => "x" } } }.to_json)
+      root.join(".claude").mkpath
+      root.join(".claude/settings.json").write({ "permissions" => { "deny" => [ "Read(.env)" ], "allow" => [ "Bash(ls)" ] } }.to_json)
+      root.join(".codex").mkpath
+      root.join(".codex/config.toml").write("model = \"x\"\n\n[mcp_servers.other]\ncommand = \"y\"\n")
+      Nibble::Dev::Setup.run(root:, tools: %w[claude codex])
+
+      Nibble::Dev::Setup.remove(root:, tools: %w[claude codex])
+
+      assert_equal({ "mcpServers" => { "other" => { "command" => "x" } } }, JSON.parse(root.join(".mcp.json").read))
+      assert_equal({ "permissions" => { "deny" => [ "Read(.env)" ], "allow" => [ "Bash(ls)" ] } }, JSON.parse(root.join(".claude/settings.json").read))
+      assert_equal "model = \"x\"\n\n[mcp_servers.other]\ncommand = \"y\"\n", root.join(".codex/config.toml").read
+    end
+  end
+
+  test "removing setup deletes only links into Nibble's skills, never a real folder or a link elsewhere" do
+    Dir.mktmpdir do |dir|
+      root = Pathname(dir)
+      root.join(".claude/skills/nibble-schema").mkpath
+      root.join(".claude/skills/nibble-schema/SKILL.md").write("ours")
+      root.join("elsewhere").mkpath
+      root.join(".claude/skills/mine").make_symlink(root.join("elsewhere"))
+      Nibble::Dev::Setup.run(root:, tools: %w[claude])
+
+      Nibble::Dev::Setup.remove(root:, tools: %w[claude])
+
+      assert_equal %w[mine nibble-schema], root.join(".claude/skills").children.map { |c| c.basename.to_s }.sort
+      assert_equal "ours", root.join(".claude/skills/nibble-schema/SKILL.md").read
+      assert_not root.join(".claude/skills/nibble-theming").symlink?
+    end
+  end
+
+  test "removing setup for one tool leaves the others" do
+    Dir.mktmpdir do |dir|
+      root = Pathname(dir)
+      Nibble::Dev::Setup.run(root:, tools: %w[codex cursor])
+
+      Nibble::Dev::Setup.remove(root:, tools: %w[cursor])
+
+      assert_not root.join(".cursor").exist?
+      assert root.join(".codex/config.toml").file?
+    end
+  end
+
+  test "the chooser asks again on a number outside 1 to 3 or a word, and takes 0 or none as no tools" do
+    assert_nil Nibble::Dev::Setup.parse_choice("4")
+    assert_nil Nibble::Dev::Setup.parse_choice("x")
+    assert_nil Nibble::Dev::Setup.parse_choice("1,4")
+    assert_equal [], Nibble::Dev::Setup.parse_choice("0")
+    assert_equal [], Nibble::Dev::Setup.parse_choice("none")
+    assert_equal %w[claude cursor], Nibble::Dev::Setup.parse_choice("1, 3")
+
+    require Rails.root.join("vendor/nibble/lib/commands/nibble/dev_command")
+    answers = %w[4 x 2]
+    command = NibbleDevCommand.new
+    command.define_singleton_method(:ask) { |*, **| answers.shift }
+    chosen = nil
+    $stdin.define_singleton_method(:tty?) { true }
+    out, = capture_io { chosen = command.choose_tools }
+    $stdin.singleton_class.send(:remove_method, :tty?)
+    assert_equal %w[codex], chosen
+    assert_empty answers
+    assert_equal 2, out.scan("Not understood").size
+  end
+
   test "the setup command writes nothing without a terminal and without --tools, and says how to pass them" do
     Dir.mktmpdir do |dir|
       out = Dir.chdir(Rails.root) do
         `HOME=#{dir} bin/rails nibble:dev:setup < /dev/null 2>&1`
       end
 
+      assert_not $?.success?
       assert_includes out, "--tools claude,codex,cursor"
       assert_not_includes out, "wrote"
       assert_empty Dir.children(dir)

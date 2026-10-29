@@ -41,11 +41,13 @@ class NibbleDevCommand < Rails::Command::Base
 
   desc "setup", "Connect the AI tools you choose in this folder to the developer tools, and keep their edits out of vendor/nibble"
   option :tools, desc: "Set up these tools without asking: claude, codex, cursor (comma-separated)"
+  option :remove, type: :boolean, default: false, desc: "Undo setup: remove what it wrote for these tools (every tool unless --tools)"
   def setup
     boot_application!
-    tools = options[:tools] ? options[:tools].split(",").map(&:strip).reject(&:empty?) : choose_tools
-    return if tools.nil?
+    tools = options[:tools] ? options[:tools].split(",").map(&:strip).reject(&:empty?) : options[:remove] ? Nibble::Dev::Setup::TOOLS : choose_tools
+    exit(1) if tools.nil?
     return puts("No tools chosen; nothing written.") if tools.empty?
+    return remove_setup(tools) if options[:remove]
 
     Nibble::Dev::Setup.run(tools:).each { |path| puts "  wrote #{path}" }
     puts "Claude Code may not edit vendor/nibble/." if tools.include?("claude")
@@ -56,6 +58,14 @@ class NibbleDevCommand < Rails::Command::Base
   end
 
   no_commands do
+    def remove_setup(tools)
+      removed = Nibble::Dev::Setup.remove(tools:)
+      removed.each { |line| puts "  #{line}" }
+      puts "Nothing to remove." if removed.empty?
+    rescue Nibble::Error => e
+      abort e.message
+    end
+
     LABELS = { "claude" => "Claude Code", "codex" => "Codex", "cursor" => "Cursor" }.freeze
 
     def choose_tools
@@ -71,8 +81,13 @@ class NibbleDevCommand < Rails::Command::Base
         puts "  #{i + 1}. #{LABELS[tool]}#{' (found on this computer)' if found.include?(tool)}"
       end
       default = found.map { |tool| Nibble::Dev::Setup::TOOLS.index(tool) + 1 }.join(",")
-      answer = ask("Numbers, separated by commas (none to skip)", default: default).to_s
-      answer.split(/[\s,]+/).reject(&:empty?).filter_map { |n| Nibble::Dev::Setup::TOOLS[n.to_i - 1] if n.to_i.between?(1, 3) }.uniq
+      loop do
+        answer = ask("Numbers from 1 to 3, separated by commas (0 or none to skip)", default: default).to_s
+        chosen = Nibble::Dev::Setup.parse_choice(answer)
+        return chosen if chosen
+
+        puts "Not understood: #{answer.inspect}. Use numbers from 1 to 3, or 0 for none."
+      end
     end
   end
 end
