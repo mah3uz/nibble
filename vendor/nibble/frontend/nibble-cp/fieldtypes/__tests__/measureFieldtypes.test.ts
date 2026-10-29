@@ -18,13 +18,22 @@ describe('decimal fieldtype', () => {
 })
 
 describe('range fieldtype', () => {
-  it('shows the value beside the slider, and the minimum when nothing is chosen yet', async () => {
-    const chosen = await render(RangeFieldtype, { value: 40, config: { append: '%' } })
+  it("shows the value beside the slider, and Not set rather than the minimum when there's none, so empty isn't read as min", async () => {
+    const chosen = await render(RangeFieldtype, { value: 40, config: { append: '%', display: 'Opacity' } })
     const empty = await render(RangeFieldtype, { value: null, config: { min: 10, max: 50 } })
 
     expect(chosen).toMatch(/<output[^>]*>\s*40%\s*<\/output>/)
-    expect(empty).toMatch(/<output[^>]*>\s*10\s*<\/output>/)
+    expect(empty).toMatch(/<output[^>]*>\s*Not set\s*<\/output>/)
     expect(chosen).toContain('role="slider"')
+    expect(chosen).toContain('aria-label="Opacity"')
+  })
+
+  it('can be cleared back to unset unless the field is required', async () => {
+    expect(await render(RangeFieldtype, { value: 40, config: { display: 'Opacity' } })).toContain(
+      'aria-label="Clear Opacity"',
+    )
+    expect(await render(RangeFieldtype, { value: 40, config: { required: true } })).not.toContain('Clear')
+    expect(await render(RangeFieldtype, { value: null, config: {} })).not.toContain('Clear')
   })
 })
 
