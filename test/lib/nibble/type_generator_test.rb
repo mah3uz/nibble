@@ -40,6 +40,43 @@ class Nibble::TypeGeneratorTest < ActiveSupport::TestCase
     end
   end
 
+  test "each form gets a values type keyed by field handle, so a theme's v-model is typed" do
+    assert_match "export type ContactFormValues = { email: string; topic: 'sales' | 'support' | ''; attachment: File[]; source: string }", generated
+    assert_match "export interface FormValues {\n  'contact': ContactFormValues\n}", generated
+  end
+
+  test "a view's form prop carries its values type, so useNibbleForm infers them" do
+    assert_match "contact: NibbleForm<ContactFormValues>", generated
+  end
+
+  test "form values follow what the browser holds for each field type" do
+    with_copied_theme do |types, _|
+      types.dirname.join("starter/schema/forms/survey.yml").write(
+        { "title" => "Survey", "fields" => [
+          { "handle" => "agree", "field" => { "type" => "toggle" } },
+          { "handle" => "tags", "field" => { "type" => "checkboxes", "options" => { "a" => "A", "it's" => "B" } } },
+          { "handle" => "plan", "field" => { "type" => "radio", "options" => %w[free paid] } },
+          { "handle" => "many", "field" => { "type" => "select", "multiple" => true, "options" => %w[x y] } },
+          { "handle" => "qty", "field" => { "type" => "integer" } },
+          { "handle" => "total", "field" => { "type" => "calculation", "formula" => "qty * 2" } }
+        ] }.to_yaml
+      )
+      Nibble.reset_schema!
+
+      assert_match "export type SurveyFormValues = { agree: boolean; tags: ('a' | 'it\\'s')[]; plan: 'free' | 'paid' | ''; many: ('x' | 'y')[]; qty: string | number | null; total: string | number | null }", generated
+    end
+  end
+
+  test "a site with no forms still gets valid form types" do
+    with_copied_theme do |types, _|
+      FileUtils.rm_rf(types.dirname.join("starter/schema/forms"))
+      FileUtils.rm_f(types.dirname.join("starter/views/pages/show.yml"))
+      Nibble.reset_schema!
+
+      assert_match "export interface FormValues {\n\n}", generated
+    end
+  end
+
   def with_copied_theme
     themes = Pathname(Dir.mktmpdir("nibble-types"))
     FileUtils.cp_r(Rails.root.join("test/nibble_themes/starter"), themes.join("starter"))

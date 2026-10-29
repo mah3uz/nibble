@@ -61,6 +61,7 @@ module Nibble
         inline = Schema::Item.new(kind: "blueprints", handle: item.handle, parent: item.key, path: item.path, layer: item.layer, data: item["blueprint"])
         blocks << interface("#{pascal(item.handle)}Globals", Blueprint.new(inline, schema: @schema).fields)
       end
+      blocks << form_values
       blocks << view_props if @config.theme_path
       blocks.join("\n")
     end
@@ -72,11 +73,41 @@ module Nibble
       "export interface #{name}#{" extends #{extends}" if extends} {\n#{members.map { |member| "  #{member}" }.join("\n")}\n}\n"
     end
 
+    def form_values
+      forms = Forms.all(schema: @schema)
+      types = forms.map do |form|
+        members = form.fields(schema: @schema).all.values.map { |field| "#{field.handle}: #{form_value_type(field)}" }
+        "export type #{form_values_name(form.handle)} = {#{members.map { |member| " #{member}" }.join(';')} }\n"
+      end
+      map = forms.map { |form| "  '#{form.handle}': #{form_values_name(form.handle)}" }
+      types << "export interface FormValues {\n#{map.join("\n")}\n}\n"
+      types.join("\n")
+    end
+
+    def form_values_name(handle) = "#{pascal(handle)}FormValues"
+
+    def form_value_type(field)
+      case field.type
+      when "toggle" then "boolean"
+      when "files" then "File[]"
+      when "checkboxes" then "(#{option_union(field)})[]"
+      when "select" then field.fieldtype.multiple? ? "(#{option_union(field)})[]" : "#{option_union(field)} | ''"
+      when "radio" then "#{option_union(field)} | ''"
+      when "integer", "calculation" then "string | number | null"
+      else "string"
+      end
+    end
+
+    def option_union(field)
+      choices = field.fieldtype.options.map { |option| "'#{option['value'].to_s.gsub(/['\\]/) { |char| "\\#{char}" }}'" }
+      choices.empty? ? "string" : choices.join(" | ")
+    end
+
     def view_props
       views = Views.sidecars(config: @config).map do |sidecar|
         props = sidecar.queries.map do |prop, raw|
           spec = Query::Spec.parse(raw, schema: @schema)
-          next "    #{prop}: NibbleForm" if spec.source.form?
+          next "    #{prop}: NibbleForm<#{form_values_name(spec.source.handle)}>" if spec.source.form?
 
           record = record_type(spec)
           record = picked(record, spec.fields) if spec.fields && !spec.source.search?

@@ -166,6 +166,28 @@ const demo = useNibbleForm(props.form)
 </template>
 ```
 
+A component written for one form can have its values typed. The generated `@site/types` has a type for each form,
+named from its handle, with a field for each of its handles, and a view's `form:` query is typed with it, so
+`useNibbleForm` knows the values without being told:
+
+```vue
+<script setup lang="ts">
+import { useNibbleForm } from '@nibble'
+import type { ViewProps } from '@site/types'
+
+const props = defineProps<{ form: ViewProps['pages/contact']['contact'] }>()
+const contact = useNibbleForm(props.form)
+// contact.values.topic is 'sales' | 'support' | ''
+</script>
+```
+
+Name the type yourself where the form comes from somewhere else: `useNibbleForm<ContactFormValues>(form)`, with
+`ContactFormValues` from `@site/types`. `FormValues['contact']` is the same type by form handle. A select or radio
+field is its option values, and `''` until something is chosen; checkboxes and a multiple select are arrays of them;
+a toggle is a `boolean`, a `files` field is `File[]`, and an `integer` or `calculation` field is a string, a number or
+`null`. A component that handles any form, taking a plain `NibbleForm`, gets values of `string`, `number`, `boolean`,
+arrays or `null` and narrows them as before.
+
 | From `useNibbleForm` | |
 |---|---|
 | `values` | a reactive map of field handle to value |
