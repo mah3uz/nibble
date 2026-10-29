@@ -165,7 +165,8 @@ Tidewater's pricing block is built end to end in
 ## 6. Error pages
 
 `views/errors/404.vue` renders every address that resolves to nothing, and `views/errors/500.vue` renders a page
-that failed — both inside the default layout, so they look like the rest of the site.
+that failed — both inside the default layout, so they look like the rest of the site. The 404 view may have a query
+sidecar, `views/errors/404.yml`, like any view.
 
 > [!TIP]
 > Every 404 is counted, most-requested first, on the Control Plane's **Missing pages** screen at `/cp/404s`, and

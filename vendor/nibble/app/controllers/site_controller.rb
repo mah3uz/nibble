@@ -52,7 +52,7 @@ class SiteController < Nibble::ApplicationController
     error_match = Nibble::Routing::Match.new(kind: :error, record: nil, taxonomy: nil, collection: nil, locale:, template: "errors/404", redirect: nil)
     (page, more) = Nibble::QueryCounter.count { Nibble::PageProps.new(error_match, request_path: request.path).build }
     @nibble_seo = page.seo
-    props = { "site" => page.props["site"], "seo" => @nibble_seo }
+    props = page.props
     count_queries(queries + more)
     render inertia: "theme/errors/404", props: props, status: :not_found
   end

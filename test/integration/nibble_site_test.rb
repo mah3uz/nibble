@@ -197,6 +197,22 @@ class NibbleSiteTest < ActionDispatch::IntegrationTest
     assert_equal [ 2, "https://elsewhere.test/" ], [ log.hits, log.referrer ]
   end
 
+  test "the 404 view receives the queries its sidecar declares" do
+    dir = Nibble.config.theme_path.join("views/errors")
+    created = !dir.exist?
+    sidecar = dir.join("404.yml")
+    FileUtils.mkdir_p(dir)
+    sidecar.write("recent:\n  from: entries:posts\n  limit: 2\n")
+    get "/no-such-page"
+
+    assert_response :not_found
+    assert_equal 2, page_props["props"]["recent"].size
+    assert page_props["props"]["seo"]
+  ensure
+    sidecar&.delete if sidecar&.exist?
+    dir.rmdir if created
+  end
+
   test "a render failure falls back to the theme's 500 page and is never cached" do
     Nibble::Presenter.define_singleton_method(:new) { |**| raise "view query exploded" }
     begin

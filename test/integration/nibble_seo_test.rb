@@ -36,6 +36,29 @@ class NibbleSeoTest < ActionDispatch::IntegrationTest
     assert_equal "noindex, nofollow", head.at_css('meta[name="robots"]')["content"]
   end
 
+  test "the server-rendered head replaces the layout's title, description, canonical and robots instead of doubling them" do
+    ssr = '<title>Grids</title><meta name="description" content="x"><link rel="canonical" href="https://example.test/blog/grids">'
+    original = InertiaRails::Helper.instance_method(:inertia_ssr_head)
+    InertiaRails::Helper.send(:define_method, :inertia_ssr_head) { ssr.html_safe }
+    begin
+      get "/blog/grids"
+    ensure
+      InertiaRails::Helper.send(:define_method, :inertia_ssr_head, original)
+    end
+
+    assert_equal 1, head.css("title").size
+    assert_equal 1, head.css('meta[name="description"]').size
+    assert_equal 1, head.css('link[rel="canonical"]').size
+    assert head.at_css('meta[property="og:title"]')
+  end
+
+  test "without a server-rendered head the layout still writes title, description and canonical for crawlers" do
+    get "/blog/grids"
+
+    assert_equal 1, head.css("title").size
+    assert_equal 1, head.css('link[rel="canonical"]').size
+  end
+
   test "the favicon chosen in the site settings is the one browsers are pointed at" do
     get "/blog/grids"
     assert_nil head.at_css('link[rel="icon"]'), "no favicon set, no link to a missing file"

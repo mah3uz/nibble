@@ -3,11 +3,14 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <% ssr_head = inertia_ssr_head %>
     <% if (seo = @nibble_seo) %>
+      <% if ssr_head.blank? %>
       <title inertia><%= seo["title"] %></title>
       <% if seo["description"] %><meta inertia="description" name="description" content="<%= seo["description"] %>"><% end %>
       <% if seo["canonical"] %><link inertia="canonical" rel="canonical" href="<%= seo["canonical"] %>"><% end %>
       <% if seo["robots"] %><meta inertia="robots" name="robots" content="<%= seo["robots"] %>"><% end %>
+      <% end %>
       <meta property="og:type" content="<%= seo["og_type"] %>">
       <meta property="og:title" content="<%= seo["title"] %>">
       <% if seo["description"] %><meta property="og:description" content="<%= seo["description"] %>"><% end %>
@@ -24,7 +27,7 @@
     <% if (theme_css = Nibble.theme_stylesheet) %><%= vite_stylesheet_tag theme_css %><% end %>
     <%= vite_client_tag %>
     <%= vite_typescript_tag "inertia" %>
-    <%= inertia_ssr_head %>
+    <%= ssr_head %>
     <%= Nibble::Integrations.head_html(@nibble_integrations) if @nibble_integrations %>
   </head>
   <body>
