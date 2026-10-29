@@ -12,6 +12,32 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's new
+
+- **Forms can be split into sections.** `sections: [{ display, instructions, fields }]` takes the place of `fields`,
+  and the theme gets the groups as `sections` beside the flat `fields`; crumbs draws each as a numbered fieldset.
+  Submissions, emails and API deliveries are unchanged.
+- **Form fields carry `prepend` and `append`** to the theme, so an amount can show `$` before its input.
+- **`offset` works with `paginate`,** so a featured post can sit above a paginated grid without repeating on page 2.
+- **Term queries can count entries.** `counts: posts` on a `terms:` query gives each term `entries_count`, in one
+  query.
+- **`nibble:check` names records not at their route,** per collection and taxonomy, and `nibble:prepare`, which every
+  deploy runs, moves them, including the terms of a taxonomy that has just been given a `route`.
+
+### What's fixed
+
+- **The page title, description, canonical link and robots tag appear once with SSR,** instead of twice until the page
+  hydrated.
+- **The 404 view gets its sidecar's data,** like any other view, instead of only `site` and `seo`.
+
+### Changed
+
+- **A form that asks for a CAPTCHA the site hasn't set up** gives the theme `captcha: { provider: null, site_key: null }`
+  instead of `null`, so it can be told apart from a form without one. Its submissions are still refused.
+
+  **Upgrade:** a theme that draws its own CAPTCHA widget whenever `form.captcha` is set should check
+  `form.captcha.provider` instead. `useNibbleForm` already does.
+
 ## 0.21.0 — 2026-10-29 14:51 +0600
 
 ### What's new
