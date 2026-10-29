@@ -12,6 +12,8 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+## 0.21.4 — 2026-10-29 21:30 +0600
+
 ### What's new
 
 - **A field can say what it expects.** `messages: { regex: "Enter an Australian mobile number" }` on a blueprint or
