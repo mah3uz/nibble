@@ -28,12 +28,20 @@ module Nibble
       private
 
       def format_locale
-        return Nibble.config.default_locale.code if Nibble.config.locales_declared?
+        browser = accepted_languages
+        return browser.first || "en" unless Nibble.config.locales_declared?
 
-        request.headers["Accept-Language"].to_s.split(",").filter_map { |part|
+        site = Nibble.config.default_locale.code
+        return site if site.include?("-")
+
+        browser.find { |tag| tag.split("-").first.casecmp?(site) && tag.include?("-") } || site
+      end
+
+      def accepted_languages
+        request.headers["Accept-Language"].to_s.split(",").filter_map do |part|
           tag = part.split(";").first.to_s.strip
           tag if tag.match?(/\A[A-Za-z0-9]+(-[A-Za-z0-9]+)*\z/)
-        }.first || "en"
+        end
       end
 
       def require_two_factor_enrolment

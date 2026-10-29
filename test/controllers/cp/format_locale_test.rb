@@ -22,6 +22,17 @@ class Nibble::Cp::FormatLocaleTest < ActionDispatch::IntegrationTest
     assert_equal "fr-CA", format_locale(accept_language: "de-DE,de;q=0.9")
   end
 
+  # A site's locale code is what its content is stored under, so a site can't add a region to it just to change how
+  # the Control Plane writes dates; the browser's region for the same language does that instead.
+  test "a site locale without a region takes the browser's region for the same language" do
+    Nibble.config = Nibble::Config.new({ "theme" => @config.theme, "locales" => [ { "code" => "en", "default" => true } ] },
+      themes_path: Rails.root.join("test/nibble_themes"))
+
+    assert_equal "en-AU", format_locale(accept_language: "en-AU,en;q=0.9")
+    assert_equal "en", format_locale(accept_language: "de-DE,de;q=0.9"), "another language's region doesn't apply"
+    assert_equal "en", format_locale
+  end
+
   test "a site with no locale uses the first tag of the request's Accept-Language" do
     Nibble.config = Nibble::Config.new({ "theme" => @config.theme }, themes_path: Rails.root.join("test/nibble_themes"))
 
