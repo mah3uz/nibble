@@ -64,9 +64,9 @@ module Nibble
           "title" => handle.humanize,
           "store" => true,
           "fields" => [
-            { "handle" => "name", "field" => { "type" => "text", "display" => "Name", "validate" => [ "required" ] } },
-            { "handle" => "email", "field" => { "type" => "text", "display" => "Email", "validate" => [ "required", "email" ] } },
-            { "handle" => "message", "field" => { "type" => "textarea", "display" => "Message", "validate" => [ "required" ] } }
+            { "handle" => "name", "field" => { "type" => "text", "display" => "Name", "required" => true } },
+            { "handle" => "email", "field" => { "type" => "text", "display" => "Email", "input_type" => "email", "required" => true } },
+            { "handle" => "message", "field" => { "type" => "textarea", "display" => "Message", "required" => true } }
           ]
         })
       end

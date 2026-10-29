@@ -20,6 +20,14 @@ class Nibble::GenerateTest < ActiveSupport::TestCase
     assert_equal %w[blueprints collections fieldsets forms globals navigation taxonomies], items.map(&:kind).uniq.sort
   end
 
+  test "a generated form marks its fields required the way the docs write it" do
+    Nibble::Generate.form("enquiry", root: @root)
+
+    fields = yaml("site/schema/forms/enquiry.yml")["fields"].to_h { |item| [ item["handle"], item["field"] ] }
+    assert_equal [ true, true, true ], fields.values.map { |field| field["required"] }
+    assert fields.values.none? { |field| field.key?("validate") }
+  end
+
   test "a collection arrives with the blueprint it points at, or the schema would not load" do
     Nibble::Generate.collection("guides", root: @root)
 
