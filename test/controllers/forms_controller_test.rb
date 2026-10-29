@@ -53,6 +53,23 @@ class FormsControllerTest < ActionDispatch::IntegrationTest
     assert_empty Submission.all
   end
 
+  test "a required consent box left unticked is refused, so no submission arrives without the consent it asks for" do
+    path = @nibble_themes.join("records", "schema", "forms", "consent.yml")
+    path.write({ "title" => "Consent", "fields" => [ { "handle" => "agree", "field" => { "type" => "toggle", "required" => true } } ] }.to_yaml)
+    Nibble.reset_schema!
+
+    post "/forms/consent", params: { agree: "false" }, headers: { "Accept" => "application/json" }
+    assert_response :unprocessable_entity
+    assert_equal [ "The Agree field is required." ], response.parsed_body["errors"]["agree"]
+    submit :consent, { agree: false }
+    assert_response :unprocessable_entity
+    assert_empty Submission.all
+
+    submit :consent, { agree: true }
+    assert_response :created
+    assert_equal({ "agree" => true }, Submission.sole.data)
+  end
+
   test "a field's own message is what a visitor sees when its rule fails" do
     submit :callback, { phone: "12345" }
 

@@ -76,6 +76,18 @@ class Nibble::ValidatorTest < ActiveSupport::TestCase
     assert_empty errors(fields(field("total", required: true, visibility: "computed")), {})
   end
 
+  # An unticked box is a value, so without this a required consent box could never be refused.
+  test "a required toggle must be on, while false still fills a required field of another type" do
+    consent = fields({ handle: "consent", field: { type: "toggle", required: true } })
+
+    [ false, "false", "0", 0, nil ].each do |off|
+      assert_equal [ "The Consent field is required." ], errors(consent, "consent" => off)["consent"], "#{off.inspect} is off"
+    end
+    [ true, "true", "1", "on" ].each { |on| assert_empty errors(consent, "consent" => on), "#{on.inspect} is on" }
+    assert_empty errors(fields({ handle: "consent", field: { type: "toggle" } }), "consent" => false)
+    assert_empty errors(fields(field("answer", required: true)), "answer" => false)
+  end
+
   test "required_if compares against another field, including booleans" do
     video = fields(field("has_video"), field("video_url", validate: [ "required_if:has_video,true", "url" ]))
 

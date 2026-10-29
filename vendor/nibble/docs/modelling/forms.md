@@ -47,6 +47,22 @@ success:
 Fields are declared exactly as in a [blueprint](blueprints.md), but a public form may only use `text`, `textarea`,
 `integer`, `toggle`, `select`, `radio`, `checkboxes`, `date` and `files`. `nibble:check` refuses anything else.
 
+A consent box is a `required` toggle. A submission with it unticked is refused with "The Consent field is required.",
+or the field's `messages.required`:
+
+```yaml
+  - handle: consent
+    field:
+      type: toggle
+      display: Consent
+      inline_label: I agree to be contacted about my enquiry
+      required: true
+      messages:
+        required: Please tick the box so we can reply
+```
+
+`validate: [accepted]` refuses an unticked box too, saying "The Consent field must be accepted."
+
 A field's `messages` set the text a visitor sees when one of its rules fails, per locale if the site has several; see
 [Options every field takes](blueprints.md#2-options-every-field-takes).
 

@@ -72,7 +72,7 @@ terms. The collection lists which blueprints it allows; the first is the default
 |---|---|
 | `display` | the label; defaults to the handle, humanised |
 | `instructions` | help text, shown below the label — `instructions_position: below` moves it under the input |
-| `required` | a value is needed to save |
+| `required` | a value is needed to save; a `toggle` must be switched on |
 | `validate` | extra rules, such as `[max:200]` or `["required_with:{this}.button_label"]` |
 | `messages` | what to say when a rule fails, keyed by rule name — see below |
 | `default` | the value a new entry, term, global or row starts with; entries that already exist keep what they have, and [`set_default`](changing-schema.md#42-set_default) fills them |
@@ -82,6 +82,12 @@ terms. The collection lists which blueprints it allows; the first is the default
 | `read_only` | shown but not editable |
 | `visibility` | `visible`, `read_only`, `hidden` or `computed` |
 | `api` | `false` leaves the field out of the generated TypeScript types — the value is still sent to pages and the API |
+
+A `required` toggle has to be switched on: an entry can't be published, and a term or global set can't be saved, while
+it is off. A toggle that may be left off is not required. The `accepted` rule (`validate: [accepted]`) asks the same of
+any field, taking `true`, `1`, `"1"`, `"yes"`, `"on"` and `"true"`, and says "The Terms field must be accepted."
+`nibble:check` warns, per collection, taxonomy and global set, how many records hold a required toggle that is off, so
+they can be switched on, or the field made optional, before someone next saves them.
 
 A failed rule says "The Phone field format is invalid." unless the field gives its own wording. `messages` is keyed by
 the name of a rule the field has (an `integer` field with a `step` also has `step`, which a form enforces), and each value is a string or a map of locale code to string:

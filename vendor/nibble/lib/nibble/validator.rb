@@ -4,8 +4,8 @@ module Nibble
       def valid? = errors.empty?
     end
 
-    Entry = Data.define(:rules, :attribute, :messages) do
-      def initialize(rules:, attribute:, messages: {}) = super
+    Entry = Data.define(:rules, :attribute, :messages, :toggle) do
+      def initialize(rules:, attribute:, messages: {}, toggle: false) = super
     end
 
     ACCEPTED = [ "yes", "on", "1", 1, true, "true" ].freeze
@@ -21,7 +21,7 @@ module Nibble
 
         list = [ *("required" if field.get("required") == true), *field.validation_rules, *Validation.explode(field.fieldtype.rules) ]
         parsed = list.uniq.map { |rule| Validation.parse(rule, prefix:, replacements:) }
-        rules[path] = Entry.new(rules: parsed, attribute: field.display, messages: field.get("messages", {}))
+        rules[path] = Entry.new(rules: parsed, attribute: field.display, messages: field.get("messages", {}), toggle: field.type == "toggle")
         field.with_value(values[field.handle]).fieldtype.extra_rules(root_values:, prefix: "#{path}.", replacements:).each do |nested_path, entry|
           rules[nested_path] = entry
         end
@@ -58,7 +58,7 @@ module Nibble
         next if @skip_required && implicit?(rule.name)
         next if !implicit?(rule.name) && blank_input?(value)
 
-        message = run(rule, value, root, names, entry.attribute, entry.messages) or next
+        message = run(rule, value, root, names, entry.attribute, entry.messages, toggle: entry.toggle) or next
         messages << message
         break if implicit?(rule.name)
       end
@@ -67,23 +67,24 @@ module Nibble
 
     def implicit?(name) = Validation::IMPLICIT.include?(name) || Validation.custom_rule(name)&.dig(:implicit)
 
-    def run(rule, value, root, names, attribute, messages = {})
+    def run(rule, value, root, names, attribute, messages = {}, toggle: false)
       params = rule.params
+      missing = toggle ? Fieldtypes::Toggle::OFF.include?(value) : blank?(value)
       message = ->(key, **extra) { Validation.message(key, attribute:, override: messages[key.split(".").first], locale: @locale, **extra) }
       sized = ->(key, **extra) { message.("#{key}.#{size_type(value, names)}", **extra) }
 
       case rule.name
-      when "required" then message.("required") if blank?(value)
+      when "required" then message.("required") if missing
       when "required_if"
         other = params.first
-        message.("required_if", other: humanize(other), value: params.drop(1).join(", ")) if matches?(lookup(root, other).last, params.drop(1)) && blank?(value)
+        message.("required_if", other: humanize(other), value: params.drop(1).join(", ")) if matches?(lookup(root, other).last, params.drop(1)) && missing
       when "required_unless"
         other = params.first
-        message.("required_unless", other: humanize(other), values: params.drop(1).join(", ")) if !matches?(lookup(root, other).last, params.drop(1)) && blank?(value)
+        message.("required_unless", other: humanize(other), values: params.drop(1).join(", ")) if !matches?(lookup(root, other).last, params.drop(1)) && missing
       when "required_with"
-        message.("required_with", values: params.map { |p| humanize(p) }.join(" / ")) if params.any? { |p| !blank?(lookup(root, p).last) } && blank?(value)
+        message.("required_with", values: params.map { |p| humanize(p) }.join(" / ")) if params.any? { |p| !blank?(lookup(root, p).last) } && missing
       when "required_without"
-        message.("required_without", values: params.map { |p| humanize(p) }.join(" / ")) if params.any? { |p| blank?(lookup(root, p).last) } && blank?(value)
+        message.("required_without", values: params.map { |p| humanize(p) }.join(" / ")) if params.any? { |p| blank?(lookup(root, p).last) } && missing
       when "accepted" then message.("accepted") unless ACCEPTED.include?(value)
       when "string" then message.("string") unless value.is_a?(String)
       when "numeric" then message.("numeric") unless numeric?(value)

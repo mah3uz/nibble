@@ -42,8 +42,7 @@ module Nibble
         end
       end
       schema.globals.each do |item|
-        inline = Schema::Item.new(kind: "blueprints", handle: item.handle, parent: item.key, path: item.path, layer: item.layer, data: item["blueprint"])
-        capture(item.path) { check_fields(Blueprint.new(inline, schema:).fields, item.path) }
+        capture(item.path) { check_fields(global_blueprint(item, schema).fields, item.path) }
       end
       schema.forms.each do |item|
         capture(item.path) do
@@ -125,6 +124,7 @@ module Nibble
       capture("site/schema/migrations") { ContentMigrations.pending } if @config.equal?(Nibble.config)
       check_drift(schema) if @config.equal?(Nibble.config)
       check_uris(schema) if @config.equal?(Nibble.config)
+      check_required_toggles(schema) if @config.equal?(Nibble.config)
     end
 
     def database_behind? = ActiveRecord::Base.connection_pool.migration_context.needs_migration?
@@ -160,6 +160,47 @@ module Nibble
         end
     rescue ActiveRecord::StatementInvalid
       nil
+    end
+
+    def check_required_toggles(schema)
+      schema.collections.each do |parent|
+        schema.blueprints_for(parent).each do |item|
+          records = Records::Entry.kept.where(collection: parent.handle, blueprint: item.handle)
+          warn_required_toggles_off("collection '#{parent.handle}'", records, "entry", "published") { Blueprint.new(item, schema:) }
+        end
+      end
+      schema.taxonomies.each do |parent|
+        schema.blueprints_for(parent).each do |item|
+          records = Records::Term.kept.where(taxonomy: parent.handle, blueprint: item.handle)
+          warn_required_toggles_off("taxonomy '#{parent.handle}'", records, "term", "saved") { Blueprint.new(item, schema:) }
+        end
+      end
+      schema.globals.each do |item|
+        warn_required_toggles_off("global '#{item.handle}'", Records::GlobalSet.where(handle: item.handle), "record", "saved") { global_blueprint(item, schema) }
+      end
+    rescue ActiveRecord::StatementInvalid
+      nil
+    end
+
+    def warn_required_toggles_off(source, records, noun, action)
+      handles = yield.fields.all.values.select { |field| field.type == "toggle" && field.required? }.map(&:handle)
+      return if handles.empty?
+
+      off = Hash.new(0)
+      records.select(:id, :data).find_each do |record|
+        handles.each { |handle| off[handle] += 1 if Fieldtypes::Toggle::OFF.include?(record.data.to_h[handle]) }
+      end
+      off.each do |handle, count|
+        @warnings << Problem.new(source:, level: :warning,
+          message: "#{count} #{noun.pluralize(count)} #{count == 1 ? 'has' : 'have'} the required toggle '#{handle}' switched off, so " \
+                   "#{count == 1 ? 'it' : 'they'} can't be #{action} until it is switched on or the field is made optional")
+      end
+    rescue SchemaError, Error
+      nil
+    end
+
+    def global_blueprint(item, schema)
+      Blueprint.new(Schema::Item.new(kind: "blueprints", handle: item.handle, parent: item.key, path: item.path, layer: item.layer, data: item["blueprint"]), schema:)
     end
 
     def check_outbound

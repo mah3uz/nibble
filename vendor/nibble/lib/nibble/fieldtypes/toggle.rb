@@ -1,6 +1,8 @@
 module Nibble
   module Fieldtypes
     class Toggle < Fieldtype
+      OFF = [ nil, false, 0, "0", "", "false" ].freeze
+
       self.categories = %w[controls]
       self.contract_samples = [ true, false ]
       self.keywords = %w[checkbox bool boolean]
@@ -20,7 +22,7 @@ module Nibble
 
       private
 
-      def truthy?(value) = ![ nil, false, 0, "0", "", "false" ].include?(value)
+      def truthy?(value) = !OFF.include?(value)
     end
   end
 end
