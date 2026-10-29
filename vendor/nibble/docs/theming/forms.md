@@ -3,7 +3,7 @@ id: theming-forms
 title: Forms in your theme
 description: Draw a form from an empty theme to a working, accessible one, field by field, then look up every key of the
   form definition, every field setting and everything useNibbleForm returns.
-order: 6
+order: 5
 ---
 
 # Forms in your theme
