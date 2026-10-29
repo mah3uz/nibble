@@ -8,6 +8,7 @@ import PageHeader from '@/components/cp/page/PageHeader.vue'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { useConfirm } from '@/lib/confirm'
+import { formatDateTime } from '@/lib/format'
 import { registerCoreFieldtypes } from '@nibble-cp/fieldtypes/core'
 import { registerFieldtype } from '@nibble-cp/fieldtypes/registry'
 import PublishContainer from '@nibble-cp/publish/PublishContainer.vue'
@@ -68,7 +69,7 @@ const spamNote = computed(() => {
 })
 const notifications = computed(() => props.submission.deliveries.filter((item) => item.key.startsWith('notify.')))
 const deliveries = computed(() => props.submission.deliveries.filter((item) => !item.key.startsWith('notify.')))
-const date = (value: string) => new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+const date = formatDateTime
 
 function retry(delivery: Delivery) {
   router.post(`${base.value}/deliveries/${encodeURIComponent(delivery.key)}/retry`, {}, { preserveScroll: true })
@@ -136,7 +137,7 @@ async function destroy() {
       <template #meta><StatusCell :value="submission.status" /></template>
       <template #actions>
         <Button v-if="can_edit" variant="outline" @click="setHandled(!submission.handled)">{{
-          submission.handled ? 'Mark new' : 'Mark handled'
+          submission.handled ? 'Mark not handled' : 'Mark handled'
         }}</Button>
         <Button v-if="can_edit" variant="outline" @click="markUnread">Mark unread</Button>
         <Button v-if="can_mark_not_spam && submission.values_kept" variant="outline" @click="markNotSpam"

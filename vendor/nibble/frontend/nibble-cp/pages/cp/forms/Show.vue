@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { formatDateTime } from '@/lib/format'
 
 const props = defineProps<{
   form: { handle: string; title: string; store: boolean; spam: number; can_export: boolean }
@@ -91,9 +92,7 @@ function open(row: ListingRow) {
 
     <CpListing :listing="listing" :exportable="false" @row-click="open">
       <template #cell-created_at="{ row, value }">
-        <span :class="row.unread ? 'font-semibold' : ''">{{
-          new Date(value as string).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
-        }}</span>
+        <span :class="row.unread ? 'font-semibold' : ''">{{ formatDateTime(value as string) }}</span>
         <span v-if="row.handled" class="ms-2 text-xs text-gray-500">Handled</span>
       </template>
     </CpListing>

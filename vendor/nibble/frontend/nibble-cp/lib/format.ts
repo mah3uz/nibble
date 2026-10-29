@@ -32,6 +32,10 @@ export function humanizedDate(iso: string): string {
   return `${MONTHS[month - 1]} ${ordinal(day)}, ${year}`
 }
 
+export function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' })
+}
+
 // Upper-case the first character only
 export function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1)
