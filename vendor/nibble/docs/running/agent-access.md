@@ -31,6 +31,9 @@ What an app may do is the **smallest** of three things, checked on every request
 3. **What this page allows.** Turn writing to navigation off here and every app loses it on its next request, without
    anyone reconnecting.
 
+A developer connects Claude Code, Codex and Cursor in one step with `nibble connect <site>`; see
+[The nibble command](cli.md#6-ai-apps).
+
 Removing someone's role, or their account, ends their apps' access at once.
 
 ## 2. Turning it on

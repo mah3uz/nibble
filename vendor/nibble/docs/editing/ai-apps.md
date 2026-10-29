@@ -27,8 +27,8 @@ Open **Connected apps** from your account menu and copy the address it shows for
 | Claude (web, desktop) | Settings → Connectors → Add custom connector |
 | ChatGPT | its connector settings, with developer mode on |
 
-Other apps, such as Claude Code, Codex and Cursor, are set up from a terminal. Ask your developer, or see
-[The nibble command](../running/cli.md).
+Other apps, such as Claude Code, Codex and Cursor, are set up from a terminal with `nibble connect <your site>`. Ask
+your developer, or see [The nibble command](../running/cli.md).
 
 The app sends you to the site to sign in, then asks what it may do:
 

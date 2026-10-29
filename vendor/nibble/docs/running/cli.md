@@ -108,6 +108,22 @@ or with `--json`, every command prints `{"ok": true, "data": …}` or `{"ok": fa
 ## 6. AI apps
 
 ```sh
+nibble connect tidewater.example            # sign in if needed, then set up every AI app found
+nibble connect tidewater.example --client claude-code,cursor
+nibble connect tidewater.example --project  # into the current project only
+nibble disconnect tidewater.example         # remove what connect added
+```
+
+`connect` signs in if you aren't already, adds the site's MCP server to each AI app it finds (Claude Code, Codex and
+Cursor), and installs the site's skill where the app supports skills. `--client` limits it to the apps you name.
+Run it again to refresh what it installed.
+
+By default it installs into your own folders, so the skill loads in every project you open. With `--project` it
+installs into the current project, so the skill loads only there. `disconnect` takes the same flags.
+
+For finer control, each part has its own command:
+
+```sh
 nibble mcp install --client claude-code     # or codex, cursor; claude and chatgpt show where to paste the address
 nibble skill install --client claude        # the site's guide, as a skill Claude or Codex loads when it's relevant
 nibble skill sync                           # refresh installed guides after the site's schema or notes change
