@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { router } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import { Button } from '@/components/ui/button'
@@ -26,7 +27,7 @@ const name = ref('')
 const busy = ref(false)
 const error = ref<string | null>(null)
 
-const date = (value: string) => new Date(value).toLocaleDateString(undefined, { dateStyle: 'medium' })
+const date = (value: string) => new Date(value).toLocaleDateString(formatLocale(), { dateStyle: 'medium' })
 
 async function add() {
   busy.value = true

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { computed, ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
@@ -56,7 +57,7 @@ function loadMore() {
 const command = (release: Release) => `bin/rails nibble:upgrade ${release.version}`
 
 const released = (value: string | null) =>
-  value ? new Date(value).toLocaleDateString(undefined, { dateStyle: 'medium' }) : null
+  value ? new Date(value).toLocaleDateString(formatLocale(), { dateStyle: 'medium' }) : null
 
 function setChecking(on: boolean) {
   router.patch('/cp/updates', { checking: on }, { preserveScroll: true })

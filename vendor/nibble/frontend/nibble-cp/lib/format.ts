@@ -1,8 +1,20 @@
-// Explicit locale so server and browser render the same text.
+// The locale comes from the server (the cp.format_locale shared prop) so SSR and the browser render the same text.
+let locale = 'en'
+
+export function setFormatLocale(tag: unknown) {
+  try {
+    locale = typeof tag === 'string' && tag ? Intl.getCanonicalLocales(tag)[0] : 'en'
+  } catch {
+    locale = 'en'
+  }
+}
+
+export const formatLocale = () => locale
+
 export function formatNumber(num: number): string {
   if (num >= 1e9) return (num / 1e9).toFixed(1) + 'B+'
   if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M+'
-  return num.toLocaleString('en-AU')
+  return num.toLocaleString(locale)
 }
 
 const MONTHS = [
@@ -33,7 +45,7 @@ export function humanizedDate(iso: string): string {
 }
 
 export function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' })
+  return new Date(iso).toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' })
 }
 
 // Upper-case the first character only
@@ -57,7 +69,7 @@ const RELATIVE_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
 // "5 minutes ago", "in 2 days". Browser-only: the result depends on the current time.
 export function timeAgo(iso: string, now: number = Date.now()): string {
   const seconds = Math.round((Date.parse(iso) - now) / 1000)
-  const format = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
+  const format = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' })
   for (const [unit, size] of RELATIVE_UNITS) {
     if (Math.abs(seconds) >= size) return format.format(Math.round(seconds / size), unit)
   }

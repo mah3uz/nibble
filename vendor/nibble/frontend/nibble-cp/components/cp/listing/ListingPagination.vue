@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { computed } from 'vue'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
 import { Button } from '@/components/ui/button'
@@ -34,7 +35,8 @@ const perPageUseful = computed(() => props.total > Math.min(...props.perPageOpti
   <div class="flex items-center gap-2 px-4.5 pt-2.5 pb-1.5 antialiased md:pt-3">
     <div class="flex flex-1 items-center">
       <span v-if="total" class="text-sm text-gray-600 tabular-nums dark:text-gray-500"
-        >{{ from.toLocaleString() }}–{{ to.toLocaleString() }} of {{ total.toLocaleString() }}</span
+        >{{ from.toLocaleString(formatLocale()) }}–{{ to.toLocaleString(formatLocale()) }} of
+        {{ total.toLocaleString(formatLocale()) }}</span
       >
     </div>
     <nav v-if="pages > 1" aria-label="Pagination" class="flex items-center gap-1">

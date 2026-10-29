@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useBreadcrumbs } from '@/lib/breadcrumbs'
-import { timeAgo } from '@/lib/format'
+import { formatLocale, timeAgo } from '@/lib/format'
 
 const props = defineProps<{ listing: ListingProps; statuses: { value: number; label: string }[] }>()
 
@@ -106,13 +106,15 @@ useBreadcrumbs([{ label: 'Redirects' }])
         <Badge variant="secondary">{{ SOURCES[value as string] ?? value }}</Badge>
       </template>
       <template #cell-hits="{ value }">
-        <span class="text-gray-600 tabular-nums dark:text-gray-400">{{ (value as number).toLocaleString() }}</span>
+        <span class="text-gray-600 tabular-nums dark:text-gray-400">{{
+          (value as number).toLocaleString(formatLocale())
+        }}</span>
       </template>
       <template #cell-last_hit_at="{ value }">
         <time
           v-if="value && mounted"
           :datetime="value as string"
-          :title="new Date(value as string).toLocaleString()"
+          :title="new Date(value as string).toLocaleString(formatLocale())"
           class="whitespace-nowrap text-gray-600 dark:text-gray-400"
           >{{ timeAgo(value as string) }}</time
         >

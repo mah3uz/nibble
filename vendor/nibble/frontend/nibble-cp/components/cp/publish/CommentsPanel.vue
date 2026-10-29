@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { onMounted, ref } from 'vue'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -50,7 +51,7 @@ async function remove(id: number) {
   if (payload) comments.value = payload.comments
 }
 
-const when = (iso: string) => new Date(iso).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' })
+const when = (iso: string) => new Date(iso).toLocaleString(formatLocale(), { dateStyle: 'medium', timeStyle: 'short' })
 
 onMounted(load)
 </script>

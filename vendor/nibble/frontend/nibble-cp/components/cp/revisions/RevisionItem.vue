@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { ChevronDown, ChevronRight, ExternalLink, RotateCcw } from '@lucide/vue'
 import { ref } from 'vue'
 import { Badge } from '@/components/ui/badge'
@@ -19,7 +20,7 @@ export type Version = {
 const props = defineProps<{ version: Version; previewUrl: string }>()
 const emit = defineEmits<{ restore: [] }>()
 
-const when = (iso: string) => new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+const when = (iso: string) => new Date(iso).toLocaleTimeString(formatLocale(), { hour: 'numeric', minute: '2-digit' })
 const fields = () => Object.values(props.version.changes).map((change) => change.label)
 const diffs = () =>
   Object.entries(props.version.changes).map(([field, change]) => ({

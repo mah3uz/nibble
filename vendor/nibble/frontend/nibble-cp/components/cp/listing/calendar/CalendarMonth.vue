@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { Link } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
@@ -68,7 +69,7 @@ const DOT: Record<string, string> = {
                 selected === day.key ? 'bg-blue-600 text-white' : '',
                 day.today ? 'text-ui-accent-text' : '',
               ]"
-              :aria-label="`Entries on ${new Date(`${day.key}T00:00`).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}`"
+              :aria-label="`Entries on ${new Date(`${day.key}T00:00`).toLocaleDateString(formatLocale(), { day: 'numeric', month: 'long' })}`"
               @click.stop="$emit('select', day.key)"
             >
               {{ day.number }}

@@ -1,3 +1,4 @@
+import { formatLocale } from '@/lib/format'
 export type Point = [number, number]
 
 // Monotone cubic interpolation keeps the curve from dipping below zero between points.
@@ -34,6 +35,6 @@ export function dayLabels(
   options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' },
 ): string[] {
   const [y, m, d] = start.split('-').map(Number)
-  const format = new Intl.DateTimeFormat('en-AU', options)
+  const format = new Intl.DateTimeFormat(formatLocale(), options)
   return Array.from({ length: count }, (_, i) => format.format(new Date(y, m - 1, d + i)))
 }

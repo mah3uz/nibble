@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { AlertTriangle, History } from '@lucide/vue'
 import { computed } from 'vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -9,7 +10,7 @@ const props = defineProps<{ backup: LocalBackup; savedSince: boolean }>()
 const emit = defineEmits<{ restore: []; discard: [] }>()
 
 const when = computed(() =>
-  new Date(props.backup.savedAt).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' }),
+  new Date(props.backup.savedAt).toLocaleString(formatLocale(), { dateStyle: 'medium', timeStyle: 'short' }),
 )
 </script>
 

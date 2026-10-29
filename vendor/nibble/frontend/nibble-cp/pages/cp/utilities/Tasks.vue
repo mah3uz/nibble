@@ -10,7 +10,7 @@ import PageHeader from '@/components/cp/page/PageHeader.vue'
 import TaskHistory, { type Run } from '@/components/cp/tasks/TaskHistory.vue'
 import { Button } from '@/components/ui/button'
 import { useBreadcrumbs } from '@/lib/breadcrumbs'
-import { timeAgo } from '@/lib/format'
+import { formatLocale, timeAgo } from '@/lib/format'
 
 type Task = {
   handle: string
@@ -31,7 +31,7 @@ const DOCS = 'https://nibble.ink/docs/modelling/scheduled-tasks'
 const history = ref<Task | null>(null)
 
 const when = (iso: string) =>
-  new Date(iso).toLocaleString('en-AU', {
+  new Date(iso).toLocaleString(formatLocale(), {
     timeZone: props.time_zone,
     weekday: 'short',
     day: 'numeric',

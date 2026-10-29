@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import StatusCell from '@/components/cp/listing/cells/StatusCell.vue'
@@ -43,7 +44,7 @@ watch(
 const groups = computed(() => {
   const byDay = new Map<string, Run[]>()
   for (const run of runs.value ?? []) {
-    const day = new Date(run.started_at ?? run.scheduled_for).toLocaleDateString('en-AU', {
+    const day = new Date(run.started_at ?? run.scheduled_for).toLocaleDateString(formatLocale(), {
       timeZone: props.timeZone,
       weekday: 'long',
       day: 'numeric',
@@ -75,7 +76,7 @@ function lists(details: Record<string, unknown>) {
 }
 
 const time = (iso: string) =>
-  new Date(iso).toLocaleTimeString('en-AU', { timeZone: props.timeZone, hour: 'numeric', minute: '2-digit' })
+  new Date(iso).toLocaleTimeString(formatLocale(), { timeZone: props.timeZone, hour: 'numeric', minute: '2-digit' })
 
 function took(run: Run) {
   if (!run.started_at || !run.finished_at) return null

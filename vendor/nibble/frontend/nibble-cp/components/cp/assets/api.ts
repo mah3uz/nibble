@@ -1,3 +1,4 @@
+import { formatLocale } from '@/lib/format'
 import type { ListingProps, ListingRow } from '@/components/cp/listing/types'
 import type { PublishBlueprint } from '@/components/cp/publish/context'
 import { humanize } from '@/lib/utils'
@@ -131,5 +132,5 @@ export function relativeTime(iso: string) {
     ['minute', 60],
   ]
   const [unit, size] = units.find(([, length]) => Math.abs(seconds) >= length) ?? ['second', 1]
-  return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(Math.round(seconds / size), unit)
+  return new Intl.RelativeTimeFormat(formatLocale(), { numeric: 'auto' }).format(Math.round(seconds / size), unit)
 }

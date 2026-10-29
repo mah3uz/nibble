@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { router, useForm } from '@inertiajs/vue3'
 import { ref, watch } from 'vue'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
@@ -52,7 +53,7 @@ watch(showIssued, (open) => {
 
 const form = useForm({ name: '', scopes: ['read'] as string[], expires_in: '90' })
 
-const date = (value: string) => new Date(value).toLocaleDateString(undefined, { dateStyle: 'medium' })
+const date = (value: string) => new Date(value).toLocaleDateString(formatLocale(), { dateStyle: 'medium' })
 
 const copyToken = () => navigator.clipboard.writeText(props.issued?.token ?? '')
 

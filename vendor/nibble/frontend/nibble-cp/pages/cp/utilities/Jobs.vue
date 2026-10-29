@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { router } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import CpPanel from '@/components/cp/page/CpPanel.vue'
@@ -38,7 +39,8 @@ defineProps<{
 const confirm = useConfirm()
 const expanded = ref<number | null>(null)
 
-const date = (value: string) => new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+const date = (value: string) =>
+  new Date(value).toLocaleString(formatLocale(), { dateStyle: 'medium', timeStyle: 'short' })
 
 const retry = (job: Failed) => router.post(`/cp/utilities/jobs/${job.id}/retry`, {}, { preserveScroll: true })
 

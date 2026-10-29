@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3'
 import { computed } from 'vue'
-import { timeAgo } from '@/lib/format'
+import { formatLocale, timeAgo } from '@/lib/format'
 import type { MissingPagesData } from './types'
 
 const props = defineProps<{ data: MissingPagesData }>()
@@ -22,7 +22,7 @@ const top = computed(() => Math.max(1, ...props.data.items.map((item) => item.hi
             <span class="block h-full rounded-full bg-rose-400" :style="{ width: `${(item.hits / top) * 100}%` }" />
           </span>
           <span class="shrink-0 text-xs text-gray-500 tabular-nums"
-            >{{ item.hits.toLocaleString() }} hits · {{ timeAgo(item.last_seen_at) }}</span
+            >{{ item.hits.toLocaleString(formatLocale()) }} hits · {{ timeAgo(item.last_seen_at) }}</span
           >
         </div>
       </div>

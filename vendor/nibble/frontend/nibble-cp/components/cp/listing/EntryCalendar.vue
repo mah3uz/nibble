@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import CpPanel from '@/components/cp/page/CpPanel.vue'
 import { Link, router } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
@@ -25,7 +26,7 @@ const cursor = computed(() => parseDay(props.calendar.date))
 
 const MONTHS = Array.from({ length: 12 }, (_, index) => ({
   value: index + 1,
-  label: new Date(Date.UTC(2024, index, 1)).toLocaleDateString('en', { month: 'long', timeZone: 'UTC' }),
+  label: new Date(Date.UTC(2024, index, 1)).toLocaleDateString(formatLocale(), { month: 'long', timeZone: 'UTC' }),
 }))
 
 const YEARS = Array.from({ length: 21 }, (_, index) => new Date().getFullYear() - 10 + index)
@@ -33,7 +34,7 @@ const YEARS = Array.from({ length: 21 }, (_, index) => new Date().getFullYear() 
 const selectedEntries = computed(() => (selected.value ? (props.calendar.days[selected.value] ?? []) : []))
 const selectedLabel = computed(() =>
   selected.value
-    ? parseDay(selected.value).toLocaleDateString('en', {
+    ? parseDay(selected.value).toLocaleDateString(formatLocale(), {
         weekday: 'long',
         year: 'numeric',
         month: 'long',

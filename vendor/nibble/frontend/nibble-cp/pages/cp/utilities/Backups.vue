@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import CpPanel from '@/components/cp/page/CpPanel.vue'
 import PanelFact from '@/components/cp/page/PanelFact.vue'
 import PageHeader from '@/components/cp/page/PageHeader.vue'
@@ -8,7 +9,8 @@ defineProps<{
   backups: { configured: boolean; latest: { name: string; created_at: string; size: string } | null }
 }>()
 
-const date = (value: string) => new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+const date = (value: string) =>
+  new Date(value).toLocaleString(formatLocale(), { dateStyle: 'medium', timeStyle: 'short' })
 
 useBreadcrumbs([{ label: 'Utilities', url: '/cp/utilities' }, { label: 'Backups' }])
 </script>

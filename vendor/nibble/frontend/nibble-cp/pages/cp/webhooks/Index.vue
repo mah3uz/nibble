@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { Link, router } from '@inertiajs/vue3'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
 import StatusCell from '@/components/cp/listing/cells/StatusCell.vue'
@@ -20,7 +21,8 @@ type WebhookRow = {
 
 defineProps<{ webhooks: WebhookRow[] }>()
 
-const date = (value: string) => new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+const date = (value: string) =>
+  new Date(value).toLocaleString(formatLocale(), { dateStyle: 'medium', timeStyle: 'short' })
 
 useBreadcrumbs([{ label: 'Webhooks' }])
 </script>

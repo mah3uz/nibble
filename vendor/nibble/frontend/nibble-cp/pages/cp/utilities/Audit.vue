@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { InfiniteScroll } from '@inertiajs/vue3'
 import { onBeforeUnmount, ref, watch } from 'vue'
 import CpPanel from '@/components/cp/page/CpPanel.vue'
@@ -47,7 +48,8 @@ const verb = (action: string) => {
   return words.charAt(0).toUpperCase() + words.slice(1)
 }
 const area = (action: string) => (action.startsWith('auth.') ? 'Sign-in & access' : 'Content')
-const date = (value: string) => new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+const date = (value: string) =>
+  new Date(value).toLocaleString(formatLocale(), { dateStyle: 'medium', timeStyle: 'short' })
 
 useBreadcrumbs([{ label: 'Utilities', url: '/cp/utilities' }, { label: 'Audit log' }])
 </script>

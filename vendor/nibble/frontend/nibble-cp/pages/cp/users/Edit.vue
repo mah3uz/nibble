@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { Link, router, useForm } from '@inertiajs/vue3'
 import CpIcon from '@/components/cp/icons/CpIcon.vue'
 import PageHeader from '@/components/cp/page/PageHeader.vue'
@@ -32,7 +33,8 @@ const form = useForm({
   role_ids: [...props.user.role_ids],
 })
 
-const date = (value: string) => new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+const date = (value: string) =>
+  new Date(value).toLocaleString(formatLocale(), { dateStyle: 'medium', timeStyle: 'short' })
 
 function toggleRole(id: number, on: boolean) {
   form.role_ids = on ? [...form.role_ids, id] : form.role_ids.filter((value) => value !== id)

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { Link } from '@inertiajs/vue3'
 import SparkLine from '@/components/cp/charts/SparkLine.vue'
 import type { OverviewData } from './types'
@@ -22,7 +23,7 @@ const TONE: Record<string, string> = {
       >
         <p class="text-sm text-gray-600 dark:text-gray-400">{{ tile.label }}</p>
         <p class="mt-1 text-2xl font-semibold tracking-tight text-gray-900 tabular-nums sm:text-3xl dark:text-white">
-          {{ tile.total.toLocaleString() }}
+          {{ tile.total.toLocaleString(formatLocale()) }}
         </p>
         <p class="text-xs text-gray-500">Last 30 days</p>
         <div :class="['-mx-3.5 mt-2 sm:-mx-4.5', TONE[tile.key] ?? 'text-indigo-500']">

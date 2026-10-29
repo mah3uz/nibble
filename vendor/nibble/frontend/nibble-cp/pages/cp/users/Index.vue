@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { Link, useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import CpListing from '@/components/cp/listing/CpListing.vue'
@@ -68,7 +69,9 @@ useBreadcrumbs([{ label: 'Users' }])
         </span>
       </template>
       <template #cell-last_login_at="{ value }">
-        <span v-if="value">{{ new Date(value as string).toLocaleDateString(undefined, { dateStyle: 'medium' }) }}</span>
+        <span v-if="value">{{
+          new Date(value as string).toLocaleDateString(formatLocale(), { dateStyle: 'medium' })
+        }}</span>
         <span v-else class="text-gray-500">Never</span>
       </template>
     </CpListing>

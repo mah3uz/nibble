@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { Link, router, useForm } from '@inertiajs/vue3'
 import { Plug, Terminal } from '@lucide/vue'
 import { computed, ref } from 'vue'
@@ -37,7 +38,7 @@ const form = useForm({
   >,
 })
 const groups = computed(() => [...new Set(props.areas.map((area) => area.group))])
-const date = (value: string) => new Date(value).toLocaleDateString(undefined, { dateStyle: 'medium' })
+const date = (value: string) => new Date(value).toLocaleDateString(formatLocale(), { dateStyle: 'medium' })
 const editing = ref<GrantRow | null>(null)
 const settingsOpen = ref(false)
 const APPROVALS = [

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { SlidersHorizontal } from '@lucide/vue'
 import { computed } from 'vue'
 import { Button } from '@/components/ui/button'
@@ -18,7 +19,7 @@ const activeCount = computed(
   () => props.filters.filter((f) => (Array.isArray(f.value) ? f.value.length > 0 : !!f.value)).length,
 )
 
-const languages = new Intl.DisplayNames(['en'], { type: 'language' })
+const languages = new Intl.DisplayNames([formatLocale()], { type: 'language' })
 
 function optionLabel(filter: ListingFilter, option: { value: string; label: string }) {
   if (filter.handle !== 'locale') return option.label

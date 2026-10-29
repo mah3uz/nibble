@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { Link, useForm } from '@inertiajs/vue3'
 import { CircleAlert, CircleCheck } from '@lucide/vue'
 import { computed, ref } from 'vue'
@@ -164,7 +165,7 @@ useBreadcrumbs([{ label: 'Connected apps', url: '/cp/account/apps' }, { label: '
     <p v-if="!['done', 'failed'].includes(status)" class="text-sm text-gray-600 dark:text-gray-400">
       <template v-if="open"
         >Approving makes exactly this change, once. It can be approved until
-        {{ new Date(expires_at).toLocaleString() }}.</template
+        {{ new Date(expires_at).toLocaleString(formatLocale()) }}.</template
       >
       <template v-else-if="status === 'approved'">Approved. The change is being made.</template>
       <template v-else-if="status === 'denied'">Declined. Nothing was changed.</template>

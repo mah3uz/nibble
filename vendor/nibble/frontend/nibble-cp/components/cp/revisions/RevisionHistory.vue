@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { router } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
@@ -46,7 +47,7 @@ watch(page, load)
 const groups = computed(() => {
   const byDay = new Map<string, Version[]>()
   for (const version of payload.value?.versions ?? []) {
-    const day = new Date(version.created_at).toLocaleDateString(undefined, {
+    const day = new Date(version.created_at).toLocaleDateString(formatLocale(), {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
@@ -62,7 +63,7 @@ async function restore(version: Version) {
   if (!record) return
 
   const ok = await confirmRestore({
-    title: `Restore the revision from ${new Date(version.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}?`,
+    title: `Restore the revision from ${new Date(version.created_at).toLocaleString(formatLocale(), { dateStyle: 'medium', timeStyle: 'short' })}?`,
     description: record.live ? 'It becomes a draft. Publish it to make it live.' : 'It is saved as a new revision.',
     confirmText: 'Restore',
   })

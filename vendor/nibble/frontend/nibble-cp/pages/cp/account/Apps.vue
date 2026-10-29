@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { Link, router, useForm } from '@inertiajs/vue3'
 import { computed, ref, watch } from 'vue'
 import AccessChooser, { type Area, type Preset } from '@/components/cp/agents/AccessChooser.vue'
@@ -65,7 +66,7 @@ watch(showIssued, (open) => {
 })
 
 const form = useForm({ name: '', preset: 'read', expires_in: '30', areas: {} as Record<string, string[]> })
-const date = (value: string) => new Date(value).toLocaleDateString(undefined, { dateStyle: 'medium' })
+const date = (value: string) => new Date(value).toLocaleDateString(formatLocale(), { dateStyle: 'medium' })
 const host = computed(() => new URL(props.endpoints.mcp).host)
 const connectCommand = computed(() => `nibble connect ${host.value}`)
 const copy = (text: string) => navigator.clipboard.writeText(text)

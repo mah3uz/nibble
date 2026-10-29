@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { Link } from '@inertiajs/vue3'
 import { computed } from 'vue'
 import type { ContentMixData, MixKey } from './types'
@@ -24,7 +25,7 @@ const width = (count: number, of: number) => `${of ? (count / of) * 100 : 0}%`
   <div class="px-4.5 py-4">
     <p class="flex items-baseline gap-2">
       <span class="text-3xl font-semibold tracking-tight text-gray-900 tabular-nums dark:text-white">{{
-        total.toLocaleString()
+        total.toLocaleString(formatLocale())
       }}</span>
       <span class="text-sm text-gray-600 dark:text-gray-400">entries</span>
     </p>

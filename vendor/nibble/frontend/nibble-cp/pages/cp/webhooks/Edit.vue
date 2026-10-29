@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { Link, router, useForm } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import StatusCell from '@/components/cp/listing/cells/StatusCell.vue'
@@ -57,7 +58,8 @@ const form = useForm({
   enabled: props.webhook.enabled,
 })
 
-const date = (value: string) => new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'medium' })
+const date = (value: string) =>
+  new Date(value).toLocaleString(formatLocale(), { dateStyle: 'medium', timeStyle: 'medium' })
 
 function toggle(list: string[], value: string, on: boolean) {
   const index = list.indexOf(value)

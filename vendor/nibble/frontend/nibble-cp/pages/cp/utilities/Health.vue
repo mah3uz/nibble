@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatLocale } from '@/lib/format'
 import { router } from '@inertiajs/vue3'
 import StatusCell from '@/components/cp/listing/cells/StatusCell.vue'
 import CpPanel from '@/components/cp/page/CpPanel.vue'
@@ -31,7 +32,7 @@ const NAMES: Record<string, string> = {
 }
 const OVERALL: Record<string, string> = { ok: 'healthy', degraded: 'degraded', down: 'down' }
 
-const time = (value: string) => new Date(value).toLocaleTimeString(undefined, { timeStyle: 'medium' })
+const time = (value: string) => new Date(value).toLocaleTimeString(formatLocale(), { timeStyle: 'medium' })
 
 useBreadcrumbs([{ label: 'Utilities', url: '/cp/utilities' }, { label: 'Health' }])
 </script>
