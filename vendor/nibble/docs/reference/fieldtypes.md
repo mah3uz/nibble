@@ -171,8 +171,8 @@ changes. With `sets`, a page receives a list of text and set blocks instead of o
 | `remove_empty_nodes` | `false`, `true`, `trim` | `false` | `true` drops empty paragraphs and headings when saving; `trim` drops only those at the start and end |
 | `sets` | map of sets | — | blocks an editor can insert between paragraphs, declared as in a [replicator](#replicator) |
 | `collapse` | `true`, `false` | `false` | with `sets`, the editor opens with every block folded |
-| `placeholder` | text | — | accepted; the Control Plane doesn't act on it |
-| `character_limit` | whole number | — | accepted; the Control Plane doesn't act on it |
+| `placeholder` | text | — | text shown in the empty editor |
+| `character_limit` | whole number | — | the most characters of text accepted, not counting markup or blocks. The editor shows `N / limit` and stops at the limit, and a save over it is refused. Content already saved over a newly set limit can't be saved until it is shortened |
 | `toolbar_mode` | `fixed`, `floating` | `fixed` | accepted; the Control Plane doesn't act on it |
 | `smart_typography` | `true`, `false` | `false` | accepted; the Control Plane doesn't act on it |
 | `enable_input_rules`, `enable_paste_rules` | `true`, `false` | `true` | accepted; the Control Plane doesn't act on them |
