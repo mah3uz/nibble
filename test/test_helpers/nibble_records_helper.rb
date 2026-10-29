@@ -108,6 +108,18 @@ module NibbleRecordsHelper
       themes_path: @nibble_themes, site_schema_path: @nibble_themes.join("site_schema"), agents_path: @nibble_themes.join("agents"))
   end
 
+  def use_site_addresses(values = {})
+    path = @nibble_themes.join("records", "schema", "globals", "site.yml")
+    FileUtils.mkdir_p(path.dirname)
+    path.write({ "title" => "Site", "blueprint" => { "title" => "Site", "tabs" => { "main" => { "sections" => [ { "fields" => [
+      { "handle" => "name", "field" => { "type" => "text" } },
+      { "handle" => "apply_url", "field" => { "type" => "text", "input_type" => "url" } },
+      { "handle" => "booking", "field" => { "type" => "link" } }
+    ] } ] } } } }.to_yaml)
+    Nibble.reset_schema!
+    Nibble::Records::GlobalSet.create!(handle: "site", locale: "en", data: values.deep_stringify_keys)
+  end
+
   def reset_nibble_records_schema
     Nibble.config = nil
     Nibble.reset_schema!

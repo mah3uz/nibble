@@ -72,8 +72,19 @@ module RichText
     end
 
     def render_link(html, attrs)
+      href = attrs["ref"].present? ? global_href(attrs) : attrs["href"].to_s
+      return html if href.nil?
+
       target = attrs["target"] == "_blank" ? %( target="_blank") : ""
-      %(<a href="#{html_escape(attrs['href'])}"#{target}>#{html}</a>)
+      %(<a href="#{html_escape(href)}"#{target}>#{html}</a>)
+    end
+
+    def global_href(attrs)
+      @addresses ||= {}
+      address = @addresses.fetch(attrs["ref"]) { @addresses[attrs["ref"]] = Nibble::GlobalLinks.address(attrs["ref"]) }
+      return address.presence if address
+
+      attrs["href"] if Nibble::SafeUrl.safe?(attrs["href"])
     end
 
     def render_image(attrs)

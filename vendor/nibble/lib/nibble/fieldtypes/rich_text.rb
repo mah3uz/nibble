@@ -76,12 +76,14 @@ module Nibble
         end
       end
 
+      def rules = %w[global_links]
+
       def extra_rules(root_values: nil, prefix: "", replacements: {})
         set_extra_rules(set_rows(to_nodes(field&.value)), root_values:, prefix:, replacements:)
       end
 
       def process(value)
-        nodes = remove_empty_nodes(to_nodes(value))
+        nodes = GlobalLinks.refresh(remove_empty_nodes(to_nodes(value)))
         nodes = unwrap_inline(nodes) if inline?
         structure = nodes.each_with_index.map do |node, index|
           next node unless set_node?(node)

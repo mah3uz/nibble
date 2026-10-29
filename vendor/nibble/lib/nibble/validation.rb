@@ -53,7 +53,8 @@ module Nibble
       "mimes" => "The %{attribute} field must be a file of type: %{values}.",
       "max_file_size" => "Each %{attribute} file must not be larger than %{max} MB.",
       "max_of_set" => "The %{attribute} field must not have more than %{max} %{set} sets.",
-      "records_exist" => "The %{attribute} field contains items that don't exist or aren't allowed here."
+      "records_exist" => "The %{attribute} field contains items that don't exist or aren't allowed here.",
+      "global_links" => "The %{attribute} field links to %{refs}, which isn't a web address field of a global set."
     }.freeze
 
     class << self

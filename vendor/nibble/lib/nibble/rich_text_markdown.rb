@@ -74,7 +74,11 @@ module Nibble
         when :strikethrough then inline(child, marks + [ { "type" => "strike" } ])
         when :link
           href = child.url.to_s
-          SafeUrl.safe?(href) ? inline(child, marks + [ { "type" => "link", "attrs" => { "href" => href } } ]) : inline(child, marks)
+          if GlobalLinks.parse(href)
+            inline(child, marks + [ { "type" => "link", "attrs" => { "href" => GlobalLinks.address(href).to_s, "ref" => href } } ])
+          else
+            SafeUrl.safe?(href) ? inline(child, marks + [ { "type" => "link", "attrs" => { "href" => href } } ]) : inline(child, marks)
+          end
         when :image then image(child)
         when :html_inline then []
         else inline(child, marks)
@@ -158,12 +162,14 @@ module Nibble
           when "italic" then "*#{text}*"
           when "strike" then "~~#{text}~~"
           when "code" then "`#{text}`"
-          when "link" then "[#{text}](#{mark.dig('attrs', 'href')})"
+          when "link" then "[#{text}](#{link_target(mark['attrs'].to_h)})"
           else text
           end
         end
       end.join
     end
+
+    def link_target(attrs) = GlobalLinks.parse(attrs["ref"]) ? attrs["ref"] : attrs["href"]
 
     def escape(text, marks)
       return text if Array(marks).any? { |mark| mark["type"] == "code" }
