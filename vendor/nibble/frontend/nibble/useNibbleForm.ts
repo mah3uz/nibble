@@ -75,6 +75,15 @@ export function isFieldVisible(field: NibbleFormField, values: Record<string, un
   return conditions.show ? passed : !passed
 }
 
+export function isFieldRequired(field: NibbleFormField, values: Record<string, unknown>) {
+  const required = field.required
+  if (typeof required === 'boolean') return required
+  if (required.rules.some((rule) => rule.operator === 'custom' || !rule.field)) return false
+  const results = required.rules.map((rule) => passes({ ...rule, field: rule.field! }, values))
+  const passed = required.match === 'any' ? results.some(Boolean) : results.every(Boolean)
+  return required.show ? passed : !passed
+}
+
 export function fileLimits(field: NibbleFormField) {
   if (field.type !== 'files') return null
   const several = (field.max_files ?? 1) > 1
@@ -143,6 +152,7 @@ export function useNibbleForm<Values extends Record<string, unknown> = Record<st
   }
 
   const isVisible = (field: NibbleFormField) => isFieldVisible(field, state)
+  const isRequired = (field: NibbleFormField) => isFieldRequired(field, state)
   const calculations = computed(() => calculate(definition.fields, state, isVisible))
   const calculated = (field: NibbleFormField) => calculations.value.get(field.handle) ?? null
   const calculatedText = (field: NibbleFormField) => formatCalculation(field, calculated(field), locale.value)
@@ -403,6 +413,7 @@ export function useNibbleForm<Values extends Record<string, unknown> = Record<st
     submit,
     reset,
     isVisible,
+    isRequired,
     calculated,
     calculatedText,
     inputId,

@@ -197,6 +197,21 @@ describe('crumbs ContactForm', () => {
     expect(html).not.toContain('<label')
   })
 
+  it('marks a conditionally required field only while its condition holds', async () => {
+    const phone = field('phone', {
+      required: { show: true, match: 'all', rules: [{ field: 'by', operator: 'equals', value: 'phone' }] },
+    })
+    const by = (value: string) => field('by', { type: 'radio', options: [{ value, label: value }], default: value })
+
+    const needed = await render(form({ fields: [by('phone'), phone] }))
+    expect(tag(needed, 'visit-phone')).toContain('required')
+    expect(needed).toContain('Fields marked')
+
+    const optional = await render(form({ fields: [by('email'), phone] }))
+    expect(tag(optional, 'visit-phone')).not.toContain('required')
+    expect(optional).not.toContain('Fields marked')
+  })
+
   it('draws a conditional field only when its condition holds, as the server will judge it', async () => {
     const company = field('company', {
       conditions: { show: true, match: 'all', rules: [{ field: 'kind', operator: 'equals', value: 'business' }] },

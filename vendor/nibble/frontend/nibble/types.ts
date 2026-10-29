@@ -48,7 +48,7 @@ type NibbleFormFieldBase = {
   handle: string
   display: string
   instructions: string | null
-  required: boolean
+  required: boolean | NibbleFormConditions
   default?: unknown
   width?: number
   conditions?: NibbleFormConditions

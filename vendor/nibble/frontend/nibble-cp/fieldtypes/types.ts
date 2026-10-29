@@ -12,6 +12,7 @@ export type PublishField = {
   instructions_position: 'above' | 'below'
   width: Width
   required: boolean
+  required_when?: Record<string, unknown>
   visibility: Visibility
   read_only: boolean
   always_save: boolean

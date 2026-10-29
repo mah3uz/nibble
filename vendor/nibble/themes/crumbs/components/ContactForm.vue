@@ -30,7 +30,9 @@ const groups = computed(() => {
   }))
 })
 
-const hasRequired = computed(() => props.form.fields.some((field) => field.required && !field.hidden))
+const hasRequired = computed(() =>
+  props.form.fields.some((field) => contact.isRequired(field) && !field.hidden && contact.isVisible(field)),
+)
 const hasErrors = computed(() => Object.keys(contact.errors.value).length > 0)
 const submitLabel = computed(() => {
   if (!contact.isLastStep.value) return t(contact.processing.value ? 'checking' : 'next')
@@ -139,7 +141,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
           >
             <legend class="mb-3">
               {{ field.display
-              }}<template v-if="field.required"
+              }}<template v-if="contact.isRequired(field)"
                 ><span class="text-accent" aria-hidden="true"> *</span
                 ><span class="sr-only">{{ ` ${t('required')}` }}</span></template
               >
@@ -168,20 +170,20 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
                 type="checkbox"
                 :name="contact.fieldName(field)"
                 value="true"
-                :required="field.required"
+                :required="contact.isRequired(field)"
                 :aria-describedby="contact.describedBy(field)"
                 :aria-invalid="invalid(field)"
                 class="mt-1 size-5 shrink-0 accent-accent"
               />
               <label :for="contact.inputId(field)">
                 {{ field.inline_label || field.display
-                }}<span v-if="field.required" class="text-accent" aria-hidden="true"> *</span>
+                }}<span v-if="contact.isRequired(field)" class="text-accent" aria-hidden="true"> *</span>
               </label>
             </div>
           </div>
           <template v-else>
             <label :for="contact.inputId(field)" class="mb-3 block">
-              {{ field.display }}<span v-if="field.required" class="text-accent" aria-hidden="true"> *</span>
+              {{ field.display }}<span v-if="contact.isRequired(field)" class="text-accent" aria-hidden="true"> *</span>
             </label>
             <textarea
               v-if="field.type === 'textarea'"
@@ -191,7 +193,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
               :maxlength="field.character_limit"
               :placeholder="field.placeholder"
               :rows="field.rows ?? 6"
-              :required="field.required"
+              :required="contact.isRequired(field)"
               :aria-describedby="contact.describedBy(field)"
               :aria-invalid="invalid(field)"
               class="w-full border border-current/40 bg-transparent p-3"
@@ -202,7 +204,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
               v-model="contact.values[field.handle]"
               :name="contact.fieldName(field)"
               :multiple="field.multiple"
-              :required="field.required"
+              :required="contact.isRequired(field)"
               :aria-describedby="contact.describedBy(field)"
               :aria-invalid="invalid(field)"
               class="w-full border-b border-current bg-transparent px-1 py-3"
@@ -210,7 +212,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
               <option
                 v-if="!field.multiple"
                 value=""
-                :disabled="field.required"
+                :disabled="contact.isRequired(field)"
                 :selected="!contact.values[field.handle]"
               >
                 {{ field.placeholder || t('choose') }}
@@ -231,7 +233,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
               :name="contact.fieldName(field)"
               :accept="contact.accept(field)"
               :multiple="(field.max_files ?? 1) > 1"
-              :required="field.required"
+              :required="contact.isRequired(field)"
               :aria-describedby="contact.describedBy(field)"
               :aria-invalid="invalid(field)"
               class="block w-full"
@@ -245,7 +247,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
               :name="contact.fieldName(field)"
               :min="bound(field, field.earliest_date, '00:00')"
               :max="bound(field, field.latest_date, '23:59')"
-              :required="field.required"
+              :required="contact.isRequired(field)"
               :aria-describedby="contact.describedBy(field)"
               :aria-invalid="invalid(field)"
               class="w-full border-b border-current bg-transparent px-1 py-3"
@@ -272,7 +274,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
                 :maxlength="field.character_limit"
                 :placeholder="field.placeholder"
                 :autocomplete="field.autocomplete"
-                :required="field.required"
+                :required="contact.isRequired(field)"
                 :aria-describedby="contact.describedBy(field)"
                 :aria-invalid="invalid(field)"
                 class="min-w-0 flex-1 bg-transparent px-1 py-3"

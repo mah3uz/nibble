@@ -44,6 +44,18 @@ const visible = computed(() =>
     prefix: props.field.prefix,
   }),
 )
+const required = computed(
+  () =>
+    props.field.required ||
+    (props.field.required_when
+      ? isVisible(props.field.required_when as Record<string, unknown>, {
+          values: siblings.value,
+          rootValues: container.values.value,
+          path: path.value,
+          prefix: props.field.prefix,
+        })
+      : false),
+)
 watch(
   visible,
   (shown) => {
@@ -71,7 +83,7 @@ const actions = computed(() => (props.field.actions ? (control.value?.fieldActio
     <div v-if="!field.hide_display || actions.length" class="flex flex-col gap-1.5">
       <div class="flex items-center justify-between gap-2">
         <Label v-if="!field.hide_display" :for="path" class="block"
-          >{{ field.display }}<span v-if="field.required" class="relative -top-px ms-0.5 text-red-600">*</span></Label
+          >{{ field.display }}<span v-if="required" class="relative -top-px ms-0.5 text-red-600">*</span></Label
         >
         <div v-if="actions.length" class="flex items-center gap-1">
           <Button

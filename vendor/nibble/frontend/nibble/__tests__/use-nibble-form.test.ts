@@ -132,6 +132,30 @@ describe('isFieldVisible', () => {
   })
 })
 
+describe('isFieldRequired', () => {
+  const phone: NibbleFormConditions = {
+    show: true,
+    match: 'all',
+    rules: [{ field: 'by', operator: 'equals', value: 'phone' }],
+  }
+
+  it('is required only while its condition passes', async () => {
+    const { isFieldRequired } = await import('../useNibbleForm')
+    const number = field({ required: phone })
+    expect(isFieldRequired(number, { by: 'phone' })).toBe(true)
+    expect(isFieldRequired(number, { by: 'email' })).toBe(false)
+    expect(isFieldRequired(field({ required: { ...phone, show: false } }), { by: 'email' })).toBe(true)
+  })
+
+  it('keeps a plain true or false as it is, and leaves a custom condition to the server', async () => {
+    const { isFieldRequired } = await import('../useNibbleForm')
+    expect(isFieldRequired(field({ required: true }), {})).toBe(true)
+    expect(isFieldRequired(field({ required: false }), {})).toBe(false)
+    const rules: NibbleFormConditions['rules'] = [{ field: null, operator: 'custom', value: 'x' }]
+    expect(isFieldRequired(field({ required: { show: true, match: 'all', rules } }), {})).toBe(false)
+  })
+})
+
 describe('useNibbleForm values and body', () => {
   const company = field({
     conditions: { show: true, match: 'all', rules: [{ field: 'kind', operator: 'equals', value: 'business' }] },
