@@ -170,8 +170,19 @@ module Nibble
           source = relation.source
           next if source.nil? || source.trashed?
 
-          { "type" => source.record_type, "title" => usage_title(source), "field" => relation.field, "edit_url" => edit_url(source) }
+          { "type" => source.record_type, "title" => usage_title(source), "field" => relation.field, "label" => usage_label(source, relation.field), "edit_url" => edit_url(source) }
         end.uniq { |item| [ item["type"], item["edit_url"] ] }
+      end
+
+      def usage_label(source, field)
+        noun = case source
+        when Nibble::Records::Entry then source.collection_item&.[]("title").to_s.singularize
+        when Nibble::Records::Term then source.taxonomy_item&.[]("title").to_s.singularize
+        when Nibble::Records::GlobalSet then "Site settings"
+        when Nibble::Records::NavigationTree then "Menu"
+        end
+        field_label = source.respond_to?(:blueprint_fields) && source.blueprint_fields.all[field]&.display || field.to_s.humanize
+        [ noun.presence, field_label ].compact.join(" · ")
       end
 
       def usage_title(source)

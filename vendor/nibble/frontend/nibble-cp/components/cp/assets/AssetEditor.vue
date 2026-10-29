@@ -270,7 +270,7 @@ function run(action: AssetMenuAction) {
                       >
                         <a v-if="use.edit_url" :href="use.edit_url" class="truncate hover:underline">{{ use.title }}</a>
                         <span v-else class="truncate">{{ use.title }}</span>
-                        <span class="shrink-0 text-xs text-gray-500">{{ use.type }} · {{ use.field }}</span>
+                        <span class="shrink-0 text-xs text-gray-500">{{ use.label ?? `${use.type} · ${use.field}` }}</span>
                       </li>
                     </ul>
                   </div>

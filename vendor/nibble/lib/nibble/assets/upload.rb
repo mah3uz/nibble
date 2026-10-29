@@ -6,7 +6,7 @@ module Nibble
       def refusal(filename, byte_size)
         return "#{File.extname(filename.to_s).presence || 'This file type'} files can't be uploaded." unless Assets.uploadable?(filename)
 
-        "#{filename} is larger than #{Nibble.config.max_upload_bytes / 1.megabyte} MB." if byte_size.to_i > Nibble.config.max_upload_bytes
+        "#{filename} is larger than #{Nibble.config.max_upload_bytes / 1.megabyte} MB. Make it smaller and try again." if byte_size.to_i > Nibble.config.max_upload_bytes
       end
 
       def call(blob, attrs = {}, actor:)

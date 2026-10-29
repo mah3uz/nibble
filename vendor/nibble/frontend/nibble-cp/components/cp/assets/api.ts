@@ -38,7 +38,7 @@ export type ImageEdits = {
   flip?: 'horizontal' | 'vertical'
 }
 
-export type AssetUsage = { type: string; title: string; field: string; edit_url: string | null }
+export type AssetUsage = { type: string; title: string; field: string; label?: string; edit_url: string | null }
 
 export type AssetDetail = {
   asset: AssetRow & {

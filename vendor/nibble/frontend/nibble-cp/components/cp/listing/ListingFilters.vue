@@ -18,6 +18,18 @@ const activeCount = computed(
   () => props.filters.filter((f) => (Array.isArray(f.value) ? f.value.length > 0 : !!f.value)).length,
 )
 
+const languages = new Intl.DisplayNames(['en'], { type: 'language' })
+
+function optionLabel(filter: ListingFilter, option: { value: string; label: string }) {
+  if (filter.handle !== 'locale') return option.label
+  try {
+    const name = languages.of(option.value)
+    return name && name !== option.value ? name : option.label
+  } catch {
+    return option.label
+  }
+}
+
 function toggleMulti(filter: ListingFilter, value: string, checked: boolean) {
   const current = Array.isArray(filter.value) ? filter.value : []
   emit('change', filter.handle, checked ? [...current, value] : current.filter((v) => v !== value))
@@ -56,7 +68,7 @@ function toggleMulti(filter: ListingFilter, value: string, checked: boolean) {
           <SelectContent>
             <SelectItem :value="ALL">{{ filter.all_label ?? 'All' }}</SelectItem>
             <SelectItem v-for="option in filter.options" :key="option.value" :value="option.value">{{
-              option.label
+              optionLabel(filter, option)
             }}</SelectItem>
           </SelectContent>
         </Select>

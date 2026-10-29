@@ -172,6 +172,7 @@ class Nibble::Cp::MediaControllerTest < ActionDispatch::IntegrationTest
     body = json(:get, "/cp/media/#{asset.id}")
     assert_equal "Sunset", body["values"]["alt"]
     assert_equal [ [ "Holiday", "image" ] ], body["usage"].map { |use| use.values_at("title", "field") }
+    assert_match(/\A\w+ · \w/, body["usage"].first["label"], "usage names the kind of item and the field, not a record type and a handle")
     assert_equal "Top level", body["folder_options"].first["label"]
   end
 
