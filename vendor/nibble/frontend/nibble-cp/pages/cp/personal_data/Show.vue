@@ -27,7 +27,7 @@ async function erase() {
     title: props.total
       ? `Erase ${props.total} ${props.total === 1 ? 'submission' : 'submissions'}?`
       : `Erase ${props.saved} saved ${props.saved === 1 ? 'form' : 'forms'}?`,
-    description: `Every submission containing ${props.email}, in every form, is deleted with its uploaded files, and so is every saved, unfinished form. This can’t be undone.`,
+    description: `Every submission containing ${props.email}, in every form, is deleted with its uploaded files, and so is every saved, unfinished form. This can't be undone.`,
     confirmText: 'Erase',
     dangerous: true,
   })

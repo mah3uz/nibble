@@ -85,7 +85,7 @@ const submitCode = () => run(() => confirmCode(code.value))
       @interact-outside.prevent
     >
       <DialogHeader>
-        <DialogTitle>Your Session is Expiring</DialogTitle>
+        <DialogTitle>Your session is expiring</DialogTitle>
         <DialogDescription aria-live="polite">
           You have been inactive for a while and will be signed out in
           <span class="font-medium text-gray-900 tabular-nums dark:text-white">{{ expiry.count }}</span>
@@ -94,7 +94,7 @@ const submitCode = () => run(() => confirmCode(code.value))
       </DialogHeader>
       <DialogFooter>
         <Button type="button" variant="ghost" @click="expiry.dismissedWarning = true">Cancel</Button>
-        <Button type="button" @click="extend"><RotateCcw /> Extend Session</Button>
+        <Button type="button" @click="extend"><RotateCcw /> Extend session</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
@@ -108,7 +108,7 @@ const submitCode = () => run(() => confirmCode(code.value))
       @interact-outside.prevent
     >
       <DialogHeader>
-        <DialogTitle>Resume Your Session</DialogTitle>
+        <DialogTitle>Resume your session</DialogTitle>
         <DialogDescription v-if="!expiry.twoFactor">
           You were signed out after a while without activity. Enter the password for
           <span class="font-medium text-gray-900 dark:text-white">{{ cp.user?.email_address }}</span> to carry on where

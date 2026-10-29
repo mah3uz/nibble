@@ -122,9 +122,15 @@ module Nibble
           "url" => "/cp/forms/#{@form.handle}/submissions/#{@submission.id}/files/#{file['id']}" }
       end
 
+      def delivery_errors(errors)
+        return unless errors.is_a?(Hash)
+
+        errors.transform_keys { |handle| @form.fields.all[handle]&.display || handle.to_s.humanize }
+      end
+
       def delivery_row(delivery)
         delivery.slice("key", "target", "mode", "status", "attempts", "response_status", "error", "errors", "at")
-          .merge("can_retry" => delivery["key"].to_s.start_with?("api.") && delivery["status"] == "failed" && Nibble::Access.can?(Nibble::Current.user, "forms.#{@form.handle}.edit"))
+          .merge("errors" => delivery_errors(delivery["errors"]), "can_retry" => delivery["key"].to_s.start_with?("api.") && delivery["status"] == "failed" && Nibble::Access.can?(Nibble::Current.user, "forms.#{@form.handle}.edit"))
       end
     end
   end

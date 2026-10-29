@@ -108,7 +108,7 @@ async function resendNotifications() {
 async function destroy() {
   const ok = await confirm({
     title: 'Delete this submission?',
-    description: 'Its files and delivery logs are deleted too. This can’t be undone.',
+    description: "Its files and delivery logs are deleted too. This can't be undone.",
     confirmText: 'Delete',
     dangerous: true,
   })
@@ -130,7 +130,7 @@ async function destroy() {
       :breadcrumbs="[
         { label: 'Forms', url: '/cp/forms' },
         { label: form.title, url: listUrl },
-        { label: `Submission ${submission.id}` },
+        { label: date(submission.created_at) },
       ]"
     >
       <template #meta><StatusCell :value="submission.status" /></template>

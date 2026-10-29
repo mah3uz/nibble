@@ -145,7 +145,7 @@ onMounted(load)
                   class="block"
                   :class="item.read ? 'text-gray-500 dark:text-gray-400' : 'text-gray-900 dark:text-gray-200'"
                   >{{ LINES[item.kind] ?? item.kind }}
-                  <span class="font-medium">{{ item.title ?? 'a record' }}</span></span
+                  <span class="font-medium">{{ item.title ?? 'something' }}</span></span
                 >
                 <span v-if="item.comment" class="mt-0.5 block truncate text-xs text-gray-500">{{ item.comment }}</span>
                 <time :datetime="item.at" class="mt-0.5 block text-xs text-gray-400">{{ timeAgo(item.at) }}</time>
@@ -156,7 +156,7 @@ onMounted(load)
               variant="ghost"
               size="icon-xs"
               class="absolute top-1.5 right-1.5 text-gray-400 hover:text-gray-900 dark:hover:text-white pointer-fine:not-group-hover:not-focus-visible:opacity-0"
-              :aria-label="`Remove notification: ${LINES[item.kind] ?? item.kind} ${item.title ?? 'a record'}`"
+              :aria-label="`Remove notification: ${LINES[item.kind] ?? item.kind} ${item.title ?? 'something'}`"
               @click="remove(item.id)"
             >
               <CpIcon name="x" class="size-3" />

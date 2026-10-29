@@ -63,7 +63,7 @@ function open(row: ListingRow) {
       :breadcrumbs="[{ label: 'Forms', url: '/cp/forms' }, { label: form.title }]"
     >
       <template #actions>
-        <Button v-if="form.can_export" variant="outline" @click="openExport">Export Submissions</Button>
+        <Button v-if="form.can_export" variant="outline" @click="openExport">Export submissions</Button>
       </template>
     </PageHeader>
 
@@ -101,7 +101,7 @@ function open(row: ListingRow) {
     <Dialog v-model:open="exporting">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Export Submissions</DialogTitle>
+          <DialogTitle>Export submissions</DialogTitle>
           <DialogDescription class="sr-only">Download this form's submissions as a file.</DialogDescription>
         </DialogHeader>
         <div class="space-y-4">

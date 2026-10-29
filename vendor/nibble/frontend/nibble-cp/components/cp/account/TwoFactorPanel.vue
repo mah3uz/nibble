@@ -90,7 +90,7 @@ async function keptCodes() {
 <template>
   <Popover v-model:open="open">
     <PopoverTrigger as-child>
-      <Button type="button" variant="outline">Two-Factor Authentication</Button>
+      <Button type="button" variant="outline">Two-factor authentication</Button>
     </PopoverTrigger>
     <PopoverContent align="end" class="w-96 space-y-3 p-4">
       <p class="text-sm text-gray-600 dark:text-gray-400">

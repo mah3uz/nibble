@@ -17,7 +17,7 @@ useBreadcrumbs([{ label: 'Trash' }])
 async function purge(row: TrashRow) {
   const ok = await confirm({
     title: `Delete "${row.title ?? 'Untitled'}" for good?`,
-    description: 'This cannot be undone.',
+    description: "This can't be undone.",
     confirmText: 'Delete for good',
     dangerous: true,
   })
@@ -45,7 +45,7 @@ async function purge(row: TrashRow) {
         <template #cell-title="{ row }">
           <span class="font-medium">{{ (row.title as string | null) ?? 'Untitled' }}</span>
           <span v-if="row.referrers" class="block text-xs text-amber-700 dark:text-amber-400">
-            Referenced by {{ row.referrers }} other {{ row.referrers === 1 ? 'record' : 'records' }}
+            Used by {{ row.referrers }} other {{ row.referrers === 1 ? 'item' : 'items' }}
           </span>
         </template>
         <template #cell-group="{ value }">

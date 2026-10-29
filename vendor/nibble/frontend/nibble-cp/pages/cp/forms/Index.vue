@@ -8,7 +8,7 @@ import { useBreadcrumbs } from '@/lib/breadcrumbs'
 
 type FormRow = { handle: string; title: string; submissions: number; unread: number; store: boolean; url: string }
 
-defineProps<{ forms: FormRow[]; can_manage_personal_data: boolean }>()
+defineProps<{ forms: FormRow[]; can_manage_personal_data: boolean; can_define: boolean }>()
 
 useBreadcrumbs([{ label: 'Forms' }])
 </script>
@@ -28,10 +28,16 @@ useBreadcrumbs([{ label: 'Forms' }])
           <div class="flex gap-4">
             <CpIcon name="forms" class="mt-0.5 size-5 text-gray-500" />
             <div>
-              <p class="font-medium">Define a form</p>
-              <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                Add a file to <code>schema/forms</code> with its fields, spam protection and notifications.
-              </p>
+              <template v-if="can_define">
+                <p class="font-medium">Define a form</p>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                  Add a file to <code>schema/forms</code> with its fields, spam protection and notifications.
+                </p>
+              </template>
+              <template v-else>
+                <p class="font-medium">No forms yet</p>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">A developer adds them.</p>
+              </template>
             </div>
           </div>
           <div class="flex gap-4">

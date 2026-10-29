@@ -31,7 +31,7 @@ const form = useForm({ email_address: '', password: '' })
   <Card>
     <CardHeader>
       <CardTitle>Sign in</CardTitle>
-      <CardDescription>Use your CMS account.</CardDescription>
+      <CardDescription>Sign in with your email and password.</CardDescription>
     </CardHeader>
     <CardContent>
       <form class="space-y-4" @submit.prevent="form.post('/cp/session', { onFinish: () => (form.password = '') })">

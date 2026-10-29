@@ -31,9 +31,9 @@ async function submit() {
             class="mb-3 flex size-10 items-center justify-center rounded-lg bg-white shadow-ui-sm ring ring-gray-200 dark:bg-gray-800 dark:ring-gray-700"
             ><CpIcon name="key" class="size-5 text-gray-700 dark:text-gray-300"
           /></span>
-          <h1 class="text-lg font-medium text-gray-900 dark:text-white">Confirm Your Identity</h1>
+          <h1 class="text-lg font-medium text-gray-900 dark:text-white">Confirm your password</h1>
           <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            For security, please re-authenticate your account.
+            Enter your password to carry on.
           </p>
         </div>
         <div class="space-y-2">
@@ -41,7 +41,7 @@ async function submit() {
           <PasswordInput id="confirm-password" v-model="password" autocomplete="current-password" required autofocus />
           <p v-if="error" class="text-sm text-destructive">{{ error }}</p>
         </div>
-        <Button type="submit" class="mt-6 w-full" :disabled="busy">Submit</Button>
+        <Button type="submit" class="mt-6 w-full" :disabled="busy">Continue</Button>
       </form>
     </div>
   </div>

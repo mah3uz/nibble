@@ -63,7 +63,7 @@ const afterSave = usePreference<CpPreferences['after_save']>('after_save', 'cont
       <template #actions>
         <Button type="button" variant="outline" @click="passkeysOpen = true">Passkeys</Button>
         <TwoFactorPanel :two-factor="props.two_factor" :has-passkeys="props.passkeys.length > 0" />
-        <Button type="button" variant="outline" @click="changingPassword = true">Change Password</Button>
+        <Button type="button" variant="outline" @click="changingPassword = true">Change password</Button>
         <Button type="submit" form="profile-form" :disabled="nameForm.processing">Save</Button>
       </template>
     </PageHeader>
@@ -76,7 +76,7 @@ const afterSave = usePreference<CpPreferences['after_save']>('after_save', 'cont
           <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
         </div>
         <div class="space-y-2">
-          <Label for="email">Email Address</Label>
+          <Label for="email">Email address</Label>
           <Input id="email" :model-value="admin.user?.email_address" readonly />
         </div>
       </form>
@@ -126,11 +126,11 @@ const afterSave = usePreference<CpPreferences['after_save']>('after_save', 'cont
     <Dialog v-model:open="changingPassword">
       <DialogContent class="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Change Password</DialogTitle>
+          <DialogTitle>Change password</DialogTitle>
         </DialogHeader>
         <form id="password-change-form" class="space-y-5" @submit.prevent="changePassword">
           <div class="space-y-2">
-            <Label for="current_password">Current Password</Label>
+            <Label for="current_password">Current password</Label>
             <PasswordInput
               id="current_password"
               v-model="passwordForm.current_password"
@@ -145,7 +145,7 @@ const afterSave = usePreference<CpPreferences['after_save']>('after_save', 'cont
             <p v-if="errors.password" class="text-sm text-destructive">{{ errors.password }}</p>
           </div>
           <div class="space-y-2">
-            <Label for="password_confirmation">Password Confirmation</Label>
+            <Label for="password_confirmation">Confirm new password</Label>
             <PasswordInput
               id="password_confirmation"
               v-model="passwordForm.password_confirmation"
@@ -160,7 +160,7 @@ const afterSave = usePreference<CpPreferences['after_save']>('after_save', 'cont
         </form>
         <DialogFooter>
           <Button type="button" variant="ghost" @click="changingPassword = false">Cancel</Button>
-          <Button type="submit" form="password-change-form" :disabled="passwordForm.processing">Change Password</Button>
+          <Button type="submit" form="password-change-form" :disabled="passwordForm.processing">Change password</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

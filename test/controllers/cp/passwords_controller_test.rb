@@ -14,7 +14,7 @@ class Nibble::Cp::PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_cp_session_path
 
     follow_redirect!
-    assert_notice "reset instructions sent"
+    assert_notice "sent it a reset link"
   end
 
   test "create for an unknown user redirects but sends no mail" do
@@ -23,7 +23,7 @@ class Nibble::Cp::PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_cp_session_path
 
     follow_redirect!
-    assert_notice "reset instructions sent"
+    assert_notice "sent it a reset link"
   end
 
   test "edit" do
@@ -36,7 +36,7 @@ class Nibble::Cp::PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_cp_password_path
 
     follow_redirect!
-    assert_notice "reset link is invalid"
+    assert_notice "reset link has expired"
   end
 
   test "update" do
@@ -65,7 +65,7 @@ class Nibble::Cp::PasswordsControllerTest < ActionDispatch::IntegrationTest
     end
 
     follow_redirect!
-    assert_notice "Passwords did not match"
+    assert_notice "passwords don't match"
   end
 
   private

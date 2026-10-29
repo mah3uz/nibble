@@ -11,7 +11,7 @@ module Nibble
           { handle: form.handle, title: form.title || form.handle.humanize, submissions: counts.fetch(form.handle, 0),
             unread: unread.fetch(form.handle, 0), store: form.store?, url: "/cp/forms/#{form.handle}" }
         end
-        render inertia: "cp/forms/Index", props: { forms: forms.sort_by { |form| form[:title].downcase }, can_manage_personal_data: Nibble::Current.user.admin? }
+        render inertia: "cp/forms/Index", props: { forms: forms.sort_by { |form| form[:title].downcase }, can_manage_personal_data: Nibble::Current.user.admin?, can_define: Nibble::Access.can?(Nibble::Current.user, "utilities.view") }
       end
 
       def show
