@@ -98,11 +98,11 @@ module Nibble
                     "options" => Records::Entry::STATUSES.map { |status| { "value" => status, "label" => status.humanize } } }
         end
         if schema.blueprints_for(item).size > 1
-          list << { "handle" => "blueprint", "label" => "Blueprint", "type" => "select", "value" => params[:blueprint],
+          list << { "handle" => "blueprint", "label" => "Type", "type" => "select", "value" => params[:blueprint],
                     "options" => schema.blueprints_for(item).map { |blueprint| { "value" => blueprint.handle, "label" => blueprint["title"] } } }
         end
         if Nibble.config.locales.size > 1
-          list << { "handle" => "locale", "label" => "Locale", "type" => "select", "value" => params[:locale],
+          list << { "handle" => "locale", "label" => "Language", "type" => "select", "value" => params[:locale],
                     "options" => Nibble.config.locales.map { |locale| { "value" => locale.code, "label" => locale.code } } }
         end
         files? ? list : list + taxonomy_filters

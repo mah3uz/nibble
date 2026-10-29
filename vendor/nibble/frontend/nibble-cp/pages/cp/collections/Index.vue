@@ -48,7 +48,7 @@ function open(row: ListingRow) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem v-for="blueprint in collection.blueprints" :key="blueprint.url" as-child>
-              <Link :href="blueprint.url">View {{ blueprint.title }} blueprint</Link>
+              <Link :href="blueprint.url">See {{ blueprint.title }} fields</Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

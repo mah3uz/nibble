@@ -149,8 +149,8 @@ module Nibble
             record = Records::Term.find_by(id: entry.subject_id) or return [ "a deleted term", nil ]
             [ record.title, "/cp/taxonomies/#{record.taxonomy}/terms/#{record.id}/edit" ]
           when "global"
-            record = Records::GlobalSet.find_by(id: entry.subject_id) or return [ "a global set", nil ]
-            [ "the #{record.item&.[]('title') || record.handle.humanize} globals", "/cp/globals/#{record.handle}/edit" ]
+            record = Records::GlobalSet.find_by(id: entry.subject_id) or return [ "a site setting", nil ]
+            [ "the #{record.item&.[]("title") || record.handle.humanize} settings", "/cp/globals/#{record.handle}/edit" ]
           when "navigation"
             record = Records::NavigationTree.find_by(id: entry.subject_id) or return [ "a menu", nil ]
             [ "the #{Nibble.schema.find(:navigation, record.handle)&.[]('title') || record.handle.humanize} menu",
@@ -169,7 +169,7 @@ module Nibble
 
             noun = collection["title"].to_s.singularize.downcase
             { "label" => "New #{noun}", "url" => "/cp/collections/#{collection.handle}/entries/new",
-              "icon" => collection["icon"] || "collections", "description" => "Start a #{noun} from its blueprint." }
+              "icon" => collection["icon"] || "collections", "description" => "Write a new #{noun}." }
           end
           if Access.can?(user, "assets.upload")
             links << { "label" => "Upload assets", "url" => "/cp/media", "icon" => "assets",

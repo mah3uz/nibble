@@ -15,6 +15,10 @@ const types = computed(() => (props.meta.types as Record<string, { title: string
 const option = ref<string | null>((props.meta.initial_option as string) ?? null)
 const url = ref((props.meta.initial_url as string) ?? '')
 const item = computed(() => props.meta.item as ItemSummary | null)
+const chooseLabel = (handle: string) => {
+  const name = (types.value[handle]?.title ?? handle).toLowerCase()
+  return `Choose ${/^[aeiou]/.test(name) ? 'an' : 'a'} ${name}…`
+}
 const NONE = '__none__'
 
 watch(
@@ -67,7 +71,7 @@ const scope = computed(() =>
         :type="option"
         :scope="scope"
         :selected-ids="item ? [item.id] : []"
-        :label="item?.title ?? `Choose ${types[option]?.title.toLowerCase() ?? option}…`"
+        :label="item?.title ?? chooseLabel(option)"
         :disabled="isReadOnly"
         @pick="pick"
       />

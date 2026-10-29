@@ -13,9 +13,7 @@ module Nibble
         props = {
           collection: { handle: collection.handle, title: collection["title"], icon: collection["icon"] || "collections", structured:, dated:, view:,
                         views: [ "list", ("tree" if structured), ("calendar" if dated) ].compact,
-                        blueprints: Nibble.schema.blueprints_for(collection).map do |item|
-                          { title: item["title"], url: "/cp/blueprints/#{collection.handle}.#{item.handle}" }
-                        end },
+                        blueprints: blueprint_links(collection) },
           create: create_link(collection)
         }
         listing = Nibble::Cp::Listing.new(collection, user: Nibble::Current.user, params:)
@@ -29,6 +27,12 @@ module Nibble
       end
 
       private
+
+      def blueprint_links(collection)
+        return [] unless Nibble::Access.can?(Nibble::Current.user, "utilities.view")
+
+        Nibble.schema.blueprints_for(collection).map { |item| { title: item["title"], url: "/cp/blueprints/#{collection.handle}.#{item.handle}" } }
+      end
 
       def send_csv(collection, listing)
         send_data listing.to_csv, filename: "#{collection.handle}-#{Date.current.iso8601}.csv", type: "text/csv"

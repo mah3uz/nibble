@@ -19,8 +19,16 @@ module Nibble
           "initial_option" => type || (field&.value.present? ? "url" : config("default_option")),
           "selected" => id,
           "item" => item && { "id" => id, "title" => item[:title], "url" => item[:url] },
-          "types" => LinkTypes.all.to_h { |link_type| [ link_type.handle, { "title" => link_type.title } ] }
+          "types" => LinkTypes.all.to_h { |link_type| [ link_type.handle, { "title" => type_title(link_type) } ] }
         }
+      end
+
+      def type_title(link_type)
+        return link_type.title unless link_type.handle == "term"
+
+        handles = Array(config("taxonomies")).presence || Nibble.schema.taxonomies.map(&:handle)
+        titles = handles.filter_map { |handle| Nibble.schema.taxonomy(handle)&.[]("title")&.singularize }
+        titles.any? ? titles.to_sentence(two_words_connector: " or ", last_word_connector: " or ") : link_type.title
       end
 
       def pre_process_index(value)
