@@ -111,8 +111,8 @@ tidewater/
 bin/rails nibble:generate:theme tidewater
 ```
 
-This copies `crumbs` into `site/themes/tidewater`, renames its npm package to `@nibble-theme/tidewater` and registers it
-with npm, and changes `theme:` in `config/nibble.yml` to `tidewater`. Commit `package-lock.json` along with the
+This copies `crumbs` into `site/themes/tidewater`, renames its npm package to `@nibble-theme/tidewater`, runs `npm install` to register it
+as a workspace, and changes `theme:` in `config/nibble.yml` to `tidewater`. Commit `package-lock.json` along with the
 theme — it now knows about the new package.
 
 From now on every view, style and component you change lives in `site/themes/tidewater/`. Restart `bin/dev` so
@@ -473,8 +473,9 @@ defineProps<{ page: { title: string }; form: NibbleForm }>()
 </template>
 ```
 
-`ContactForm` came with the theme you copied; it renders any form's fields, handles errors and shows the success
-message. Its button says "Send message" — change that in `site/themes/tidewater/components/ContactForm.vue` if you like.
+`ContactForm` came with the theme you copied. It draws every public field type, handles steps and errors, and shows
+the success message, so it serves any form as it is; [Forms in your theme](../theming/forms.md) explains how it is
+built, for when you want your own markup. Its button says "Send message" — change that in `site/themes/tidewater/components/ContactForm.vue` if you like.
 
 Restart `bin/dev` for the new view, then create a page titled **Book a demo** with the slug `demo`, set its
 **Template** to `demo` in the sidebar, and publish. Fill the form in at `/demo`: the success message appears, the

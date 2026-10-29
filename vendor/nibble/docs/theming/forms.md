@@ -20,9 +20,11 @@ After reading this guide, you will know:
   calculations.
 - How to translate a form, type its values, and check that it is accessible.
 - Every key of the form definition and of a field, and every member `useNibbleForm` returns (sections 16 to 18).
+- What a complete, small stepped form component looks like (section 19).
 
 The working example is `themes/crumbs/components/ContactForm.vue`. It draws every public field type and uses every
-feature below, so read it beside this guide, and start from it rather than from scratch.
+feature below, so it serves any form as it is: copy it into your theme, or read it beside this guide and start from
+it rather than from scratch. Section 19 is a smaller component you can write from this guide alone.
 
 ## 1. Getting the form into a view
 
@@ -47,6 +49,10 @@ defineProps<{ form: NibbleForm }>()
   <DemoForm :form="form" />
 </template>
 ```
+
+The view only renders once a page uses it. In the Control Plane, create a page, choose the view as its **Template**
+and publish; [the tutorial](../getting-started/tutorial.md#72-put-it-on-a-page) walks through it. A collection whose
+entries should all use the view names it as `template:` in its schema instead.
 
 `form` is the definition the server builds for the visitor's request: the fields with their settings resolved, the
 action to post to, the honeypot, the CAPTCHA, the success message and more. Section 16 lists every key. A page showing a
@@ -655,3 +661,134 @@ The rest depend on the type, and are absent unless the schema set them:
 | `setFiles(handle, event)` | keeps the files chosen in a file input |
 | `accept(field)` | the `accept` attribute for a `files` field |
 | `fileLimits(field)` | the allowed types, size and count as a sentence, or `null` for other fields |
+
+## 19. A complete stepped form
+
+This component draws any form made of text, textarea, select and toggle fields, with notes and hidden fields. It
+has everything sections 2 to 15 teach: an error summary that takes focus, ids linking help and errors to inputs, a
+required note, the honeypot, the hidden resume token and timestamp, the CAPTCHA element, steps with a focused heading,
+a closed form, and Save and finish later. Add a branch for each other field type you use (section 7).
+
+```vue
+<!-- site/themes/tidewater/components/StepForm.vue -->
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useNibbleForm, type NibbleForm, type NibbleFormField } from '@nibble'
+
+const props = defineProps<{ form: NibbleForm }>()
+const f = useNibbleForm(props.form)
+const { errors, errorList, sent, message, saved, processing, stepping, step, steps, isLastStep, progress, trap } = f
+
+const sections = computed(() => {
+  const byHandle = new Map(props.form.fields.map((field) => [field.handle, field]))
+  const list = props.form.sections ?? [{ display: null, instructions: null, fields: [...byHandle.keys()] }]
+  return list.map((s) => ({ ...s, fields: s.fields.flatMap((handle) => byHandle.get(handle) ?? []) }))
+})
+const hasRequired = computed(() => props.form.fields.some((field) => f.isVisible(field) && f.isRequired(field)))
+
+const attrs = (field: NibbleFormField) => ({
+  id: f.inputId(field),
+  name: f.fieldName(field),
+  required: f.isRequired(field),
+  'aria-describedby': f.describedBy(field),
+  'aria-invalid': errors.value[field.handle] ? ('true' as const) : undefined,
+})
+</script>
+
+<template>
+  <p v-if="form.closed" role="status">{{ form.closed_message }}</p>
+  <p v-else-if="sent" :ref="(el) => (f.messageEl.value = el as HTMLElement)" role="status" tabindex="-1">
+    {{ message }}
+  </p>
+  <form v-else :action="form.action" method="post" novalidate @submit="f.submit">
+    <p v-if="form.result?.status === 'expired'" role="status">{{ form.result.message }}</p>
+
+    <div
+      v-if="Object.keys(errors).length"
+      :ref="(el) => (f.summaryEl.value = el as HTMLElement)"
+      role="alert"
+      tabindex="-1"
+    >
+      <p>{{ errors.base ?? form.messages?.check_answers ?? 'Please check these answers:' }}</p>
+      <ul>
+        <li v-for="error in errorList" :key="error.handle">
+          <a :href="error.href">{{ error.label }}: {{ error.message }}</a>
+        </li>
+      </ul>
+    </div>
+
+    <p v-if="hasRequired">{{ form.messages?.required_note ?? 'Fields marked * are required.' }}</p>
+    <template v-if="stepping">
+      <p :ref="(el) => (f.stepEl.value = el as HTMLElement)" tabindex="-1">
+        Step {{ step + 1 }} of {{ steps.length }}
+      </p>
+      <progress :value="progress" max="1" />
+    </template>
+    <fieldset v-for="(section, index) in sections" v-show="f.isCurrentStep(index)" :key="index">
+      <legend v-if="section.display">{{ section.display }}</legend>
+      <p v-if="section.instructions">{{ section.instructions }}</p>
+      <template v-for="field in section.fields" :key="field.handle">
+        <input v-if="field.hidden" type="hidden" :name="f.fieldName(field)" :value="f.values[field.handle] as string" />
+        <div v-else-if="f.isVisible(field)">
+          <div v-if="field.type === 'note'" v-html="field.text_html" />
+          <template v-else>
+            <label :for="f.inputId(field)">
+              {{ field.display }}
+              <template v-if="f.isRequired(field)">
+                <span aria-hidden="true"> *</span><span class="sr-only"> (required)</span>
+              </template>
+            </label>
+            <select v-if="field.type === 'select'" v-bind="attrs(field)" v-model="f.values[field.handle] as string">
+              <option value="">{{ field.placeholder || form.messages?.choose || 'Choose one…' }}</option>
+              <option v-for="o in field.options" :key="o.value" :value="o.value">{{ o.label }}</option>
+            </select>
+            <textarea
+              v-else-if="field.type === 'textarea'"
+              v-bind="attrs(field)"
+              v-model="f.values[field.handle] as string"
+            />
+            <input
+              v-else-if="field.type === 'toggle'"
+              v-bind="attrs(field)"
+              v-model="f.values[field.handle] as boolean"
+              type="checkbox"
+              value="true"
+            />
+            <input
+              v-else
+              v-bind="attrs(field)"
+              v-model="f.values[field.handle] as string"
+              :type="field.input_type ?? 'text'"
+              :autocomplete="field.autocomplete"
+            />
+          </template>
+          <p v-if="field.instructions" :id="f.helpId(field)">{{ field.instructions }}</p>
+          <p v-if="errors[field.handle]" :id="f.errorId(field)">{{ errors[field.handle] }}</p>
+        </div>
+      </template>
+    </fieldset>
+    <input
+      v-if="form.honeypot"
+      v-model="trap"
+      :name="form.honeypot"
+      tabindex="-1"
+      autocomplete="off"
+      aria-hidden="true"
+      style="position: absolute; left: -9999px"
+    />
+    <input v-if="form.timestamp" type="hidden" name="_nibble_t" :value="form.timestamp" />
+    <input v-if="form.resume?.token" type="hidden" name="_nibble_resume" :value="form.resume.token" />
+    <div :ref="(el) => (f.captchaEl.value = el as HTMLElement)" />
+
+    <button v-if="stepping && step > 0" type="button" @click="f.back">Back</button>
+    <button type="submit" :disabled="processing">{{ isLastStep ? form.submit_label || 'Send' : 'Next' }}</button>
+    <button v-if="form.resume" type="button" :disabled="processing" @click="f.saveForLater">
+      Save and finish later
+    </button>
+    <p role="status">{{ saved }}</p>
+  </form>
+</template>
+```
+
+`attrs(field)` collects what every input shares, so each branch states only what differs. A form without `steps` has
+`stepping` false, so the same component draws one page and the Next, Back and progress controls never appear.
