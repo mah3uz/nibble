@@ -26,6 +26,32 @@ class Nibble::Cp::NibbleApi::RelationshipsControllerTest < ActionDispatch::Integ
     assert_equal({ query: "abo", scope: { "collections" => [ "pages" ] }, limit: 50 }, @resolver.last_call)
   end
 
+  test "a resolver that cannot page is searched without an offset" do
+    sign_in_as users(:editor)
+    get cp_nibble_relationships_path("entry"), params: { offset: 20 }, as: :json
+
+    assert_response :success
+    assert_equal [ :query, :scope, :limit ], @resolver.last_call.keys
+  end
+
+  test "assets page with an offset" do
+    Nibble.boot!
+    3.times do |i|
+      blob = ActiveStorage::Blob.create_and_upload!(io: file_fixture("pixel.png").open, filename: "pic#{i}.png")
+      Nibble::Lifecycle.call(Nibble::Records::Asset.new(blob:), :create, {}, actor: Nibble::Principal.system)
+    end
+    sign_in_as users(:editor)
+
+    get cp_nibble_relationships_path("asset"), params: { q: "pic", limit: 2 }, as: :json
+    first = JSON.parse(response.body)["data"].map { |row| row["id"] }
+    get cp_nibble_relationships_path("asset"), params: { q: "pic", limit: 2, offset: 2 }, as: :json
+
+    assert_response :success
+    rest = JSON.parse(response.body)["data"].map { |row| row["id"] }
+    assert_equal 1, rest.size
+    assert_empty first & rest
+  end
+
   test "an unknown record type is a 404, not a server error" do
     sign_in_as users(:editor)
     get cp_nibble_relationships_path("gadget"), as: :json

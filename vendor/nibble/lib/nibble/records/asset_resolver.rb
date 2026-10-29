@@ -6,11 +6,11 @@ module Nibble
         ids.filter_map { |id| records[id.to_s] && summary(records[id.to_s], scope) }
       end
 
-      def search(query:, scope: {}, limit: 20)
+      def search(query:, scope: {}, limit: 20, offset: 0)
         pattern = "%#{Asset.sanitize_sql_like(query.to_s.downcase)}%"
         table = Asset.arel_table
         scoped(scope).where(table[:title].lower.matches(pattern).or(table[:filename].lower.matches(pattern)))
-          .order(created_at: :desc).limit(limit).map { |asset| summary(asset, scope) }
+          .order(created_at: :desc).limit(limit).offset(offset).map { |asset| summary(asset, scope) }
       end
 
       def resolve(id)

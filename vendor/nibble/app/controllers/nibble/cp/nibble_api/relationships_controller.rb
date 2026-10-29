@@ -10,7 +10,7 @@ module Nibble
           scope = params.fetch(:scope, {}).permit!.to_h.transform_values { |value| Array(value) }
           limit = params.fetch(:limit, 20).to_i.clamp(1, MAX_RESULTS)
           offset = params[:offset].to_i
-          paging = offset.positive? ? { offset: } : {}
+          paging = offset.positive? && pages?(resolver) ? { offset: } : {}
           render json: { data: resolver.search(query: params[:q].to_s.strip, scope:, limit:, **paging) }
         rescue ::Nibble::Error
           head :not_found
@@ -35,6 +35,10 @@ module Nibble
         end
 
         private
+
+        def pages?(resolver)
+          resolver.method(:search).parameters.any? { |kind, name| kind == :keyrest || name == :offset }
+        end
 
         def new_record
           case params[:type]
