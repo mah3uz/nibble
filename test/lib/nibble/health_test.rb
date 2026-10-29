@@ -94,7 +94,7 @@ class Nibble::HealthTest < ActiveSupport::TestCase
     worker
     job.ready_execution.update_columns(created_at: 10.minutes.ago)
 
-    assert_equal [ "warn", "Work in deliveries" ], [ check("queue").status, check("queue").message.split.first(3).join(" ") ]
+    assert_equal [ "warn", "Background work has" ], [ check("queue").status, check("queue").message.split.first(3).join(" ") ]
   end
 
   test "one failing check makes the site down, a warning only degrades it" do

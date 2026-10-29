@@ -235,7 +235,7 @@ class Nibble::Cp::EntriesControllerTest < ActionDispatch::IntegrationTest
     lifecycle(entry, :save, { "title" => "Colleague's" })
 
     patch "#{entries_path}/#{entry.id}", params: { entry: { title: "Mine again", lock_version: stale } }
-    assert_match "Someone saved this", session[:inertia_errors].with_indifferent_access[:lock_version]
+    assert_match "Someone else saved this", session[:inertia_errors].with_indifferent_access[:lock_version]
     assert_equal "Colleague's", entry.reload.title
   end
 
