@@ -123,6 +123,9 @@ add tables and columns, so they can be rolled back, but the snapshot taken befor
   messages say what to do next in plain words.
 - **History, the audit log and approvals say what happened.** They show field labels, readable values, titles and
   verbs, and an approval says what it does and changes. Signed-in devices have names.
+- **The Control Plane formats numbers and dates in the site's locale,** the default one in `config/nibble.yml`, or the
+  browser's language when the site declares none. Sites on `en` now see dates as month/day/year with 12-hour times;
+  set the locale's code to `en-AU` or `en-GB` to keep day/month/year.
 - **Date fields are compact** unless `full_width: true`, or the date-time has a `time_zone`.
 - **Relationship fields with 25 or fewer choices show a dropdown** and offer **Create a new …**.
 - **`nibble:check` reports more:** records holding a switched-off required toggle, saved text failing an email, URL or
