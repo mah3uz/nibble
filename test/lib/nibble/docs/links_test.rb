@@ -36,6 +36,16 @@ class DocsLinksTest < ActiveSupport::TestCase
     assert_empty broken, "broken docs links:\n#{broken.join("\n")}"
   end
 
+  # The docs site gives each page the URL /docs/<file name>, and a section's index.md takes its folder's name.
+  test "no two docs pages share a file name, which the docs site would put at the same URL" do
+    slugs = PAGES.group_by do |file|
+      parts = file.relative_path_from(DOCS).to_s.delete_suffix(".md").split("/")
+      parts.last == "index" ? parts[-2] : parts.last
+    end
+
+    assert_empty slugs.select { |_, files| files.size > 1 }.transform_values { |files| files.map { |file| file.relative_path_from(DOCS).to_s } }
+  end
+
   test "every docs page has its own id and an order, since the docs site addresses and places pages by them" do
     fronts = PAGES.to_h { |file| [ file.relative_path_from(DOCS).to_s, Nibble::Markdown.front_matter(file.read) ] }
     ids = fronts.values.map { |front| front["id"] }
