@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.21.0 — 2026-10-29 14:51 +0600
+
 ### What's new
 
 - **Approving a change makes it.** When a connected app's change waits for approval, approving it in the Control Plane
