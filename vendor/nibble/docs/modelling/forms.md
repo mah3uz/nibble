@@ -14,6 +14,7 @@ land in the CRM and keep bots out. This guide covers all of that.
 After reading this guide, you will know:
 
 - How to declare a form and which fields a public form may use.
+- How to split a long form into steps, and let a visitor save it and finish later.
 - How to put a form on a page.
 - How spam protection works, and how to turn on a CAPTCHA.
 - How to email submissions, and how to send them to another system's API.
@@ -209,6 +210,57 @@ calculation, because a calculation isn't an answer the visitor posts. A calculat
 and only a form can have one. `nibble:check` refuses a formula that doesn't parse, one that names a field the form
 doesn't have or one that doesn't hold a number, a calculation that depends on itself (directly or through other
 calculations), `decimals` outside 0–15, and a calculation in a blueprint or global set.
+
+### 1.2 Steps, and finishing later
+
+`steps: true` on a sectioned form makes each section a step. The visitor sees one step at a time with a progress
+indicator, Back and Next, and Next checks that step before moving on:
+
+```yaml
+title: Book a demo
+steps: true
+resume: true
+resume_email: email
+resume_days: 7
+sections:
+  - display: Your details
+    fields:
+      - handle: email
+        field: { type: text, input_type: email, display: Work email, required: true }
+  - display: Your team
+    fields:
+      - handle: team_size
+        field: { type: integer, display: People, required: true }
+```
+
+Next posts what the visitor has entered to `POST /forms/demo/steps/<index>`, where `<index>` counts the form's sections
+from 0. Nibble checks that section's fields as it checks a submission, conditions included, and answers
+`{ "ok": true }` or `422` with the section's `errors`; nothing is stored, emailed or delivered. Step checks don't count
+towards `spam.rate_limit`: they have a cap of their own, twenty times its `requests` in the same window. Sending the
+form on the last step checks every field again, as for any submission. A step whose fields are all hidden by their
+conditions is skipped. Without JavaScript the form is one long sectioned form, every step shown, and it is sent as
+usual.
+
+`resume: true` adds **Save and finish later**. It posts what the visitor has entered to `POST /forms/demo/resume`, and
+Nibble emails the address in the field `resume_email` names a link back to the page the form is on,
+`/demo?resume=<token>`. That page's definition then carries the saved values, and the form starts from them; it is
+rendered for each visit rather than kept in the page cache. The link works for `resume_days`, 7 unless set; after
+that, or once the form has been sent, the definition says the link has expired and the form starts empty.
+
+What is saved is held like a submission's values, and only until the visitor comes back:
+
+- Fields with `encrypt: true` are stored encrypted. Files never are: the visitor attaches them again.
+- Only a digest of the link's token is stored, so the database alone can't open a saved form.
+- A saved form is never a submission: it isn't listed, counted towards `limits`, emailed to anyone but the visitor,
+  delivered or handled.
+- Sending the form deletes it, and so does saving again from the same page, so a visitor holds one link. The daily
+  purge deletes saved forms once they expire, and **Personal data** erases them with a person's submissions.
+- Saving takes the form's honeypot, `min_seconds`, `max_links` and CAPTCHA like a submission does, and has its own
+  `spam.rate_limit` count, so the form can't be used to send email in bulk. A save caught as spam looks saved and keeps
+  nothing.
+
+`nibble:check` refuses `steps: true` without `sections`, a `resume_email` that isn't one of the form's text fields,
+and `resume` on a form with `store: false`.
 
 ## 2. Putting it on a page
 
@@ -546,6 +598,11 @@ site's `config/locales/<locale>.yml`:
 | `nibble.forms.client.too_large` | the browser can't send the files |
 | `nibble.forms.client.generic` | the answer had no message to show |
 | `nibble.forms.client.network` | the request didn't reach the site |
+| `nibble.forms.resume.saved` | a form was saved to finish later; takes `one` and `other` forms with `%{count}` days |
+| `nibble.forms.resume.email` | a save has no valid address in the `resume_email` field |
+| `nibble.forms.resume.failed` | the email with the link couldn't be sent |
+| `nibble.forms.resume.too_large` | there is too much to save |
+| `nibble.forms.resume.expired` | a link has expired or its form was sent |
 
 A field's failed rules say "The Courriel field is required." in the field's `display` for the visitor's language; the
 sentence itself is translated through `nibble.validation.*`, or by the field's own [`messages`](#1-declaring-a-form).
@@ -568,5 +625,7 @@ the visitor submitted from: the form title, field labels and option labels in it
 | a field's `encrypt` | true stores its value encrypted; not on `files`, nor with `store: false` |
 | a `calculation` field's `formula`, `decimals`, `prepend`, `append` | the formula, **required**; places to round to, 0–15; text before and after the figure ([Calculations](#11-calculations)) |
 | `retention_days` | a positive number |
+| `steps` | true makes each section a step; needs `sections` |
+| `resume`, `resume_email`, `resume_days` | true adds Save and finish later; `resume_email` names the text field with the visitor's address; `resume_days` is how long the link works, 7 unless set |
 | `limits` | `{ opens_at, closes_at, max_submissions, unique, closed_message }` |
 | `handler` | the name of a registered Ruby handler |

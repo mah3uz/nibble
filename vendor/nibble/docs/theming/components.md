@@ -181,6 +181,12 @@ const demo = useNibbleForm(props.form)
 | `summaryEl`, `messageEl` | refs for the error summary and the success message; each is focused when it appears, so give it `tabindex="-1"` |
 | `setFiles`, `accept`, `fileLimits(field)` | for `files` fields; `fileLimits` describes the allowed types, size and count, such as "PDF or JPG, up to 5 MB each, at most 3 files." |
 | `calculated(field)`, `calculatedText(field)` | for `calculation` fields: the current figure, or `null` while it's blank, and the figure as text in the site's locale with its `decimals`, `prepend` and `append`, such as "$1,350.00" (`""` while blank) |
+| `enhanced` | true once the component has mounted in the browser, so a control that needs JavaScript can wait for it |
+| `stepping`, `steps`, `step` | whether the form is showing one step at a time; its steps (sections with their `index`, leaving out any whose fields are all hidden); the position of the current one |
+| `isCurrentStep(index)`, `isLastStep`, `progress` | whether section `index` is the one to draw; whether the current step is the last; how far along the visitor is, from 0 to 1 |
+| `next`, `back` | check the current step with the server and move on, or stay with its errors; go back without a check |
+| `stepEl` | a ref for the step heading, focused when the step changes, so give it `tabindex="-1"` and say which step it is |
+| `saveForLater`, `saved` | save what was entered and email the visitor a link, for a form with `resume`; the message to show once it has |
 
 Each field carries its settings, such as `placeholder`, `options`, and `prepend` and `append` to draw beside the
 input, and an `integer` field's `min`, `max` and `step`. Text fields carry `autocomplete`, textareas `rows`, toggles `inline_label`,
@@ -206,6 +212,19 @@ screen readers hear it change:
 The form posts nothing for it: the server calculates the stored value itself (see
 [Calculations](../modelling/forms.md#11-calculations)).
 
+A form with `steps: true` has `form.steps` true. Until it mounts, `stepping` is false and `isCurrentStep` is true for
+every section, so the server draws every step and a visitor without JavaScript fills in one long form. Once mounted,
+draw only the section where `isCurrentStep(index)` holds, with `v-show` so a file a visitor chose stays chosen, and a
+step heading on `stepEl` such as "Step 2 of 4". `submit` before the last step calls `next`, so the one submit button can
+read Next until then, and a refused send opens the step with the first error. `next` sends a step only its own files.
+
+A form with `resume: true` has `form.resume`, `{ email, days, token }`: the field that takes the visitor's address,
+how many days the link works, and the token when the page was opened from a resume link (`?resume=<token>`). Then
+`form.result` is `{ status: 'resumed', values }` and `values` starts from them, or `{ status: 'expired', message }`
+when the link no longer works. `submit` sends the token as `_nibble_resume`, so the save is deleted once the form is
+sent; a form posted without JavaScript needs it as a hidden input. Show `saved` in a `role="status"` element that is
+on the page before it fills, so a screen reader announces it.
+
 `NibbleFormField` is a union on `type`, so a template that checks `field.type === 'select'` reads `field.options`
 without a cast.
 
@@ -213,8 +232,9 @@ without a cast.
 > This short example renders every field as a text input and leaves out the CAPTCHA widget, so it only works for a
 > form without `captcha: true`. The theme you copied from `crumbs` has `components/ContactForm.vue`, which draws
 > every public fieldtype with its own control (a checkbox for a toggle, a fieldset of radios or checkboxes for
-> choices, a date or date-and-time input, a live `<output>` for a calculation), sends hidden fields, applies conditions, links help and errors to their
-> inputs, and handles file uploads, the honeypot and the CAPTCHA. Start from it rather than from scratch.
+> choices, a date or date-and-time input, a live `<output>` for a calculation), sends hidden fields, applies conditions,
+> links help and errors to their inputs, handles file uploads, the honeypot and the CAPTCHA, and draws steps and Save
+> and finish later. Start from it rather than from scratch.
 
 ## 7. Shared props
 
