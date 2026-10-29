@@ -17,12 +17,11 @@ yours — and the content itself lives in SQLite. Uploads go to S3. Deployment i
 
 Upgrades arrive as releases, and each one replaces `vendor/nibble` whole.
 
-## Alpha
+## Beta
 
-> [!WARNING]
-> **Nibble is in `alpha` and under heavy development.** Expect breaking changes often: settings, schema keys, commands
-> and the theme API can change from one release to the next. Read the [changelog](CHANGELOG.md) before every
-> upgrade.
+> [!NOTE]
+> **Nibble is in `beta`.** A release is meant to keep a working site working. Anything you need to do arrives as an
+> **Upgrade** note in the [changelog](CHANGELOG.md), so read it before every upgrade.
 
 ## Install
 

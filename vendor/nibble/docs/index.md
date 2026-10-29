@@ -52,9 +52,9 @@ code, and a form that books a demo.
 Every guide uses that same site in its examples, so the collection you declare in one is the one you render in
 the next.
 
-> [!WARNING]
-> **Nibble is in `alpha` and under heavy development.** Expect breaking changes often: settings, schema keys, commands
-> and the theme API can change from one release to the next. Read the [changelog](../changelogs/index.md) before every upgrade.
+> [!NOTE]
+> **Nibble is in `beta`.** A release is meant to keep a working site working. Anything you need to do arrives as an
+> **Upgrade** note in the [changelog](../changelogs/index.md), so read it before every upgrade.
 
 > [!TIP]
 > New to Nibble? Start with [Getting Started with Nibble](getting-started/tutorial.md). It builds the whole

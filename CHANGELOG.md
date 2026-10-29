@@ -7,10 +7,15 @@ release whose database migrations cannot be undone says so in its entry, so you 
 back. The Control Plane shows these same notes, read from the feed the documentation site publishes, which is
 generated from this file rather than written by hand.
 
-Versions are ordered but not promises: while Nibble is `0.x`, anything can change between releases. Themes pin the
-theme API (`nibble: '^1'` in `theme.yml`), not this number.
+Nibble is in beta: a release is meant to keep a working site working, and what it can't keep working is in an
+**Upgrade** note. Themes pin the theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
+
+### What's fixed
+
+- **A term query with `counts` is typed with `entries_count`** in `site/types.d.ts`, so a view can show the count
+  without a cast.
 
 ## 0.21.1 — 2026-10-29 17:57 +0600
 
