@@ -12,6 +12,44 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+### What's new
+
+- **Approving a change makes it.** When a connected app's change waits for approval, approving it in the Control Plane
+  carries it out, as the app, and keeps the result; the app sends nothing again. Permissions are checked again at that
+  moment, so a connection revoked or narrowed in the meantime fails instead of changing anything, and the person is
+  told. Apps read the outcome with the new `get_approval` operation.
+- **Each connection chooses whether to ask.** Connecting an app offers **Ask before live changes** (the default) or
+  **Make changes without asking**, which needs your password. Under **Users → Agent access**, **Approvals** decides
+  whether people may choose: **Each person chooses** or **Always ask**. An app signed in with a code always asks.
+- **Approve or decline several at once,** with one password confirmation.
+- **Apps send files without base64.** `PUT /api/v1/uploads` takes a file's bytes, and `upload_asset` takes the upload
+  it returns, or a `url` for the site to fetch. `create_upload` gives an MCP app the address to send a file to. A file
+  waiting for approval is kept once, and the approval page shows it.
+- **Markdown works in rich text at any depth,** including the rich text inside a page's blocks, in what apps write and
+  what they read.
+- **`describe_schema` lists each block's sets and their fields,** so an app can write blocks without reading an
+  existing entry first.
+- **A dry run warns about what it can't place:** a block type the field doesn't have, or an image whose asset doesn't
+  exist.
+- **Creating or changing an entry through the API returns `preview_url`,** the draft's preview in the Control Plane.
+- **A connected app stays connected while it's used:** its sign-in ends 90 days after it was last used, not 90 days
+  after it was connected.
+
+### What's fixed
+
+- **A missing theme says when `NIBBLE_THEME` chose it,** so a variable left in a shell or `.env` is easy to spot.
+
+### Changed
+
+- **The management API is version 2.** Rich text inside blocks is read as Markdown where it converts without loss,
+  as top-level rich text already was.
+- **An approval answer names its state:** `approval_pending`, `approval_denied`, `approval_expired` or
+  `approval_mismatch`, instead of `approval_not_valid` for all four. A request repeated once its approval is done or
+  declined asks again; a retry with the original `idempotency_key` gets the first answer.
+
+  **Upgrade:** an app or script that reads nested rich text as editor JSON, or checks for `approval_not_valid`, needs
+  updating. Nibble's own `nibble` command and MCP clients need nothing.
+
 ## 0.20.0 — 2026-10-29 03:37 +0600
 
 ### What's new
