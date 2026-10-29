@@ -46,10 +46,18 @@ module Nibble
         queried.empty? ? "/forms/#{form.handle}" : "/forms/#{form.handle}?#{queried.to_query}"
       end
 
+      # nibble:check refuses an unknown computed default; a page that still has one shows the form without it.
+      def public_default(field)
+        field.default_value
+      rescue Nibble::Error => error
+        Rails.logger.warn("[nibble] form field #{field.path}: #{error.message}")
+        nil
+      end
+
       def field_definition(field, params = {})
         config = field.fieldtype.config.slice(*FIELD_CONFIG).compact
         config["options"] = field.fieldtype.options if OPTION_TYPES.include?(field.type)
-        config["default"] = field.default_value if config.key?("default")
+        config["default"] = public_default(field) if config.key?("default")
         if field.get("hidden") == true
           config["hidden"] = true
           config["value"] = config["default"] = prefill_value(field, params) || field.get("value")

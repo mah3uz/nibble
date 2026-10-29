@@ -84,6 +84,9 @@ module Nibble
           problem(source, "field '#{field.path}' uses unknown validation rule '#{name}'") unless Validation.known?(name)
         end
         check_messages(field, rule_names, source)
+        if field.computed_default? && !Defaults.registered?(name = field.get("default").delete_prefix(Field::COMPUTED_DEFAULT_PREFIX))
+          problem(source, "field '#{field.path}' has computed default '#{name}', which isn't registered")
+        end
         unless Operations::FieldSchema.known?(field)
           @warnings << Problem.new(source:, level: :warning,
             message: "field '#{field.path}' is a #{field.type}, which apps can't be told how to write: give the fieldtype a json_schema")

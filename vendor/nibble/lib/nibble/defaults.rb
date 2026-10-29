@@ -10,6 +10,8 @@ module Nibble
         resolver.call
       end
 
+      def registered?(name) = resolvers.key?(name.to_s)
+
       def reset! = @resolvers = nil
 
       private

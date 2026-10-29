@@ -153,11 +153,13 @@ class FormsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "the refusal says how long to wait for the form's own window" do
+    # Limits count in fixed windows, so the wait depends on how far into one the request lands.
+    travel_to Time.zone.at((Time.current.to_i / 600) * 600 + 30)
     2.times { submit :tracked, { name: "Ada" } }
     submit :tracked, { name: "Ada" }
 
     assert_response :too_many_requests
-    assert_match(/try again in (9|10) minutes\./, response.parsed_body["errors"]["base"].first)
+    assert_match(/try again in 10 minutes\./, response.parsed_body["errors"]["base"].first)
 
     submit :contact, VALID
     5.times { submit :contact, VALID }

@@ -52,6 +52,15 @@ class Nibble::Forms::DefinitionTest < ActiveSupport::TestCase
     assert_equal [ 2, true ], fields["topics"].values_at("max_items", "clearable")
   end
 
+  # A typo in a computed default must not take the page down; nibble:check is where it fails.
+  test "an unregistered computed default leaves the field empty instead of breaking the form's page" do
+    Nibble::Defaults.reset!
+    assert_nil definition("settings")["fields"].find { |field| field["handle"] == "arrival" }["default"]
+
+    problems = Nibble::Check.run.problems.map(&:to_s)
+    assert(problems.any? { |problem| problem.include?("computed default 'today', which isn't registered") })
+  end
+
   test "a field's condition reaches the theme as rules it can evaluate, and an unconditional field has none" do
     fields = definition("conditional")["fields"].index_by { |field| field["handle"] }
 
