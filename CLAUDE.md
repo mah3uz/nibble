@@ -25,6 +25,10 @@ everything else · Active Storage on S3 behind a CDN, served through `AssetFiles
 Control Plane · themes as npm workspaces under `site/themes/*` and `vendor/nibble/themes/*` · Kamal on a VPS · nightly `VACUUM INTO` snapshots to S3
 (`DatabaseSnapshotJob`). Do not introduce React or Hotwire.
 
+shadcn-vue isn't a dependency: add a Control Plane component with `npx shadcn-vue@latest add <component>`
+(`components.json` at the root), and copy any stylesheet variant it needs from shadcn-vue's `tailwind.css` into
+`vendor/nibble/frontend/entrypoints/cp.css`, as `data-open:` and `no-scrollbar` are. See `docs/contributing/architecture.md` §5.
+
 ## Architecture
 
 **Where things live. Everything under `vendor/nibble/` is ours; everything else is the site's.** The site's `Gemfile`
