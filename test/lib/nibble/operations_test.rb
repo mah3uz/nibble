@@ -149,6 +149,62 @@ class Nibble::OperationsTest < ActiveSupport::TestCase
     assert_equal "array", fields.dig("related", "schema", "type")
   end
 
+  def described(config, handle = "sample") = Nibble::Operations::FieldSchema.for(Nibble::Field.new(handle, config))
+
+  test "an app is told the limits a field already enforces, so it can write a valid value the first time" do
+    assert_equal 80, described({ "type" => "text", "character_limit" => 80 })["maxLength"]
+    assert_equal 200, described({ "type" => "textarea", "character_limit" => 200 })["maxLength"]
+    assert_equal "email", described({ "type" => "text", "input_type" => "email" })["format"]
+    assert_equal "uri", described({ "type" => "text", "input_type" => "url" })["format"]
+    assert_nil described({ "type" => "text", "input_type" => "tel" })["format"]
+
+    seats = described({ "type" => "integer", "min" => 10, "max" => 100, "step" => 5 })
+    assert_equal [ 10, 100, 5 ], seats.values_at("minimum", "maximum", "multipleOf")
+    offset = described({ "type" => "integer", "min" => 1, "step" => 2 })
+    assert_nil offset["multipleOf"], "steps from 1 aren't multiples of 2"
+    assert_match "In steps of 2 from 1", offset["description"]
+
+    assert_equal "date", described({ "type" => "date" })["format"]
+    assert_equal "date-time", described({ "type" => "date", "time_enabled" => true })["format"]
+  end
+
+  test "a choice keeps its values in enum and names their labels in the description" do
+    schema = described({ "type" => "select", "options" => { "sales" => "Sales team", "support" => "Support" } })
+
+    assert_equal %w[sales support], schema["enum"]
+    assert_match "Options: sales (Sales team), support (Support)", schema["description"]
+    assert_nil described({ "type" => "radio", "options" => %w[a b] })["description"], "labels that only repeat the values add nothing"
+  end
+
+  test "a read-only field is marked readOnly, and a conditional one says when" do
+    assert described({ "type" => "text", "read_only" => true })["readOnly"]
+    assert described({ "type" => "text", "visibility" => "read_only" })["readOnly"]
+
+    conditional = described({ "type" => "text", "read_only" => { "if" => { "locked" => true } } })
+    assert_nil conditional["readOnly"]
+    assert_match "Read-only when locked is true", conditional["description"]
+  end
+
+  test "a field shown only on a condition says so and isn't required in its row" do
+    schema = described({ "type" => "text", "if" => { "hero_kind" => "video" } })
+    assert_match "Only when hero_kind is video", schema["description"]
+    assert_match "Not when kind is personal or kind is empty",
+      described({ "type" => "text", "unless_any" => { "kind" => [ "personal", "empty" ] } })["description"]
+
+    grid = described({ "type" => "grid", "fields" => [
+      { "handle" => "url", "field" => { "type" => "text", "required" => true, "if" => { "kind" => "link" } } },
+      { "handle" => "label", "field" => { "type" => "text", "required" => true } }
+    ] })
+    assert_equal [ "label" ], grid.dig("items", "required")
+  end
+
+  test "a fieldtype's own json_schema is kept, with the title and notes added" do
+    schema = described({ "type" => "calculation", "formula" => "1 + 1", "instructions" => "Total" })
+
+    assert_equal [ "number", true ], schema.values_at("type", "readOnly")
+    assert_match(/\ATotal — Calculated when the form is submitted/, schema["description"])
+  end
+
   test "every built-in fieldtype can be described to an app" do
     Nibble::Fieldtypes.handles.each do |type|
       field = Nibble::Field.new("sample", { "type" => type, "options" => %w[a b] })

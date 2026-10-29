@@ -27,16 +27,72 @@ module Nibble
 
       module_function
 
+      FORMATS = { "email" => "email", "url" => "uri" }.freeze
+      OPERATORS = { "equals" => "is", "===" => "is", "not" => "is not", "!==" => "is not", "contains" => "contains",
+                    "contains_any" => "contains any of", ">" => "is more than", ">=" => "is at least", "<" => "is less than",
+                    "<=" => "is at most" }.freeze
+
       def for(field, depth = 0)
         return nil if HIDDEN.include?(field.type)
 
-        schema = field.fieldtype.respond_to?(:json_schema) ? field.fieldtype.json_schema : (TYPES[field.type] || choice(field))
+        own = field.fieldtype.respond_to?(:json_schema)
+        schema = own ? field.fieldtype.json_schema : (TYPES[field.type] || choice(field))
         return nil unless schema
 
-        schema = nested(field, schema, depth) unless field.fieldtype.respond_to?(:json_schema)
+        schema = nested(field, rules(field, schema), depth) unless own
         schema = schema.merge("title" => field.display)
-        field.instructions.present? ? schema.merge("description" => [ field.instructions, schema["description"] ].compact.join(" — ")) : schema
+        schema = schema.merge("readOnly" => true) if field.visibility == "read_only"
+        notes = [ field.instructions.presence, schema["description"], *labels(field), *conditions(field) ].compact
+        notes.any? ? schema.merge("description" => notes.join(" — ")) : schema
       end
+
+      def rules(field, schema)
+        limit = field.get("character_limit").to_i
+        schema = schema.merge("maxLength" => limit) if limit.positive? && %w[text textarea markdown].include?(field.type)
+        case field.type
+        when "text" then FORMATS[field.get("input_type")] ? schema.merge("format" => FORMATS[field.get("input_type")]) : schema
+        when "integer" then integer(field, schema)
+        when "date"
+          time = field.get("time_enabled") == true
+          schema.merge("format" => time ? "date-time" : "date", "description" => time ? "ISO 8601 date-time" : "ISO 8601 date")
+        else schema
+        end
+      end
+
+      def integer(field, schema)
+        min, max, step = field.get("min"), field.get("max"), field.get("step").to_i
+        schema = schema.merge({ "minimum" => min, "maximum" => max }.compact)
+        return schema unless step.positive?
+
+        (min.to_i % step).zero? ? schema.merge("multipleOf" => step) : schema.merge("description" => "In steps of #{step} from #{min}")
+      end
+
+      def labels(field)
+        return [] unless %w[select radio checkboxes].include?(field.type) && field.fieldtype.respond_to?(:options)
+
+        options = field.fieldtype.options
+        return [] if options.all? { |option| option["label"].to_s == option["value"].to_s }
+
+        [ "Options: #{options.map { |option| "#{option['value']} (#{option['label']})" }.join(', ')}" ]
+      end
+
+      def conditions(field)
+        shown = Conditions.describe(field.config, prefix: field.prefix)
+        locked = field.read_only_condition && Conditions.describe(field.read_only_condition, prefix: field.prefix)
+        [ (shown && "#{shown['show'] ? 'Only when' : 'Not when'} #{sentence(shown)}; otherwise it isn't saved"),
+          (locked && "Read-only #{locked['show'] ? 'when' : 'unless'} #{sentence(locked)}; a value sent then is ignored") ].compact
+      end
+
+      def sentence(described)
+        described["rules"].map do |rule|
+          next "the custom condition #{rule['value'].to_s.delete_prefix('custom ')} passes" if rule["operator"] == "custom"
+
+          value = { "null" => "empty", "empty" => "empty" }.fetch(rule["value"], rule["value"])
+          "#{rule['field'].to_s.sub(Conditions::ROOT_PREFIX, '')} #{OPERATORS.fetch(rule['operator'], rule['operator'])} #{value}"
+        end.join(described["match"] == "any" ? " or " : " and ")
+      end
+
+      def conditional?(field) = Conditions.describe(field.config, prefix: field.prefix).present?
 
       def nested(field, schema, depth)
         return schema if depth >= MAX_DEPTH
@@ -68,7 +124,7 @@ module Nibble
 
       def object(fields, depth = 0)
         properties = fields.all.values.filter_map { |field| (schema = self.for(field, depth)) && [ field.handle, schema ] }.to_h
-        required = fields.all.values.select { |field| field.required? && properties.key?(field.handle) }.map(&:handle)
+        required = fields.all.values.select { |field| field.required? && properties.key?(field.handle) && !conditional?(field) }.map(&:handle)
         { "type" => "object", "properties" => properties, "required" => required.presence }.compact
       end
     end
