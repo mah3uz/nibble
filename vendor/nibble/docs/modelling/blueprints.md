@@ -83,6 +83,14 @@ terms. The collection lists which blueprints it allows; the first is the default
 | `visibility` | `visible`, `read_only`, `hidden` or `computed` |
 | `api` | `false` leaves the field out of the generated TypeScript types — the value is still sent to pages and the API |
 
+A `default` of `computed:<name>` is worked out each time it is used. Nibble has one built in, `computed:today`, the
+current date in the site's time zone as `YYYY-MM-DD`. A site registers its own in an initializer, and `nibble:check`
+reports a `computed:` default nothing has registered:
+
+```ruby
+Nibble::Defaults.register("quarter") { "Q#{(Time.zone.today.month - 1) / 3 + 1}" }
+```
+
 A `required` toggle has to be switched on: an entry can't be published, and a term or global set can't be saved, while
 it is off. A toggle that may be left off is not required. The `accepted` rule (`validate: [accepted]`) asks the same of
 any field, taking `true`, `1`, `"1"`, `"yes"`, `"on"` and `"true"`, and says "The Terms field must be accepted."

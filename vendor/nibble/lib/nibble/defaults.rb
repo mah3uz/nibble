@@ -1,5 +1,7 @@
 module Nibble
   module Defaults
+    BUILT_IN = { "today" => -> { Time.zone.today.iso8601 } }.freeze
+
     class << self
       def register(name, &resolver)
         resolvers[name.to_s] = resolver
@@ -16,7 +18,7 @@ module Nibble
 
       private
 
-      def resolvers = @resolvers ||= {}
+      def resolvers = @resolvers ||= BUILT_IN.dup
     end
   end
 end

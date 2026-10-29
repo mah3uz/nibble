@@ -113,6 +113,17 @@ class Nibble::FieldsTest < ActiveSupport::TestCase
     assert_equal({ "hint" => "upcased on save" }, result.meta["code"])
   end
 
+  test "the built-in computed:today default is the date in the site's time zone" do
+    field = fields([ { handle: "date", field: { type: "fake_text", default: "computed:today" } } ]).get("date")
+    Time.use_zone("Pacific/Auckland") do
+      travel_to Time.utc(2026, 9, 16, 20, 0) do
+        assert_equal "2026-09-17", field.default_value
+      end
+    end
+    Nibble::Defaults.reset!
+    assert Nibble::Defaults.registered?("today"), "the built-in survives a reset"
+  end
+
   test "computed defaults resolve through registered resolvers, and unknown ones fail loud" do
     Nibble::Defaults.register("today") { "2026-09-17" }
     field = fields([ { handle: "date", field: { type: "fake_text", default: "computed:today" } } ]).get("date")
