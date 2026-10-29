@@ -308,7 +308,7 @@ each with a label a screen reader hears as "3 of 5". Style the labels as stars. 
 **Toggle.** A single checkbox with `value="true"`; its value in `values` is a `boolean`. `inline_label` is the text
 beside it (plain text); draw `field.display` above it as a heading when `inline_label` is set, and the label text is
 `inline_label` or, without one, `display`. A consent box is a required toggle. When the label has links, the server
-sends `inline_label_html` as well, holding only links with `href` and `rel="noopener"`; draw it inside the checkbox's
+sends `inline_label_html` as well, holding only links with `href`, `target="_blank"` and `rel="noopener noreferrer"` (they open in a new tab, so the visitor keeps their answers); draw it inside the checkbox's
 `<label>` instead of `inline_label`:
 
 ```vue

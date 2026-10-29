@@ -267,7 +267,7 @@ A consent box is a `required` toggle whose `inline_label` links to the policy:
 
 The label may be written per locale. A link may go to a web, email or phone address or a page on the site; any other
 link is shown as its text. The theme receives `inline_label` as plain text with only the link text, and
-`inline_label_html` with the links as `<a href rel="noopener">` when the label has any. Emails, the Control Plane's
+`inline_label_html` with the links as `<a href target="_blank" rel="noopener noreferrer">`, so a link opens in a new tab and the visitor keeps their answers when the label has any. Emails, the Control Plane's
 submissions and CSV exports show the plain text.
 
 ### 1.4 Notes

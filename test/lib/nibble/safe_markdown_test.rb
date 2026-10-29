@@ -1,10 +1,16 @@
 require "test_helper"
 
 class Nibble::SafeMarkdownTest < ActiveSupport::TestCase
-  test "a label link keeps only web, email, phone and site targets, and gets rel=noopener without a target" do
+  test "a label link keeps only web, email, phone and site targets, and opens in a new tab so the visitor keeps their answers" do
     html = Nibble::SafeMarkdown.label_html("[a](https://x.test) [b](mailto:a@x.test) [c](tel:+6123) [d](/privacy) [e](#top)")
 
-    assert_equal 5, Nokogiri::HTML5.fragment(html).css("a[href][rel=noopener]").size
+    assert_equal 5, Nokogiri::HTML5.fragment(html).css(%(a[href][target=_blank][rel="noopener noreferrer"])).size
+  end
+
+  test "links in a note stay in the same tab" do
+    html = Nibble::SafeMarkdown.html("[a](https://x.test)")
+
+    assert_includes html, 'rel="noopener"'
     assert_not_includes html, "target"
   end
 
