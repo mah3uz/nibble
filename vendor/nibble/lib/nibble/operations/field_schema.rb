@@ -68,7 +68,7 @@ module Nibble
       end
 
       def labels(field)
-        return [] unless %w[select radio checkboxes].include?(field.type) && field.fieldtype.respond_to?(:options)
+        return [] unless %w[select radio checkboxes button_group].include?(field.type) && field.fieldtype.respond_to?(:options)
 
         options = field.fieldtype.options
         return [] if options.all? { |option| option["label"].to_s == option["value"].to_s }
@@ -116,7 +116,7 @@ module Nibble
       def choice(field)
         options = field.get("options")
         values = options.is_a?(Hash) ? options.keys : Array(options).map { |option| option.is_a?(Hash) ? option["key"] || option["value"] : option }
-        return nil unless %w[select radio checkboxes].include?(field.type)
+        return nil unless %w[select radio checkboxes button_group].include?(field.type)
 
         one = { "type" => "string", "enum" => values.map(&:to_s).presence }.compact
         field.type == "checkboxes" || field.get("multiple") == true ? { "type" => "array", "items" => one } : one

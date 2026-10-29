@@ -78,6 +78,7 @@ module Nibble
     end
 
     def migrate_config(config) = config
+    def config_problems = []
 
     def default_value = nil
     def pre_process(raw) = raw

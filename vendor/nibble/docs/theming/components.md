@@ -184,7 +184,7 @@ const contact = useNibbleForm(props.form)
 Name the type yourself where the form comes from somewhere else: `useNibbleForm<ContactFormValues>(form)`, with
 `ContactFormValues` from `@site/types`. `FormValues['contact']` is the same type by form handle. A select or radio
 field is its option values, and `''` until something is chosen; checkboxes and a multiple select are arrays of them;
-a toggle is a `boolean`, a `files` field is `File[]`, and an `integer`, `decimal`, `range`, `rating` or `calculation` field is a string, a number or
+a button group is typed as a radio; a toggle is a `boolean`, a `files` field is `File[]`, and an `integer`, `decimal`, `range`, `rating` or `calculation` field is a string, a number or
 `null`. A component that handles any form, taking a plain `NibbleForm`, gets values of `string`, `number`, `boolean`,
 arrays or `null` and narrows them as before.
 
@@ -215,7 +215,9 @@ Each field carries its settings, such as `placeholder`, `options`, and `prepend`
 input, and an `integer` field's `min`, `max` and `step`. A `decimal` field carries `decimals` (0 to 10, default 2), `min`, `max`, `step`
 and `placeholder`; a `range` field carries `min` (default 0), `max` (default 100), `step` (default 1), and its `default`
 starts the slider; a `rating` field carries `max` (2 to 10, default 5), and its values are 1 to `max`. Text fields carry `autocomplete`, textareas `rows`, toggles `inline_label` (plain text) and, when the label has links, `inline_label_html`,
-dates `time_enabled`, `earliest_date` and `latest_date`, and selects `max_items` and `clearable`; `default` is already
+dates `time_enabled`, `earliest_date` and `latest_date`, times `seconds`, `earliest` and `latest` (as `"09:00"`),
+colours `swatches` (lowercase `#rrggbb`) and `allow_any`, button groups `options`, and selects `max_items` and
+`clearable`; `default` is already
 resolved, so a computed default is a date, not a name. A field with a condition carries `conditions`, the rules for
 when to draw it (see [Forms](../modelling/forms.md#1-declaring-a-form)). `isVisible(field)` evaluates them as the
 server does, and `submit` leaves a field they hide out of what it posts; the server applies them again to what is
@@ -267,8 +269,10 @@ without a cast.
 > [!WARNING]
 > This short example renders every field as a text input and leaves out the CAPTCHA widget, so it only works for a
 > form without `captcha: true`. The theme you copied from `crumbs` has `components/ContactForm.vue`, which draws
-> every public fieldtype with its own control (a slider with its value for a range, stars for a rating, a checkbox for a toggle, a fieldset of radios or checkboxes for
-> choices, a date or date-and-time input, a live `<output>` for a calculation), sends hidden fields, applies conditions,
+> every public fieldtype with its own control (a slider with its value for a range, stars for a rating, a checkbox for a toggle,
+> a fieldset of radios or checkboxes for choices, radios drawn as joined buttons for a button group, a date or
+> date-and-time input, a time input, a colour input with its swatches suggested, or swatch radios when only swatches
+> are allowed, a live `<output>` for a calculation), sends hidden fields, applies conditions,
 > links help and errors to their inputs, handles file uploads, the honeypot and the CAPTCHA, and draws steps and Save
 > and finish later. Start from it rather than from scratch.
 

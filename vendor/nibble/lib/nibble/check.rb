@@ -84,6 +84,7 @@ module Nibble
         rule_names.each do |name|
           problem(source, "field '#{field.path}' uses unknown validation rule '#{name}'") unless Validation.known?(name)
         end
+        field.fieldtype.config_problems.each { |message| problem(source, "field '#{field.path}' #{message}") }
         check_messages(field, rule_names, source)
         check_required_condition(field, fields, source)
         problem(source, "field '#{field.path}' is a note, which only displays text: it can't be required, hidden, encrypted or have a default") if note_with_storage_options?(field)

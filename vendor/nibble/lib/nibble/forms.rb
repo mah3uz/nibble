@@ -1,6 +1,6 @@
 module Nibble
   module Forms
-    PUBLIC_FIELDTYPES = %w[text textarea integer decimal range rating toggle select radio checkboxes date files calculation note].freeze
+    PUBLIC_FIELDTYPES = %w[text textarea integer decimal range rating toggle select radio checkboxes date files calculation note time color button_group].freeze
     CAPTCHA_PROVIDERS = %w[turnstile recaptcha].freeze
     DELIVERY_MODES = %w[sync async].freeze
     DEFAULT_HONEYPOT = "_nibble_hp".freeze
@@ -46,7 +46,7 @@ module Nibble
     DEFAULT_CLOSED_MESSAGE = "This form isn't taking submissions right now.".freeze
     LIMIT_KEYS = %w[max_submissions opens_at closes_at closed_message unique].freeze
     SCHEDULE_LIMITS = %w[max_submissions opens_at closes_at].freeze
-    UNIQUE_FIELDTYPES = %w[text textarea integer decimal select radio date].freeze
+    UNIQUE_FIELDTYPES = %w[text textarea integer decimal select radio date button_group].freeze
     AUTOFILL_NAMES = /name|mail|phone|tel|address|street|city|zip|postal|country|company|organi[sz]ation|website|url|homepage|user|login/i
 
     Form = Data.define(:item) do

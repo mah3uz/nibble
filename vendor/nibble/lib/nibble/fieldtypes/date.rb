@@ -37,7 +37,7 @@ module Nibble
         time.utc.iso8601
       end
 
-      def preload = { "timezone" => Time.zone.tzinfo.name }
+      def preload = { "timezone" => ::Time.zone.tzinfo.name }
 
       def pre_process_index(value) = value.blank? ? nil : { "date" => pre_process(value), "time_enabled" => time_enabled? }
 
@@ -66,8 +66,8 @@ module Nibble
         case value
         when ::Time, ActiveSupport::TimeWithZone then value
         when ::Date then value.in_time_zone
-        when "now" then Time.current
-        else time_enabled? ? Time.zone.parse(value.to_s) : ::Date.iso8601(value.to_s[0, 10]).in_time_zone
+        when "now" then ::Time.current
+        else time_enabled? ? ::Time.zone.parse(value.to_s) : ::Date.iso8601(value.to_s[0, 10]).in_time_zone
         end
       rescue ArgumentError, ::Date::Error
         nil

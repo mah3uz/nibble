@@ -2,8 +2,10 @@ import { registerFieldtype } from './registry'
 
 const components = {
   assets: () => import('./components/AssetsFieldtype.vue'),
+  button_group: () => import('./components/ButtonGroupFieldtype.vue'),
   checkboxes: () => import('./components/CheckboxesFieldtype.vue'),
   code: () => import('./components/CodeFieldtype.vue'),
+  color: () => import('./components/ColorFieldtype.vue'),
   date: () => import('./components/DateFieldtype.vue'),
   decimal: () => import('./components/DecimalFieldtype.vue'),
   entries: () => import('./components/EntriesFieldtype.vue'),
@@ -25,6 +27,7 @@ const components = {
   terms: () => import('./components/TermsFieldtype.vue'),
   text: () => import('./components/TextFieldtype.vue'),
   textarea: () => import('./components/TextareaFieldtype.vue'),
+  time: () => import('./components/TimeFieldtype.vue'),
   toggle: () => import('./components/ToggleFieldtype.vue'),
 }
 

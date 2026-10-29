@@ -92,6 +92,9 @@ type NibbleFormFieldTypes = {
   files: { max_files?: number; max_file_size?: number; extensions?: string[] }
   calculation: { formula: string; decimals?: number; prepend?: string; append?: string }
   note: { text_html?: string }
+  time: { placeholder?: string; seconds?: boolean; earliest?: string; latest?: string }
+  color: { swatches: string[]; allow_any: boolean }
+  button_group: { options: NibbleFormOption[] }
 }
 
 type NibbleFormFieldKey = {

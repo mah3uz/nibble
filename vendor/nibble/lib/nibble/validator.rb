@@ -113,6 +113,10 @@ module Nibble
       when "ends_with" then message.("ends_with", values: params.join(", ")) unless params.any? { |p| value.to_s.end_with?(p) }
       when "date" then message.("date") unless to_time(value)
       when "after", "after_or_equal", "before", "before_or_equal" then compare_dates(rule.name, value, params.first, root, message)
+      when "time" then message.("time") unless Fieldtypes::Time.valid?(value)
+      when "earliest_time" then message.("earliest_time", time: params.first) if Fieldtypes::Time.valid?(value) && Fieldtypes::Time.compare(value, params.first).negative?
+      when "color" then message.("color") unless Fieldtypes::Color.valid?(value)
+      when "latest_time" then message.("latest_time", time: params.first) if Fieldtypes::Time.valid?(value) && Fieldtypes::Time.compare(value, params.first).positive?
       when "same" then message.("same", other: humanize(params.first)) unless value == lookup(root, params.first).last
       when "different" then message.("different", other: humanize(params.first)) if value == lookup(root, params.first).last
       when "records_exist" then message.("records_exist") unless records_exist?(value, params)

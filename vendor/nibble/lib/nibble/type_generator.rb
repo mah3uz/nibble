@@ -92,7 +92,7 @@ module Nibble
       when "files" then "File[]"
       when "checkboxes" then "(#{option_union(field)})[]"
       when "select" then field.fieldtype.multiple? ? "(#{option_union(field)})[]" : "#{option_union(field)} | ''"
-      when "radio" then "#{option_union(field)} | ''"
+      when "radio", "button_group" then "#{option_union(field)} | ''"
       when "integer", "decimal", "range", "rating", "calculation" then "string | number | null"
       else "string"
       end

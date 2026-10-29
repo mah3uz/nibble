@@ -6,6 +6,7 @@ module Nibble
       Nibble::Fieldtypes::Slug Nibble::Fieldtypes::RichText Nibble::Fieldtypes::Markdown Nibble::Fieldtypes::Link Nibble::Fieldtypes::List Nibble::Fieldtypes::Seo
       Nibble::Fieldtypes::Grid Nibble::Fieldtypes::Replicator Nibble::Fieldtypes::Assets Nibble::Fieldtypes::Entries Nibble::Fieldtypes::Terms
       Nibble::Fieldtypes::Secret Nibble::Fieldtypes::Files Nibble::Fieldtypes::Calculation Nibble::Fieldtypes::Note
+      Nibble::Fieldtypes::Time Nibble::Fieldtypes::Color Nibble::Fieldtypes::ButtonGroup
     ].freeze
 
     class << self

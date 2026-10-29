@@ -2,8 +2,8 @@ module Nibble
   module Forms
     module Definition
       FIELD_CONFIG = %w[placeholder input_type character_limit default width multiple inline max_files max_file_size extensions prepend append min max step
-        autocomplete rows inline_label time_enabled earliest_date latest_date max_items clearable formula decimals].freeze
-      OPTION_TYPES = %w[select radio checkboxes].freeze
+        autocomplete rows inline_label time_enabled earliest_date latest_date max_items clearable formula decimals seconds earliest latest swatches allow_any].freeze
+      OPTION_TYPES = %w[select radio checkboxes button_group].freeze
       LOCALIZED_CONFIG = %w[placeholder inline_label].freeze
       CLIENT_MESSAGES = %w[too_large generic network choose send sending next checking back save_later step check_answers required_note required].freeze
       TIMESTAMP_FIELD = "_nibble_t".freeze

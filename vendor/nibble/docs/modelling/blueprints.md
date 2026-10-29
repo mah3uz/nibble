@@ -136,8 +136,8 @@ and a locale the site doesn't have.
 | Group | Types |
 |---|---|
 | Text | `text`, `textarea`, `code`, `rich_text`, `markdown`, `slug`, `secret` |
-| Numbers and dates | `integer`, `decimal`, `range`, `rating`, `date` |
-| Choice | `select`, `radio`, `checkboxes`, `toggle`, `list` |
+| Numbers and dates | `integer`, `decimal`, `range`, `rating`, `date`, `time` |
+| Choice | `select`, `radio`, `button_group`, `checkboxes`, `toggle`, `list`, `color` |
 | Relationships | `entries`, `terms`, `relationship`, `link` |
 | Files | `assets`, `files` |
 | Repeating | `grid`, `replicator` |
@@ -220,6 +220,30 @@ Arrow keys move between the stars, and each star is named for a screen reader, s
 **`select`**, **`radio`** and **`checkboxes`** hold a fixed list written in the blueprint. For a list your editors
 manage themselves, use a taxonomy with a `terms` field, or an `entries` field with `mode: select`, instead of
 options.
+
+**`button_group`** is a `radio` drawn as a row of joined buttons, for a few short choices such as sizes. It takes the
+same `options` and `cast_booleans`, stores the same value and reaches a page the same way, so a field can switch
+between the two without touching its content. The arrow keys move between its buttons as they move between radios.
+
+**`time`** is a time of day on the 24-hour clock, stored as `"14:30"`. Its options:
+
+| Option | |
+|---|---|
+| `seconds` | `true` stores seconds too, as `"14:30:05"`; off by default, when seconds a browser sends are dropped |
+| `earliest`, `latest` | the earliest and latest time accepted, both included, such as `"09:00"` and `"17:30"` |
+| `placeholder` | text shown in the empty input |
+
+Write times in quotes: YAML reads an unquoted `09:00` as a number, and `nibble:check` refuses it. Anything but a
+24-hour time is refused, so `9:30`, `24:00` and `noon` never reach a page.
+
+**`color`** is a colour, stored as lowercase `#rrggbb`; a value typed in capitals is stored in lowercase, and
+anything else (`#fff`, `red`, a colour with transparency) is refused. Its options:
+
+| Option | |
+|---|---|
+| `swatches` | a list of colours offered as buttons, each written as `#rrggbb` |
+| `allow_any` | `true` (the default) also offers a colour picker and a box for the hex value; `false` accepts only a swatch |
+| `default` | the colour a new entry starts with; with `allow_any: false` it must be one of the swatches |
 
 **`link`** accepts a URL or a link to an entry, and follows the entry if it moves.
 

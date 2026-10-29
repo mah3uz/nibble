@@ -23,6 +23,9 @@ const PUBLIC_FIELDTYPES = [
   'files',
   'calculation',
   'note',
+  'time',
+  'color',
+  'button_group',
 ]
 
 const field = (handle: string, extra: Record<string, unknown> = {}) =>
@@ -145,6 +148,9 @@ describe('crumbs ContactForm', () => {
       field('files', { type: 'files', extensions: ['pdf', 'jpg'], max_file_size: 5, max_files: 3 }),
       field('total', { type: 'calculation', formula: '{guests} * 10' }),
       field('notice', { type: 'note', text_html: '<p>We reply within a day.</p>' }),
+      field('opens', { type: 'time', seconds: true, earliest: '09:00', latest: '17:30' }),
+      field('brand', { type: 'color', swatches: ['#1a2b3c'], allow_any: true }),
+      field('delivery', { type: 'button_group', display: 'Delivery', options }),
     ]
     const html = await render(form({ fields }))
 
@@ -173,6 +179,9 @@ describe('crumbs ContactForm', () => {
     expect(html).toContain('PDF or JPG, up to 5 MB each, at most 3 files.')
     expect(tag(html, 'visit-total')).toMatch(/^<output/)
     expect(html).toContain('<p>We reply within a day.</p>')
+    expect(tag(html, 'visit-opens')).toMatch(/type="time"(?=[^>]*step="1")(?=[^>]*min="09:00")(?=[^>]*max="17:30")/)
+    expect(tag(html, 'visit-brand')).toMatch(/type="color"[^>]*list="visit-brand-swatches"/)
+    expect(html).toMatch(/<datalist id="visit-brand-swatches">\s*(<!--\[-->)?<option value="#1a2b3c">/)
   })
 
   it('draws a consent link inside the checkbox label, and a note as text with no control or name', async () => {
@@ -194,6 +203,27 @@ describe('crumbs ContactForm', () => {
     expect(html).toContain('<p>Replies take a day.</p>')
     expect(html).not.toContain('name="notice"')
     expect(html).not.toContain('for="visit-notice"')
+  })
+
+  it('draws a button group, and a colour limited to swatches, as radios a keyboard and a screen reader use as radios', async () => {
+    const fields = [
+      field('delivery', { type: 'button_group', display: 'Delivery', options }),
+      field('brand', { type: 'color', display: 'Brand', swatches: ['#1a2b3c', '#ffaa00'], allow_any: false }),
+    ]
+    const html = await render(form({ fields }))
+
+    const [delivery, brand] = html.match(/<fieldset[\s\S]*?<\/fieldset>/g) ?? []
+    expect(delivery).toMatch(/<legend[^>]*>\s*Delivery/)
+    expect(
+      delivery!.match(
+        /<input[^>]*type="radio"[^>]*name="delivery"[^>]*value="(small|large)"[^>]*class="peer sr-only"/g,
+      ),
+    ).toHaveLength(2)
+    expect(delivery).toContain('2–10')
+    expect(brand!.match(/type="radio"[^>]*name="brand"[^>]*value="#(1a2b3c|ffaa00)"/g)).toHaveLength(2)
+    expect(brand).toMatch(/background-color:#ffaa00;[^>]*aria-hidden="true"/)
+    expect(brand).toContain('#ffaa00</span>')
+    expect(html).not.toContain('type="color"')
   })
 
   it('shows a calculation as read-only output that screen readers hear change, and posts nothing for it', async () => {

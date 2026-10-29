@@ -24,7 +24,7 @@ export function activeCount(rows: SetRow[] | null | undefined) {
   return (rows ?? []).filter((row) => row.enabled !== false).length
 }
 
-const CHOICES = ['select', 'radio']
+const CHOICES = ['select', 'radio', 'button_group']
 
 export function setPreview(fields: PublishField[], row: Record<string, unknown>, limit = 60) {
   const text = fields

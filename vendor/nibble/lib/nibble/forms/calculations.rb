@@ -4,7 +4,7 @@ module Nibble
     class Calculations
       TYPE = "calculation".freeze
       NUMERIC_TYPES = %w[integer decimal range rating toggle calculation].freeze
-      CHOICE_TYPES = %w[select radio].freeze
+      CHOICE_TYPES = %w[select radio button_group].freeze
 
       def self.of(fields) = fields.all.values.select { |field| field.type == TYPE }
 

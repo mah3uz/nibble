@@ -46,8 +46,8 @@ success:
 ```
 
 Fields are declared exactly as in a [blueprint](blueprints.md), but a public form may only use `text`, `textarea`,
-`integer`, `decimal`, `range`, `rating`, `toggle`, `select`, `radio`, `checkboxes`, `date`, `files`,
-[`calculation`](#11-calculations) and [`note`](#14-notes).
+`integer`, `decimal`, `range`, `rating`, `toggle`, `select`, `radio`, `button_group`, `checkboxes`, `date`, `time`,
+`color`, `files`, [`calculation`](#11-calculations) and [`note`](#14-notes).
 `nibble:check` refuses anything else.
 
 A consent box is a `required` toggle. A submission with it unticked is refused with "The Consent field is required.",
@@ -93,8 +93,10 @@ anything else:
 ```
 
 A field's other settings reach the theme too: a `text` field's `autocomplete`, a `textarea`'s `rows`, a `toggle`'s
-`inline_label` (the text beside a consent box), a `date`'s `time_enabled`, `earliest_date` and `latest_date`, and a
-`select`'s `max_items` and `clearable`. A field's `default` arrives resolved, so `default: computed:today` is today's
+`inline_label` (the text beside a consent box), a `date`'s `time_enabled`, `earliest_date` and `latest_date`, a
+`time`'s `seconds`, `earliest` and `latest`, a `color`'s `swatches` and `allow_any`, and a
+`select`'s `max_items` and `clearable`. A `button_group` carries its `options` as a `radio` does, and a
+[calculation](#11-calculations) may name one whose options are all numbers. A field's `default` arrives resolved, so `default: computed:today` is today's
 date.
 
 A form field takes the same [conditions](blueprints.md#6-conditional-fields) as a blueprint field. Nibble skips a hidden

@@ -49,6 +49,13 @@ function chosen(field: NibbleFormField, value: string) {
   return Array.isArray(current) ? (current as string[]).includes(value) : current === value
 }
 
+const swatchesOnly = (field: NibbleFormField) => field.type === 'color' && field.allow_any === false
+const joined = (field: NibbleFormField) => field.type === 'button_group' || swatchesOnly(field)
+const choices = (field: NibbleFormField) =>
+  swatchesOnly(field)
+    ? (field.swatches ?? []).map((swatch) => ({ value: swatch, label: swatch }))
+    : (field.options ?? [])
+
 function bound(field: NibbleFormField, date: string | undefined, time: string) {
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return undefined
   return field.time_enabled ? `${date}T${time}` : date
@@ -136,7 +143,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
         />
         <div v-else-if="contact.isVisible(field)">
           <fieldset
-            v-if="field.type === 'radio' || field.type === 'checkboxes'"
+            v-if="field.type === 'radio' || field.type === 'checkboxes' || joined(field)"
             :aria-describedby="contact.describedBy(field)"
           >
             <legend class="mb-3">
@@ -146,7 +153,31 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
                 ><span class="sr-only">{{ ` ${t('required')}` }}</span></template
               >
             </legend>
-            <div :class="field.inline ? 'flex flex-wrap gap-x-6 gap-y-3' : 'grid gap-3'">
+            <div v-if="joined(field)" class="flex flex-wrap">
+              <label v-for="(option, optionIndex) in choices(field)" :key="option.value" class="-ml-px first:ml-0">
+                <input
+                  :id="optionId(field, optionIndex)"
+                  v-model="contact.values[field.handle]"
+                  type="radio"
+                  :name="contact.fieldName(field)"
+                  :value="option.value"
+                  :aria-invalid="invalid(field)"
+                  class="peer sr-only"
+                />
+                <span
+                  class="peer-checked:bg-ink peer-checked:text-paper dark:peer-checked:bg-paper dark:peer-checked:text-ink flex min-h-12 cursor-pointer items-center gap-2 border border-current px-4 py-2 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent"
+                >
+                  <span
+                    v-if="swatchesOnly(field)"
+                    class="size-6 border border-current/40"
+                    :style="{ backgroundColor: option.value }"
+                    aria-hidden="true"
+                  />
+                  <span :class="{ 'font-mono text-sm': swatchesOnly(field) }">{{ option.label }}</span>
+                </span>
+              </label>
+            </div>
+            <div v-else :class="field.inline ? 'flex flex-wrap gap-x-6 gap-y-3' : 'grid gap-3'">
               <label v-for="(option, optionIndex) in field.options" :key="option.value" class="flex items-center gap-3">
                 <input
                   :id="optionId(field, optionIndex)"
@@ -314,6 +345,36 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
               }}</output>
               <span v-if="field.append">{{ field.append }}</span>
             </div>
+            <input
+              v-else-if="field.type === 'time'"
+              :id="contact.inputId(field)"
+              v-model="contact.values[field.handle] as string"
+              type="time"
+              :name="contact.fieldName(field)"
+              :step="field.seconds ? 1 : undefined"
+              :min="field.earliest"
+              :max="field.latest"
+              :required="contact.isRequired(field)"
+              :aria-describedby="contact.describedBy(field)"
+              :aria-invalid="invalid(field)"
+              class="w-full border-b border-current bg-transparent px-1 py-3"
+            />
+            <template v-else-if="field.type === 'color'">
+              <input
+                :id="contact.inputId(field)"
+                v-model="contact.values[field.handle] as string"
+                type="color"
+                :name="contact.fieldName(field)"
+                :list="field.swatches?.length ? `${contact.inputId(field)}-swatches` : undefined"
+                :required="contact.isRequired(field)"
+                :aria-describedby="contact.describedBy(field)"
+                :aria-invalid="invalid(field)"
+                class="h-12 w-20 cursor-pointer border border-current bg-transparent p-1"
+              />
+              <datalist v-if="field.swatches?.length" :id="`${contact.inputId(field)}-swatches`">
+                <option v-for="swatch in field.swatches" :key="swatch" :value="swatch" />
+              </datalist>
+            </template>
             <output
               v-else-if="field.type === 'calculation'"
               :id="contact.inputId(field)"
