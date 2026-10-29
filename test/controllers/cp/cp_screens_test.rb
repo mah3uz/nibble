@@ -205,7 +205,7 @@ class Nibble::Cp::CpScreensTest < ActionDispatch::IntegrationTest
     row = props["audit"].find { |item| item["action"] == "record.created" }
 
     assert row, "the log is what makes a change traceable"
-    assert_includes row["changed"], "title", "an entry with no changed fields tells no one anything"
+    assert_includes row["changed"], "Title", "an entry with no changed fields tells no one anything"
 
     post "/cp/utilities/purge_cache", params: { tags: "entry:#{entry.id}, collection:articles" }
     assert_redirected_to "/cp/utilities/cache"
