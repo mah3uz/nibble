@@ -23,6 +23,7 @@ module Nibble
       def pre_process(value) = truthy?(value)
       def process(value) = value.nil? ? nil : truthy?(value)
       def augment(value) = truthy?(value)
+      def pre_process_index(value) = truthy?(value) ? "Yes" : "No"
       def ts_type = "boolean"
 
       private

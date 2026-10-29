@@ -4,7 +4,7 @@ module Nibble
       PER_PAGE_OPTIONS = [ 25, 50, 100 ].freeze
       TYPES = {
         "text" => "text", "textarea" => "text", "slug" => "code", "integer" => "number", "decimal" => "number", "range" => "number", "rating" => "number", "toggle" => "text",
-        "select" => "text", "radio" => "text", "checkboxes" => "list", "date" => "date", "list" => "list",
+        "select" => "list", "radio" => "list", "button_group" => "list", "checkboxes" => "list", "date" => "date", "list" => "list",
         "assets" => "image", "entries" => "list", "terms" => "list", "link" => "text", "rich_text" => "text"
       }.freeze
 

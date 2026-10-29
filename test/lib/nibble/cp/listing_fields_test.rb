@@ -16,6 +16,8 @@ class Nibble::Cp::ListingFieldsTest < ActiveSupport::TestCase
       { "handle" => "mood", "field" => { "type" => "select", "options" => { "calm" => "Calm and quiet", "loud" => "Loud" }, "listable" => true } },
       { "handle" => "tags", "field" => { "type" => "checkboxes", "options" => { "a" => "Alpha", "b" => "Beta" }, "listable" => true } },
       { "handle" => "free", "field" => { "type" => "toggle", "listable" => true } },
+      { "handle" => "stages", "field" => { "type" => "select", "multiple" => true, "options" => { "a" => "Alpha", "b" => "Beta" }, "listable" => true } },
+      { "handle" => "price", "field" => { "type" => "decimal", "prepend" => "$", "decimals" => 2, "listable" => true } },
       { "handle" => "hidden_mood", "field" => { "type" => "select", "options" => %w[x y], "listable" => true, "filterable" => false } },
       { "handle" => "unlisted", "field" => { "type" => "select", "options" => %w[x y], "listable" => false } },
       { "handle" => "forced", "field" => { "type" => "select", "options" => %w[x y], "listable" => false, "filterable" => true } }
@@ -123,6 +125,20 @@ class Nibble::Cp::ListingFieldsTest < ActiveSupport::TestCase
     assert_equal 30, listing(field_mood: [ "calm" ], per_page: 100).props["pagination"]["total"]
     assert_equal 20, listing(field_tags: [ "a" ], per_page: 100).props["pagination"]["total"]
     assert_equal 8, listing(field_tags: [ "a" ], field_mood: [ "calm" ], field_free: "0", per_page: 100).props["pagination"]["total"]
+  end
+
+  test "cells read as the editor would say them: option labels, Yes or No, and a price with its places" do
+    event("Gig", "mood" => "calm", "stages" => %w[b a], "free" => true, "price" => 52.5)
+    event("Quiet")
+    row = ->(title) { listing.props["rows"].find { |item| item["title"] == title } }
+
+    assert_equal [ "Calm and quiet" ], row.("Gig")["mood"]
+    assert_equal %w[Beta Alpha], row.("Gig")["stages"]
+    assert_equal "Yes", row.("Gig")["free"]
+    assert_equal "No", row.("Quiet")["free"], "a toggle never set reads as off"
+    assert_equal "$52.50", row.("Gig")["price"]
+    assert_nil row.("Quiet")["price"]
+    assert_equal %w[list list], [ column("mood")["type"], column("stages")["type"] ]
   end
 
   test "filters are offered in plain words, only for filterable fields" do

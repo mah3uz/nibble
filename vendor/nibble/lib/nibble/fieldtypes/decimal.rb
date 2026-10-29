@@ -32,6 +32,11 @@ module Nibble
         ActiveSupport::NumberHelper.number_to_rounded(value, precision: places)
       end
 
+      def pre_process_index(value)
+        shown = display(value) or return value
+        "#{config('prepend')}#{shown}#{config('append')}"
+      end
+
       def json_schema
         { "type" => "number", **{ "minimum" => bound("min"), "maximum" => bound("max") }.compact, "multipleOf" => 10.0**-places }
       end
