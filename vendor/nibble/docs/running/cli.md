@@ -116,6 +116,17 @@ nibble skill sync                           # refresh installed guides after the
 The guide is written from the site's schema and its own notes in `site/agents/*.md` — put your editorial style
 there — so each site's is different.
 
+To connect a client without the `nibble` command, give it the site's address for apps, shown under **Connected apps**
+in the account menu — for example `https://tidewater.example/mcp`:
+
+| Client | How |
+|---|---|
+| Claude Code | `claude mcp add --transport http tidewater https://tidewater.example/mcp` |
+| Codex | `[mcp_servers.tidewater]` with `url = "https://tidewater.example/mcp"` in `~/.codex/config.toml`, then `codex mcp login tidewater` |
+| Cursor | its MCP settings, as a server with that URL |
+
+The client opens a browser to sign in and approve the connection, as in [Agent access](agent-access.md).
+
 ## 7. Completion
 
 Add the line for your shell to its startup file, then open a new terminal:
