@@ -84,7 +84,7 @@ class FormLimitsTest < ActionDispatch::IntegrationTest
 
     submit :signup_once, { email: "ADA@example.TEST", name: "Ada again" }
     assert_response :unprocessable_entity
-    assert_equal({ "email" => [ "The Email has already been used." ] }, response.parsed_body["errors"])
+    assert_equal({ "email" => [ "Email has already been used." ] }, response.parsed_body["errors"])
     assert_equal 2, Submission.kept.count
   end
 

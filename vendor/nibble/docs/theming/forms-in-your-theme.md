@@ -415,7 +415,7 @@ check. When a refused send has errors in another step, the form opens the step w
 A form with `resume: true` has `form.resume`, `{ email, days, token }`: the handle of the field that takes the visitor's
 address, how many days the link works, and the token when the page was opened from a resume link. Draw a button that
 calls `saveForLater`, and a status element for `saved` that is on the page before it fills, so a screen reader
-announces it:
+announces it. Give that element to `savedEl` with `tabindex="-1"`: it takes focus once the save is done:
 
 ```vue
 <button v-if="form.resume" type="button" :disabled="demo.processing.value" @click="demo.saveForLater">
@@ -634,7 +634,7 @@ The rest depend on the type, and are absent unless the schema set them:
 | `inputId(field)`, `helpId(field)`, `errorId(field)` | the ids for a field's input, its help and its error, unique to the form |
 | `describedBy(field)` | the `aria-describedby` for its input |
 | `goToField(handle, event)` | for an error link's click: opens the step holding the field and focuses its input |
-| `summaryEl`, `messageEl` | refs for the error summary and the success message; each is focused when it appears, so give it `tabindex="-1"` |
+| `summaryEl`, `messageEl`, `savedEl` | refs for the error summary, the success message and the saved-for-later message; each is focused when it appears, so give it `tabindex="-1"` |
 
 **Steps**
 
