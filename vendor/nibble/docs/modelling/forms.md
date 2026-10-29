@@ -99,10 +99,13 @@ current value of `field`, and `value` is the text written in the schema:
 | `contains_any` | a list includes one of the comma-separated items in `value`, or a string contains one |
 | `custom` | a condition written in Ruby; its `field` can be `null` |
 
-A theme can't run `custom`, so it draws that field and leaves the decision to the server. The server is always the
-authority: it applies the same conditions to every submission, whatever the theme drew.
+A theme can't run `custom`, so it draws that field and leaves the decision to the server. `useNibbleForm`'s
+`isVisible(field)` evaluates the rest as the server does, and the form leaves a field they hide out of what it posts;
+`crumbs`' contact form draws only the fields whose conditions hold. The server is always the authority: it applies the
+same conditions to every submission, whatever the theme drew.
 
-A field with `hidden: true` is never drawn as an input. Give it a fixed `value`, a `prefill` from the page's query
+A field with `hidden: true` is never shown to the visitor; `crumbs`' contact form sends it as an
+`<input type="hidden">`. Give it a fixed `value`, a `prefill` from the page's query
 string, or both, to record where a visitor came from:
 
 ```yaml
@@ -167,7 +170,7 @@ The view receives the form's definition — its fields, where to post, the honey
 a complete form component.
 
 A form posted without JavaScript that fails validation sends the visitor back to the page, and the form's `result` holds
-their `errors` and the `values` they typed, so the theme can fill the form again. `values` leaves out files, hidden
+their `errors` and the `values` they typed, and `useNibbleForm` starts the form from them. `values` leaves out files, hidden
 fields, password inputs and the honeypot, and drops what wouldn't fit in the session cookie (about 2 KB in all). It is
 there only for the one page load after the post.
 

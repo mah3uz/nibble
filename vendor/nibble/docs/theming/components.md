@@ -123,7 +123,7 @@ parameter it declares — `param` if it is not `page`.
 ## 6. Forms
 
 A form's definition comes from the view's sidecar (`from: form:demo`), and `useNibbleForm` does the rest: values,
-posting, validation errors, the honeypot, the CAPTCHA and the success message.
+conditions, posting, validation errors, the honeypot, the CAPTCHA and the success message.
 
 ```vue
 <!-- site/themes/tidewater/components/DemoForm.vue -->
@@ -137,13 +137,29 @@ const demo = useNibbleForm(props.form)
 <template>
   <p v-if="demo.sent.value" role="status">{{ demo.message.value }}</p>
   <form v-else :action="form.action" method="post" novalidate @submit="demo.submit">
-    <p v-if="demo.errors.value.base" role="alert">{{ demo.errors.value.base }}</p>
-
-    <div v-for="field in form.fields" :key="field.handle">
-      <label :for="field.handle">{{ field.display }}</label>
-      <input :id="field.handle" v-model="demo.values[field.handle] as string" :name="demo.fieldName(field)" />
-      <p v-if="demo.errors.value[field.handle]" role="alert">{{ demo.errors.value[field.handle] }}</p>
+    <div v-if="Object.keys(demo.errors.value).length" :ref="(el) => (demo.summaryEl.value = el as HTMLElement)" role="alert" tabindex="-1">
+      <p>{{ demo.errors.value.base ?? 'Please check these answers:' }}</p>
+      <ul>
+        <li v-for="error in demo.errorList.value" :key="error.handle">
+          <a :href="error.href">{{ error.label }}: {{ error.message }}</a>
+        </li>
+      </ul>
     </div>
+
+    <template v-for="field in form.fields" :key="field.handle">
+      <div v-if="demo.isVisible(field)">
+        <label :for="demo.inputId(field)">{{ field.display }}</label>
+        <input
+          :id="demo.inputId(field)"
+          v-model="demo.values[field.handle] as string"
+          :name="demo.fieldName(field)"
+          :aria-describedby="demo.describedBy(field)"
+          :aria-invalid="demo.errors.value[field.handle] ? 'true' : undefined"
+        />
+        <p v-if="field.instructions" :id="demo.helpId(field)">{{ field.instructions }}</p>
+        <p v-if="demo.errors.value[field.handle]" :id="demo.errorId(field)">{{ demo.errors.value[field.handle] }}</p>
+      </div>
+    </template>
 
     <button type="submit" :disabled="demo.processing.value">Book my demo</button>
   </form>
@@ -154,27 +170,38 @@ const demo = useNibbleForm(props.form)
 |---|---|
 | `values` | a reactive map of field handle to value |
 | `errors` | messages by field handle, and `base` for the form as a whole |
+| `errorList` | the field errors in form order, each with `label`, `message` and an `href` to its input, for a summary at the top |
 | `processing` | true while the submission is in flight |
 | `sent`, `message` | whether it succeeded, and the success message |
 | `submit`, `reset` | send it; clear it |
 | `fieldName(field)` | the input `name` Nibble expects |
-| `setFiles`, `accept` | for `files` fields |
+| `isVisible(field)` | whether the field's conditions hold for the current values |
+| `inputId(field)`, `helpId(field)`, `errorId(field)` | the ids for a field's input, its help and its error, unique to the form |
+| `describedBy(field)` | the `aria-describedby` for its input: the help id when the field has instructions or file limits, and the error id when it has an error |
+| `summaryEl`, `messageEl` | refs for the error summary and the success message; each is focused when it appears, so give it `tabindex="-1"` |
+| `setFiles`, `accept`, `fileLimits(field)` | for `files` fields; `fileLimits` describes the allowed types, size and count, such as "PDF or JPG, up to 5 MB each, at most 3 files." |
 
 Each field carries its settings, such as `placeholder`, `options`, and `prepend` and `append` to draw beside the
 input, and an `integer` field's `min`, `max` and `step`. Text fields carry `autocomplete`, textareas `rows`, toggles `inline_label`,
 dates `time_enabled`, `earliest_date` and `latest_date`, and selects `max_items` and `clearable`; `default` is already
 resolved, so a computed default is a date, not a name. A field with a condition carries `conditions`, the rules for
-when to draw it (see [Forms](../modelling/forms.md#1-declaring-a-form)); the server applies them again to what is
-posted. A field with `hidden: true` is not drawn: it carries the `value` resolved for the current request (its `default`
+when to draw it (see [Forms](../modelling/forms.md#1-declaring-a-form)). `isVisible(field)` evaluates them as the
+server does, and `submit` leaves a field they hide out of what it posts; the server applies them again to what is
+posted. A `custom` condition runs only on the server, so `isVisible` draws its field. A field with `hidden: true` is not drawn: it carries the `value` resolved for the current request (its `default`
 is the same), and `form.action` already carries the prefilled query, so posting the form records it. After a failed post without JavaScript, `form.result` is `{ status: 'invalid', errors, values }`, where `values` are
-the plain values the visitor typed, by field handle; start the inputs from them. A form split into sections also has `form.sections`, each with a `display`, `instructions` and the handles of
+the plain values the visitor typed, by field handle; `values` starts from them. A form split into sections also has `form.sections`, each with a `display`, `instructions` and the handles of
 its `fields`; it is `null` for a form with one list. `form.captcha` has a `null` provider when the form asks for a
 CAPTCHA the site hasn't set up. See [Forms](../modelling/forms.md).
 
+`NibbleFormField` is a union on `type`, so a template that checks `field.type === 'select'` reads `field.options`
+without a cast.
+
 > [!WARNING]
 > This short example renders every field as a text input and leaves out the CAPTCHA widget, so it only works for a
-> form without `captcha: true`. The theme you copied from `crumbs` has `components/ContactForm.vue`, which handles
-> every public fieldtype, file uploads, the honeypot and the CAPTCHA. Start from it rather than from scratch.
+> form without `captcha: true`. The theme you copied from `crumbs` has `components/ContactForm.vue`, which draws
+> every public fieldtype with its own control (a checkbox for a toggle, a fieldset of radios or checkboxes for
+> choices, a date or date-and-time input), sends hidden fields, applies conditions, links help and errors to their
+> inputs, and handles file uploads, the honeypot and the CAPTCHA. Start from it rather than from scratch.
 
 ## 7. Shared props
 
