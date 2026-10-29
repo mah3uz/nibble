@@ -169,8 +169,11 @@ class Nibble::Cp::FormHandlingTest < ActionDispatch::IntegrationTest
     assert_equal 2, audited("form.person_exported").changeset["count"]
     assert_not_includes audited("form.person_exported").changeset.to_s, "jane@"
 
+    other_form.update!(data: other_form.data.merge("note" => "=HYPERLINK(\"http://evil.test\") jane@example.test"))
     get "/cp/personal-data/export.csv", params: { email: "jane@example.test" }
-    assert_equal %w[form id created_at status field value], CSV.parse(response.body).first
+    rows = CSV.parse(response.body)
+    assert_equal %w[form id created_at status field value], rows.first
+    assert rows.any? { |row| row.last.to_s.start_with?("'=HYPERLINK") }, "a visitor's formula is neutralised in the person export too"
 
     perform_enqueued_jobs { delete "/cp/personal-data", params: { email: "jane@example.test" } }
     assert_equal [ unrelated.id ], Submission.ids

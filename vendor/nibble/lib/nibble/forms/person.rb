@@ -21,7 +21,7 @@ module Nibble
         CSV.generate do |csv|
           csv << %w[form id created_at status field value]
           submissions.each do |submission|
-            rows(submission).each { |field, value| csv << [ submission.form, submission.id, submission.created_at.utc.iso8601, submission.status, field, value ] }
+            rows(submission).each { |field, value| csv << Cp::CsvCells.row([ submission.form, submission.id, submission.created_at.utc.iso8601, submission.status, field, value ]) }
           end
         end
       end
