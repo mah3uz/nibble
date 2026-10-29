@@ -147,16 +147,39 @@ the smaller widths a browser may choose instead. An `assets` field names its pre
 Secrets and per-machine addresses. In development they live in `.env`, which is never committed. In production they
 are environment variables, set by the deploy, and the sensitive ones come from encrypted credentials.
 
-| Variable | Purpose |
-|---|---|
-| `SITE_URL` | the public URL in production — must be `https` |
-| `NIBBLE_THEME` | the active theme, when `config/nibble.yml` does not name one |
-| `NIBBLE_BLOCK_INDEXING` | any value: disallow crawling, mark every page `noindex`, leave analytics off |
-| `SMTP_ADDRESS`, `SMTP_PORT` | outgoing mail |
-| `AWS_BUCKET_NAME`, `AWS_REGION` | store uploads in S3; without a bucket they are kept on the server's disk |
-| `DB_SNAPSHOT_BUCKET`, `DB_SNAPSHOT_REGION` | where the nightly [backup](backups.md) goes |
-| `INERTIA_SSR_PORT` | the port server-side rendering listens on, if 13714 clashes |
-| `NIBBLE_SECRET_<NAME>` | a secret named in `outbound.secrets` |
+Every variable Nibble or the files it writes into a site read, and what each does when it is not set:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `SITE_URL` | `http://localhost:` and `PORT` | the public URL; in production it must be `https` and not localhost, or the site refuses to serve |
+| `NIBBLE_THEME` | the theme in `config/nibble.yml`, then `crumbs` | the active theme |
+| `NIBBLE_BLOCK_INDEXING` | unset | any value: disallow crawling, mark every page `noindex`, leave analytics off |
+| `RAILS_MASTER_KEY` | the contents of `config/master.key` | unlocks the encrypted credentials; production will not boot without one or the other |
+| `SMTP_ADDRESS` | `smtp.postmarkapp.com` | outgoing mail server |
+| `SMTP_PORT` | `587` | outgoing mail port |
+| `AWS_BUCKET_NAME` | unset | store uploads in this S3 bucket; unset, they are kept on the server's disk |
+| `AWS_REGION` | `ap-southeast-2` | the region of the uploads bucket |
+| `DB_SNAPSHOT_BUCKET` | unset | the S3 bucket for the nightly [backup](backups.md); unset, copies stay on the server and `nibble:check` warns |
+| `DB_SNAPSHOT_REGION` | `ap-southeast-2` | the region of the backup bucket; a bucket anywhere else needs this set, or the upload fails |
+| `INERTIA_SSR_PORT` | `13714` | the port server-side rendering listens on, if 13714 clashes |
+| `PORT` | `3100` | the port Puma listens on |
+| `WEB_CONCURRENCY` | one process | how many Puma worker processes to start; `auto` starts one per processor |
+| `RAILS_MAX_THREADS` | `3` for Puma, `5` for the database pool when unset | threads per Puma process, and the database connections to match |
+| `PIDFILE` | unset | where Puma writes its process id |
+| `SOLID_QUEUE_IN_PUMA` | unset | any value: run the job worker inside Puma, as [Deploying](deploying.md) does |
+| `JOB_CONCURRENCY` | `1` | how many job worker processes to start |
+| `RAILS_LOG_LEVEL` | `info` | the production log level |
+| `KAMAL_VERSION` | set by Kamal on each deploy | part of the [page cache](deploying.md#6-the-page-cache-and-cdns) key, so a deploy never serves pages the last release rendered |
+| `NIBBLE_SECRET_<NAME>` | unset | a secret named in `outbound.secrets` |
+| `NIBBLE_VERSION` | the latest release | read by the install script: the release to install |
+| `NIBBLE_ARCHIVE` | unset | a local release archive, with its `SHA256SUMS` beside it, for `nibble:upgrade` to take instead of downloading one |
+| `NIBBLE_REPOSITORY` | Nibble's own releases | the `owner/name` of a GitHub repository `nibble:upgrade` downloads releases from |
+| `NIBBLE_OFFLINE` | unset | `1`: `bin/install` and `bin/upgrade` install gems and packages from the local cache only |
+| `RAILS_ENV`, `RACK_ENV` | `development` | the environment `nibble:upgrade` runs its steps in |
+| `BUNDLE_GEMFILE` | the site's `Gemfile` | set by `bin/kamal`, `bin/vite` and `config/boot.rb` when unset |
+| `CI` | unset | any value: the test environment loads all code up front and `bin/brakeman` insists on its latest rules |
+| `NIBBLE_DEV_TOOLS` | unset | set by the developer-tool commands (`nibble:dev:mcp`, `nibble:dev:tool`) for their own process |
+| `NIBBLE_TEST_REPORT`, `RUBYOPT` | unset | used by the developer tools when they run the tests for an agent; not for you to set |
 
 | Credential | Purpose |
 |---|---|

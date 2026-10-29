@@ -39,6 +39,7 @@ bin/rails nibble:generate:fieldset cta
 bin/rails nibble:generate:global company
 bin/rails nibble:generate:navigation help
 bin/rails nibble:generate:form demo
+bin/rails nibble:generate:plugin acme            # refuses: there is no extension API yet
 bin/rails nibble:schema:show                  # the schema after all three layers
 bin/rails nibble:schema:types                 # regenerate site/types.d.ts
 bin/rails nibble:schema:snapshot              # record field types as the baseline for nibble:check
