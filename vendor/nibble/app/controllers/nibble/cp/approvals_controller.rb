@@ -33,6 +33,8 @@ module Nibble
         end
       end
 
+      BATCH_WORDS = { "denied" => "declined", "not_found" => "not found" }.freeze
+
       def batch
         ids = Array(params[:ids]).map(&:to_s).uniq.first(BATCH)
         found = Nibble::Approval.includes(:grant).where(public_id: ids).select { |approval| approval.grant.user_id == Nibble::Current.user.id }.index_by(&:public_id)
@@ -45,7 +47,9 @@ module Nibble
         return render(json: { approvals: outcomes }) if request.format.json? && !request.inertia?
 
         counts = outcomes.group_by { |outcome| outcome[:status] }.transform_values(&:size)
-        redirect_back_or_to "/cp/account/apps", notice: counts.map { |status, count| "#{count} #{status}" }.join(", ")
+        message = counts.map { |status, count| "#{count} #{BATCH_WORDS.fetch(status, status)}" }.join(", ")
+        flash_key = counts.keys.intersect?(%w[failed expired not_found]) ? :alert : :notice
+        redirect_back_or_to "/cp/account/apps", flash_key => message
       end
 
       private

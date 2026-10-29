@@ -243,6 +243,15 @@ class Nibble::Cp::ApprovalsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "pending", approval(id).status
   end
 
+  test "a batch where something didn't happen is reported as a warning, not a success" do
+    id = publish.details["approval"]
+    sign_in_as users(:admin)
+
+    post "/cp/approvals/batch", params: { ids: [ id, "appr_missing" ], decision: "approve" }
+    assert_equal "1 done, 1 not found", flash[:alert]
+    assert_nil flash[:notice]
+  end
+
   test "only the person the app acts for can see or decide a request" do
     asked = publish
     sign_in_as users(:editor)
