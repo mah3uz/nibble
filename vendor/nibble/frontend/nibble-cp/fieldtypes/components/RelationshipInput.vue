@@ -8,7 +8,7 @@ import { statusLabel } from '@/lib/format'
 import type { ItemSummary } from '../../lib/relationships'
 import { searchRelationships } from '../../lib/relationships'
 import type { CreateTarget } from '../../lib/relationships'
-import { normalizeMode, pickerFor, probeLimit } from '../relationshipMode'
+import { nextIds, normalizeMode, pickerFor, probeLimit } from '../relationshipMode'
 import RecordCreate from './RecordCreate.vue'
 import RecordSearch from './RecordSearch.vue'
 import RecordSelect from './RecordSelect.vue'
@@ -45,16 +45,16 @@ function emitIds(next: string[]) {
 function pick(item: ItemSummary) {
   if (!known.value.has(item.id))
     emit('updateMeta', { ...props.meta, data: [...((props.meta.data as ItemSummary[]) ?? []), item] })
-  if (single.value) return emitIds([item.id])
-  if (ids.value.includes(item.id)) return emitIds(ids.value.filter((id) => id !== item.id))
-  if (!full.value) emitIds([...ids.value, item.id])
+  const next = nextIds(ids.value, item.id, { single: single.value, max: props.maxItems })
+  if (next !== ids.value) emitIds(next)
 }
 
 const mode = computed(() => normalizeMode(props.mode))
 const options = ref<ItemSummary[] | null>(null)
 const picker = computed(() => pickerFor(mode.value, props.readOnly ? 0 : (options.value?.length ?? null)))
 const creatable = computed(() => ((props.meta.creatable as CreateTarget[]) ?? []).filter((target) => target.handle))
-const picking = computed(() => !props.readOnly && !full.value && !(single.value && ids.value.length))
+const choosing = computed(() => !props.readOnly && !(single.value && ids.value.length))
+const picking = computed(() => choosing.value && !full.value)
 
 onMounted(async () => {
   const limit = probeLimit(mode.value)
@@ -102,6 +102,18 @@ useSortable(listRef, ids, {
         /></Button>
       </div>
     </div>
+    <RecordStack
+      v-if="choosing && picker === 'stack'"
+      :id="id"
+      :type="type"
+      :scope="scope"
+      :selected-ids="ids"
+      :label="label"
+      :single="single"
+      :max="maxItems"
+      :full="full"
+      @pick="pick"
+    />
     <template v-if="picking">
       <RecordSelect
         v-if="picker === 'select'"
@@ -118,16 +130,6 @@ useSortable(listRef, ids, {
         :scope="scope"
         :selected-ids="ids"
         :label="label"
-        @pick="pick"
-      />
-      <RecordStack
-        v-else-if="picker === 'stack'"
-        :id="id"
-        :type="type"
-        :scope="scope"
-        :selected-ids="ids"
-        :label="label"
-        :single="single"
         @pick="pick"
       />
       <RecordSearch
