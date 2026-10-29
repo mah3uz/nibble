@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useNibbleForm, type NibbleForm } from '@nibble'
+import { useNibbleForm, type NibbleForm, type NibbleFormField } from '@nibble'
 
 const props = defineProps<{ form: NibbleForm }>()
 const contact = useNibbleForm(props.form)
@@ -13,6 +13,24 @@ const groups = computed(() => {
     fields: section.fields.flatMap((handle) => byHandle.get(handle) ?? []),
   }))
 })
+
+const hasRequired = computed(() => props.form.fields.some((field) => field.required && !field.hidden))
+const hasErrors = computed(() => Object.keys(contact.errors.value).length > 0)
+
+const help = (field: NibbleFormField) => [field.instructions, contact.fileLimits(field)].filter(Boolean).join(' ')
+const invalid = (field: NibbleFormField) => (contact.errors.value[field.handle] ? 'true' : undefined)
+const optionId = (field: NibbleFormField, index: number) =>
+  index === 0 ? contact.inputId(field) : `${contact.inputId(field)}-${index}`
+
+function chosen(field: NibbleFormField, value: string) {
+  const current = contact.values[field.handle]
+  return Array.isArray(current) ? (current as string[]).includes(value) : current === value
+}
+
+function bound(field: NibbleFormField, date: string | undefined, time: string) {
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return undefined
+  return field.time_enabled ? `${date}T${time}` : date
+}
 </script>
 
 <template>
@@ -24,15 +42,33 @@ const groups = computed(() => {
     novalidate
     @submit="contact.submit"
   >
-    <p v-if="contact.sent.value" role="status" class="border-l-2 border-accent pl-4 text-lg">
+    <p
+      v-if="contact.sent.value"
+      :ref="(el) => (contact.messageEl.value = el as HTMLElement | null)"
+      role="status"
+      tabindex="-1"
+      class="border-l-2 border-accent pl-4 text-lg"
+    >
       {{ contact.message.value }}
     </p>
-    <p
-      v-if="contact.errors.value.base"
+    <div
+      v-if="hasErrors"
+      :ref="(el) => (contact.summaryEl.value = el as HTMLElement | null)"
       role="alert"
+      tabindex="-1"
       class="border-l-2 border-red-600 pl-4 text-red-700 dark:text-red-400"
     >
-      {{ contact.errors.value.base }}
+      <p>{{ contact.errors.value.base ?? 'Please check these answers:' }}</p>
+      <ul v-if="contact.errorList.value.length" class="mt-2 grid gap-1 text-sm">
+        <li v-for="error in contact.errorList.value" :key="error.handle">
+          <a :href="error.href" class="underline underline-offset-4 hover:text-accent"
+            >{{ error.label }}: {{ error.message }}</a
+          >
+        </li>
+      </ul>
+    </div>
+    <p v-if="hasRequired" class="-mb-4 text-sm text-gray-600 dark:text-gray-300">
+      Fields marked <span class="text-accent">*</span> are required.
     </p>
 
     <component
@@ -45,62 +81,166 @@ const groups = computed(() => {
         <legend class="mb-2 text-xl">{{ index + 1 }}. {{ group.display }}</legend>
         <p v-if="group.instructions" class="-mt-4 text-sm text-gray-600 dark:text-gray-300">{{ group.instructions }}</p>
       </template>
-      <div v-for="field in group.fields" :key="field.handle">
-        <label :for="`contact-${field.handle}`" class="mb-3 block">
-          {{ field.display }}<span v-if="field.required" class="text-accent"> *</span>
-        </label>
-        <textarea
-          v-if="field.type === 'textarea'"
-          :id="`contact-${field.handle}`"
-          v-model="contact.values[field.handle] as string"
-          :name="contact.fieldName(field)"
-          :maxlength="field.character_limit"
-          :required="field.required"
-          rows="6"
-          class="w-full border border-current/40 bg-transparent p-3"
-        />
-        <select
-          v-else-if="field.type === 'select'"
-          :id="`contact-${field.handle}`"
-          v-model="contact.values[field.handle]"
-          :name="contact.fieldName(field)"
-          class="w-full border-b border-current bg-transparent px-1 py-3"
-        >
-          <option value="">Choose one…</option>
-          <option v-for="option in field.options" :key="option.value" :value="option.value">{{ option.label }}</option>
-        </select>
+      <template v-for="field in group.fields" :key="field.handle">
         <input
-          v-else-if="field.type === 'files'"
-          :id="`contact-${field.handle}`"
-          type="file"
+          v-if="field.hidden"
+          :id="contact.inputId(field)"
+          type="hidden"
           :name="contact.fieldName(field)"
-          :accept="contact.accept(field)"
-          :multiple="(field.max_files ?? 1) > 1"
-          class="block w-full"
-          @change="contact.setFiles(field.handle, $event)"
+          :value="contact.values[field.handle]"
         />
-        <div v-else class="flex items-baseline gap-2 border-b border-current">
-          <span v-if="field.prepend">{{ field.prepend }}</span>
-          <input
-            :id="`contact-${field.handle}`"
-            v-model="contact.values[field.handle] as string"
-            :type="field.type === 'integer' ? 'number' : (field.input_type ?? 'text')"
-            :inputmode="field.type === 'integer' ? 'numeric' : undefined"
-            :min="field.min"
-            :max="field.max"
-            :step="field.step"
-            :name="contact.fieldName(field)"
-            :maxlength="field.character_limit"
-            :required="field.required"
-            class="min-w-0 flex-1 bg-transparent px-1 py-3"
-          />
-          <span v-if="field.append">{{ field.append }}</span>
+        <div v-else-if="contact.isVisible(field)">
+          <fieldset
+            v-if="field.type === 'radio' || field.type === 'checkboxes'"
+            :aria-describedby="contact.describedBy(field)"
+          >
+            <legend class="mb-3">
+              {{ field.display
+              }}<template v-if="field.required"
+                ><span class="text-accent" aria-hidden="true"> *</span
+                ><span class="sr-only"> (required)</span></template
+              >
+            </legend>
+            <div :class="field.inline ? 'flex flex-wrap gap-x-6 gap-y-3' : 'grid gap-3'">
+              <label v-for="(option, optionIndex) in field.options" :key="option.value" class="flex items-center gap-3">
+                <input
+                  :id="optionId(field, optionIndex)"
+                  v-model="contact.values[field.handle]"
+                  :type="field.type === 'radio' ? 'radio' : 'checkbox'"
+                  :name="contact.fieldName(field)"
+                  :value="option.value"
+                  :aria-invalid="invalid(field)"
+                  class="size-5 shrink-0 accent-accent"
+                />
+                {{ option.label }}
+              </label>
+            </div>
+          </fieldset>
+          <div v-else-if="field.type === 'toggle'">
+            <p v-if="field.inline_label" class="mb-3">{{ field.display }}</p>
+            <div class="flex items-start gap-3">
+              <input
+                :id="contact.inputId(field)"
+                v-model="contact.values[field.handle]"
+                type="checkbox"
+                :name="contact.fieldName(field)"
+                value="true"
+                :required="field.required"
+                :aria-describedby="contact.describedBy(field)"
+                :aria-invalid="invalid(field)"
+                class="mt-1 size-5 shrink-0 accent-accent"
+              />
+              <label :for="contact.inputId(field)">
+                {{ field.inline_label || field.display
+                }}<span v-if="field.required" class="text-accent" aria-hidden="true"> *</span>
+              </label>
+            </div>
+          </div>
+          <template v-else>
+            <label :for="contact.inputId(field)" class="mb-3 block">
+              {{ field.display }}<span v-if="field.required" class="text-accent" aria-hidden="true"> *</span>
+            </label>
+            <textarea
+              v-if="field.type === 'textarea'"
+              :id="contact.inputId(field)"
+              v-model="contact.values[field.handle] as string"
+              :name="contact.fieldName(field)"
+              :maxlength="field.character_limit"
+              :placeholder="field.placeholder"
+              :rows="field.rows ?? 6"
+              :required="field.required"
+              :aria-describedby="contact.describedBy(field)"
+              :aria-invalid="invalid(field)"
+              class="w-full border border-current/40 bg-transparent p-3"
+            />
+            <select
+              v-else-if="field.type === 'select'"
+              :id="contact.inputId(field)"
+              v-model="contact.values[field.handle]"
+              :name="contact.fieldName(field)"
+              :multiple="field.multiple"
+              :required="field.required"
+              :aria-describedby="contact.describedBy(field)"
+              :aria-invalid="invalid(field)"
+              class="w-full border-b border-current bg-transparent px-1 py-3"
+            >
+              <option
+                v-if="!field.multiple"
+                value=""
+                :disabled="field.required"
+                :selected="!contact.values[field.handle]"
+              >
+                {{ field.placeholder || 'Choose one…' }}
+              </option>
+              <option
+                v-for="option in field.options"
+                :key="option.value"
+                :value="option.value"
+                :selected="chosen(field, option.value)"
+              >
+                {{ option.label }}
+              </option>
+            </select>
+            <input
+              v-else-if="field.type === 'files'"
+              :id="contact.inputId(field)"
+              type="file"
+              :name="contact.fieldName(field)"
+              :accept="contact.accept(field)"
+              :multiple="(field.max_files ?? 1) > 1"
+              :required="field.required"
+              :aria-describedby="contact.describedBy(field)"
+              :aria-invalid="invalid(field)"
+              class="block w-full"
+              @change="contact.setFiles(field.handle, $event)"
+            />
+            <input
+              v-else-if="field.type === 'date'"
+              :id="contact.inputId(field)"
+              v-model="contact.values[field.handle] as string"
+              :type="field.time_enabled ? 'datetime-local' : 'date'"
+              :name="contact.fieldName(field)"
+              :min="bound(field, field.earliest_date, '00:00')"
+              :max="bound(field, field.latest_date, '23:59')"
+              :required="field.required"
+              :aria-describedby="contact.describedBy(field)"
+              :aria-invalid="invalid(field)"
+              class="w-full border-b border-current bg-transparent px-1 py-3"
+            />
+            <div v-else class="flex items-baseline gap-2 border-b border-current">
+              <span v-if="field.prepend">{{ field.prepend }}</span>
+              <input
+                :id="contact.inputId(field)"
+                v-model="contact.values[field.handle] as string"
+                :type="field.type === 'integer' ? 'number' : (field.input_type ?? 'text')"
+                :inputmode="field.type === 'integer' ? 'numeric' : undefined"
+                :min="field.min"
+                :max="field.max"
+                :step="field.step"
+                :name="contact.fieldName(field)"
+                :maxlength="field.character_limit"
+                :placeholder="field.placeholder"
+                :autocomplete="field.autocomplete"
+                :required="field.required"
+                :aria-describedby="contact.describedBy(field)"
+                :aria-invalid="invalid(field)"
+                class="min-w-0 flex-1 bg-transparent px-1 py-3"
+              />
+              <span v-if="field.append">{{ field.append }}</span>
+            </div>
+          </template>
+          <p v-if="help(field)" :id="contact.helpId(field)" class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+            {{ help(field) }}
+          </p>
+          <p
+            v-if="contact.errors.value[field.handle]"
+            :id="contact.errorId(field)"
+            class="mt-2 text-sm text-red-700 dark:text-red-400"
+          >
+            {{ contact.errors.value[field.handle] }}
+          </p>
         </div>
-        <p v-if="field.instructions" class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ field.instructions }}</p>
-        <p v-if="contact.errors.value[field.handle]" class="mt-2 text-sm text-red-700 dark:text-red-400">
-          {{ contact.errors.value[field.handle] }}
-        </p>
-      </div>
+      </template>
     </component>
 
     <input
