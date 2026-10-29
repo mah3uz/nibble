@@ -12,6 +12,149 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+This release is mostly forms and fields, and a plainer Control Plane. Four database migrations are added; they only
+add tables and columns, so they can be rolled back, but the snapshot taken before an upgrade is the surest way back.
+
+### What's new
+
+- **Public forms can be handled, not just stored.** Each submission is **New** or **Handled**, can be marked unread,
+  and carries internal notes, and the list takes bulk actions. A person's submissions can be exported or erased by
+  email address, exports and deletes are recorded in the audit log, and the submissions of a form removed from the
+  schema are purged after the retention period.
+- **Form notifications need no code.** `notify` entries merge `{field.x}` and `{global.set.field}` into the subject
+  and message, take recipients from a field or a global (`to: {field.email}`), and are routed with `if:`. Each email
+  is recorded on the submission, and **Send notifications again** resends them.
+- **A form can open, close and cap itself.** `limits:` takes `opens_at`, `closes_at`, `max_submissions` and `unique`
+  (a value accepted once, such as a ticket code), with a `closed_message` shown when it is closed. A form's
+  `submit_label` replaces the button text.
+- **More ways to catch spam.** `spam.min_seconds` treats a submission sent too soon after the form was shown as spam,
+  and `spam.max_links` catches text full of links. The rate limit now counts only accepted submissions, so refused
+  posts no longer lock a real visitor out, and the refusal says how long to wait.
+- **A form field can be encrypted.** `encrypt: true` stores the value encrypted, bound to its submission and field.
+  Staff, exports, emails, deliveries and per-person search still read it.
+- **Multi-step forms, saved forms and calculations.** `steps: true` turns sections into checked steps. `resume: true`
+  adds **Save and finish later**, with a link emailed to the visitor. A `calculation` field is worked out on the
+  server when the form is sent, with a live figure in the theme through `calculated()`.
+- **Forms speak the visitor's language.** A multilingual site translates a form's text, Nibble's own form messages and
+  the visitor's confirmation email.
+- **Hidden and prefilled form fields.** A `hidden` field is filled from a fixed `value` or from the page's query
+  string with `prefill`.
+- **Themes get what they need to draw a form.** A form field arrives with its fieldtype settings, its resolved default
+  and its conditions as rules to evaluate. `useNibbleForm` applies conditions, leaves out fields hidden by one,
+  refills typed values after a refused post even without JavaScript, and gives ids, `aria-describedby`, an error list
+  and focus targets. Crumbs' contact form draws every public fieldtype accessibly, with steps, calculations and the
+  closed message.
+- **Rich text can link to a global.** Choose a global field in the link dialog, or write
+  `[Apply](global:site.apply_url)` through the API, and the link follows the global's address when the text renders.
+- **Content migrations work on globals.** `rename_field` and `set_default` take a `global` in every locale, and the new
+  `move_field` and `remove_field` carry values to another global or drop a field that left the schema, so nothing is
+  stranded.
+- **New fieldtypes.** `decimal`, `range`, `rating`, `time`, `color` and `button_group` work in blueprints and public
+  forms, with Control Plane controls and crumbs inputs. `note` shows Markdown between a form's fields and stores
+  nothing. Decimal, range and rating can be used in calculations.
+- **Date-times can have a time zone.** `time_zone: Europe/London` (or `site`) reads the time as typed in that zone,
+  stores the moment in UTC and shows it in that zone. A time the clocks skip is refused, and a repeated one takes its
+  first occurrence.
+- **Text can be validated by what it holds.** `input_type: email`, `url` or `tel` checks the value on save, in
+  blueprints and on public forms. A toggle's `inline_label` can hold Markdown links, for a consent checkbox.
+- **A field's `required` and `read_only` can take a condition.** The required marker shows only while the condition
+  passes, and a hidden field keeps its stored value.
+- **Read-only means read-only.** A value sent for a `read_only` field is kept as stored whoever saves, rows in grids
+  and replicators by their `id`. Entry, term, global and asset writes through the API answer with an `ignored` list of
+  the fields whose value was kept.
+- **Apps see fuller field schemas.** The JSON Schema an app writes against describes length, format, range, step,
+  option labels, read-only state, conditions and when a field is required.
+- **`list_form_submissions` takes `since` and `q`,** searching as the Control Plane listing does.
+- **`site/types.d.ts` types each form's values,** and a view's form prop uses them, so `values.topic` is typed.
+  `useNibbleForm` takes that type; an untyped call is unchanged.
+- **`computed:today` is a built-in default,** the current date in the site's time zone.
+- **Blocks are easier to work with.** Undo a removed block or grid row from the notice that appears, move blocks and
+  rows up and down from their menu, copy a block and paste it into any field with the same set, and use
+  `collapse: accordion` to keep one block open at a time. Grids and blocks have a **Full screen** action.
+- **Rich text options now do what the reference says.** `placeholder`, `character_limit` (with a counter),
+  `toolbar_mode`, `smart_typography`, input and paste rules, `link_noopener`, `link_noreferrer`, `link_collections`
+  (the link dialog's **Page** tab lists routed collections), `always_show_set_button`, `previews` and
+  `inline_hard_breaks`.
+- **Pickers have modes and can create.** `entries` and `terms` fields take `mode: auto | default | select | typeahead
+  | stack`; `auto`, the default, is a dropdown for 25 or fewer choices. People allowed to create the item see
+  **Create a new …** in the picker. `nibble:check` refuses an unknown mode.
+- **Duplicate an entry** from the editor or the listing. A field's `duplicate` option decides what is copied; slug and
+  `unique` fields are left out by default.
+- **Entry listings sort and filter by field.** Field columns sort, and listed choice, toggle and date fields add
+  filters. `sortable` and `filterable` turn them off or on per field.
+- **Documentation covers more of the site.** A theming guide to forms, pages on what a view receives and on styling
+  and the page shell, a **Reference** section listing every fieldtype option, validation rule and condition, and the
+  forms guide split into declaring, delivery, spam and privacy, translation and a key reference. Tests fail when the
+  code gains an option the pages miss.
+- **Guides for the people who run a site.** Webhooks, the Utilities screens, every `nibble:check` message, every
+  environment variable and task, the page cache and CDN, sign-in lockout and recovery, and administering from the
+  Control Plane without a terminal.
+- **Guides for editors, and routes in.** Settings, categories and tags, the trash, your account and two-factor
+  sign-in, and form submissions, with start-here routes by audience and every guide listed on the docs home.
+
+### What's fixed
+
+- **Crumbs ships a fallback `default` view,** and `nibble:check` warns when a collection's entries resolve to a view
+  the theme lacks. A set without a view is a warning, since its blocks render nothing.
+- **The 500 page gets the site's shared props,** falling back to empty ones if loading them fails.
+- **The Backups screen links to the restore section** of the backups guide.
+- **The health check asks the page renderer on the configured port.**
+- **`nibble:generate:form` writes `required: true`.**
+- **Form emails show every fieldtype's value again.** Only a fieldtype with its own display formats a submitted value.
+- **A form field's `messages` override the step error,** and a calculation's posted value is never kept in a saved
+  form.
+
+### Changed
+
+- **Plainer wording in the Control Plane.** Page-builder sets are **blocks**, globals are **Site settings**, pending
+  edits to a live page are a **Draft**, a taxonomy shows its own name, and link targets are filtered by **Type**.
+  Statuses show their label (In review, not the stored key), error summaries name a field once by its label, and
+  messages say what to do next in plain words.
+- **History, the audit log and approvals say what happened.** They show field labels, readable values, titles and
+  verbs, and an approval says what it does and changes. Signed-in devices have names.
+- **Date fields are compact** unless `full_width: true`, or the date-time has a `time_zone`.
+- **Relationship fields with 25 or fewer choices show a dropdown** and offer **Create a new …**.
+- **`nibble:check` reports more:** records holding a switched-off required toggle, saved text failing an email, URL or
+  phone check, a picker mode it doesn't know, and a `link_collections` handle that names no collection.
+
+### Security
+
+- **CSV exports can't run formulas.** A cell that starts like a spreadsheet formula is written as text, in entry, term,
+  submission and per-person exports.
+- **Rich text links to other sites carry `rel="noopener"`** by default.
+- **A resume link's token stays out of the request log,** and the personal data export of saved forms leaves it out.
+
+**Upgrade:**
+
+1. **A required toggle must be switched on, everywhere.** `required: true` on a `toggle` now means it has to be on:
+   entries holding one switched off can't be published, and terms and globals can't be saved. `bin/rails nibble:check`
+   lists them; fix them, or drop `required` if "off" is a valid answer.
+2. **CSV exports put `'` before cells that look like formulas.** A script that parses an export sees `'=SUM(A1)`
+   where it saw `=SUM(A1)`; strip a leading `'` if you read the files.
+3. **Writes to a `read_only` field are now ignored** from the Control Plane, API tokens and MCP, and likewise for
+   `visibility: read_only`. An integration that sets such a field must use an import, a content migration or a
+   scheduled task, which are exempt, or you remove `read_only` from the field.
+4. **Email, URL and phone `text` fields are checked on save.** A saved record whose value fails can't be saved until
+   it is fixed; `bin/rails nibble:check` lists them. To check a phone number against your own pattern, use
+   `validate: regex:`, which replaces the phone check.
+5. **A rich text field with `character_limit` refuses longer text on save.** Content already over a newly set limit
+   can't be saved until it is shortened.
+6. **`to: {global…}` on a form notification** lets whoever edits that global choose where submissions go. Keep such a
+   global to people you'd trust with the inbox.
+7. **A custom theme must post `_nibble_t`** (a hidden input holding `form.timestamp`) when a form sets
+   `spam.min_seconds`, or every submission is caught as spam. `useNibbleForm` and crumbs already do.
+8. **`limits.unique` covers only submissions accepted after it's added.** Duplicates already stored are left alone.
+9. **Rich text links to other sites now get `rel="noopener"`.** Set `link_noopener: false` on the field to keep the old
+   output.
+10. **Editors will notice:** date fields are compact unless `full_width: true` or zoned; grids and blocks have a
+    **Full screen** action; relationship fields with 25 or fewer choices show a dropdown and offer **Create a new …**
+    to people allowed to; entry listings gain filters for listed choice, toggle and date fields; and the new names
+    (blocks, Site settings, Draft, Type).
+11. **Four new database migrations** add form handling (handled state, notes, retention), encrypted submission fields,
+    submission keys for `limits.unique` and saved forms (`form_partials`). `bin/rails nibble:upgrade` runs them. They
+    only add tables and columns, so `bin/rails db:rollback` can undo them, which drops what they hold.
+12. **`site/types.d.ts` gains form value types.** `bin/rails nibble:upgrade` regenerates it; commit the new file.
+
 ## 0.21.4 — 2026-10-29 21:30 +0600
 
 ### What's new
