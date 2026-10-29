@@ -309,7 +309,7 @@ A date, or a date and time. Stores `YYYY-MM-DD`, or with `time_enabled` a UTC da
 | `time_zone` | an IANA name such as `Europe/London`, or `site` | — | with `time_enabled`, the clock the person types on, read with the offset that zone has on that date. `site` is the zone the site is set to (`config.time_zone` in `config/application.rb`). Without it, a date-time is stored in UTC and shown in the site's zone |
 | `earliest_date`, `latest_date` | date | — | the first and last date accepted, both included; midnight in `time_zone` when it has one |
 | `inline` | `true`, `false` | `false` | draws the calendar open instead of behind an input |
-| `full_width` | `true`, `false` | `false` | stretches the input across the whole field instead of keeping it compact |
+| `full_width` | `true`, `false` | `false` | stretches the input across the whole field instead of keeping it compact. A date-time with a `time_zone` always uses the whole field, because the zone name needs the room |
 
 A time the clocks skip when they go forward, such as 02:30 on the night summer time starts, is refused with the
 message key `local_time`. A time they repeat when they go back is the first of the two. Adding a zone to a field that

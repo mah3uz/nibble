@@ -30,4 +30,9 @@ describe('dateWidthClass', () => {
     expect(dateWidthClass({ full_width: false })).toContain('max-w-xs')
     expect(dateWidthClass({ full_width: true })).not.toContain('max-w-xs')
   })
+
+  it('gives a date with a time zone the whole field, since the zone name needs the room', () => {
+    expect(dateWidthClass({ time_enabled: true, time_zone: 'Europe/London' })).not.toContain('max-w-xs')
+    expect(dateWidthClass({ time_enabled: true })).toContain('max-w-xs')
+  })
 })
