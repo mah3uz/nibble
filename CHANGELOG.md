@@ -12,6 +12,8 @@ theme API (`nibble: '^1'` in `theme.yml`), not this number.
 
 ## Unreleased
 
+## 0.21.1 — 2026-10-29 17:57 +0600
+
 ### What's new
 
 - **Forms can be split into sections.** `sections: [{ display, instructions, fields }]` takes the place of `fields`,
