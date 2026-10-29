@@ -509,7 +509,8 @@ last `retention_days` and keeps applying it to the submissions left behind; a fo
 after the purge first finds the form missing. `bin/rails nibble:check` warns while such submissions are stored.
 
 An administrator can find, export or erase everything held about one email address, across every form, from
-**Forms → Personal data** in the Control Plane; the audit log records each export, erasure and submission delete
+**Forms → Personal data** in the Control Plane. The export includes forms saved to finish later that mention the address, marked
+`saved`, and never their link. The audit log records each export, erasure and submission delete
 without storing the address. Visitors' IP addresses are never stored, only a keyed hash of them.
 
 A field with `encrypt: true` is stored encrypted, with a key derived from the site's `secret_key_base` and bound to
