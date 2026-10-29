@@ -1,9 +1,9 @@
 ---
-id: theming-content-api
+id: extending-content-api
 title: The Content API
 description: Read the site's content over HTTP — tokens and scopes, the endpoints, filtering, sorting, pagination
   and previews.
-order: 5
+order: 7
 ---
 
 # The Content API
@@ -23,7 +23,7 @@ After reading this guide, you will know:
 **Use it** when something outside the site needs its content: a product showing "What's new", a mobile app, a
 static build, a search index somewhere else.
 
-**Do not use it from your own theme.** A theme asks for content through its [query sidecar](queries.md), which is
+**Do not use it from your own theme.** A theme asks for content through its [query sidecar](../theming/queries.md), which is
 faster, needs no token, and lets Nibble cache the page precisely.
 
 The API is read-only. Nothing is written through it.
@@ -40,9 +40,9 @@ api: true
 Nibble's `pages` and `posts` and the theme's taxonomies have `api: true` already.
 
 > [!WARNING]
-> Every field of a served entry is in the response. A field option `api: false` exists, but it only leaves the field
-> out of the generated TypeScript types — the value is still sent. Keep anything that must stay private out of
-> collections the API serves.
+> Every field of a served entry is in the response except those marked `api: false`, which the API leaves out (a page
+> still receives them). A site whose `load_defaults` is older than 0.15.0 still sends them. Keep anything that must
+> stay private out of collections the API serves.
 
 ## 3. Tokens
 
@@ -58,7 +58,7 @@ scopes:
 ![API tokens in the Control Plane](../../images/cp/api-tokens.png)
 
 These tokens only ever read. A program that needs to change content does it as a person, through the
-[management API](../extending/management-api.md).
+[management API](management-api.md).
 
 > [!CAUTION]
 > A token is shown once, when it is created. Store it where the job that uses it can read it and nowhere else —
@@ -88,8 +88,9 @@ Each token may make 300 requests a minute.
 | `GET /api/v1/schema` | the collections and taxonomies the API serves, and their fields |
 | `GET /api/v1/health` | whether the site is healthy |
 
-Content comes back in the same shape a view receives, so a field means the same thing in a template and in a JSON
-response.
+Content comes back in the shape a view receives (see [Content in views](../theming/content-in-views.md)), so a field
+means the same thing in a template and in a JSON response. The one difference is `api: false` fields, which the API
+leaves out.
 
 > [!TIP]
 > `/api/v1/routes` is the one a static build wants: it lists every page that exists, so a generator knows what to
@@ -101,7 +102,7 @@ response.
 
 ## 5. Query parameters
 
-The listing endpoints take the same options as a [query sidecar](queries.md), written as URL parameters:
+The listing endpoints take the same options as a [query sidecar](../theming/queries.md), written as URL parameters:
 
 | Parameter | Example | Means |
 |---|---|---|

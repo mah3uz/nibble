@@ -8,7 +8,7 @@ order: 4
 
 # The management API and MCP
 
-The [content API](../theming/content-api.md) serves published content to other websites. This API is the other
+The [content API](content-api.md) serves published content to other websites. This API is the other
 half: it changes content, always as a person, through the same checks as the Control Plane. The `nibble` command and
 AI apps use it; so can anything you build.
 

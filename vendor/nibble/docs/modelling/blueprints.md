@@ -81,7 +81,7 @@ terms. The collection lists which blueprints it allows; the first is the default
 | `listable` | `true` shows it as a column in the listing, `hidden` offers it in the column picker, `false` never |
 | `read_only` | shown but not editable, and kept as it is on every save — see below; `{ if: … }` makes it read-only while a condition passes |
 | `visibility` | `visible`, `read_only`, `hidden` or `computed` |
-| `api` | `false` leaves the field out of the generated TypeScript types — the value is still sent to pages and the API |
+| `api` | `false` leaves the field out of the generated TypeScript types and the Content API's responses — pages still receive the value, so read it with a cast |
 
 A `default` of `computed:<name>` is worked out each time it is used. Nibble has one built in, `computed:today`, the
 current date in the site's time zone as `YYYY-MM-DD`. A site registers its own in an initializer, and `nibble:check`

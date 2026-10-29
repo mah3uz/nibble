@@ -85,7 +85,7 @@ the next.
 - [Queries](theming/queries.md) — asking for the content a page needs.
 - [Theme components](theming/components.md) — rich text, images, blocks, pagination, SEO and forms.
 - [SEO, sitemaps and feeds](theming/seo-and-feeds.md) — what search engines and feed readers receive.
-- [The Content API](theming/content-api.md) — reading the same content from somewhere else.
+- [The Content API](extending/content-api.md) — reading the same content from somewhere else.
 
 ## Editing content
 

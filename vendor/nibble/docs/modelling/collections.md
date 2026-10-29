@@ -167,7 +167,7 @@ api: true
 |---|---|---|
 | `sitemap` | included | whether entries appear in `/sitemap.xml`, and with what priority |
 | `feed` | off | `true`, or a title and limit, publishes an Atom feed at `/feed-<handle>.xml` |
-| `api` | off | whether the [Content API](../theming/content-api.md) serves this collection |
+| `api` | off | whether the [Content API](../extending/content-api.md) serves this collection |
 
 Every collection with a feed also appears in `/feed.xml`. See [SEO, sitemaps and feeds](../theming/seo-and-feeds.md).
 
