@@ -1,7 +1,7 @@
 module Nibble
   module Forms
     module Definition
-      FIELD_CONFIG = %w[placeholder input_type character_limit default width multiple inline max_files max_file_size extensions prepend append].freeze
+      FIELD_CONFIG = %w[placeholder input_type character_limit default width multiple inline max_files max_file_size extensions prepend append min max step].freeze
       OPTION_TYPES = %w[select radio checkboxes].freeze
 
       module_function

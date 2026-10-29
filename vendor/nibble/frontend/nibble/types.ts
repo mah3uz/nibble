@@ -52,6 +52,9 @@ export type NibbleFormField = {
   extensions?: string[]
   prepend?: string
   append?: string
+  min?: number
+  max?: number
+  step?: number
 }
 
 export type NibbleFormSection = {

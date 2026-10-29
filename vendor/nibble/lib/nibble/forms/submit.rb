@@ -26,6 +26,7 @@ module Nibble
         fields = @form.fields
         values = @params.slice(*fields.handles)
         errors = Validator.new(fields, replacements: { "type" => "form_submission" }, locale: @locale).validate(values).errors
+        errors = step_errors(fields, values).merge(errors)
         return result(:invalid, errors:, values:) if errors.any?
 
         data, blob_ids = upload(fields, values)
@@ -33,6 +34,19 @@ module Nibble
       end
 
       private
+
+      def step_errors(fields, values)
+        fields.all.values.each_with_object({}) do |field, found|
+          step = field.get("step")
+          next unless field.type == "integer" && step.to_i.positive? && values[field.handle].to_s.match?(/\A-?\d+\z/)
+
+          from = field.get("min").to_i
+          next if (values[field.handle].to_i - from) % step.to_i == 0
+
+          found[field.handle] = [ I18n.t("nibble.validation.step", attribute: field.display, step:, from:,
+            default: "The %{attribute} field must go up in steps of %{step} (from %{from}).") ]
+        end
+      end
 
       def result(status, submission: nil, errors: {}, values: {}) = Result.new(status:, submission:, errors:, values:)
 

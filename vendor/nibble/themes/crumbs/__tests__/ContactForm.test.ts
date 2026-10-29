@@ -74,4 +74,14 @@ describe('crumbs ContactForm', () => {
     expect(html.match(/<label/g)).toHaveLength(3)
     expect(html).toMatch(/<span>\$<\/span>\s*<input[^>]*id="contact-budget"[^>]*>\s*<span>per head<\/span>/)
   })
+
+  it('draws an integer field as a number input with min, max and step, so the browser agrees with the server', async () => {
+    const html = await render(
+      form({ fields: [field('amount', { type: 'integer', min: 2000, max: 10000, step: 500 })] }),
+    )
+
+    expect(html).toMatch(
+      /<input(?=[^>]*type="number")(?=[^>]*inputmode="numeric")(?=[^>]*min="2000")(?=[^>]*max="10000")(?=[^>]*step="500")[^>]*>/,
+    )
+  })
 })

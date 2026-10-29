@@ -32,6 +32,25 @@ class Nibble::Forms::DefinitionTest < ActiveSupport::TestCase
     assert_equal [ "$", "per head" ], budget.values_at("prepend", "append")
   end
 
+  test "an integer field's min, max and step reach the theme, so it can draw a number input with them" do
+    amount = definition("pledge")["fields"].first
+
+    assert_equal [ 2000, 10_000, 500 ], amount.values_at("min", "max", "step")
+  end
+
+  test "a public submission off the step, counted from min, is refused and one on it is accepted" do
+    pledge = ->(amount) { Nibble::Forms::Submit.call(Nibble::Forms.find("pledge"), { "amount" => amount }, ip: "203.0.113.2", user_agent: "test", locale: "en") }
+
+    refused = pledge.(2250)
+    assert_equal :invalid, refused.status
+    assert_equal [ "The Amount field must go up in steps of 500 (from 2000)." ], refused.errors["amount"]
+    assert_equal :ok, pledge.("2500").status
+  end
+
+  test "a blueprint integer field treats step as a hint, so an off-step value still saves" do
+    assert_equal 12, create_entry("articles", { seats: 12 }).data["seats"]
+  end
+
   test "a required field inside a section is enforced and a valid submission is stored, as for a flat form" do
     result = submit("note" => "hi")
     assert_equal :invalid, result.status

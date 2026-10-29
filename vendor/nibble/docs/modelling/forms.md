@@ -53,6 +53,10 @@ A field's `messages` set the text a visitor sees when one of its rules fails, pe
 `text` and `integer` fields take `prepend` and `append`, short text a theme draws before and after the input
 (`prepend: $`, `append: per month`).
 
+An `integer` field's `min`, `max` and `step` reach the theme, which draws a number input with them. On a public form
+Nibble also refuses a value that is off the step, counted from `min` (or 0): with `min: 2000` and `step: 500`, 2250 is
+refused and 2500 is accepted. In a blueprint, `step` is only a hint to the input.
+
 A long form can be split into sections instead of one `fields` list. Each section has a `display`, optional
 `instructions` and its own `fields`, declared the same way:
 

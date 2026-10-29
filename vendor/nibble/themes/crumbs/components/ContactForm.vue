@@ -84,7 +84,11 @@ const groups = computed(() => {
           <input
             :id="`contact-${field.handle}`"
             v-model="contact.values[field.handle] as string"
-            :type="field.input_type ?? 'text'"
+            :type="field.type === 'integer' ? 'number' : (field.input_type ?? 'text')"
+            :inputmode="field.type === 'integer' ? 'numeric' : undefined"
+            :min="field.min"
+            :max="field.max"
+            :step="field.step"
             :name="contact.fieldName(field)"
             :maxlength="field.character_limit"
             :required="field.required"

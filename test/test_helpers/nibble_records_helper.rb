@@ -7,6 +7,7 @@ module NibbleRecordsHelper
     "blueprints/collections/articles/article.yml" => { title: "Article", tabs: { main: { sections: [ { fields: [
       { handle: "title", field: { type: "text", required: true } },
       { handle: "summary", field: { type: "textarea", validate: [ "max:20" ] } },
+      { handle: "seats", field: { type: "integer", min: 10, step: 5 } },
       { handle: "related", field: { type: "entries", collections: [ "articles", "docs" ] } },
       { handle: "tags", field: { type: "terms", taxonomies: [ "tags" ] } },
       { handle: "image", field: { type: "assets", max_files: 1, preset: "card" } },
@@ -70,6 +71,9 @@ module NibbleRecordsHelper
         { handle: "budget", field: { type: "integer", prepend: "$", append: "per head" } }
       ] },
       { display: "The visit", fields: [ { handle: "note", field: { type: "textarea" } } ] }
+    ] },
+    "forms/pledge.yml" => { title: "Pledge", fields: [
+      { handle: "amount", field: { type: "integer", min: 2000, max: 10_000, step: 500 } }
     ] },
     "navigation/docs_menu.yml" => { title: "Docs menu", max_depth: 2, collections: [ "docs" ] }
   }.freeze
