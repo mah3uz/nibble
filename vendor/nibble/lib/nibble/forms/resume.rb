@@ -64,8 +64,8 @@ module Nibble
 
       def kept_values
         fields = @form.fields
-        files = fields.all.values.select { |field| field.type == "files" }.map(&:handle)
-        @params.slice(*fields.handles).except(*files).select { |_, value| plain?(value) }.merge(hidden_values(fields))
+        skipped = fields.all.values.select { |field| field.type == "files" || field.type == Calculations::TYPE }.map(&:handle)
+        @params.slice(*fields.handles).except(*skipped).select { |_, value| plain?(value) }.merge(hidden_values(fields))
       end
 
       def link(token) = "#{Nibble.config.url.to_s.chomp('/')}#{@page}?#{{ QUERY => token }.to_query}"
