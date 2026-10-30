@@ -192,6 +192,18 @@ defineProps<ViewProps['posts/show'] & { page: PostsPost }>()
 </script>
 ```
 
+A query's `include` is in its type: an included field holds the related record's full type in place of its summary,
+and `children` holds the collection's records. A sidecar with `page: { include: [...] }` gives its `ViewProps` entry
+a `page` holding only the included fields, so a view joins it to its own record without that field:
+
+```vue
+<script setup lang="ts">
+import type { PostsPost, ViewProps } from '@site/types'
+
+defineProps<ViewProps['posts/show'] & { page: Omit<PostsPost, 'authors'> }>()
+</script>
+```
+
 `useNavigation('main')` returns that menu's items typed with `MainNavigationItem`, so `item.fields.icon` compiles only
 when the menu's `item_fields` declare `icon`, and `item.entry` holds the `entry_fields` the menu lists. A custom kind
 has its own member of the union, as do `heading` when the menu sets `headings: true` and `query` when it lists `queries`: narrow on `item.kind` to read
