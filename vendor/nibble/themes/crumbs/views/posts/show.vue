@@ -5,9 +5,11 @@ import Prose from '../../components/Prose.vue'
 import { computed } from 'vue'
 import type { PostsPost, ViewProps } from '@site/types'
 import PostCard from '../../components/PostCard.vue'
-import { formatDate, isoDate } from '../../lib/format'
+import { isoDate, useFormatDate } from '../../lib/format'
 
 const props = defineProps<ViewProps['posts/show'] & { page: PostsPost }>()
+
+const formatDate = useFormatDate()
 
 const readingTime = computed(() => {
   const words = (props.page.body ?? '')
@@ -54,6 +56,7 @@ const readingTime = computed(() => {
       v-if="page.featured_image"
       :image="page.featured_image"
       loading="eager"
+      sizes="(min-width: 80rem) 80rem, 100vw"
       class="mx-auto aspect-9/5 w-full rounded-lg object-cover"
     />
     <div class="mx-auto max-w-[65ch] pt-10 sm:pt-14">

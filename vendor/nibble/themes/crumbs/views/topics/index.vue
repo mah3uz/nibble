@@ -15,6 +15,9 @@ defineProps<ViewProps['topics/index'] & { page: { title: string } }>()
         <h2 class="font-display text-4xl uppercase">
           <Link :href="topic.uri ?? '#'" class="hover:text-accent">{{ topic.title }} ↗</Link>
         </h2>
+        <p class="mt-3 font-mono text-base text-accent sm:text-sm">
+          {{ topic.entries_count }} {{ topic.entries_count === 1 ? 'article' : 'articles' }}
+        </p>
         <p v-if="topic.description" class="mt-4 max-w-[48ch] text-lg leading-8 text-gray-600 dark:text-gray-300">
           {{ topic.description }}
         </p>

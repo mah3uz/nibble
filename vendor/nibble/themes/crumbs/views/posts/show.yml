@@ -5,3 +5,4 @@ related:
   not:
     id: $entry.id
   limit: 3
+  fields: [excerpt, published_at, featured_image]

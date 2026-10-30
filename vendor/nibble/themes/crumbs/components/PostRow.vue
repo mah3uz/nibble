@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3'
 import type { PostsPost } from '@site/types'
-import { formatDate, isoDate } from '../lib/format'
+import { isoDate, useFormatDate } from '../lib/format'
 
-defineProps<{ post: PostsPost }>()
+defineProps<{ post: Pick<PostsPost, 'title' | 'uri' | 'excerpt' | 'published_at'> }>()
+
+const formatDate = useFormatDate()
 </script>
 
 <template>

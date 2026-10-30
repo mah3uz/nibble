@@ -1,10 +1,12 @@
 featured:
   from: entries:posts
   limit: 1
+  fields: [excerpt, published_at, topics, authors]
 recent:
   from: entries:posts
   offset: 1
   limit: 6
+  fields: [excerpt, published_at, featured_image]
 topics:
   from: terms:topics
   fields: [title, uri]

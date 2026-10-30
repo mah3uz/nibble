@@ -2,9 +2,11 @@
 import { Link } from '@inertiajs/vue3'
 import type { PagesPage, ViewProps } from '@site/types'
 import PostCard from '../components/PostCard.vue'
-import { formatDate, isoDate } from '../lib/format'
+import { isoDate, useFormatDate } from '../lib/format'
 
 defineProps<ViewProps['home'] & { page: PagesPage }>()
+
+const formatDate = useFormatDate()
 </script>
 
 <template>
