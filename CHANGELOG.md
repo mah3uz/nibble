@@ -17,11 +17,44 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 - **`bin/rails nibble:schema:types --without-site`** writes a theme's types from Nibble's schema and the theme's
   alone, leaving out `site/schema`, so a theme you publish can be type-checked as it ships, whatever the site you
   develop it in changes.
+- **Themes get the site's time zone as `site.time_zone`**, an IANA name such as `Australia/Sydney`, in every view's
+  props, so a theme can date a post on the day it happened where the site is rather than in UTC.
+- **crumbs uses what themes can do now.** It shows dates in the page's locale and the site's time zone, asks listing
+  queries for only the fields it draws, sets `sizes` on its card and hero images, and counts each topic's articles. Its
+  Main menu draws nested items, as a dropdown that works without JavaScript and an indented list on phones; its footer
+  draws the Footer menu, falling back to Main while that is empty; its header shows the Site logo when one is set. Its
+  404 page offers the menu, a search box and the latest articles; search results say whether a hit is an article or a
+  page and where a page sits; the embed block plays YouTube and Vimeo videos in privacy-friendly players and links
+  anything else; form fields sit side by side by their `width` hint; and the fallback taxonomy views show a term's
+  description.
 
 ### What's fixed
 
 - **`nibble:check` accepts `messages.unique` on a field the form's `limits.unique` names.** It said the field had no
   rule for that message, though a repeated value shows it.
+- **crumbs' contact form takes posts without JavaScript when it is paced.** It now sends the `_nibble_t` hidden
+  input, so a form with `spam.min_seconds` no longer counts every no-JavaScript post as spam.
+- **crumbs opens off-site menu items.** It drew them with Inertia's `Link`, which can't leave the site, so a menu item
+  such as GitHub did nothing; it uses a plain link now, as the CTA block does for an off-site link.
+- **crumbs' light or dark choice arrives with the page.** It is kept in the `nibble_theme` cookie, so a returning
+  visitor doesn't see the other scheme first; a choice an earlier crumbs saved carries over.
+- **crumbs loads its fonts from the page head**, not an `@import` that held up the stylesheet, and its footer no longer
+  prints the year, which a cached page could show stale.
+
+### Changed
+
+- **crumbs' starter contact form is paced instead of using a CAPTCHA.** `spam.min_seconds: 3` and `spam.max_links: 2`
+  replace `captcha: true`, so a fresh install takes messages without keys. A page that shows the form is no longer kept
+  in the page cache, since each visit needs a fresh timestamp.
+
+**Upgrade:**
+
+1. **A site that relied on crumbs' CAPTCHA keeps it with a form of its own.** Copy
+   `vendor/nibble/themes/crumbs/schema/forms/contact.yml` to `site/schema/forms/contact.yml` and set
+   `spam: { captcha: true }`.
+2. **A theme that draws a paced form with its own markup adds the timestamp.** Add
+   `<input v-if="form.timestamp" type="hidden" name="_nibble_t" :value="form.timestamp" />`, or posts without
+   JavaScript are counted as spam.
 
 ## 0.22.2 — 2026-10-30 05:17 +0600
 
