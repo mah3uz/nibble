@@ -144,7 +144,7 @@ class Nibble::NavigationMenusTest < ActiveSupport::TestCase
       { "type" => "url", "title" => "Blog", "url" => "/blog/" },
       { "type" => "url", "title" => "About", "url" => "https://example.com/about" },
       { "type" => "url", "title" => "Elsewhere", "url" => "https://elsewhere.test/blog" },
-      { "type" => "url", "title" => "Top", "url" => "/blog#top" }
+      { "type" => "url", "title" => "Top", "url" => "https://example.com/blog#top" }
     ])
     match = Nibble::Routing.resolve(article.uri)
     flags = lambda do |path|

@@ -138,7 +138,7 @@ module Nibble
         children = with_trail(item["children"].to_a)
         path = site_path(item["url"])
         current = !path.nil? && path == page_path
-        trail = current || children.any? { |child| child["in_trail"] } || (path.present? && path != "/" && page_path.start_with?("#{path}/"))
+        trail = current || children.any? { |child| child["in_trail"] } || (path.present? && page_path.start_with?("#{path}/"))
         item.merge("current" => current, "in_trail" => trail, "children" => children)
       end
     end
