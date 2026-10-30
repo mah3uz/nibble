@@ -88,8 +88,8 @@ class Nibble::TypeGeneratorTest < ActiveSupport::TestCase
   test "a menu's item fields, entry fields and kinds are typed in its own item type" do
     with_menu do
       assert_match "export type MainNavigationItem =", generated
-      assert_match "kind: 'link'; url: string; fields: { icon: string | null; dense: boolean }; entry: MainNavigationEntry | null", generated
-      assert_match "kind: 'featured'; url: string; fields: { icon: string | null; dense: boolean; badge: number | null }", generated
+      assert_match "kind: 'link'; type: NavigationLinkType; url: string; fields: { icon: string | null; dense: boolean }; entry: MainNavigationEntry | null", generated
+      assert_match "kind: 'featured'; type: NavigationLinkType; url: string; fields: { icon: string | null; dense: boolean; badge: number | null }", generated
       assert_match "export type MainNavigationEntry = { title: string | null }", generated
     end
   end
@@ -100,8 +100,8 @@ class Nibble::TypeGeneratorTest < ActiveSupport::TestCase
       assert_no_match "'heading'", generated.slice(/export type MainNavigationItem =.*?\n\n/m)
     end
     with_menu("main", headings: true) do
-      assert_match "kind: 'heading'; url: null;", generated
-      assert_match "kind: 'link'; url: string;", generated
+      assert_match "kind: 'heading'; type: null; url: null;", generated
+      assert_match "kind: 'link'; type: NavigationLinkType; url: string;", generated
     end
   end
 

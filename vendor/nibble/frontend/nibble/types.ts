@@ -3,10 +3,8 @@ export type Link = { type: string; id?: number; title: string; url: string; chil
 export type NavigationLinkType = 'url' | 'entry' | 'term' | 'global' | 'asset'
 
 export interface NavigationItemBase<Child> {
-  type: NavigationLinkType | null
   id?: number
   title: string
-  url: string | null
   new_tab: boolean
   current: boolean
   in_trail: boolean
@@ -15,6 +13,8 @@ export interface NavigationItemBase<Child> {
 
 export interface NavigationItem extends NavigationItemBase<NavigationItem> {
   kind: string
+  type: NavigationLinkType | null
+  url: string | null
   fields: Record<string, unknown>
   entry: Record<string, unknown> | null
 }

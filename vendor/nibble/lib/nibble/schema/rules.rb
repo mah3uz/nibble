@@ -9,7 +9,14 @@ module Nibble
       HASH = ->(value) { value.is_a?(Hash) }
       ARRAY = ->(value) { value.is_a?(Array) }
       STRINGS = ->(value) { value.is_a?(Array) && value.all? { |item| STRING.(item) } }
-      ROUTE = ->(value) { value.nil? || (value.is_a?(String) && (value.start_with?("/") || value.start_with?("{"))) }
+      MENU_KINDS = ->(value) do
+        value.is_a?(Hash) && value.all? do |handle, kind|
+          STRING.(handle) && kind.is_a?(Hash) && (kind.keys - %w[display link children fields]).empty? &&
+            (kind["display"].nil? || STRING.(kind["display"])) && (kind["link"].nil? || %w[optional required none].include?(kind["link"])) &&
+            (kind["children"].nil? || BOOLEAN.(kind["children"])) && (kind["fields"].nil? || ARRAY.(kind["fields"]))
+        end
+      end
+      ROUTE =->(value) { value.nil? || (value.is_a?(String) && (value.start_with?("/") || value.start_with?("{"))) }
       STRUCTURE = ->(value) do
         value == false || (value.is_a?(Hash) && (value["max_depth"].nil? || INTEGER.(value["max_depth"])) && [ nil, true, false ].include?(value["root"]))
       end
@@ -46,7 +53,8 @@ module Nibble
           required: %w[title],
           keys: {
             "title" => STRING, "max_depth" => INTEGER, "collections" => STRINGS, "taxonomies" => STRINGS,
-            "globals" => ->(value) { BOOLEAN.(value) || STRINGS.(value) }, "assets" => BOOLEAN, "headings" => BOOLEAN, "item_fields" => ARRAY, "entry_fields" => STRINGS
+            "globals" => ->(value) { BOOLEAN.(value) || STRINGS.(value) }, "assets" => BOOLEAN, "headings" => BOOLEAN, "item_fields" => ARRAY, "entry_fields" => STRINGS,
+            "kinds" => MENU_KINDS, "queries" => STRINGS
           }
         },
         "forms" => {

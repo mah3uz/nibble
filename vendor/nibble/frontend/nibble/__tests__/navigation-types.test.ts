@@ -1,6 +1,14 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
 import type { useNavigation } from '../composables'
-import type { NavigationItem, NavigationItemBase } from '../types'
+import type { Link, NavigationItem, NavigationItemBase, NavigationLinkType } from '../types'
+
+type LinkOnlyNavigationItem = NavigationItemBase<LinkOnlyNavigationItem> & {
+  kind: 'link'
+  type: NavigationLinkType
+  url: string
+  fields: {}
+  entry: null
+}
 
 type FixtureNavigationEntry = { summary: string | null }
 type FixtureNavigationItem =
@@ -37,6 +45,13 @@ describe('typed navigation', () => {
     const read = (item: Items<'fixture'>[number]) => (item.kind === 'featured' ? item.fields.badge : item.fields.icon)
 
     expect(read({ kind: 'featured', fields: { icon: null, badge: 'New' } } as Items<'fixture'>[number])).toBe('New')
+  })
+
+  it('keeps a link-only menu assignable to Link, so themes that typed their menu with it still compile', () => {
+    const items: LinkOnlyNavigationItem[] = []
+    const links: Link[] = items
+
+    expect(links).toEqual([])
   })
 
   it('types a menu the schema does not name loosely', () => {
