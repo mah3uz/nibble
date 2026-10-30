@@ -39,9 +39,19 @@ back, but the snapshot taken before an upgrade is the surest way back.
 - **Generated types follow `include`.** An included field is typed as the record it holds, and `children` as the
   collection's records.
 
+### What's fixed
+
+- **A crop shows wherever the image is used.** An image whose field has no `preset` was served as uploaded, with its
+  uploaded size, so cropping, rotating or flipping it in the media library changed only its preset uses. Every use now
+  shows the edited image at its edited size, and **Reset** brings the original back everywhere. The crop editor and
+  **Download** in the Control Plane still work from the original. An animated image can't be edited, since its uses
+  would show a single frame; one edited before keeps being served as uploaded.
+
 ### Changed
 
 - crumbs lists topics in its footer from a layout query, and a post shows its author's bio.
+- An image that already has edits gets a new address, so a cache holding its original under the old one can't keep
+  serving it; the old address redirects.
 
 ## 0.24.0 — 2026-10-30 21:08 +0600
 
