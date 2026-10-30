@@ -237,7 +237,34 @@ to end, and [Theme components](../theming/components.md) covers the `Blocks` com
 > [!TIP]
 > Nibble ships a standard set of blocks — text, quote, call to action, image, gallery and embed — as
 > `nibble::page_fields.blocks`. Reference it with `field: nibble::page_fields.blocks` when you need nothing more.
-> When you do, copy it into your blueprint and add to it.
+> To change the list without copying it, add `add_sets` and `remove_sets` under `config`:
+>
+> ```yaml
+> - handle: blocks
+>   field: nibble::page_fields.blocks
+>   config:
+>     add_sets:
+>       content:                 # an existing group: the set goes at its end
+>         latest_posts:
+>           display: Latest posts
+>           fields:
+>             - handle: count
+>               field: { type: integer, min: 1, max: 12, default: 3 }
+>       showcase:                # a new group: it goes after the existing ones
+>         display: Showcase
+>         sets:
+>           logos:
+>             display: Logos
+>             fields:
+>               - handle: images
+>                 field: { type: assets }
+>     remove_sets: [embed]
+> ```
+>
+> `nibble:check` refuses an added handle the field already has (replace a set with `config: sets` instead, or pick
+> another handle), a removed set the field doesn't have, and a removed set that saved blocks still use. Every other
+> key under `config` replaces the field's own, as for any reference. `add_sets` and `remove_sets` work on any
+> replicator reached through a reference.
 
 > [!CAUTION]
 > Removing a set that pages already use strands the blocks written with it. `nibble:check` refuses the change and

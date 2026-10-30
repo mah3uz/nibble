@@ -155,42 +155,32 @@ standard list of blocks:
   field: nibble::page_fields.blocks
 ```
 
-Replace that line with a copy of the `blocks` field from `vendor/nibble/core_schema/fieldsets/page_fields.yml`, and add
-a `pricing` set to its `content` group:
+Keep the reference and add a `pricing` set to its `content` group with `add_sets`:
 
 ```yaml
 - handle: blocks
-  field:
-    type: replicator
-    display: Page blocks
-    button_label: Add block
-    sets:
+  field: nibble::page_fields.blocks
+  config:
+    add_sets:
       content:
-        display: Content
-        sets:
-          # rich_text, quote and cta, exactly as you copied them
-          pricing:
-            display: Pricing
-            icon: layout-grid
-            fields:
-              - handle: plans
-                field:
-                  type: grid
-                  add_row: Add plan
-                  fields:
-                    - handle: name
-                      field: { type: text, required: true }
-                    - handle: price
-                      field: { type: text, required: true, instructions: "Per month, e.g. $19" }
-                    - handle: features
-                      field: { type: list }
-      # media, exactly as you copied it
+        pricing:
+          display: Pricing
+          icon: layout-grid
+          fields:
+            - handle: plans
+              field:
+                type: grid
+                add_row: Add plan
+                fields:
+                  - handle: name
+                    field: { type: text, required: true }
+                  - handle: price
+                    field: { type: text, required: true, instructions: "Per month, e.g. $19" }
+                  - handle: features
+                    field: { type: list }
 ```
 
-> [!WARNING]
-> Keep every set you copied. Pages already use them — the example content does — and a set that disappears from
-> the blueprint strands the blocks written with it. `nibble:check` refuses that, and says which pages it would
-> affect.
+The standard blocks stay as they are, and Nibble's later improvements to them reach this page too.
 
 Then draw it. Each set renders through `views/sets/<set handle>.vue`, receiving the set's fields as props:
 

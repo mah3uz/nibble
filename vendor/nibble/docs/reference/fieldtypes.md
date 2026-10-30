@@ -603,6 +603,7 @@ what each can carry are in [Pages built from blocks](../modelling/blueprints.md#
 |---|---|---|---|
 | `sets` | map of sets, or of groups of sets | — | the kinds of block. A set takes `display`, `fields`, `instructions`, `icon`, `badge` and `max` |
 | `max_sets` | whole number | — | the most blocks of every set together |
+| `add_sets`, `remove_sets` | map of groups to sets, list of set handles | — | only on a field that [references](../modelling/blueprints.md#4-pages-built-from-blocks) a replicator written elsewhere: add sets to its groups or in a new group, or leave some out |
 | `button_label` | text | — | the label of the Add button |
 | `button_position` | `below`, `header` | `below` | where the Add button sits; `header` puts it in the header of the section the field is in |
 | `insert_below` | `true`, `false` | `true` | `false` leaves out the button on each block that adds another beneath it |

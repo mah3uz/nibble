@@ -126,7 +126,7 @@ class Nibble::SetAdjustmentsTest < ActiveSupport::TestCase
     entry.update_columns(data: entry.data.merge("blocks" => [ { "id" => "aaaaaaaa", "type" => "quote" }, { "id" => "bbbbbbbb", "type" => "rich_text" } ]))
 
     issues = Nibble::Drift.issues.map { |issue| "#{issue.source}: #{issue.message}" }
-    assert_equal [ "collections/articles: set 'quote' of blocks was removed and 1 block still use it; keep the set, or run nibble:check --allow-data-loss" ], issues
+    assert_equal [ "collections/articles: set 'quote' of blocks was removed and 1 block still hold it; keep the set, or run nibble:check --allow-data-loss" ], issues
   end
 
   test "a removed set no saved block uses is not an issue" do

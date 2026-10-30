@@ -51,7 +51,7 @@ module Nibble
     end
 
     def removed_set(scope, field, set, count)
-      Issue.new(source: scope, message: "set '#{set}' of #{field} was removed and #{count} #{'block'.pluralize(count)} still use it; keep the set, or run nibble:check --allow-data-loss")
+      Issue.new(source: scope, message: "set '#{set}' of #{field} was removed and #{count} #{'block'.pluralize(count)} still hold it; keep the set, or run nibble:check --allow-data-loss")
     end
 
     def changed_types(scan, snapshot, covered)
