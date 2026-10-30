@@ -16,7 +16,7 @@ After reading this guide, you will know:
 - How to install Nibble and sign in to a new site.
 - How to give the site a theme of its own.
 - How landing pages are built from blocks, and how to add a block of your own.
-- How to run a blog with an Atom feed.
+- How to run a blog with an Atom feed, and arrange the main menu.
 - How to serve a folder of Markdown as a help centre.
 - How to declare a form and put it on a page.
 - What to check before the first deploy.
@@ -128,7 +128,7 @@ Vite picks up the new theme, and change something in `site/themes/tidewater/styl
 
 Pages are a **collection** — a kind of content — that Nibble ships ready to use. A page's fields come from its
 **blueprint**, and the one in your theme gives a page a title, an intro and a list of **blocks**: text, quotes,
-calls to action, images and galleries, in any order.
+calls to action, images, galleries, video embeds and the latest posts, in any order.
 
 In the Control Plane, open **Pages** and choose **New page**:
 
@@ -148,14 +148,8 @@ A pricing table is not one of the blocks `crumbs` ships, so you add one. A block
 blueprint — the fields an editor fills in — and a **view** that draws it.
 
 Open `site/themes/tidewater/schema/blueprints/collections/pages/page.yml`. Its `blocks` field points at Nibble's
-standard list of blocks:
-
-```yaml
-- handle: blocks
-  field: nibble::page_fields.blocks
-```
-
-Keep the reference and add a `pricing` set to its `content` group with `add_sets`:
+standard list of blocks, and already adds a Latest posts block to its `content` group with `add_sets`. Add a
+`pricing` set beside it:
 
 ```yaml
 - handle: blocks
@@ -163,6 +157,8 @@ Keep the reference and add a `pricing` set to its `content` group with `add_sets
   config:
     add_sets:
       content:
+        latest_posts:
+          # as the theme wrote it
         pricing:
           display: Pricing
           icon: layout-grid
@@ -203,10 +199,9 @@ defineProps<{ plans: { name: string; price: string; features: string[] | null }[
 </template>
 ```
 
-Regenerate the theme's TypeScript types, which now include the pricing block, and check the schema:
+Check the schema. It warns about a set that has no view, so run it once `pricing.vue` is written:
 
 ```sh
-bin/rails nibble:schema:types
 bin/rails nibble:check
 ```
 
@@ -228,7 +223,9 @@ under Content. Then open **Posts** and choose **New post**, pick its author and 
 
 Tidewater also wants `/blog` itself to list every post, an Atom feed, and the collection called "Blog" in the
 Control Plane. A collection's settings are a file, and to
-change Nibble's you write your own version of it in `site/schema/`. Create `site/schema/collections/posts.yml`:
+change Nibble's you write your own version of it in `site/schema/`. Copy
+`vendor/nibble/core_schema/collections/posts.yml` to `site/schema/collections/posts.yml`, change its title and add
+the listing page and the feed:
 
 ```yaml
 schema: 1
@@ -237,8 +234,20 @@ route: /blog/{slug}
 index_route: /blog
 index_template: posts/index
 dated: true
+taxonomies: []
 blueprints: [post]
 template: posts/show
+layout: default
+workflow: simple
+revisions:
+  keep: 100
+sitemap:
+  enabled: true
+  priority: 0.6
+  changefreq: weekly
+search: site
+api: true
+localizable: true
 sort: published_at:desc
 feed:
   title: The Tidewater blog
@@ -246,11 +255,47 @@ feed:
 
 > [!IMPORTANT]
 > A file in `site/schema/` **replaces** the file of the same name from Nibble or your theme — it does not merge into
-> it. That is why this one repeats the route and template. See [Modelling content](../modelling/index.md).
+> it. That is why this one repeats every key of Nibble's: leave out `search: site` and posts drop out of search.
+> See [Modelling content](../modelling/index.md).
 
 `/blog` now renders the theme's `posts/index` view, which lists posts twelve to a page, and the sidebar says
 **Blog** — its button to write one now reads **New blog**, since the label is made from the title. The feed is at
 `/feed-posts.xml`, and `/feed.xml` combines every collection that has one.
+
+Tidewater works from Sydney, so its posts should be scheduled on Sydney's clock and dated on the day they went out
+there. Set the site's time zone in `config/application.rb`, and restart `bin/dev`:
+
+```ruby
+config.time_zone = "Australia/Sydney"
+```
+
+The theme receives it as `site.time_zone` and formats every post date in it. See
+[Content in views](../theming/content-in-views.md#4-multi-language-sites).
+
+### 5.1 The main menu
+
+The header draws the **Main** menu. Tidewater groups its product pages under a heading, which Nibble's menu doesn't
+allow by itself. Write your own version of it, as you did for posts:
+
+```yaml
+# site/schema/navigation/main.yml
+schema: 1
+title: Main
+max_depth: 2
+headings: true
+collections: [pages, posts]
+```
+
+```sh
+bin/rails nibble:schema:types
+```
+
+In the Control Plane, open **Navigation → Main** and add a heading **Product** with the Pricing page under it, then
+links to `/blog` and `/help`. Add **Book a demo** under Product once you have made it in section 7.
+
+Each menu item tells the theme whether it is the page being shown (`current`) or leads to it (`in_trail`), so the
+header underlines **Product** on `/pricing` without comparing URLs. Menus can hold much more — item fields, kinds of
+your own, lists of posts; see [Globals and navigation](../modelling/globals-and-navigation.md#2-navigation).
 
 ## 6. The help centre, as files
 
@@ -338,20 +383,24 @@ An article page needs nothing but itself, so delete `show.yml`, and fill the vie
 ```vue
 <script setup lang="ts">
 import { RichText, useNavigation } from '@nibble'
-import type { ViewProps, HelpArticle } from '@site/types'
+import type { HelpArticle } from '@site/types'
 
-defineProps<ViewProps['help/show'] & { page: HelpArticle }>()
+defineProps<{ page: HelpArticle }>()
 const sidebar = useNavigation('help')
 </script>
 
 <template>
   <div class="grid gap-10 md:grid-cols-[14rem_1fr]">
-    <nav>
+    <nav aria-label="Help centre">
       <ul>
         <li v-for="link in sidebar" :key="link.url">
-          <a :href="link.url">{{ link.title }}</a>
-          <ul v-if="link.children.length">
-            <li v-for="child in link.children" :key="child.url"><a :href="child.url">{{ child.title }}</a></li>
+          <a :href="link.url" :aria-current="link.current ? 'page' : undefined" :class="{ 'font-semibold': link.in_trail }">
+            {{ link.title }}
+          </a>
+          <ul v-if="link.in_trail && link.children.length" class="pl-4">
+            <li v-for="child in link.children" :key="child.url">
+              <a :href="child.url" :aria-current="child.current ? 'page' : undefined">{{ child.title }}</a>
+            </li>
           </ul>
         </li>
       </ul>
@@ -366,7 +415,9 @@ const sidebar = useNavigation('help')
 
 ### 6.4 Build and look
 
-Deleting the sidecar changed what the view receives, so regenerate the theme's types, then build:
+A view without a sidecar receives only `page`, so it has no `ViewProps` entry. Each link says whether it is the
+article being shown (`current`) or leads to it (`in_trail`), which opens the section you are in. Deleting the
+sidecar changed the theme's types, so regenerate them, then build:
 
 ```sh
 bin/rails nibble:schema:types
@@ -418,11 +469,12 @@ deploy and, in development, as soon as its file changes.
 ```yaml
 # site/schema/forms/demo.yml
 title: Book a demo
+submit_label: Book my demo
 fields:
   - handle: name
-    field: { type: text, display: Your name, required: true }
+    field: { type: text, display: Your name, required: true, autocomplete: name, width: 50 }
   - handle: email
-    field: { type: text, input_type: email, display: Work email, required: true }
+    field: { type: text, input_type: email, display: Work email, required: true, autocomplete: email, width: 50 }
   - handle: team_size
     field:
       type: select
@@ -431,12 +483,17 @@ fields:
 notify:
   - to: sales@tidewater.example
     reply_to: email
+spam:
+  min_seconds: 3
+  max_links: 2
 success:
   message: Thanks — we'll be in touch within a working day.
 ```
 
 Submissions are stored, emailed to sales with replies going to the person who asked, and listed under **Forms**
-in the Control Plane.
+in the Control Plane. `submit_label` is the button's text, and `width: 50` puts name and email side by side.
+`spam` paces the form as the theme's own contact form is: a post sent within three seconds of the page loading, or
+text holding more than two links, is kept aside as spam.
 
 ### 7.2 Put it on a page
 
@@ -451,29 +508,40 @@ form:
 ```vue
 <!-- site/themes/tidewater/views/demo.vue -->
 <script setup lang="ts">
-import type { NibbleForm } from '@nibble'
+import type { PagesPage, ViewProps } from '@site/types'
 import ContactForm from '../components/ContactForm.vue'
+import PageHeading from '../components/PageHeading.vue'
 
-defineProps<{ page: { title: string }; form: NibbleForm }>()
+defineProps<ViewProps['demo'] & { page: PagesPage }>()
 </script>
 
 <template>
-  <h1>{{ page.title }}</h1>
-  <ContactForm :form="form" />
+  <div>
+    <PageHeading :title="page.title" :eyebrow="page.eyebrow" :description="page.intro" />
+    <ContactForm :form="form" />
+  </div>
 </template>
 ```
 
-`ContactForm` came with the theme you copied. It draws every public field type, handles steps and errors, and shows
-the success message, so it serves any form as it is; [Forms in your theme](../theming/forms-in-your-theme.md) explains how it is
-built, for when you want your own markup. Its button says "Send message" — change that in `site/themes/tidewater/components/ContactForm.vue` if you like.
+The form and the sidecar both change the theme's types — `ViewProps['demo']` gives `form` the form's own values —
+so regenerate them:
+
+```sh
+bin/rails nibble:schema:types
+```
+
+`ContactForm` and `PageHeading` came with the theme you copied. `ContactForm` draws every public field type, posts
+the pacing timestamp, handles steps and errors, and shows the success message, so it serves any form as it is;
+[Forms in your theme](../theming/forms-in-your-theme.md) explains how it is built, for when you want your own markup.
 
 Restart `bin/dev` for the new view, then create a page titled **Book a demo** with the slug `demo`, set its
-**Template** to `demo` in the sidebar, and publish. Fill the form in at `/demo`: the success message appears, the
-submission is listed under **Forms → Book a demo**, and sales gets an email titled "New submission: Book a demo".
+**Template** to `demo` in the sidebar, and publish. Add it under **Product** in the Main menu. Fill the form in at
+`/demo`: the success message appears, the submission is listed under **Forms → Book a demo**, and sales gets an
+email titled "New submission: Book a demo".
 
-> [!WARNING]
-> Before this form is public, turn on spam protection. Every form is rate-limited and has a hidden honeypot field,
-> but a CAPTCHA is what stops a determined bot. See [Forms](../modelling/form-spam-and-privacy.md#1-spam).
+> [!NOTE]
+> Every form is also rate-limited and has a hidden honeypot field. If determined bots get through anyway, add a
+> CAPTCHA; see [Form spam and privacy](../modelling/form-spam-and-privacy.md#1-spam).
 
 ### 7.3 A quote form
 
@@ -506,7 +574,7 @@ fields:
       type: date
       display: Start date
       time_enabled: true
-      time_zone: Australia/Sydney
+      time_zone: site
   - handle: brand_color
     field: { type: color, display: Invoice colour, swatches: ["#0f766e", "#1d4ed8", "#111827"] }
 success:
@@ -520,12 +588,14 @@ success:
   works it out again when the form is sent and stores that, never a value posted by the browser. Give money
   `decimals`.
 - `decimal` keeps a fixed number of places. `time` stores a 24-hour time such as `14:30`, written in quotes in YAML.
-- A `date` with `time_enabled` also asks for a time, and `time_zone` says whose clock the visitor types on: the time
-  is stored as the same moment in UTC and a page receives it with Sydney's offset.
+- A `date` with `time_enabled` also asks for a time, and `time_zone` says whose clock the visitor types on — `site`
+  is the site's own, Sydney's here: the time is stored as the same moment in UTC and a page receives it with
+  Sydney's offset.
 - `color` stores `#rrggbb`; `swatches` offers colours as buttons, and a picker comes with them unless `allow_any: false`.
 
 Put it on a page the way you did the demo form, with `from: form:quote` in a `quote.yml` sidecar and a view like
-`demo.vue`; `ContactForm` draws every one of these fields. Each type's options are in the
+`demo.vue` using `ViewProps['quote']`, then run `bin/rails nibble:schema:types`; `ContactForm` draws every one of
+these fields. Each type's options are in the
 [field type reference](../reference/fieldtypes.md), and [Forms in your theme](../theming/forms-in-your-theme.md) shows
 how to draw them yourself.
 
