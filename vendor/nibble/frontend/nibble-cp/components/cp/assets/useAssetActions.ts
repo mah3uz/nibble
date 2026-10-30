@@ -137,7 +137,10 @@ export function useAssetActions(options: {
         await navigator.clipboard.writeText(new URL(asset.url, window.location.origin).toString())
         return toast.success('URL copied')
       case 'download': {
-        const link = Object.assign(document.createElement('a'), { href: asset.url, download: asset.filename })
+        const link = Object.assign(document.createElement('a'), {
+          href: `/cp/media/${asset.id}/original?download=1`,
+          download: asset.filename,
+        })
         return link.click()
       }
       case 'duplicate':

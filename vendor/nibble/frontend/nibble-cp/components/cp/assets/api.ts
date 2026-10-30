@@ -50,6 +50,7 @@ export type AssetDetail = {
     tags: string[]
     created_at: string
     preview: string
+    original_url: string
     download_url: string
     lock_version: number
   }

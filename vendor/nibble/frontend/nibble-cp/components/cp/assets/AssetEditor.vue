@@ -334,7 +334,7 @@ function run(action: AssetMenuAction) {
           />
           <CropEditor
             v-if="cropping && asset"
-            :src="asset.url"
+            :src="asset.original_url"
             :edits="edits"
             @cancel="cropping = false"
             @apply="applyCrop"

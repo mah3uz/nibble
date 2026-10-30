@@ -144,6 +144,7 @@ Rails.application.routes.draw do
         delete :folders, action: :destroy_folder
       end
       member do
+        get :original
         post :duplicate
         post :reupload
         post :replace
