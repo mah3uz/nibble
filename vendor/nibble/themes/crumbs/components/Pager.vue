@@ -2,14 +2,15 @@
 import { Link } from '@inertiajs/vue3'
 import { Pagination, type PaginationMeta } from '@nibble'
 
-withDefaults(defineProps<{ meta: PaginationMeta; previousLabel?: string; nextLabel?: string }>(), {
+withDefaults(defineProps<{ meta: PaginationMeta; label?: string; previousLabel?: string; nextLabel?: string }>(), {
+  label: 'Article pages',
   previousLabel: '← Newer articles',
   nextLabel: 'Older articles →',
 })
 </script>
 
 <template>
-  <Pagination :meta="meta">
+  <Pagination :meta="meta" :label="label">
     <template #default="{ href, current }">
       <div class="mt-12 flex flex-wrap items-center justify-between gap-6 border-t border-current/20 pt-6">
         <Link v-if="current > 1" :href="href(current - 1)" rel="prev" class="py-3 hover:text-accent">{{
