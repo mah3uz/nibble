@@ -27,6 +27,33 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
   page and where a page sits; the embed block plays YouTube and Vimeo videos in privacy-friendly players and links
   anything else; form fields sit side by side by their `width` hint; and the fallback taxonomy views show a term's
   description.
+- **Menus can hold more than links.** A navigation can allow headings (`headings: true`), links to a global's
+  address field (`globals:`) and to files (`assets: true`), and fields of its own on every item (`item_fields:`), such
+  as a description or an icon; `entry_fields:` hands a theme chosen fields of the page an item links to. Any item can
+  open in a new tab, be hidden, or show only between two dates, and cached pages change at each date. A menu that
+  declares none of this behaves, stores and types exactly as before.
+- **Mega menus, when a navigation asks for them.** `kinds:` declares item kinds of its own, such as a featured card
+  with an image and a button, each saying whether it links and holds children. `queries:` lets an item list a
+  collection's published pages — a page's children, or a term's entries, sorted, up to 50 — so a new page appears
+  without editing the menu; any change to that collection clears the pages that show the menu, so keep it for small
+  collections.
+- **Each menu item tells a theme whether it is the current page** (`current`) or leads to it (`in_trail`), so themes
+  stop working it out themselves, and `useNavigation('main')` is typed from the menu's schema: `@site/types` gains a
+  `<Menu>NavigationItem` per menu that narrows on `kind`. Apps and agents are told each menu's item shape.
+- **The menu editor** adds headings, site-setting and file links, Open in a new tab, Hidden, the menu's own fields and
+  kinds, lists of pages, and show dates; items can be duplicated, collapsed and moved by keyboard as well as dragged
+  between levels, and a refused save marks the item each problem is on.
+- **Content packages carry every kind of menu item**, naming the pages, terms and files it links to by key. An
+  existing package imports as before.
+- **A theme or site adds blocks to Nibble's standard ones** with `add_sets` under a reference's `config:`, and leaves
+  some out with `remove_sets`, instead of copying the whole list. `nibble:check` refuses an added block whose handle is
+  taken or a removal of one that isn't there, and warns when a removed block still holds saved content.
+- **Content migrations rename and delete menus and global sets**: `rename_navigation`, `delete_navigation`,
+  `rename_global` and `delete_global`, in every locale and with their permissions. `nibble:check` warns about a menu
+  stored for a navigation the schema no longer has, and names the migration that clears it.
+- **crumbs uses all of it**: its header and footer mark the current page and section from the menu, open new-tab
+  items in a new tab and say so to screen readers, and draw headings as dropdown titles and footer columns (crumbs'
+  Footer menu allows headings and two levels); its pages offer a Latest posts block, added with `add_sets`.
 
 ### What's fixed
 
@@ -40,6 +67,14 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
   visitor doesn't see the other scheme first; a choice an earlier crumbs saved carries over.
 - **crumbs loads its fonts from the page head**, not an `@import` that held up the stylesheet, and its footer no longer
   prints the year, which a cached page could show stale.
+- **Renaming a collection keeps who may edit it.** `rename_collection` moves roles', connected apps' and Agent access
+  permissions to the new handle, and `delete_collection` removes them; they stayed on the old handle, so the collection
+  quietly disappeared for every editor who wasn't a superuser. `nibble:check` no longer stops an upgrade over a role
+  naming a handle that a pending migration renames.
+- **The menu editor offers only the levels a menu allows.** It offered one more than `max_depth`, which the save then
+  refused, and a menu without `max_depth` is no longer held to three levels.
+- **Re-importing a package doesn't count a menu as changed** because a save stores an item's field differently from
+  how the package spells it.
 
 ### Changed
 
@@ -55,6 +90,8 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 2. **A theme that draws a paced form with its own markup adds the timestamp.** Add
    `<input v-if="form.timestamp" type="hidden" name="_nibble_t" :value="form.timestamp" />`, or posts without
    JavaScript are counted as spam.
+3. **A site that renamed a collection before this release** re-ticks that collection's permissions under **Roles**,
+   checks its row under **Agent access**, and reconnects apps that were granted it.
 
 ## 0.22.2 — 2026-10-30 05:17 +0600
 
