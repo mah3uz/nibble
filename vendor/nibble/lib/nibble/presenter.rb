@@ -18,8 +18,14 @@ module Nibble
     def present(records, fields: nil, include: [], depth: 1)
       records = Array(records)
       @preload.load(records)
+      children = include.include?("children") && depth < MAX_DEPTH ? children_of(records) : {}
+      children = children.transform_values { |list| present(list, fields:, include:, depth: depth + 1) }
       Resolvers.with_overrides(@preload.resolvers) do
-        records.map { |record| present_one(record, fields:, include:, depth:, seen: Set[key(record)]) }
+        records.map do |record|
+          next present_one(record, fields:, include:, depth:, seen: Set[key(record)]) unless children.key?(record.id)
+
+          present_one(record, fields:, include: include - [ "children" ], depth:, seen: Set[key(record)]).merge("children" => children[record.id])
+        end
       end
     end
 
@@ -63,6 +69,25 @@ module Nibble
       end
       data.merge(augmented.except(*data.keys, *hidden(field_set)))
     end
+
+    # A child published later isn't among the tags of the entries already shown, so the collection's tag stands for it.
+    def children_of(records)
+      parents = records.select { |record| tree?(record) }
+      return {} if parents.empty?
+
+      parents.map(&:collection).uniq.each { |handle| Dependencies.add("collection:#{handle}") }
+      entries = parents.grep(Records::Entry)
+      scope = Records::Entry.kept.where(parent_id: entries.map(&:id)).order(:position, :id)
+      scope = scope.where(status: "published") if @context.public?
+      found = entries.any? ? scope.group_by(&:parent_id) : {}
+      parents.to_h { |parent| [ parent.id, parent.is_a?(Files::Page) ? file_children(parent) : found.fetch(parent.id, []) ] }
+    end
+
+    def file_children(page)
+      Files.index.of(page.collection).select { |child| child.parent_key == page.key }.sort_by { |child| [ child.position || Float::INFINITY, child.title ] }
+    end
+
+    def tree?(record) = (record.is_a?(Records::Entry) || record.is_a?(Files::Page)) && record.collection_item.try(:[], "structure").is_a?(Hash)
 
     def hidden(fields)
       display_only = fields.all.values.select(&:display_only?).map(&:handle)

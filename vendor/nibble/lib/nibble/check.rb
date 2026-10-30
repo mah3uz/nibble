@@ -439,15 +439,52 @@ module Nibble
       end
     end
 
+    RESERVED_PROPS = %w[page layout site seo preview].freeze
+
     def check_sidecars(schema)
-      Views.sidecars(config: @config).each do |sidecar|
+      views = check_queries(schema, "views")
+      view_props = views.reject { |sidecar| sidecar.view.start_with?("sets/") }.flat_map { |sidecar| sidecar.queries.keys }
+      views.each do |sidecar|
+        (sidecar.queries.keys & RESERVED_PROPS).each do |prop|
+          @warnings << Problem.new(source: sidecar.path.to_s.delete_prefix("#{Rails.root}/"), level: :warning,
+            message: "query '#{prop}' hides the #{prop} prop every view is given; rename the query")
+        end
+      end
+      check_queries(schema, "layouts").each do |sidecar|
+        (sidecar.queries.keys & RESERVED_PROPS).each { |prop| problem(sidecar.path, "query '#{prop}' is named like the #{prop} prop every page is given") }
+        (sidecar.queries.keys & view_props).each { |prop| problem(sidecar.path, "query '#{prop}' is also a view's query, so one would hide the other") }
+      end
+    end
+
+    def check_queries(schema, folder)
+      Views.sidecars(folder:, config: @config).each do |sidecar|
         sidecar.queries.each do |prop, spec|
           Query::Spec.parse(spec, schema:)
         rescue Query::Invalid => e
           problem(sidecar.path, "query '#{prop}' #{e.message}")
         end
+        check_page_key(sidecar, schema)
       rescue SchemaError => e
         problem(e.file, e.message)
+      end
+    end
+
+    def check_page_key(sidecar, schema)
+      (sidecar.page.keys - %w[include]).each { |key| problem(sidecar.path, "page.#{key} isn't a page key (use include)") }
+      return if sidecar.page_include.empty?
+
+      blueprints = (schema.collections + schema.taxonomies).flat_map { |parent| schema.blueprints_for(parent) }
+      fields = blueprints.flat_map do |item|
+        Blueprint.new(item, schema:).fields.all.values
+      rescue SchemaError, Error
+        []
+      end
+      relations = fields.select { |field| field.fieldtype_class&.relationship }.map(&:handle)
+      structured = schema.collections.any? { |item| item["structure"].is_a?(Hash) }
+      sidecar.page_include.each do |handle|
+        next if relations.include?(handle) || (handle == "children" && structured)
+
+        problem(sidecar.path, handle == "children" ? "page.include 'children' needs a structured collection" : "page.include '#{handle}' isn't a relationship field in any blueprint")
       end
     end
 

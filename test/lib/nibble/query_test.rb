@@ -167,4 +167,13 @@ class Nibble::QueryTest < ActiveSupport::TestCase
     assert_equal "paginate", assert_raises(Nibble::Query::Invalid) { Nibble::Query::Spec.parse({ from: "entries:posts", limit: "$set.count", paginate: { per_page: 5 } }) }.key
     assert_nothing_raised { Nibble::Query::Spec.parse({ from: "entries:posts", limit: "$entry.count", paginate: nil }) }
   end
+
+  # Only a structured collection has a tree, so asking another source for children would quietly give nothing.
+  test "children can be included only from a structured collection" do
+    assert_equal [ "children" ], Nibble::Query::Spec.parse({ from: "entries:pages", include: [ "children" ] }).include
+    [ "entries:posts", "terms:topics" ].each do |from|
+      error = assert_raises(Nibble::Query::Invalid) { Nibble::Query::Spec.parse({ from:, include: [ "children" ] }) }
+      assert_match "only for entries of a structured collection", error.message, from
+    end
+  end
 end

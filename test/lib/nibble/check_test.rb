@@ -375,6 +375,45 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     assert_match "query 'posts' where.excerpt: isn't filterable", check.problems.map(&:to_s).join("\n")
   end
 
+  def sidecar_file(relative, content)
+    path = @themes.join("check", relative)
+    FileUtils.mkdir_p(path.dirname)
+    path.write(content.to_yaml)
+  end
+
+  # Every page gets a layout's props beside its view's, so a shared name would hide one of them on some page.
+  test "a layout query named like a page prop or a view's query is refused" do
+    sidecar_file("views/posts/index.yml", { "posts" => { "from" => "entries:posts" } })
+    sidecar_file("layouts/default.yml", { "site" => { "from" => "entries:pages" }, "posts" => { "from" => "entries:posts" }, "menu" => { "from" => "entries:pages" } })
+
+    messages = check.problems.select { |item| item.source.end_with?("layouts/default.yml") }.map(&:message)
+    assert_includes messages, "query 'site' is named like the site prop every page is given"
+    assert_includes messages, "query 'posts' is also a view's query, so one would hide the other"
+    assert_not(messages.any? { |message| message.include?("'menu'") })
+  end
+
+  # A site may have named a view query page before the key meant the page; it keeps rendering, with a nudge.
+  test "a view query named like a page prop is a warning, not a problem" do
+    sidecar_file("views/posts/show.yml", { "page" => { "from" => "entries:posts" } })
+
+    result = check
+    assert_not(result.problems.any? { |item| item.source.end_with?("posts/show.yml") })
+    assert_includes result.warnings.map(&:message), "query 'page' hides the page prop every view is given; rename the query"
+  end
+
+  test "page.include must name a relationship field some blueprint has, and page takes no other key" do
+    theme_file("collections/articles.yml", title: "Articles", blueprints: [ "article" ])
+    theme_file("blueprints/collections/articles/article.yml", title: "Article", tabs: { main: { sections: [ { fields: [
+      { handle: "title", field: { type: "text" } }, { handle: "writers", field: { type: "entries", collections: [ "articles" ] } } ] } ] } })
+    sidecar_file("layouts/default.yml", { "page" => { "include" => %w[writers title nothing children], "fields" => %w[title] } })
+
+    messages = check.problems.select { |item| item.source.end_with?("layouts/default.yml") }.map(&:message)
+    assert_includes messages, "page.include 'title' isn't a relationship field in any blueprint"
+    assert_includes messages, "page.include 'nothing' isn't a relationship field in any blueprint"
+    assert_includes messages, "page.fields isn't a page key (use include)"
+    assert_not(messages.any? { |message| message.include?("'writers'") || message.include?("'children'") }, "pages is structured, so children is fine")
+  end
+
   test "a sidecar may take limit and per_page from its block" do
     view = @themes.join("check", "views", "sets", "latest.yml")
     FileUtils.mkdir_p(view.dirname)

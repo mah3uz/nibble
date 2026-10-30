@@ -11,9 +11,40 @@ class Nibble::TypeGeneratorTest < ActiveSupport::TestCase
   end
 
   test "sidecar queries become typed view props, narrowed by fields and wrapped when paginated" do
-    assert_match "'posts/index': {\n    posts: Paginated<(PostsPost)>", generated
+    assert_match "'taxonomies/show': {\n    posts: Paginated<(PostsPost)>", generated
     assert_match "more: Pick<(PostsPost), 'title' | 'uri' | 'id' | 'type' | 'url'>[]", generated
     assert_match "topics: Pick<(TopicsTopic),", generated
+  end
+
+  # An included field holds whole records, so a view reading the related record's own fields type-checks.
+  test "an included field is typed as the records it points at, not their summaries" do
+    assert_match "'posts/index': {\n    posts: Paginated<(Omit<PostsPost, 'topics'> & { topics: (TopicsTopic)[] })>", generated
+    assert_match "latest: Pick<(Omit<PostsPost, 'topics'> & { topics: (TopicsTopic)[] }), 'title' | 'excerpt' | 'topics'", generated
+  end
+
+  test "children are typed one level down, with the same fields and no includes" do
+    with_copied_theme do |types, _|
+      types.dirname.join("starter/views/home.yml").write(
+        { "menu" => { "from" => "entries:pages", "include" => %w[children], "fields" => %w[title] } }.to_yaml
+      )
+      Nibble.reset_schema!
+
+      assert_match "menu: (Pick<(PagesPage), 'title' | 'id' | 'type' | 'uri' | 'url'> & { children: Pick<(PagesPage), 'title' | 'id' | 'type' | 'uri' | 'url'>[] })[]", generated
+    end
+  end
+
+  # Inertia hands a layout the page's props, so a layout types them as a view does, with only the page fields it includes.
+  test "layout sidecars become LayoutProps, and page.include types just the included fields" do
+    with_copied_theme do |types, _|
+      layouts = types.dirname.join("starter/layouts")
+      layouts.mkpath
+      layouts.join("default.yml").write({ "page" => { "include" => %w[related] }, "footer" => { "from" => "terms:topics", "fields" => %w[title] } }.to_yaml)
+      types.dirname.join("starter/views/posts/show.yml").write({ "page" => { "include" => %w[topics children] } }.to_yaml)
+      Nibble.reset_schema!
+
+      assert_match "export interface LayoutProps {\n  'default': {\n    page: { related: (PostsPost)[] }\n    footer: Pick<(TopicsTopic), 'title' | 'id' | 'type' | 'uri' | 'url'>[]\n  }\n}", generated
+      assert_match "'posts/show': {\n    page: { topics: (TopicsTopic)[]; children: (DocsDoc | PagesPage)[] }\n  }", generated
+    end
   end
 
   # Picking a key the record doesn't have fails to compile, so a view asking for the parent needs it added instead.

@@ -13,7 +13,7 @@ module Nibble
             input: Dev.schema({ "key" => { "type" => "string" } })),
           Tool.new(name: "render", title: "Render a page", read_only: true, handler: method(:render),
             description: "Everything one request to a path produces, without a browser: what it resolved to, the view and " \
-                         "layout files that answer it and whose they are, the view's queries, its props, cache tags, query " \
+                         "layout files that answer it and whose they are, the view's and the layout's sidecars, its props, cache tags, query " \
                          "count, time, the HTTP status, and any error with where it happened. Call it after changing a view.",
             input: Dev.schema({ "path" => { "type" => "string", "description" => "Like /blog/hello-world, with ?query if the view reads params" } }, %w[path])),
           Tool.new(name: "run_query_sidecar", title: "Run a view's queries", read_only: true, handler: method(:run_sidecar),
@@ -49,7 +49,7 @@ module Nibble
           "resolved" => { "kind" => match.kind.to_s, "template" => match.template, "locale" => match.locale,
                           "record" => match.record && { "type" => match.record.record_type, "id" => match.record.id, "title" => match.record.title } }.compact,
           "view" => view_file("views", match.template), "layout" => view_file("layouts", page.props["layout"]),
-          "sidecar" => sidecar(match.template), "props" => Dev.compact(page.props), "cache_tags" => tags.sort,
+          "sidecar" => sidecar(Views.sidecar(match.template)), "layout_sidecar" => sidecar(Views.layout_sidecar(page.props["layout"])), "props" => Dev.compact(page.props), "cache_tags" => tags.sort,
           "queries" => queries + more, "props_ms" => ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started) * 1000).round
         }.merge(http(input["path"]))
       rescue StandardError => error
@@ -63,7 +63,7 @@ module Nibble
 
         match = Routing::Match.new(kind: :view, record: nil, taxonomy: nil, collection: nil, locale: Nibble.config.default_locale.code, template: view, redirect: nil)
         props = PageProps.new(match, params: input["params"].to_h).build.props
-        { "sidecar" => sidecar(view), "results" => Dev.compact(props.slice(*sidecar.queries.keys)) }
+        { "sidecar" => sidecar(sidecar), "results" => Dev.compact(props.slice(*sidecar.queries.keys)) }
       rescue StandardError => error
         { "error" => failure(error) }
       end
@@ -76,9 +76,8 @@ module Nibble
           &.then { |file| { "path" => Dev.relative(file), "owner" => Dev.owner(file) } }
       end
 
-      def sidecar(view)
-        sidecar = Views.sidecar(view)
-        sidecar.path && { "path" => Dev.relative(sidecar.path), "params" => sidecar.params, "queries" => sidecar.queries }
+      def sidecar(sidecar)
+        sidecar.path && { "path" => Dev.relative(sidecar.path), "params" => sidecar.params, "page" => sidecar.page.presence, "queries" => sidecar.queries }.compact
       end
 
       def http(path)

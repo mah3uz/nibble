@@ -41,7 +41,7 @@ module Nibble
         @offset = @raw["offset"].nil? ? nil : Integer(@raw["offset"], exception: false) || raise(Invalid.new("offset", "must be a number"))
         raise Invalid.new("paginate", "can't be combined with limit") if @paginate && @limit
         @counts = parse_counts
-        @include = @raw["include"].nil? ? [] : parse_list("include") { |handle| @relation_fields.key?(handle) || raise(Invalid.new("include", "'#{handle}' isn't a relationship field")) }
+        @include = @raw["include"].nil? ? [] : parse_list("include") { |handle| includable?(handle) }
         @fields = @raw.key?("fields") ? parse_list("fields") { |handle| valid_field?(handle) || raise(Invalid.new("fields", "unknown field '#{handle}'")) } : nil
       end
 
@@ -50,6 +50,14 @@ module Nibble
       def column_fields_only? = !source.search? && fields && fields.all? { |handle| source.columns.include?(handle) || handle == "url" }
 
       private
+
+      def includable?(handle)
+        return true if @relation_fields.key?(handle)
+        raise Invalid.new("include", "'#{handle}' isn't a relationship field") unless handle == "children"
+        raise Invalid.new("include", "'children' is only for entries of a structured collection") unless source.entries? && source.schema_item(@schema)["structure"].is_a?(Hash)
+
+        true
+      end
 
       def valid_field?(handle) = source.search? || source.columns.include?(handle) || @field_handles.include?(handle) || %w[url parent].include?(handle)
 

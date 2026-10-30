@@ -63,7 +63,7 @@ module Nibble
       end
       blocks << navigation_types
       blocks << form_values
-      blocks << view_props if @config.theme_path
+      blocks << sidecar_props("ViewProps", "views") << sidecar_props("LayoutProps", "layouts") if @config.theme_path
       blocks.join("\n")
     end
 
@@ -137,20 +137,40 @@ module Nibble
       choices.empty? ? "string" : choices.join(" | ")
     end
 
-    def view_props
-      views = Views.sidecars(config: @config).map do |sidecar|
-        props = sidecar.queries.map do |prop, raw|
-          spec = Query::Spec.parse(raw, schema: @schema)
-          next "    #{prop}: NibbleForm<#{form_values_name(spec.source.handle)}>" if spec.source.form?
-
-          record = record_type(spec)
-          record = picked(record, spec.fields) if spec.fields && !spec.source.search?
-          record = "(#{record} & { entries_count: number })" if spec.counts
-          "    #{prop}: #{spec.paginate ? "Paginated<#{record}>" : "#{record}[]"}"
-        end
+    def sidecar_props(name, folder)
+      sidecars = Views.sidecars(folder:, config: @config).map do |sidecar|
+        props = sidecar.queries.map { |prop, raw| "    #{prop}: #{query_type(Query::Spec.parse(raw, schema: @schema))}" }
+        props.unshift("    page: #{page_type(sidecar.page_include)}") if sidecar.page_include.any?
         "  '#{sidecar.view}': {\n#{props.join("\n")}\n  }"
       end
-      "export interface ViewProps {\n#{views.join("\n")}\n}\n"
+      "export interface #{name} {\n#{sidecars.join("\n")}\n}\n"
+    end
+
+    def query_type(spec)
+      return "NibbleForm<#{form_values_name(spec.source.handle)}>" if spec.source.form?
+
+      children = spec.include.include?("children") && !spec.source.relation_fields(@schema).key?("children")
+      record = record_type(spec, include: spec.include - (children ? %w[children] : []))
+      record = picked(record, spec.fields) if spec.fields && !spec.source.search?
+      record = "(#{record} & { children: #{child_type(spec)}[] })" if children
+      record = "(#{record} & { entries_count: number })" if spec.counts
+      spec.paginate ? "Paginated<#{record}>" : "#{record}[]"
+    end
+
+    # Children are presented a level down, where includes no longer expand.
+    def child_type(spec) = spec.fields ? picked(record_type(spec), spec.fields) : record_type(spec)
+
+    # Only the included fields: a view already types its page and joins this to it.
+    def page_type(include)
+      fields = (@schema.collections + @schema.taxonomies).flat_map { |parent| @schema.blueprints_for(parent) }
+        .flat_map { |item| Blueprint.new(item, schema: @schema).fields.all.values }
+      members = include.filter_map do |handle|
+        next "children: #{union(@schema.collections.select { |item| item['structure'].is_a?(Hash) })}[]" if handle == "children"
+
+        types = fields.select { |field| field.handle == handle && field.fieldtype_class&.relationship }.map { |field| included_type(field) }.uniq
+        "#{handle}: #{types.join(' | ')}" if types.any?
+      end
+      object_type(members)
     end
 
     # A record has no parent key: the presenter adds one only when asked, so it can't be picked from the record.
@@ -159,7 +179,7 @@ module Nibble
       fields.include?("parent") ? "(#{picked} & { parent: ParentSummary | null })" : picked
     end
 
-    def record_type(spec)
+    def record_type(spec, include: [])
       source = spec.source
       parents = if source.search?
         definition = Search.indexes(schema: @schema)[source.handle].to_h
@@ -167,9 +187,36 @@ module Nibble
       else
         [ source.schema_item(@schema) ]
       end
-      names = parents.flat_map { |parent| @schema.blueprints_for(parent).map { |item| "#{pascal(parent.handle)}#{pascal(item.handle)}" } }
+      union(parents, include:)
+    end
+
+    def union(parents, include: [])
+      names = parents.flat_map { |parent| @schema.blueprints_for(parent).map { |item| expanded("#{pascal(parent.handle)}#{pascal(item.handle)}", item, include) } }
       names.empty? ? "RecordBase" : "(#{names.join(' | ')})"
     end
+
+    # An included field holds whole records where the blueprint's own type has summaries.
+    def expanded(name, item, include)
+      return name if include.empty?
+
+      fields = Blueprint.new(item, schema: @schema).fields
+      handles = include.select { |handle| fields.get(handle)&.fieldtype_class&.relationship }
+      return name if handles.empty?
+
+      "Omit<#{name}, #{handles.map { |handle| "'#{handle}'" }.join(' | ')}> & #{object_type(handles.map { |handle| "#{handle}: #{included_type(fields.get(handle))}" })}"
+    end
+
+    def included_type(field)
+      fieldtype = field.fieldtype
+      parents = case fieldtype
+      when Fieldtypes::Entries then targets(@schema.collections, fieldtype.config("collections"))
+      when Fieldtypes::Terms then targets(@schema.taxonomies, fieldtype.config("taxonomies"))
+      else return fieldtype.ts_type
+      end
+      fieldtype.single? ? "#{union(parents)} | null" : "#{union(parents)}[]"
+    end
+
+    def targets(items, handles) = Array(handles).compact_blank.empty? ? items : items.select { |item| Array(handles).include?(item.handle) }
 
     def pascal(handle) = handle.to_s.delete_prefix("nibble::").camelize
   end

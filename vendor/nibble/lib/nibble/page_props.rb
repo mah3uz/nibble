@@ -20,16 +20,18 @@ module Nibble
 
     def build
       sidecar = Views.sidecar(@match.template)
+      layout = Views.layout_sidecar(layout_for)
       declared = @params.slice(*self.class.param_names(@match.template))
       context = Query::Context.public(locale: @match.locale, entry: (@match.record if @match.kind == :entry),
         term: (@match.record if @match.kind == :term), params: declared)
       presenter = Presenter.new(context:)
 
-      page = present_page(presenter)
+      page = present_page(presenter, sidecar.page_include | layout.page_include)
       run_set_sidecars(page, context, presenter)
       site = site_props(context, presenter, declared)
       seo = Seo.new(page:, site:, kind: @match.kind, url: site["url"]).to_h
       props = { "page" => page, "layout" => layout_for }
+        .merge(run_queries(layout.queries, context, presenter))
         .merge(run_queries(sidecar.queries, context, presenter))
         .merge("site" => site, "seo" => seo, "preview" => preview_prop)
       Result.new(props:, seo:, view: @match.template)
@@ -38,7 +40,7 @@ module Nibble
     def self.declared_params(template, params) = params.slice(*param_names(template))
 
     def self.param_names(template)
-      sidecars = [ Views.sidecar(template), *Views.sidecars.select { |sidecar| sidecar.view.start_with?("sets/") } ]
+      sidecars = [ Views.sidecar(template), *Views.sidecars.select { |sidecar| sidecar.view.start_with?("sets/") }, *Views.sidecars(folder: "layouts") ]
       sidecars.flat_map { |sidecar| [ *sidecar.params, *form_params(sidecar) ] }.uniq
     end
 
@@ -52,12 +54,18 @@ module Nibble
 
     private
 
-    def present_page(presenter)
-      return presenter.present([ @match.record ]).first if @match.record
+    def present_page(presenter, include)
+      return presenter.present([ @match.record ], include: page_include(include)).first if @match.record
       return { "collection" => @match.collection.handle, "title" => @match.collection["title"] } if @match.collection
       return { "title" => @match.template == "errors/500" ? "Something went wrong" : "Page not found" } unless @match.taxonomy
 
       { "taxonomy" => @match.taxonomy.handle, "title" => @match.taxonomy["title"] }
+    end
+
+    # One layout or view serves records of many blueprints, so it may name a field only some of them have.
+    def page_include(include)
+      fields = @match.record.blueprint_fields
+      include.select { |handle| handle == "children" || fields.get(handle)&.fieldtype_class&.relationship }
     end
 
     def preview_prop
