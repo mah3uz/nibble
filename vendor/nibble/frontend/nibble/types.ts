@@ -1,12 +1,34 @@
 export type Link = { type: string; id?: number; title: string; url: string; children: Link[] }
 
+export type NavigationLinkType = 'url' | 'entry' | 'term' | 'global' | 'asset'
+
+export interface NavigationItemBase<Child> {
+  type: NavigationLinkType | null
+  id?: number
+  title: string
+  url: string | null
+  new_tab: boolean
+  current: boolean
+  in_trail: boolean
+  children: Child[]
+}
+
+export interface NavigationItem extends NavigationItemBase<NavigationItem> {
+  kind: string
+  fields: Record<string, unknown>
+  entry: Record<string, unknown> | null
+}
+
+// The generated site types add each menu here, so useNavigation('main') knows its item fields.
+export interface NavigationMenus {}
+
 export type SiteProps = {
   locale: string
   time_zone: string
   url: string
   params: Record<string, string>
   globals: Record<string, Record<string, unknown>>
-  navigation: Record<string, Link[]>
+  navigation: Record<string, NavigationItem[]>
 }
 
 export type RecordSummary = { id: string; type: string; title: string; uri: string | null; url: string | null }

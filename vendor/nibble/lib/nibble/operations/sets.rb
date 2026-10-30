@@ -4,17 +4,49 @@ module Nibble
       NODE = {
         "type" => "object",
         "properties" => {
-          "type" => { "type" => "string", "enum" => %w[entry term url] },
-          "id" => { "type" => "integer", "description" => "For entry and term links" },
+          "kind" => { "type" => "string", "enum" => %w[link heading], "description" => "link when left out. A heading has no link; its children sit under it" },
+          "type" => { "type" => "string", "enum" => %w[url entry term global asset], "description" => "What a link points at. Required unless the item is a heading or a kind without a link" },
+          "id" => { "type" => "integer", "description" => "For entry, term and asset links" },
           "url" => { "type" => "string", "description" => "For url links: https, mailto, tel, or a path like /about" },
-          "title" => { "type" => "string", "description" => "Required for url links; defaults to the linked record's title" },
-          "children" => { "type" => "array" }
-        },
-        "required" => %w[type]
+          "ref" => { "type" => "string", "description" => "For global links: global:<set>.<field>, a link field of a global set" },
+          "title" => { "type" => "string", "description" => "Required for url links and headings; defaults to the linked record's title" },
+          "new_tab" => { "type" => "boolean", "description" => "Open the link in a new tab. Off when left out" },
+          "hidden" => { "type" => "boolean", "description" => "Keep the item out of the site without deleting it" },
+          "fields" => { "type" => "object", "description" => "The item's own fields" },
+          "show_from" => { "type" => "string", "format" => "date-time", "description" => "ISO 8601; the item appears from then" },
+          "show_until" => { "type" => "string", "format" => "date-time", "description" => "ISO 8601; the item disappears after then" },
+          "children" => { "type" => "array", "items" => { "type" => "object", "description" => "Same shape as this item" } }
+        }
       }.freeze
       TREE_SCHEMA = { "type" => "array", "items" => NODE }.freeze
 
       module_function
+
+      # A menu's tree schema and custom kinds, derived from its own schema: its item fields, kinds and query sources.
+      def menu_schema(item, schema: Nibble.schema)
+        menu = MenuSchema.new(item, schema:)
+        properties = NODE["properties"].merge(
+          "kind" => NODE.dig("properties", "kind").merge("enum" => menu.kind_handles),
+          "fields" => { "type" => "object", "description" => "The item's fields" }.merge(FieldSchema.object(menu.item_fields))
+        )
+        properties = properties.merge("query" => query_schema(menu)) if menu.queries.any?
+        { "tree" => { "type" => "array", "items" => NODE.merge("properties" => properties) },
+          "kinds" => menu.kinds.to_h { |kind| [ kind.handle, kind_schema(kind) ] }.presence }.compact
+      end
+
+      def kind_schema(kind)
+        { "title" => kind.display, "link" => kind.link, "children" => kind.children,
+          "fields" => { "type" => "object", "description" => "The fields of a #{kind.handle} item, in its `fields`" }.merge(FieldSchema.object(kind.fields)) }
+      end
+
+      def query_schema(menu)
+        { "type" => "object", "description" => "For a query item: lists entries of one collection as its children",
+          "properties" => { "collection" => { "type" => "string", "enum" => menu.queries },
+                            "parent" => { "type" => "integer", "description" => "Entry id; lists its children" },
+                            "term" => { "type" => "object", "properties" => { "taxonomy" => { "type" => "string" }, "id" => { "type" => "integer" } } },
+                            "sort" => { "type" => "string" }, "limit" => { "type" => "integer" } },
+          "required" => %w[collection] }
+      end
 
       def operations
         [
@@ -27,7 +59,7 @@ module Nibble
                                        "lock_version" => { "type" => "integer" }, "data" => { "type" => "object" } },
               %w[handle lock_version data], write: true)),
           Operation.new(name: "get_navigation", title: "Read a navigation menu", read_only: true, destructive: false,
-            needs: %w[navigation read], handler: method(:get_navigation), description: "A navigation menu's tree of links.",
+            needs: %w[navigation read], handler: method(:get_navigation), description: "A navigation menu's tree of items: links, headings and any kinds the menu defines. describe_schema gives the item shape.",
             input: Operations.schema({ "handle" => { "type" => "string" }, "locale" => { "type" => "string" } }, %w[handle])),
           Operation.new(name: "update_navigation", title: "Change a navigation menu", read_only: false, destructive: false,
             needs: %w[navigation write], handler: method(:update_navigation), consequential: true,

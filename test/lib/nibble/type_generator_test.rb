@@ -70,6 +70,37 @@ class Nibble::TypeGeneratorTest < ActiveSupport::TestCase
     end
   end
 
+  def with_menu(handle = "main")
+    with_copied_theme do |types, _|
+      types.dirname.join("starter/schema/navigation").mkpath
+      types.dirname.join("starter/schema/navigation/#{handle}.yml").write(
+        { "schema" => 1, "title" => "Menu", "collections" => [ "posts" ], "entry_fields" => [ "title" ],
+          "item_fields" => [ { "handle" => "icon", "field" => { "type" => "text" } }, { "handle" => "dense", "field" => { "type" => "toggle" } } ],
+          "kinds" => { "featured" => { "display" => "Featured", "link" => "required",
+                                         "fields" => [ { "handle" => "badge", "field" => { "type" => "integer" } } ] } } }.to_yaml
+      )
+      Nibble.reset_schema!
+      yield
+    end
+  end
+
+  # A theme that reads item.fields.icon only compiles when the menu's own fields are in the types it imports.
+  test "a menu's item fields, entry fields and kinds are typed in its own item type" do
+    with_menu do
+      assert_match "export type MainNavigationItem =", generated
+      assert_match "kind: 'link' | 'heading'; fields: { icon: string | null; dense: boolean }; entry: MainNavigationEntry | null", generated
+      assert_match "kind: 'featured'; fields: { icon: string | null; dense: boolean; badge: number | null }", generated
+      assert_match "export type MainNavigationEntry = { title: string | null }", generated
+    end
+  end
+
+  test "useNavigation is typed per menu through the generated menu map" do
+    with_menu("docs") do
+      assert_match "declare module '@nibble/types' {\n  interface NavigationMenus {\n", generated
+      assert_match "'docs': DocsNavigationItem", generated
+    end
+  end
+
   test "a site with no forms still gets valid form types" do
     with_copied_theme do |types, _|
       FileUtils.rm_rf(types.dirname.join("starter/schema/forms"))

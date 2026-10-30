@@ -130,6 +130,10 @@ file there with no `Authorization` header: `curl -T photo.jpg "<url>"`.
 - **`describe_schema` lists every set.** A replicator's `items` is a `oneOf` with one schema per set: `type` as a
   `const` (the set's handle) beside the set's fields. A grid's `items` lists its fields. Three levels of nesting are
   described; deeper ones are plain objects.
+- **`describe_schema` describes a menu's items.** For a navigation menu, `tree` is the JSON Schema of its items: `kind`,
+  the link's `type` and its target (`id`, `url` or `ref`), `title`, `new_tab`, `hidden`, `fields`, `query`,
+  `show_from`, `show_until` and `children`. `fields` lists the menu's `item_fields`, and `kinds` lists each custom
+  kind's fields. `describe_site` gives the same `tree` and `kinds` for every menu it lists.
 - **`describe_schema` carries each field's rules**: `maxLength` from `character_limit`, `format` (`email`, `uri`,
   `date` or `date-time`), `minimum`, `maximum` and `multipleOf` for integers, and `readOnly`. A choice's values are
   its `enum`, and its labels, when they differ, are listed in its `description`. The `description` also says when a

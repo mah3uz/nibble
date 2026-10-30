@@ -63,7 +63,7 @@ module Nibble
           "taxonomies" => schema.taxonomies.select { |item| Policy.can?(principal, "terms.#{item.handle}.view") }
             .map { |item| { "handle" => item.handle, "title" => AgentAccess.title(item) } },
           "globals" => sets(schema.globals, "globals", principal),
-          "navigation" => sets(schema.navigations, "navigation", principal)
+          "navigation" => sets(schema.navigations, "navigation", principal).map { |set| set.merge(Sets.menu_schema(schema.find(:navigation, set["handle"]), schema:)) }
         }
       end
 
@@ -90,9 +90,9 @@ module Nibble
           Operations.require!(caller.principal, "globals.#{handle}.view")
           { "global" => handle, "fields" => fields(Records::GlobalSet.new(handle: item.handle).blueprint_fields) }
         when "navigation"
-          schema.find(:navigation, handle) or Operations.not_found!("navigation menu #{handle}")
+          item = schema.find(:navigation, handle) or Operations.not_found!("navigation menu #{handle}")
           Operations.require!(caller.principal, "navigation.#{handle}.view")
-          { "navigation" => handle, "tree" => Sets::TREE_SCHEMA }
+          { "navigation" => handle, **Sets.menu_schema(item, schema:) }
         end
       end
 

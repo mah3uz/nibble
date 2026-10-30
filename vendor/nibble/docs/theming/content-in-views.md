@@ -181,6 +181,7 @@ Import from `@site/types`.
 | `ViewProps['sets/pricing']` | the same for a set's sidecar, as its `queries` prop |
 | `SiteGlobals`, `<Handle>Globals` | a global's fields |
 | `FormValues['demo']`, `DemoFormValues` | the values a form collects; see [Forms](forms-in-your-theme.md) |
+| `MainNavigationItem`, `<Menu>NavigationItem` | one item of a menu, with its `fields`, its `entry` and its custom kinds typed from the menu's schema |
 
 ```vue
 <script setup lang="ts">
@@ -189,6 +190,11 @@ import type { PostsPost, ViewProps } from '@site/types'
 defineProps<ViewProps['posts/show'] & { page: PostsPost }>()
 </script>
 ```
+
+`useNavigation('main')` returns that menu's items typed with `MainNavigationItem`, so `item.fields.icon` compiles only
+when the menu's `item_fields` declare `icon`, and `item.entry` holds the `entry_fields` the menu lists. A custom kind
+has its own member of the union: narrow on `item.kind` to read the fields only that kind has. A menu the schema
+doesn't name returns `NavigationItem`, whose `fields` and `entry` are loose.
 
 `@nibble` exports a few types of its own for the shared props: `SiteProps`, `Link` (a menu item), `RecordSummary`,
 `SetBlock`, `RichTextValue`, `ImageValue`, `PaginationMeta`, `SeoProps`, and the form types `NibbleForm`,

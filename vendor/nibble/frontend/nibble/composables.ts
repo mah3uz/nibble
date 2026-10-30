@@ -1,6 +1,6 @@
 import { usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
-import type { Link, SiteProps } from './types'
+import type { NavigationItem, NavigationMenus, SiteProps } from './types'
 
 export function useSite() {
   const page = usePage<{ site: SiteProps }>()
@@ -12,9 +12,14 @@ export function useGlobals<T = Record<string, unknown>>(handle: string) {
   return computed(() => (site.value?.globals?.[handle] ?? {}) as T)
 }
 
-export function useNavigation(handle: string) {
+export function useNavigation<H extends string>(handle: H) {
   const site = useSite()
-  return computed<Link[]>(() => site.value?.navigation?.[handle] ?? [])
+  return computed(
+    () =>
+      (site.value?.navigation?.[handle] ?? []) as (H extends keyof NavigationMenus
+        ? NavigationMenus[H]
+        : NavigationItem)[],
+  )
 }
 
 export function useLocale() {
