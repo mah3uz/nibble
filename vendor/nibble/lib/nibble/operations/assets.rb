@@ -178,8 +178,9 @@ module Nibble
       end
 
       def summary(asset)
+        width, height = Nibble::Assets.output_size(asset, nil)
         { "id" => asset.id, "filename" => asset.filename, "folder" => asset.folder, "kind" => asset.kind, "url" => asset.url,
-          "alt" => asset.alt, "width" => asset.width, "height" => asset.height }.compact
+          "alt" => asset.alt, "width" => width, "height" => height }.compact
       end
 
       def view(asset)

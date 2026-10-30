@@ -59,7 +59,7 @@ class AssetFilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ 1.0, [ 8, 8, 16, 16 ] ], zoomed.values_at(:resize, :crop), "twice the scale, window centred on the quarter point"
   end
 
-  test "crop, rotation and flip apply before the preset, and the original file stays untouched" do
+  test "crop, rotation and flip apply before the preset, and the stored file stays untouched" do
     asset = create_asset
     asset.update_columns(width: 64, height: 32, edits: { "crop" => { "x" => 0.5, "y" => 0, "width" => 0.5, "height" => 1 }, "rotate" => 90, "flip" => "horizontal" })
 
@@ -73,7 +73,74 @@ class AssetFilesControllerTest < ActionDispatch::IntegrationTest
     get asset.url("cp-thumb")
     assert_equal [ 16, 64 ], [ image.width, image.height ], "thumbnails show the edited image"
     get asset.url
+    assert_equal [ 16, 64 ], [ image.width, image.height ], "the plain URL shows the edited image too"
+    assert_equal file_fixture("photo.jpg").binread, asset.blob.download
+  end
+
+  test "an edit reaches every use: the plain URL serves it at full size in the file's own format, and its value says so" do
+    asset = create_asset
+    asset.update_columns(width: 64, height: 32)
+    lifecycle(asset, :save, "edits" => { "crop" => { "x" => 0.25, "y" => 0, "width" => 0.5, "height" => 1 } })
+    asset.reload
+
+    get asset.url
+    assert_response :success
+    assert_equal [ 32, 32 ], [ image.width, image.height ], "a field without a preset shows the crop, not the uncropped original"
+    assert_equal "image/jpeg", response.media_type
+    assert_match "public", response.headers["Cache-Control"]
+    assert_equal [ 32, 32 ], Nibble::Records::AssetResolver.new.summary(asset).values_at("width", "height"), "the size a theme lays out matches the file"
+
+    get asset.url("card")
+    assert_equal [ 32, 16 ], [ image.width, image.height ], "a preset still fits its own box"
+  end
+
+  test "resetting the edits brings the original back on the plain URL, byte for byte" do
+    asset = create_asset
+    asset.update_columns(width: 64, height: 32)
+    lifecycle(asset, :save, "edits" => { "rotate" => 90 })
+    edited = asset.reload.url
+    get edited
+    assert_equal [ 32, 64 ], [ image.width, image.height ]
+
+    lifecycle(asset, :save, "edits" => {})
+    get edited
+    assert_redirected_to asset.reload.url, "a page cached with the edited URL is sent to the current file"
+    get asset.url
     assert_equal file_fixture("photo.jpg").binread, response.body
+    assert_equal [ 64, 32 ], Nibble::Records::AssetResolver.new.summary(asset).values_at("width", "height")
+  end
+
+  test "an edited image moves off the address its original may be cached under, and an unedited one keeps its own" do
+    asset = create_asset
+    unedited = ->(edits) { "/media/#{asset.uuid}/photo.jpg?v=#{Digest::SHA256.hexdigest([ asset.blob_id, nil, nil, 1.0, edits ].to_json)[0, 12]}" }
+    assert_equal unedited.({}), asset.url
+
+    asset.update_columns(edits: { "rotate" => 90 })
+    get unedited.({ "rotate" => 90 })
+    assert_redirected_to asset.url
+  end
+
+  test "an edited PNG stays a PNG" do
+    png = Vips::Image.black(4, 2, bands: 4).write_to_buffer(".png")
+    asset = create_asset(blob: ActiveStorage::Blob.create_and_upload!(io: StringIO.new(png), filename: "badge.png"))
+    asset.update_columns(width: 4, height: 2, edits: { "rotate" => 90 })
+
+    get asset.url
+    assert_equal "image/png", response.media_type
+    assert_equal [ 2, 4, 4 ], [ image.width, image.height, image.bands ], "turned, and its transparency survives"
+  end
+
+  test "files that aren't raster images ignore edits and are served as uploaded" do
+    svg = %(<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><rect width="1" height="1"/></svg>)
+    pdf = "%PDF-1.4\n%%EOF\n"
+    [ [ svg, "logo.svg" ], [ pdf, "paper.pdf" ] ].each do |body, filename|
+      asset = create_asset(blob: ActiveStorage::Blob.create_and_upload!(io: StringIO.new(body), filename:))
+      asset.update_columns(edits: { "rotate" => 90 })
+
+      get asset.url
+      assert_response :success
+      assert_equal body, response.body, filename
+    end
   end
 
   test "any edit changes the URLs, so the forever cache never serves an old crop" do

@@ -12,6 +12,7 @@ class AssetFilesController < ActionController::Base
     http_cache_forever(public: true) do
       if preset then send_transform(asset, preset)
       elsif asset.kind == "svg" then send_svg(asset)
+      elsif Nibble::Assets.edited?(asset) then send_blob_stream(asset.blob.variant(Nibble::Assets::Transform.edited(asset)).processed.image.blob)
       else send_blob_stream(asset.blob)
       end
     end

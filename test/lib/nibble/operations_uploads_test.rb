@@ -57,6 +57,13 @@ class Nibble::OperationsUploadsTest < ActiveSupport::TestCase
     assert_equal "upload_not_found", failure("upload_asset", "upload" => id).code, "an upload makes one asset"
   end
 
+  test "an app reads an edited image at the size its url delivers" do
+    asset = create_asset
+    asset.update_columns(width: 64, height: 32, edits: { "rotate" => 90 })
+
+    assert_equal [ 32, 64 ], run_op("get_asset", "id" => asset.id).values_at("width", "height")
+  end
+
   test "another connection's upload is refused, even by the same person" do
     id, blob = stage
 

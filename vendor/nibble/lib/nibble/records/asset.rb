@@ -23,6 +23,7 @@ module Nibble
       validates :focal_zoom, numericality: { in: 1..10 }
       validate :focal_point_complete
       validate :edits_are_valid
+      validate :edits_keep_animation
       validate :folder_exists
       validate :tags_are_strings
 
@@ -35,8 +36,14 @@ module Nibble
       def focal = focal_x && { "x" => focal_x, "y" => focal_y }
       def display_title = title.presence || filename
       def url(preset = nil, width: nil) = Assets.url(self, preset, width:)
-      def version = Digest::SHA256.hexdigest([ blob_id, focal_x, focal_y, focal_zoom, edits ].to_json)[0, 12]
       def rotation = edits["rotate"].to_i
+
+      # Moves an edited image's address, since caches may hold its original under the old one forever.
+      def version
+        parts = [ blob_id, focal_x, focal_y, focal_zoom, edits ]
+        parts << "edited" if edits.present?
+        Digest::SHA256.hexdigest(parts.to_json)[0, 12]
+      end
 
       def rotated_size
         return nil unless width.to_i.positive? && height.to_i.positive?
@@ -96,6 +103,11 @@ module Nibble
         valid = box.size == 4 && box.all?(Numeric) && box[0] >= 0 && box[1] >= 0 && box[2].positive? && box[3].positive? &&
           box[0] + box[2] <= 1.0001 && box[1] + box[3] <= 1.0001
         errors.add(:edits, "crop must stay inside the image") unless valid
+      end
+
+      # Edits render a single frame, so an animation would be delivered as a still.
+      def edits_keep_animation
+        errors.add(:edits, "can't change an animated image") if edits_changed? && edits.is_a?(Hash) && edits.any? && Assets.animated?(self)
       end
 
       def tags_are_strings

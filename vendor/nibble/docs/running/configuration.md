@@ -142,6 +142,10 @@ assets:
 `fit: crop` fills the size exactly, keeping the focal point in frame; `fit: contain` fits inside it. `srcset` lists
 the smaller widths a browser may choose instead. An `assets` field names its preset with `preset: logo`.
 
+A crop, rotation or flip made in the media library applies to every use of the image, with a preset or without
+one: a field with no preset gets the edited image at its full edited size, in the format it was uploaded in, and
+reports that size as its `width` and `height`. The untouched original is reached only from the Control Plane.
+
 ## 6. Environment and credentials
 
 Secrets and per-machine addresses. In development they live in `.env`, which is never committed. In production they

@@ -125,6 +125,32 @@ class Nibble::Cp::MediaControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ asset.blob_id, "Sunset", { "rotate" => 180 }, {} ], [ copy.blob_id, copy.alt, copy.edits, asset.reload.edits ]
   end
 
+  test "after a crop the library reports the cropped size, and only the editor and Download reach the untouched file" do
+    asset = create_asset
+    asset.update_columns(width: 64, height: 32)
+    json(:patch, "/cp/media/#{asset.id}", { asset: { edits: { crop: { x: 0, y: 0, width: 0.5, height: 1 } } } })
+    original = file_fixture("photo.jpg").binread
+
+    detail = json(:get, "/cp/media/#{asset.id}")["asset"]
+    assert_equal [ 32, 32 ], detail.values_at("width", "height"), "the size every use is delivered at"
+    get detail["url"]
+    assert_not_equal original, response.body
+
+    get detail["original_url"]
+    follow_redirect!
+    assert_equal original, response.body, "the crop editor starts from the whole image, not the last crop"
+    assert_match(/\Ainline/, response.headers["Content-Disposition"])
+
+    get detail["download_url"]
+    follow_redirect!
+    assert_equal original, response.body
+    assert_match(/\Aattachment/, response.headers["Content-Disposition"])
+
+    reset!
+    get detail["original_url"]
+    assert_no_match %r{/rails/active_storage}, response.location.to_s, "signed-out visitors get no link to the original"
+  end
+
   test "deleting an asset in use asks first and names where it's used" do
     asset = create_asset
     create_entry("articles", { "title" => "Holiday", "image" => { "asset" => asset.id.to_s } })

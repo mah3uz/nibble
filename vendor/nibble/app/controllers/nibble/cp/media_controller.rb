@@ -1,8 +1,10 @@
 module Nibble
   module Cp
     class MediaController < BaseController
+      ORIGINAL_LINK_EXPIRY = 5.minutes
+
       before_action { authorize!("assets.view") }
-      before_action :load_asset, only: %i[show update destroy duplicate reupload replace]
+      before_action :load_asset, only: %i[show original update destroy duplicate reupload replace]
 
       def index
         listing = Nibble::Cp::AssetListing.new(user: Nibble::Current.user, params:)
@@ -19,7 +21,8 @@ module Nibble
           asset: Nibble::Cp::AssetListing.new(user: Nibble::Current.user).row(@asset, usage.size).merge(
             "mime" => @asset.mime, "focal" => @asset.focal, "focal_zoom" => @asset.focal_zoom, "edits" => @asset.edits, "tags" => @asset.tags, "created_at" => @asset.created_at.utc.iso8601,
             "preview" => @asset.url(@asset.image? && Nibble::Assets.transformable?(@asset) ? "cp-large" : nil),
-            "download_url" => rails_blob_path(@asset.blob, disposition: "attachment", only_path: true),
+            "original_url" => "/cp/media/#{@asset.id}/original",
+            "download_url" => "/cp/media/#{@asset.id}/original?download=1",
             "lock_version" => @asset.lock_version
           ),
           blueprint: @asset.blueprint_definition.to_publish_h,
@@ -29,6 +32,11 @@ module Nibble
           folder_options: Nibble::Cp::AssetListing.new(user: Nibble::Current.user).folder_options,
           can: abilities
         }
+      end
+
+      # Proxied rather than sent to storage, so the crop editor can draw it onto a canvas from the same origin.
+      def original
+        redirect_to rails_storage_proxy_path(@asset.blob, expires_in: ORIGINAL_LINK_EXPIRY, disposition: params[:download].present? ? "attachment" : "inline")
       end
 
       def create
