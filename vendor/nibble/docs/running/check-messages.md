@@ -120,6 +120,7 @@ These run against the database, so a build with no database does not show them.
 | `page.include '…' isn't a relationship field in any blueprint`, `page.include 'children' needs a structured collection` | `page: { include: … }` names something that can't be expanded | name an `entries` or `terms` field, or `children` once a collection is structured |
 | `query '…' is named like the … prop every page is given` | a layout's query is called `page`, `layout`, `site`, `seo` or `preview` | rename it |
 | `query '…' is also a view's query, so one would hide the other` | a layout and a view use the same query name | rename one |
+| `extends '…', which has no sidecar (layouts/….yml)`, `extends '…', which leads back to itself` | a layout sidecar's `extends` names a layout with no sidecar, or the layouts extend each other in a circle | name a layout that has a sidecar |
 | `query '…' hides the … prop every view is given; rename the query` (warning) | a view's query is called `page`, `layout`, `site`, `seo` or `preview` | rename it |
 | `theme.yml: '…' is required`, `… isn't a manifest key`, `handle … must match the folder name`, `nibble … isn't compatible with theme API …` | the theme's manifest | fix `theme.yml` |
 | `required view '….vue' is missing`, `required layout 'default.vue' is missing`, `set '…' has no view sets/….vue` | the theme lacks a view the site needs | add the view |

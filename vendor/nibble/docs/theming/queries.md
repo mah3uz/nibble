@@ -299,6 +299,17 @@ defineProps<LayoutProps['default']>()
 A layout the theme does not have renders as `default`, so it takes `default`'s sidecar. Its `params` are declared for
 every page.
 
+Layouts that share a header share its queries with `extends`, which takes the queries, `params` and page includes of
+another layout's sidecar; a query of the same name in the extending sidecar wins:
+
+```yaml
+# site/themes/tidewater/layouts/docs.yml
+extends: default
+sections:
+  from: entries:docs
+  where: { parent_id: { null: true } }
+```
+
 A layout's queries run for every page, so keep them small. Editing an entry of a collection a layout queries clears
 every page that uses the layout.
 

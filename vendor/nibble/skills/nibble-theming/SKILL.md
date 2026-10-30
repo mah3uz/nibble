@@ -25,7 +25,7 @@ in `config/nibble.yml` (`theme:`), then `NIBBLE_THEME`, and is looked for in `si
 | `views/<name>.yml` | the view's query sidecar: each key becomes a prop |
 | `views/sets/<set>.vue` | one block of a replicator field, given the set's fields as props |
 | `layouts/<name>.vue` | the frame around a page; `default` unless a collection names another |
-| `layouts/<name>.yml` | the layout's query sidecar: its props reach every page using it, so keep it small; a missing layout uses `default`'s |
+| `layouts/<name>.yml` | the layout's query sidecar: its props reach every page using it, so keep it small; a missing layout uses `default`'s; `extends: <layout>` takes another layout's queries |
 | `components/` | the theme's own components |
 | `styles/theme.css` | the theme's stylesheet (Tailwind) |
 | `schema/` | the theme's schema layer, read after Nibble's and before the site's |
