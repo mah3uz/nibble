@@ -12,6 +12,8 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+## 0.23.0 — 2026-10-30 20:09 +0600
+
 > **Menus that do more, and blocks you add instead of copy.** Menus gain headings, fields and kinds of their own,
 > lists that fill themselves and show dates; a theme adds blocks to Nibble's standard ones; and crumbs, the theme
 > every site starts from, uses all of it.
