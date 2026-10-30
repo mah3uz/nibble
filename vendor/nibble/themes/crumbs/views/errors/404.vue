@@ -2,8 +2,8 @@
 import { Link } from '@inertiajs/vue3'
 import { useNavigation } from '@nibble'
 import type { ViewProps } from '@site/types'
+import MenuLink from '../../components/MenuLink.vue'
 import { formatDate, isoDate } from '../../lib/format'
-import { onSite } from '../../lib/links'
 
 defineProps<ViewProps['errors/404']>()
 
@@ -19,9 +19,8 @@ const links = useNavigation('main')
     </p>
     <div class="mt-8 flex flex-wrap gap-6">
       <Link class="py-3 underline" href="/">Back home</Link>
-      <template v-for="link in links" :key="link.url">
-        <Link v-if="onSite(link.url)" class="py-3 underline" :href="link.url">{{ link.title }}</Link>
-        <a v-else class="py-3 underline" :href="link.url">{{ link.title }}</a>
+      <template v-for="(link, position) in links" :key="position">
+        <MenuLink v-if="link.url" :item="link" class="py-3 underline" />
       </template>
     </div>
     <form action="/search" method="get" role="search" aria-label="Search articles" class="mt-8 flex max-w-xl gap-4">

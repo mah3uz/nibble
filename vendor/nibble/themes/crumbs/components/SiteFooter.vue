@@ -2,12 +2,15 @@
 import { useGlobals, useNavigation } from '@nibble'
 import { computed } from 'vue'
 import type { SiteGlobals } from '@site/types'
-import { linkTag } from '../lib/links'
+import MenuLink from './MenuLink.vue'
 
 const site = useGlobals<SiteGlobals>('site')
 const footer = useNavigation('footer')
 const main = useNavigation('main')
-const links = computed(() => (footer.value.length ? footer.value : main.value))
+const links = computed(() =>
+  footer.value.length ? footer.value : main.value.map((link) => ({ ...link, children: [] as never[] })),
+)
+const columns = computed(() => links.value.some((link) => link.kind === 'heading' || link.children.length))
 </script>
 
 <template>
@@ -20,16 +23,25 @@ const links = computed(() => (footer.value.length ? footer.value : main.value))
           {{ site.tagline }}
         </p>
       </div>
-      <nav aria-label="Footer navigation" class="flex flex-wrap gap-x-6 gap-y-2 text-base sm:text-sm">
-        <component
-          :is="linkTag(link.url)"
-          v-for="link in links"
-          :key="link.url"
-          class="py-3 hover:text-accent"
-          :href="link.url"
-        >
-          {{ link.title }}
-        </component>
+      <nav
+        aria-label="Footer navigation"
+        class="flex flex-wrap text-base sm:text-sm"
+        :class="columns ? 'gap-x-10 gap-y-6' : 'gap-x-6 gap-y-2'"
+      >
+        <template v-for="(link, position) in links" :key="position">
+          <div v-if="link.kind === 'heading' || link.children.length" class="min-w-36">
+            <h2 class="py-3 font-mono text-accent">
+              <template v-if="link.kind === 'heading'">{{ link.title }}</template>
+              <MenuLink v-else :item="link" class="hover:underline" />
+            </h2>
+            <ul role="list">
+              <li v-for="(child, index) in link.children" :key="index">
+                <MenuLink v-if="child.kind !== 'heading'" :item="child" class="block py-2 hover:text-accent" />
+              </li>
+            </ul>
+          </div>
+          <MenuLink v-else :item="link" class="py-3 hover:text-accent" />
+        </template>
       </nav>
       <ul v-if="site.social_links?.length" class="flex gap-4 text-base sm:text-sm" role="list">
         <li v-for="social in site.social_links" :key="social.id">

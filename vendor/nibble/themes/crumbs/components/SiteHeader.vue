@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { Link, usePage } from '@inertiajs/vue3'
-import { Image, useGlobals, useNavigation, type Link as MenuItem } from '@nibble'
+import { Link } from '@inertiajs/vue3'
+import { Image, useGlobals, useNavigation } from '@nibble'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
-import type { SiteGlobals } from '@site/types'
-import { linkTag } from '../lib/links'
+import type { MainNavigationItem, SiteGlobals } from '@site/types'
+import MenuLink from './MenuLink.vue'
 import ThemeSwitch from './ThemeSwitch.vue'
 
 const site = useGlobals<SiteGlobals>('site')
 const links = useNavigation('main')
-const page = usePage()
 const menuOpen = ref(false)
 const searchOpen = ref(false)
 const submenu = ref<number | null>(null)
@@ -22,14 +21,8 @@ const searchControl = computed(() =>
     : { href: '/search' },
 )
 
-function current(url: string) {
-  const path = page.url.split('?')[0]
-  if (path === url) return 'page'
-  if (url !== '/' && path.startsWith(`${url}/`)) return 'true'
-}
-
-const inSection = (link: MenuItem) => current(link.url) || link.children.some((child) => current(child.url))
-const submenuItems = (link: MenuItem) => (link.url ? [{ ...link, children: [] }, ...link.children] : link.children)
+const submenuItems = (link: MainNavigationItem) =>
+  link.url ? [{ ...link, children: [] }, ...link.children] : link.children
 
 function toggled(index: number, event: Event) {
   if ((event.target as HTMLDetailsElement).open) submenu.value = index
@@ -93,7 +86,7 @@ onBeforeUnmount(() => document.removeEventListener('click', clickOutside))
             >
               <summary
                 class="flex cursor-pointer list-none items-center gap-1 py-3 hover:text-accent [&::-webkit-details-marker]:hidden"
-                :class="{ 'underline decoration-accent decoration-2 underline-offset-8': inSection(link) }"
+                :class="{ 'underline decoration-accent decoration-2 underline-offset-8': link.in_trail }"
               >
                 {{ link.title }}
                 <svg
@@ -111,30 +104,26 @@ onBeforeUnmount(() => document.removeEventListener('click', clickOutside))
                 class="bg-paper dark:bg-night-panel absolute top-full -left-4 z-20 min-w-48 border-2 border-current py-2"
                 role="list"
               >
-                <li v-for="item in submenuItems(link)" :key="item.url">
-                  <component
-                    :is="linkTag(item.url)"
-                    :href="item.url"
+                <li v-for="(item, position) in submenuItems(link)" :key="position">
+                  <MenuLink
+                    v-if="item.url"
+                    :item="item"
                     class="block px-4 py-2 whitespace-nowrap -outline-offset-2 hover:text-accent"
-                    :class="{ 'underline decoration-accent decoration-2': current(item.url) === 'page' }"
-                    :aria-current="current(item.url)"
+                    :class="{ 'underline decoration-accent decoration-2': item.current }"
                     @click="submenu = null"
-                  >
+                  />
+                  <p v-else class="px-4 pt-3 pb-1 font-mono whitespace-nowrap text-gray-600 dark:text-gray-400">
                     {{ item.title }}
-                  </component>
+                  </p>
                 </li>
               </ul>
             </details>
-            <component
-              :is="linkTag(link.url)"
-              v-else
-              :href="link.url"
+            <MenuLink
+              v-else-if="link.url"
+              :item="link"
               class="block py-3 hover:text-accent"
-              :class="{ 'underline decoration-accent decoration-2 underline-offset-8': current(link.url) }"
-              :aria-current="current(link.url)"
-            >
-              {{ link.title }}
-            </component>
+              :class="{ 'underline decoration-accent decoration-2 underline-offset-8': link.in_trail }"
+            />
           </li>
         </ul>
       </nav>
@@ -166,30 +155,24 @@ onBeforeUnmount(() => document.removeEventListener('click', clickOutside))
     <nav v-show="menuOpen" id="mobile-navigation" aria-label="Mobile navigation" class="pb-5 lg:hidden">
       <ul role="list">
         <li v-for="(link, index) in links" :key="`${index}-${link.url}`">
-          <component
-            :is="linkTag(link.url)"
+          <MenuLink
             v-if="link.url"
-            :href="link.url"
+            :item="link"
             class="block py-3 hover:text-accent"
-            :class="{ 'text-accent': current(link.url) }"
-            :aria-current="current(link.url)"
+            :class="{ 'text-accent': link.in_trail }"
             @click="menuOpen = false"
-          >
-            {{ link.title }}
-          </component>
+          />
           <p v-else class="py-3">{{ link.title }}</p>
           <ul v-if="link.children.length" class="mb-2 border-l-2 border-current/20 pl-4" role="list">
-            <li v-for="child in link.children" :key="child.url">
-              <component
-                :is="linkTag(child.url)"
-                :href="child.url"
+            <li v-for="(child, position) in link.children" :key="position">
+              <MenuLink
+                v-if="child.url"
+                :item="child"
                 class="block py-2.5 hover:text-accent"
-                :class="{ 'text-accent': current(child.url) }"
-                :aria-current="current(child.url)"
+                :class="{ 'text-accent': child.in_trail }"
                 @click="menuOpen = false"
-              >
-                {{ child.title }}
-              </component>
+              />
+              <p v-else class="pt-3 pb-1 font-mono text-gray-600 dark:text-gray-400">{{ child.title }}</p>
             </li>
           </ul>
         </li>

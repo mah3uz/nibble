@@ -1,7 +1,7 @@
 import { createSSRApp, h, type Component } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Link as MenuItem } from '@nibble'
+import type { NavigationItem } from '@nibble'
 import { onSite } from '../lib/links'
 import SiteFooter from '../components/SiteFooter.vue'
 import SiteHeader from '../components/SiteHeader.vue'
@@ -41,14 +41,29 @@ vi.mock('@nibble', async () => {
   }
 })
 
-const item = (title: string, url: string, children: MenuItem[] = []): MenuItem => ({
+const item = (
+  title: string,
+  url: string,
+  children: NavigationItem[] = [],
+  state: Partial<NavigationItem> = {},
+): NavigationItem => ({
+  kind: 'link',
   type: 'url',
   title,
   url,
+  new_tab: false,
+  current: false,
+  in_trail: false,
+  fields: {},
+  entry: null,
   children,
+  ...state,
 })
+const heading = (title: string, children: NavigationItem[]) =>
+  item(title, '', children, { kind: 'heading', type: null, url: null })
 const render = (component: Component, props = {}) => renderToString(createSSRApp({ render: () => h(component, props) }))
-const anchor = (html: string, text: string) => html.match(new RegExp(`<a[^>]*>\\s*${text}\\s*</a>`))?.[0] ?? ''
+const anchor = (html: string, text: string) =>
+  html.match(new RegExp(`<a[^>]*>\\s*${text}\\s*(<!--v-if-->)?</a>`))?.[0] ?? ''
 
 beforeEach(() => {
   state.mounted = false
@@ -80,9 +95,13 @@ describe('crumbs SiteHeader', () => {
   })
 
   it('draws a nested item’s children in both menus, so nothing an editor nests in Main disappears', async () => {
-    state.url = '/blog/first'
     state.navigation.main = [
-      item('Archive', '/blog', [item('First', '/blog/first'), item('Elsewhere', 'https://x.test')]),
+      item(
+        'Archive',
+        '/blog',
+        [item('First', '/blog/first', [], { current: true, in_trail: true }), item('Elsewhere', 'https://x.test')],
+        { in_trail: true },
+      ),
     ]
     const html = await render(SiteHeader)
 
@@ -96,6 +115,43 @@ describe('crumbs SiteHeader', () => {
     const mobile = html.match(/<nav[^>]*id="mobile-navigation"[\s\S]*?<\/nav>/)![0]
     expect(anchor(mobile, 'First')).toContain('aria-current="page"')
     expect(anchor(mobile, 'Elsewhere')).toContain('href="https://x.test"')
+  })
+
+  it('marks the current page and its section from what the server says, not by matching the address itself', async () => {
+    state.url = '/about'
+    state.navigation.main = [
+      item('About', '/about'),
+      item('Archive', '/blog', [], { in_trail: true }),
+      item('Reading', '/topics/reading', [], { current: true, in_trail: true }),
+    ]
+    const desktop = (await render(SiteHeader)).match(/<nav aria-label="Main navigation"[\s\S]*?<\/nav>/)![0]
+
+    expect(anchor(desktop, 'About')).not.toContain('aria-current')
+    expect(anchor(desktop, 'Archive')).toContain('aria-current="true"')
+    expect(anchor(desktop, 'Archive')).toContain('underline')
+    expect(anchor(desktop, 'Reading')).toContain('aria-current="page"')
+  })
+
+  it('opens a new-tab item in a new tab, and says so to people who can’t see it', async () => {
+    state.navigation.main = [item('Shop', 'https://shop.example', [], { new_tab: true }), item('About', '/about')]
+    const html = await render(SiteHeader)
+
+    const shop = html.match(/<a[^>]*href="https:\/\/shop.example"[^>]*>[\s\S]*?<\/a>/)![0]
+    expect(shop).toContain('target="_blank"')
+    expect(shop).toContain('rel="noopener"')
+    expect(shop).toMatch(/Shop<span class="sr-only"> \(opens in a new tab\)<\/span>/)
+    expect(anchor(html, 'About')).not.toContain('target')
+  })
+
+  it('draws a heading in a dropdown as a label, not a link, so a menu with headings still renders', async () => {
+    state.navigation.main = [heading('Company', [heading('People', []), item('Jobs', '/jobs')])]
+    const html = await render(SiteHeader)
+    const desktop = html.match(/<nav aria-label="Main navigation"[\s\S]*?<\/nav>/)![0]
+
+    expect(desktop).toMatch(/<summary[^>]*>\s*Company/)
+    expect(desktop).toMatch(/<p[^>]*>\s*People\s*<\/p>/)
+    expect(desktop).not.toMatch(/<a[^>]*>\s*(Company|People)/)
+    expect(anchor(desktop, 'Jobs')).toContain('href="/jobs"')
   })
 
   it('names the home link by the visible site name, and shows the logo in its place when one is set', async () => {
@@ -131,6 +187,26 @@ describe('crumbs SiteFooter', () => {
     expect(html).not.toContain('Archive')
     expect(anchor(html, 'Privacy')).toContain('data-inertia')
     expect(anchor(html, 'Status')).not.toContain('data-inertia')
+  })
+
+  it('draws a heading as a column title with its links beneath, and a flat menu as one row of links', async () => {
+    state.navigation.footer = [
+      heading('Company', [item('About', '/about'), item('Jobs', 'https://jobs.example', [], { new_tab: true })]),
+      heading('Help', [item('Contact', '/contact')]),
+    ]
+    const columns = (await render(SiteFooter)).replace(/<!--.*?-->/g, '').match(/<nav[\s\S]*?<\/nav>/)![0]
+    expect([...columns.matchAll(/<h2[^>]*>([^<]*)<\/h2>/g)].map((match) => match[1].trim())).toEqual([
+      'Company',
+      'Help',
+    ])
+    expect(columns).toMatch(/Company<\/h2>\s*<ul role="list"><li><a[^>]*href="\/about"/)
+    expect(columns).toMatch(/target="_blank" rel="noopener"[^>]*>Jobs<span class="sr-only">/)
+
+    state.navigation.footer = [item('Privacy', '/privacy', [], { current: true, in_trail: true })]
+    const flat = (await render(SiteFooter)).replace(/<!--.*?-->/g, '').match(/<nav[\s\S]*?<\/nav>/)![0]
+    expect(flat).not.toContain('<h2')
+    expect(flat).toMatch(/<nav aria-label="Footer navigation" class="[^"]*gap-x-6[^"]*"><a/)
+    expect(anchor(flat, 'Privacy')).toContain('aria-current="page"')
   })
 
   it('prints no year, which would differ between the server, a cached copy and the browser', async () => {

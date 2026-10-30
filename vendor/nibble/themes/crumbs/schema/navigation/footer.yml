@@ -1,0 +1,5 @@
+schema: 1
+title: Footer
+max_depth: 2
+headings: true
+collections: [pages, posts]
