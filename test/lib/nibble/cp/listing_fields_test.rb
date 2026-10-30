@@ -95,15 +95,17 @@ class Nibble::Cp::ListingFieldsTest < ActiveSupport::TestCase
   end
 
   test "a date range includes the whole of its last day" do
-    event("Before", "starts" => "2026-02-28T23:00:00Z")
-    event("Inside", "starts" => "2026-03-05T20:00:00Z")
-    event("Last day", "starts" => "2026-03-10T23:30:00Z")
-    event("After", "starts" => "2026-03-11T01:00:00Z")
-    event("Unset")
+    Time.use_zone("UTC") do
+      event("Before", "starts" => "2026-02-28T23:00:00Z")
+      event("Inside", "starts" => "2026-03-05T20:00:00Z")
+      event("Last day", "starts" => "2026-03-10T23:30:00Z")
+      event("After", "starts" => "2026-03-11T01:00:00Z")
+      event("Unset")
 
-    assert_equal [ "Inside", "Last day" ], titles(field_starts_from: "2026-03-01", field_starts_to: "2026-03-10").sort
-    assert_equal [ "After" ], titles(field_starts_from: "2026-03-11")
-    assert_equal [ "Before" ], titles(field_starts_to: "2026-02-28")
+      assert_equal [ "Inside", "Last day" ], titles(field_starts_from: "2026-03-01", field_starts_to: "2026-03-10").sort
+      assert_equal [ "After" ], titles(field_starts_from: "2026-03-11")
+      assert_equal [ "Before" ], titles(field_starts_to: "2026-02-28")
+    end
   end
 
   test "a filtered listing narrows in SQL and never loads unrelated rows' data" do

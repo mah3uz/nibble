@@ -148,15 +148,17 @@ class FormLimitsPageTest < ActionDispatch::IntegrationTest
   def contact = page_props["props"]["contact"]
 
   test "a page showing a scheduled form is rendered for each visit, so it closes on time rather than when the cache empties" do
-    travel_to(Time.utc(2026, 11, 2, 16, 59)) do
-      get "/about"
-      get "/about"
-      assert_nil response.headers["X-Nibble-Cache"]
-      assert_not contact["closed"]
-      assert_not_includes response.headers["Surrogate-Key"].to_s, "uncacheable"
-    end
+    Time.use_zone("UTC") do
+      travel_to(Time.utc(2026, 11, 2, 16, 59)) do
+        get "/about"
+        get "/about"
+        assert_nil response.headers["X-Nibble-Cache"]
+        assert_not contact["closed"]
+        assert_not_includes response.headers["Surrogate-Key"].to_s, "uncacheable"
+      end
 
-    travel_to(Time.utc(2026, 11, 2, 17)) { get "/about" }
-    assert_equal [ true, "This form isn't taking submissions right now." ], contact.values_at("closed", "closed_message")
+      travel_to(Time.utc(2026, 11, 2, 17)) { get "/about" }
+      assert_equal [ true, "This form isn't taking submissions right now." ], contact.values_at("closed", "closed_message")
+    end
   end
 end

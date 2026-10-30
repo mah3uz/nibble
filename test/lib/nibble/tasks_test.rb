@@ -116,16 +116,18 @@ class Nibble::TasksTest < ActiveSupport::TestCase
   end
 
   test "schedules are read in the site's time zone, unless one names its own" do
-    task = Nibble::Tasks.find("ping")
-    assert_equal Time.utc(2026, 10, 29, 5), task.next_run_at(Time.utc(2026, 10, 29, 0)).utc
+    Time.use_zone("UTC") do
+      task = Nibble::Tasks.find("ping")
+      assert_equal Time.utc(2026, 10, 29, 5), task.next_run_at(Time.utc(2026, 10, 29, 0)).utc
 
-    Time.use_zone("Australia/Brisbane") do
-      assert_equal Time.utc(2026, 10, 29, 19), task.next_run_at(Time.utc(2026, 10, 29, 0)).utc, "5am in Brisbane is 19:00 UTC the day before"
-      Nibble::Tasks.tick(now: Time.utc(2026, 10, 29, 12))
-      Nibble::Tasks.tick(now: Time.utc(2026, 10, 29, 19, 0, 30))
+      Time.use_zone("Australia/Brisbane") do
+        assert_equal Time.utc(2026, 10, 29, 19), task.next_run_at(Time.utc(2026, 10, 29, 0)).utc, "5am in Brisbane is 19:00 UTC the day before"
+        Nibble::Tasks.tick(now: Time.utc(2026, 10, 29, 12))
+        Nibble::Tasks.tick(now: Time.utc(2026, 10, 29, 19, 0, 30))
+      end
+      assert_equal [ Time.utc(2026, 10, 29, 19) ], runs("ping").pluck(:scheduled_for)
+      assert_equal Time.utc(2026, 10, 29, 20), Nibble::Tasks.cron("0 5 * * * Asia/Tokyo").next_time(Time.utc(2026, 10, 29)).to_t.utc
     end
-    assert_equal [ Time.utc(2026, 10, 29, 19) ], runs("ping").pluck(:scheduled_for)
-    assert_equal Time.utc(2026, 10, 29, 20), Nibble::Tasks.cron("0 5 * * * Asia/Tokyo").next_time(Time.utc(2026, 10, 29)).to_t.utc
   end
 
   test "fetched figures replace the stored ones, and a failing API leaves them as they were" do
