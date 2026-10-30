@@ -16,6 +16,7 @@ const props = defineProps<{
   menu: NavMenu
   tree: NavTreeItem[]
   records: NavEntry[]
+  query_records?: NavEntry[]
   assets?: NavAsset[]
   source?: { folder: string; links: { title: string; url: string; depth: number }[] } | null
 }>()
@@ -59,6 +60,7 @@ function change(next: NavTreeItem[] | null, id: string, done: string) {
 provideNavEditor({
   menu: props.menu,
   entries: props.records,
+  queryRecords: props.query_records ?? [],
   tree: items,
   assets,
   errors: itemErrors,
@@ -66,7 +68,12 @@ provideNavEditor({
   change,
   moveTo: (from, toParent, index) => {
     const item = itemAt(items.value, from)
-    if (item) change(move(items.value, from, toParent, index, props.menu.max_depth), item.id, `Moved “${item.title}”.`)
+    if (item)
+      change(
+        move(items.value, from, toParent, index, props.menu.max_depth, props.menu.kinds),
+        item.id,
+        `Moved “${item.title}”.`,
+      )
   },
 })
 

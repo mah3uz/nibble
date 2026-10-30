@@ -2,7 +2,14 @@ import type { PublishField } from '@nibble-cp/fieldtypes/types'
 
 export type NavLink =
   { type: 'url'; url: string } | { type: 'entry' | 'term' | 'asset'; id: number } | { type: 'global'; ref: string }
-export type NavKind = 'link' | 'heading'
+export type NavKind = string
+export type NavQuery = {
+  collection: string
+  parent?: number
+  term?: { taxonomy: string; id: number }
+  sort?: string
+  limit?: number
+}
 export type NavTreeItem = {
   id: string
   kind: NavKind
@@ -10,6 +17,9 @@ export type NavTreeItem = {
   link: NavLink | null
   new_tab: boolean
   hidden: boolean
+  query?: NavQuery | null
+  show_from?: string | null
+  show_until?: string | null
   fields: Record<string, unknown>
   field_meta: Record<string, unknown>
   children: NavTreeItem[]
@@ -39,5 +49,20 @@ export type NavMenu = {
   assets?: boolean
   globals?: NavGlobal[]
   item_fields?: PublishField[]
+  kinds?: NavKindDef[]
+  queries?: NavQuerySource[]
+}
+export type NavKindDef = {
+  handle: string
+  display: string
+  link: 'optional' | 'required' | 'none'
+  children: boolean
+  fields: PublishField[]
+}
+export type NavQuerySource = {
+  handle: string
+  title: string
+  structured: boolean
+  taxonomies: { handle: string; title: string }[]
 }
 export type NavItemErrors = { messages: string[]; fields: Record<string, string[]> }

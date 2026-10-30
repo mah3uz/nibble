@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { canNest, duplicate, errorsByItem, fits, move, nest, shift, unnest } from '../tree'
-import type { NavTreeItem } from '../types'
+import { canNest, duplicate, errorsByItem, fits, holdsChildren, move, nest, shift, unnest } from '../tree'
+import type { NavKindDef, NavTreeItem } from '../types'
 
 const item = (id: string, children: NavTreeItem[] = []): NavTreeItem => ({
   id,
@@ -81,6 +81,30 @@ describe('keyboard moves', () => {
   it('moves an item up a level, to just after the item it was under', () => {
     expect(shape(unnest(tree, [1, 0]))).toEqual(['a', 'b', 'c', 'd'])
     expect(unnest(tree, [0])).toBeNull()
+  })
+})
+
+describe('kinds that hold no children', () => {
+  const card: NavKindDef = { handle: 'card', display: 'Card', link: 'required', children: false, fields: [] }
+  const group: NavKindDef = { handle: 'group', display: 'Group', link: 'none', children: true, fields: [] }
+  const as = (kind: string, node: NavTreeItem) => ({ ...node, kind })
+  const tree = [as('card', item('a')), as('query', item('q')), as('group', item('g')), item('d')]
+
+  it('refuses to drag an item under a kind the menu says has no children, which the server would refuse', () => {
+    expect(holdsChildren(tree[0]!, [card])).toBe(false)
+    expect(move(tree, [3], [0], 0, null, [card])).toBeNull()
+    expect(nest(tree, [1], null, [card])).toBeNull()
+  })
+
+  it('refuses to put anything under a list of pages, whose items come from its collection on the site', () => {
+    expect(holdsChildren(tree[1]!)).toBe(false)
+    expect(move(tree, [3], [1], 0, null)).toBeNull()
+    expect(nest(tree, [2], null)).toBeNull()
+  })
+
+  it('still nests under links, headings and kinds that allow children', () => {
+    expect(shape(move(tree, [0], [2], 0, null, [card, group]))).toEqual(['q', { g: ['a'] }, 'd'])
+    expect(shape(nest(tree, [3], null, [card, group]))).toEqual(['a', 'q', { g: ['d'] }])
   })
 })
 

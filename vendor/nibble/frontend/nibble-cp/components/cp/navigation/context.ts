@@ -5,6 +5,7 @@ import type { NavAsset, NavEntry, NavItemErrors, NavMenu, NavTreeItem } from './
 export type NavEditor = {
   menu: NavMenu
   entries: NavEntry[]
+  queryRecords: NavEntry[]
   tree: Ref<NavTreeItem[]>
   assets: Ref<Record<string, NavAsset>>
   errors: Ref<Record<string, NavItemErrors>>

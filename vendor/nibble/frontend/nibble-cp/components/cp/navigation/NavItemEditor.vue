@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AlertCircle } from '@lucide/vue'
+import { AlertCircle, X } from '@lucide/vue'
 import { computed, reactive, ref, watch } from 'vue'
 import type { AssetRow } from '@/components/cp/assets/api'
 import AssetSelector from '@/components/cp/assets/AssetSelector.vue'
@@ -19,19 +19,23 @@ import {
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
 import LinkUrlInput from '@nibble-cp/components/LinkUrlInput.vue'
+import DateFieldtype from '@nibble-cp/fieldtypes/components/DateFieldtype.vue'
 import PublishContainer from '@nibble-cp/publish/PublishContainer.vue'
 import PublishFields from '@nibble-cp/publish/PublishFields.vue'
 import { useNavEditor } from './context'
 import EntryPicker from './EntryPicker.vue'
-import type { NavEntry, NavKind, NavLink, NavTreeItem } from './types'
+import { QUERY_SORTS } from './tree'
+import type { NavEntry, NavKind, NavLink, NavQuery, NavTreeItem } from './types'
 
 const props = defineProps<{ open: boolean; item: NavTreeItem | null; kind: NavKind }>()
 const emit = defineEmits<{ save: [NavTreeItem]; 'update:open': [boolean] }>()
-const { menu, entries, assets, errors } = useNavEditor()
+const { menu, entries, queryRecords, assets, errors } = useNavEditor()
 
 const TITLE_MAX_LENGTH = 60
 const URL_FORMAT = /^(https:\/\/\S+|\/\S*)$/
 const NO_BLUEPRINT = { handle: 'item', title: '', tabs: [] }
+const QUERY_LIMIT = 50
+const DATE_CONFIG = { type: 'date', time_enabled: true, full_width: true }
 
 const form = reactive({
   title: '',
@@ -44,13 +48,28 @@ const form = reactive({
   hidden: false,
   fields: {} as Record<string, unknown>,
   fieldMeta: {} as Record<string, unknown>,
+  collection: '',
+  parent: null as number | null,
+  term: 'any',
+  sort: 'default',
+  limit: '',
+  showFrom: null as string | null,
+  showUntil: null as string | null,
 })
 const pickingFile = ref(false)
 
 const kind = computed(() => props.item?.kind ?? props.kind)
-const noun = computed(() => (kind.value === 'heading' ? 'heading' : 'link'))
+const custom = computed(() => menu.kinds?.find((one) => one.handle === kind.value))
+const noun = computed(() =>
+  kind.value === 'heading' ? 'heading' : kind.value === 'query' ? 'list of pages' : (custom.value?.display ?? 'link'),
+)
+const linkMode = computed(() => (kind.value === 'link' ? 'required' : (custom.value?.link ?? 'none')))
 const globals = computed(() => menu.globals ?? [])
-const itemFields = computed(() => menu.item_fields ?? [])
+const itemFields = computed(() => {
+  const own = custom.value?.fields ?? []
+  const handles = new Set(own.map((field) => field.handle))
+  return [...own, ...(menu.item_fields ?? []).filter((field) => !handles.has(field.handle))]
+})
 const itemErrors = computed(() => (props.item ? errors.value[props.item.id] : undefined))
 const itemMessages = computed(() => {
   const onFields = Object.values(itemErrors.value?.fields ?? {}).flat()
@@ -72,7 +91,13 @@ watch(
       link && (link.type === 'entry' || link.type === 'term')
         ? entries.find((e) => e.type === link.type && e.id === link.id)
         : null
-    form.linkType = linked ? groupKey(linked) : link?.type === 'global' || link?.type === 'asset' ? link.type : 'url'
+    form.linkType = linked
+      ? groupKey(linked)
+      : link?.type === 'global' || link?.type === 'asset' || link?.type === 'url'
+        ? link.type
+        : linkMode.value === 'optional'
+          ? 'none'
+          : 'url'
     form.url = link?.type === 'url' ? link.url : ''
     form.entryId = linked?.id ?? null
     form.globalRef = link?.type === 'global' ? link.ref : ''
@@ -81,6 +106,14 @@ watch(
     form.hidden = item?.hidden ?? false
     form.fields = { ...(item?.fields ?? {}) }
     form.fieldMeta = { ...(item?.field_meta ?? {}) }
+    const query = item?.query
+    form.collection = query?.collection ?? (menu.queries?.length === 1 ? menu.queries[0]!.handle : '')
+    form.parent = query?.parent ?? null
+    form.term = query?.term ? `${query.term.taxonomy}:${query.term.id}` : 'any'
+    form.sort = query?.sort ?? 'default'
+    form.limit = query?.limit === undefined ? '' : String(query.limit)
+    form.showFrom = item?.show_from ?? null
+    form.showUntil = item?.show_until ?? null
   },
   { immediate: true },
 )
@@ -94,14 +127,66 @@ const pickedGlobal = computed(() =>
 )
 const pickedFile = computed(() => (form.assetId === null ? null : assets.value[String(form.assetId)]))
 
+const source = computed(() => menu.queries?.find((one) => one.handle === form.collection))
+const parentEntries = computed(() =>
+  queryRecords.filter((record) => record.type === 'entry' && record.group === form.collection),
+)
+const termGroups = computed(() =>
+  (source.value?.taxonomies ?? []).map((taxonomy) => ({
+    ...taxonomy,
+    terms: queryRecords.filter((record) => record.type === 'term' && record.group === taxonomy.handle),
+  })),
+)
+const sorts = computed(() => {
+  const offered = QUERY_SORTS.filter((sort) => !sort.structured || source.value?.structured)
+  return form.sort === 'default' || offered.some((sort) => sort.value === form.sort)
+    ? offered
+    : [...offered, { value: form.sort, label: `Sorted by ${form.sort}` }]
+})
+const limit = computed(() => (form.limit.trim() === '' ? undefined : Number(form.limit)))
+const queryValid = computed(
+  () =>
+    kind.value !== 'query' ||
+    (!!source.value &&
+      (limit.value === undefined || (Number.isInteger(limit.value) && limit.value >= 1 && limit.value <= QUERY_LIMIT))),
+)
+const datesInOrder = computed(
+  () => !form.showFrom || !form.showUntil || Date.parse(form.showFrom) < Date.parse(form.showUntil),
+)
+
+function pickCollection() {
+  form.parent = null
+  form.term = 'any'
+  if (!sorts.value.some((sort) => sort.value === form.sort)) form.sort = 'default'
+}
+
+function query(): NavQuery | null {
+  if (kind.value !== 'query') return props.item?.query ?? null
+  const [taxonomy, id] = form.term.split(':')
+  return {
+    collection: form.collection,
+    ...(form.parent !== null && { parent: form.parent }),
+    ...(form.term !== 'any' && { term: { taxonomy: taxonomy!, id: Number(id) } }),
+    ...(form.sort !== 'default' && { sort: form.sort }),
+    ...(limit.value !== undefined && { limit: limit.value }),
+  }
+}
+
 const linkValid = computed(() => {
-  if (kind.value === 'heading') return true
+  if (linkMode.value === 'none' || form.linkType === 'none') return true
   if (form.linkType === 'url') return URL_FORMAT.test(form.url)
   if (form.linkType === 'global') return !!pickedGlobal.value
   if (form.linkType === 'asset') return form.assetId !== null
   return form.entryId !== null
 })
-const valid = computed(() => form.title.trim().length > 0 && form.title.length <= TITLE_MAX_LENGTH && linkValid.value)
+const valid = computed(
+  () =>
+    form.title.trim().length > 0 &&
+    form.title.length <= TITLE_MAX_LENGTH &&
+    linkValid.value &&
+    queryValid.value &&
+    datesInOrder.value,
+)
 
 function pickFile(rows: AssetRow[]) {
   const row = rows[0]
@@ -114,7 +199,9 @@ function pickFile(rows: AssetRow[]) {
 }
 
 function link(): NavLink | null {
-  if (kind.value === 'heading') return null
+  if (linkMode.value === 'none' && !custom.value && kind.value !== 'heading' && kind.value !== 'query')
+    return props.item?.link ?? null
+  if (linkMode.value === 'none' || form.linkType === 'none') return null
   if (form.linkType === 'url') return { type: 'url', url: form.url }
   if (form.linkType === 'global') return { type: 'global', ref: form.globalRef }
   if (form.linkType === 'asset') return { type: 'asset', id: form.assetId! }
@@ -128,8 +215,11 @@ function save() {
     kind: kind.value,
     title: form.title.trim(),
     link: link(),
-    new_tab: kind.value === 'link' ? form.newTab : (props.item?.new_tab ?? false),
+    new_tab: linkMode.value !== 'none' ? form.newTab && form.linkType !== 'none' : (props.item?.new_tab ?? false),
     hidden: form.hidden,
+    query: query(),
+    show_from: form.showFrom,
+    show_until: form.showUntil,
     fields: form.fields,
     field_meta: form.fieldMeta,
     children: props.item?.children ?? [],
@@ -154,12 +244,92 @@ function save() {
           <Label for="nav-item-title">Title</Label>
           <Input id="nav-item-title" v-model="form.title" :maxlength="TITLE_MAX_LENGTH" required />
         </div>
-        <template v-if="kind === 'link'">
+        <template v-if="kind === 'query'">
+          <div class="space-y-2">
+            <Label for="nav-item-collection">Pages from</Label>
+            <Select v-model="form.collection" @update:model-value="pickCollection">
+              <SelectTrigger id="nav-item-collection" class="w-full"
+                ><SelectValue placeholder="Choose a collection…"
+              /></SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="one in menu.queries" :key="one.handle" :value="one.handle">{{
+                  one.title
+                }}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div v-if="source?.structured" class="space-y-2">
+            <Label id="nav-item-parent-label">Under the page</Label>
+            <div class="flex items-center gap-2">
+              <EntryPicker
+                v-model="form.parent"
+                :entries="parentEntries"
+                placeholder="Any page"
+                aria-labelledby="nav-item-parent-label"
+              />
+              <Button
+                v-if="form.parent !== null"
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Clear the page"
+                @click="form.parent = null"
+                ><X
+              /></Button>
+            </div>
+            <p class="text-xs text-muted-foreground">Leave empty to list from the whole collection.</p>
+          </div>
+          <div v-if="termGroups.length" class="space-y-2">
+            <Label for="nav-item-term">Only pages in</Label>
+            <Select v-model="form.term">
+              <SelectTrigger id="nav-item-term" class="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Any term</SelectItem>
+                <SelectGroup v-for="taxonomy in termGroups" :key="taxonomy.handle">
+                  <SelectLabel>{{ taxonomy.title }}</SelectLabel>
+                  <SelectItem v-for="term in taxonomy.terms" :key="term.id" :value="`${taxonomy.handle}:${term.id}`">{{
+                    term.title
+                  }}</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+          <div class="grid grid-cols-[1fr_6rem] gap-3">
+            <div class="space-y-2">
+              <Label for="nav-item-sort">Order</Label>
+              <Select v-model="form.sort">
+                <SelectTrigger id="nav-item-sort" class="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">The collection's own order</SelectItem>
+                  <SelectItem v-for="sort in sorts" :key="sort.value" :value="sort.value">{{ sort.label }}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div class="space-y-2">
+              <Label for="nav-item-limit">Up to</Label>
+              <Input
+                id="nav-item-limit"
+                v-model="form.limit"
+                type="number"
+                inputmode="numeric"
+                :min="1"
+                :max="QUERY_LIMIT"
+                :placeholder="String(QUERY_LIMIT)"
+                :aria-invalid="!queryValid || undefined"
+              />
+            </div>
+          </div>
+          <p class="text-xs text-muted-foreground" :class="!queryValid && source && 'text-destructive'">
+            The site lists up to {{ QUERY_LIMIT }} published pages here, and keeps the list up to date by itself.
+          </p>
+        </template>
+        <template v-if="linkMode !== 'none'">
           <div class="space-y-2">
             <Label for="nav-item-link-type">Link type</Label>
             <Select v-model="form.linkType" @update:model-value="form.entryId = null">
               <SelectTrigger id="nav-item-link-type" class="w-full"><SelectValue /></SelectTrigger>
               <SelectContent>
+                <SelectItem v-if="linkMode === 'optional'" value="none">No link</SelectItem>
                 <SelectItem value="url">URL</SelectItem>
                 <SelectItem v-for="group in groups" :key="group.value" :value="group.value">{{
                   group.label
@@ -215,11 +385,11 @@ function save() {
             </div>
             <AssetSelector v-model:open="pickingFile" :max-files="1" title="Choose a file" @select="pickFile" />
           </div>
-          <div v-else class="space-y-2">
+          <div v-else-if="form.linkType !== 'none'" class="space-y-2">
             <Label>{{ pickerLabel }}</Label>
             <EntryPicker v-model="form.entryId" :entries="pickerEntries" />
           </div>
-          <label class="flex items-center justify-between gap-4 text-sm">
+          <label v-if="form.linkType !== 'none'" class="flex items-center justify-between gap-4 text-sm">
             Open in a new tab
             <Switch v-model="form.newTab" />
           </label>
@@ -233,6 +403,33 @@ function save() {
           </span>
           <Switch v-model="form.hidden" />
         </label>
+        <div class="space-y-2">
+          <Label for="nav-item-show-from">Show from</Label>
+          <DateFieldtype
+            id="nav-item-show-from"
+            handle="show_from"
+            :value="form.showFrom"
+            :config="DATE_CONFIG"
+            @update:value="(value: string | null) => (form.showFrom = value)"
+          />
+        </div>
+        <div class="space-y-2">
+          <Label for="nav-item-show-until">Show until</Label>
+          <DateFieldtype
+            id="nav-item-show-until"
+            handle="show_until"
+            :value="form.showUntil"
+            :config="DATE_CONFIG"
+            @update:value="(value: string | null) => (form.showUntil = value)"
+          />
+          <p class="text-xs" :class="datesInOrder ? 'text-muted-foreground' : 'text-destructive'">
+            {{
+              datesInOrder
+                ? 'Leave both empty to show it all the time.'
+                : 'Choose a show until date after its show from date.'
+            }}
+          </p>
+        </div>
         <PublishContainer
           v-if="itemFields.length"
           :model-value="form.fields"

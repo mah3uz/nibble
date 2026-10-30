@@ -1,6 +1,17 @@
-import type { NavItemErrors, NavTreeItem } from './types'
+import type { NavItemErrors, NavKindDef, NavTreeItem } from './types'
 
 export type Path = number[]
+
+export const QUERY_SORTS: { value: string; label: string; structured?: boolean }[] = [
+  { value: 'title', label: 'By title' },
+  { value: 'published_at:desc', label: 'Newest first' },
+  { value: 'position', label: 'In the order of the structure', structured: true },
+]
+
+// A query item's children come from its collection on the site, so none are added by hand.
+export function holdsChildren(item: NavTreeItem, kinds: NavKindDef[] = []): boolean {
+  return item.kind !== 'query' && kinds.find((kind) => kind.handle === item.kind)?.children !== false
+}
 
 export function levels(item: NavTreeItem): number {
   return 1 + Math.max(0, ...item.children.map(levels))
@@ -47,8 +58,11 @@ export function move(
   toParent: Path,
   index: number,
   maxDepth: number | null,
+  kinds: NavKindDef[] = [],
 ): NavTreeItem[] | null {
   if (from.length === 0 || from.every((step, i) => toParent[i] === step)) return null
+  const parent = toParent.length ? itemAt(tree, toParent) : undefined
+  if (parent && !holdsChildren(parent, kinds)) return null
   const next = copy(tree)
   const source = listAt(next, from.slice(0, -1))
   const target = listAt(next, toParent)
@@ -66,11 +80,16 @@ export function shift(tree: NavTreeItem[], path: Path, delta: -1 | 1): NavTreeIt
   return move(tree, path, path.slice(0, -1), index, null)
 }
 
-export function nest(tree: NavTreeItem[], path: Path, maxDepth: number | null): NavTreeItem[] | null {
+export function nest(
+  tree: NavTreeItem[],
+  path: Path,
+  maxDepth: number | null,
+  kinds: NavKindDef[] = [],
+): NavTreeItem[] | null {
   const index = path.at(-1)!
   if (index === 0) return null
   const above = [...path.slice(0, -1), index - 1]
-  return move(tree, path, above, itemAt(tree, above)!.children.length, maxDepth)
+  return move(tree, path, above, itemAt(tree, above)!.children.length, maxDepth, kinds)
 }
 
 export function unnest(tree: NavTreeItem[], path: Path): NavTreeItem[] | null {

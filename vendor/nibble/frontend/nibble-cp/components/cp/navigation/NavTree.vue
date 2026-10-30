@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUp,
+  CalendarClock,
   ChevronRight,
   Copy,
   ExternalLink,
@@ -27,25 +28,44 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { formatDateTime } from '@nibble-cp/lib/format'
 import { useNavEditor } from './context'
 import NavAddButton from './NavAddButton.vue'
 import NavItemEditor from './NavItemEditor.vue'
-import { canNest, duplicate, fits, itemAt, nest, pathOf, shift, unnest, type Path } from './tree'
+import {
+  QUERY_SORTS,
+  canNest,
+  duplicate,
+  fits,
+  holdsChildren,
+  itemAt,
+  nest,
+  pathOf,
+  shift,
+  unnest,
+  type Path,
+} from './tree'
 import type { NavKind, NavTreeItem } from './types'
 
 const props = defineProps<{ path: Path; inHidden?: boolean }>()
 const editor = useNavEditor()
-const { menu, entries, assets, errors, collapsed } = editor
+const { menu, entries, queryRecords, assets, errors, collapsed } = editor
 
 const depth = computed(() => props.path.length)
 const items = computed(() =>
   depth.value ? (itemAt(editor.tree.value, props.path)?.children ?? []) : editor.tree.value,
 )
 const nests = computed(() => canNest(depth.value, menu.max_depth))
+const owner = computed(() => (depth.value ? itemAt(editor.tree.value, props.path) : undefined))
+const addable = computed(() => !owner.value || holdsChildren(owner.value, menu.kinds))
 const addLabel = computed(() => (depth.value === 0 ? 'Add link' : 'Add sub-link'))
 const helpId = `nav-${menu.handle}-move-help`
 
 const quoted = (item: NavTreeItem) => `“${item.title}”`
+// Children a kind no longer allows stay on screen, so they can be moved out.
+const holds = (item: NavTreeItem) => nests.value && (holdsChildren(item, menu.kinds) || item.children.length > 0)
+const kindLabel = (item: NavTreeItem) =>
+  item.kind === 'query' ? 'List of pages' : menu.kinds?.find((kind) => kind.handle === item.kind)?.display
 const here = (index: number): Path => [...props.path, index]
 
 function entryFor(item: NavTreeItem) {
@@ -61,7 +81,8 @@ function globalFor(ref: string) {
 }
 function summary(item: NavTreeItem): string {
   const link = item.link
-  if (!link) return 'Heading'
+  if (item.kind === 'query') return querySummary(item)
+  if (!link) return item.kind === 'heading' ? 'Heading' : 'No link'
   if (link.type === 'url') return link.url
   if (link.type === 'global') {
     const found = globalFor(link.ref)
@@ -69,6 +90,28 @@ function summary(item: NavTreeItem): string {
   }
   if (link.type === 'asset') return assets.value[String(link.id)]?.filename ?? 'Missing (deleted)'
   return entryFor(item)?.path ?? 'Missing (deleted)'
+}
+function querySummary(item: NavTreeItem): string {
+  const query = item.query
+  if (!query?.collection) return 'No collection chosen'
+  const named = (type: string, id?: number) =>
+    id === undefined ? undefined : (queryRecords.find((r) => r.type === type && r.id === id)?.title ?? 'a deleted one')
+  const parent = named('entry', query.parent)
+  const term = named('term', query.term?.id)
+  const sort = query.sort && (QUERY_SORTS.find((one) => one.value === query.sort)?.label ?? `Sorted by ${query.sort}`)
+  return [
+    `${menu.queries?.find((q) => q.handle === query.collection)?.title ?? query.collection}${parent ? ` under “${parent}”` : ''}${term ? ` in “${term}”` : ''}`,
+    sort && sort.toLowerCase(),
+    `up to ${query.limit ?? 50}`,
+  ]
+    .filter(Boolean)
+    .join(', ')
+}
+function schedule(item: NavTreeItem): string | null {
+  const from = item.show_from && formatDateTime(item.show_from)
+  const until = item.show_until && formatDateTime(item.show_until)
+  if (from && until) return `${from} – ${until}`
+  return from ? `From ${from}` : until ? `Until ${until}` : null
 }
 function warning(item: NavTreeItem): string | null {
   const link = item.link
@@ -110,7 +153,7 @@ function toggle(item: NavTreeItem) {
 const moves = {
   up: (index: number) => shift(editor.tree.value, here(index), -1),
   down: (index: number) => shift(editor.tree.value, here(index), 1),
-  in: (index: number) => nest(editor.tree.value, here(index), menu.max_depth),
+  in: (index: number) => nest(editor.tree.value, here(index), menu.max_depth, menu.kinds),
   out: (index: number) => unnest(editor.tree.value, here(index)),
 }
 const verbs = { up: 'Moved up', down: 'Moved down', in: 'Moved down a level', out: 'Moved up a level' }
@@ -141,7 +184,9 @@ function canDrop(list: HTMLElement, dragged: HTMLElement): boolean {
   if (dragged.contains(list)) return false
   const from = pathOf(editor.tree.value, dragged.dataset.id ?? '')
   const item = from && itemAt(editor.tree.value, from)
-  return !!item && fits(item, parentPath(list).length, menu.max_depth)
+  const parent = parentPath(list)
+  const holder = parent.length ? itemAt(editor.tree.value, parent) : undefined
+  return !!item && fits(item, parent.length, menu.max_depth) && (!holder || holdsChildren(holder, menu.kinds))
 }
 
 const listRef = useTemplateRef<HTMLElement>('list')
@@ -185,7 +230,7 @@ useSortable(listRef, items, {
             <GripVertical class="size-4" />
           </button>
           <button
-            v-if="nests && item.children.length"
+            v-if="holds(item) && item.children.length"
             type="button"
             class="-m-1 shrink-0 rounded-sm p-1 text-muted-foreground outline-none hover:text-foreground focus-visible:focus-outline"
             :aria-expanded="!collapsed.has(item.id)"
@@ -198,7 +243,9 @@ useSortable(listRef, items, {
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span class="truncate text-sm font-medium">{{ item.title }}</span>
+              <Badge v-if="kindLabel(item)" variant="outline">{{ kindLabel(item) }}</Badge>
               <Badge v-if="item.hidden"><EyeOff /> Hidden</Badge>
+              <Badge v-if="schedule(item)" variant="outline"><CalendarClock /> {{ schedule(item) }}</Badge>
               <span v-if="warning(item)" class="inline-flex items-center gap-1 text-xs text-amber-600">
                 <AlertTriangle class="size-3" /> {{ warning(item) }}
               </span>
@@ -207,7 +254,7 @@ useSortable(listRef, items, {
               >
             </div>
             <p class="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
-              <span class="truncate" :class="!item.link && 'italic'">{{ summary(item) }}</span>
+              <span class="truncate" :class="!item.link && item.kind !== 'query' && 'italic'">{{ summary(item) }}</span>
               <template v-if="item.link && item.new_tab"
                 ><ExternalLink class="size-3 shrink-0" aria-hidden="true" /><span class="sr-only"
                   >, opens in a new tab</span
@@ -260,12 +307,15 @@ useSortable(listRef, items, {
             <AlertCircle class="mt-px size-3.5 shrink-0" />{{ message }}
           </li>
         </ul>
-        <div v-if="nests && !collapsed.has(item.id)" class="border-t p-2 pl-8">
+        <p v-if="item.kind === 'query'" class="border-t px-2 py-1.5 pl-8 text-xs text-muted-foreground">
+          The site fills this list with the matching pages.
+        </p>
+        <div v-else-if="holds(item) && !collapsed.has(item.id)" class="border-t p-2 pl-8">
           <NavTree :path="here(index)" :in-hidden="inHidden || item.hidden" />
         </div>
       </div>
     </div>
-    <NavAddButton :label="addLabel" @add="openNew" />
+    <NavAddButton v-if="addable" :label="addLabel" @add="openNew" />
     <p v-if="depth === 0" :id="helpId" class="sr-only">
       Use the arrow keys to move it: up and down to reorder, right to put it under the item above, left to move it out a
       level.

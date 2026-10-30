@@ -6,7 +6,10 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import type { NavEntry } from './types'
 
-const props = defineProps<{ entries: NavEntry[]; disabled?: boolean }>()
+defineOptions({ inheritAttrs: false })
+const props = withDefaults(defineProps<{ entries: NavEntry[]; disabled?: boolean; placeholder?: string }>(), {
+  placeholder: 'Choose…',
+})
 const selectedId = defineModel<number | null>({ default: null })
 
 const open = ref(false)
@@ -27,9 +30,10 @@ function pick(entry: NavEntry) {
         role="combobox"
         :aria-expanded="open"
         :disabled="disabled"
-        class="w-full justify-between font-normal"
+        v-bind="$attrs"
+        class="w-full min-w-0 flex-1 justify-between font-normal"
       >
-        <span class="truncate">{{ selected ? selected.title : 'Choose…' }}</span>
+        <span class="truncate">{{ selected ? selected.title : placeholder }}</span>
         <ChevronsUpDown class="shrink-0 opacity-50" />
       </Button>
     </PopoverTrigger>
