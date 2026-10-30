@@ -125,7 +125,7 @@ module Nibble
         end
       end
 
-def flag(message, path = @checking) = errors.add(:tree, message, path:)
+      def flag(message, path = @checking) = errors.add(:tree, message, path:)
 
       def process_item_fields = self.tree = processed_tree(tree)
 
