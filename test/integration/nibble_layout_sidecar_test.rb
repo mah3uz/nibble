@@ -107,4 +107,19 @@ class NibbleLayoutSidecarTest < ActionDispatch::IntegrationTest
     assert_equal [], menu["Blog"]["children"]
     assert_not menu["About"]["children"].last.key?("children"), "#{history.title} is deeper than a page goes"
   end
+
+  # Layouts that share a header share its queries by naming the layout they build on, not by copying them.
+  test "a layout that extends another gets its queries, params and page includes, and overrides by name" do
+    @themes.join("starter", "layouts").mkpath
+    @themes.join("starter", "layouts", "docs.vue").write("<template><slot /></template>\n")
+    layout("params" => %w[topic], "recent" => { "from" => "entries:posts", "limit" => 1 }, "topics" => { "from" => "terms:topics" }, "page" => { "include" => %w[topics] })
+    write("layouts/docs.yml", { "extends" => "default", "topics" => { "from" => "terms:topics", "limit" => 1 }, "pages" => { "from" => "entries:pages" }, "page" => { "include" => %w[related] } })
+
+    sidecar = Nibble::Views.layout_sidecar("docs")
+    assert_equal %w[pages recent topics], sidecar.queries.keys.sort
+    assert_equal 1, sidecar.queries["topics"]["limit"], "the layout's own query wins over the one it extends"
+    assert_equal %w[topic], sidecar.params
+    assert_equal %w[topics related].sort, sidecar.page_include.sort
+    assert_equal %w[recent topics], Nibble::Views.layout_sidecar("default").queries.keys.sort, "extending doesn't change the base"
+  end
 end

@@ -392,6 +392,16 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     assert_not(messages.any? { |message| message.include?("'menu'") })
   end
 
+  test "a layout can't extend a layout with no sidecar, or one that leads back to it" do
+    sidecar_file("layouts/docs.yml", { "extends" => "missing" })
+    sidecar_file("layouts/a.yml", { "extends" => "b" })
+    sidecar_file("layouts/b.yml", { "extends" => "a" })
+
+    messages = check.problems.map { |item| [ File.basename(item.source), item.message ] }
+    assert_includes messages, [ "docs.yml", "extends 'missing', which has no sidecar (layouts/missing.yml)" ]
+    assert_includes messages, [ "a.yml", "extends 'b', which leads back to itself" ]
+  end
+
   # A site may have named a view query page before the key meant the page; it keeps rendering, with a nudge.
   test "a view query named like a page prop is a warning, not a problem" do
     sidecar_file("views/posts/show.yml", { "page" => { "from" => "entries:posts" } })

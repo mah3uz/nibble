@@ -63,7 +63,7 @@ module Nibble
       end
       blocks << navigation_types
       blocks << form_values
-      blocks << sidecar_props("ViewProps", "views") << sidecar_props("LayoutProps", "layouts") if @config.theme_path
+      blocks << sidecar_props("ViewProps", Views.sidecars(config: @config)) << sidecar_props("LayoutProps", Views.layout_sidecars(config: @config)) if @config.theme_path
       blocks.join("\n")
     end
 
@@ -137,8 +137,8 @@ module Nibble
       choices.empty? ? "string" : choices.join(" | ")
     end
 
-    def sidecar_props(name, folder)
-      sidecars = Views.sidecars(folder:, config: @config).map do |sidecar|
+    def sidecar_props(name, sidecars)
+      sidecars = sidecars.map do |sidecar|
         props = sidecar.queries.map { |prop, raw| "    #{prop}: #{query_type(Query::Spec.parse(raw, schema: @schema))}" }
         props.unshift("    page: #{page_type(sidecar.page_include)}") if sidecar.page_include.any?
         "  '#{sidecar.view}': {\n#{props.join("\n")}\n  }"

@@ -453,7 +453,16 @@ module Nibble
       check_queries(schema, "layouts").each do |sidecar|
         (sidecar.queries.keys & RESERVED_PROPS).each { |prop| problem(sidecar.path, "query '#{prop}' is named like the #{prop} prop every page is given") }
         (sidecar.queries.keys & view_props).each { |prop| problem(sidecar.path, "query '#{prop}' is also a view's query, so one would hide the other") }
+        check_extends(sidecar)
       end
+    end
+
+    def check_extends(sidecar)
+      chain = [ sidecar, *Views.ancestors(sidecar, config: @config) ]
+      name = chain.last.extends or return
+      return problem(sidecar.path, "extends '#{sidecar.extends}', which leads back to itself") if chain.any? { |item| item.view == name }
+
+      problem(sidecar.path, "extends '#{name}', which has no sidecar (layouts/#{name}.yml)")
     end
 
     def check_queries(schema, folder)
