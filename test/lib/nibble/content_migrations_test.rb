@@ -650,4 +650,184 @@ class Nibble::ContentMigrationsTest < ActiveSupport::TestCase
     assert_not_equal Nibble.site_schema_path, site_layer,
                      "the schema layers are configured, so a real site's migrations cannot reach a fixture"
   end
+
+  def links_schema
+    field = ->(handle, type, **config) { { "handle" => handle, "field" => { "type" => type, **config.deep_stringify_keys } } }
+    row = [ field.("link", "link"), field.("label", "text", required: true), field.("icon", "text") ]
+    @nibble_themes.join("records/schema/globals").mkpath
+    @nibble_themes.join("records/schema/globals/site.yml").write({ "title" => "Site", "blueprint" => { "title" => "Site", "tabs" => { "main" => { "sections" => [ { "fields" => [
+      field.("apply_url", "link"), field.("seats", "integer", max: 10), field.("token", "secret"), field.("utility_links", "grid", fields: row),
+      field.("blocks", "replicator", sets: { cta: { fields: row }, note: { fields: [ field.("link", "text") ] } })
+    ] } ] } } } }.to_yaml)
+    Nibble.reset_schema!
+  end
+
+  def set_apply_url(name, from: "/list-your-business", to: "/business")
+    migration(name, { "set_value" => { "global" => "site", "field" => "apply_url", "from" => from, "to" => to } })
+  end
+
+  test "a link a site still holds at its old value is changed in every locale, with the old value kept in the history" do
+    links_schema
+    in_two_locales do
+      english = save_global("site", "en", "apply_url" => "/list-your-business")
+      french = save_global("site", "fr", "apply_url" => "/list-your-business")
+      set_apply_url("2026_10_09_apply_url")
+
+      results = run_migrations
+
+      assert_equal [ [ "set site.apply_url in global #{english.id} (en), global #{french.id} (fr)", 2 ] ], results.first.counts
+      assert_equal [ "/business", "/business" ], [ english.reload.data["apply_url"], french.reload.data["apply_url"] ]
+      assert_equal [ "import", "set site.apply_url" ], [ english.revisions.last.kind, english.revisions.last.message ]
+      assert_equal "/list-your-business", english.revisions.reverse_order.second.data["apply_url"]
+    end
+  end
+
+  test "a value an editor changed since, or never filled, is left alone, because it isn't what the migration expects" do
+    links_schema
+    in_two_locales do
+      edited = save_global("site", "en", "apply_url" => "/join-us")
+      empty = save_global("site", "fr", "seats" => 4)
+      revisions = Nibble::Records::Revision.count
+      set_apply_url("2026_10_09_apply_url")
+
+      assert_equal [ [ "set site.apply_url", 0 ] ], run_migrations.first.counts
+      assert_equal [ "/join-us", nil ], [ edited.reload.data["apply_url"], empty.reload.data["apply_url"] ]
+      assert_equal revisions, Nibble::Records::Revision.count
+    end
+  end
+
+  test "running the same change again changes nothing, since nothing still holds the old value" do
+    links_schema
+    save_global("site", "en", "apply_url" => "/list-your-business")
+    set_apply_url("2026_10_09_apply_url")
+    run_migrations
+    revisions = Nibble::Records::Revision.count
+
+    set_apply_url("2026_10_10_apply_url_again")
+
+    assert_equal [ [ "set site.apply_url", 0 ] ], run_migrations.first.counts
+    assert_equal revisions, Nibble::Records::Revision.count
+  end
+
+  test "from is read the way the field stores its values, and a null from fills only what is empty" do
+    links_schema
+    in_two_locales do
+      counted = save_global("site", "en", "seats" => 4)
+      unset = save_global("site", "fr", "apply_url" => "/join-us")
+      migration("2026_10_09_seats", { "set_value" => { "global" => "site", "field" => "seats", "from" => "4", "to" => 6 } })
+      set_apply_url("2026_10_10_fill", from: nil, to: "/business")
+
+      run_migrations
+
+      assert_equal 6, counted.reload.data["seats"]
+      assert_equal [ "/business", "/join-us" ], [ counted.data["apply_url"], unset.reload.data["apply_url"] ]
+    end
+  end
+
+  test "row matching changes only the listed keys of the matching rows, and keeps their ids and other keys" do
+    links_schema
+    site = save_global("site", "en",
+      "utility_links" => [ { "id" => "row00001", "link" => "/list-your-business", "label" => "List yours", "icon" => "shop" },
+                           { "id" => "row00002", "link" => "/about", "label" => "About" } ],
+      "blocks" => [ { "id" => "set00001", "type" => "cta", "link" => "/list-your-business", "label" => "List yours" },
+                    { "id" => "set00002", "type" => "note", "link" => "/list-your-business" } ])
+    operations = %w[utility_links blocks].map do |field|
+      { "set_value" => { "global" => "site", "field" => field, "where" => { "link" => "/list-your-business" }, "to" => { "link" => "/business", "label" => "Business" } } }
+    end
+    migration("2026_10_11_links", *operations)
+
+    run_migrations
+
+    assert_equal [ { "id" => "row00001", "link" => "/business", "label" => "Business", "icon" => "shop" },
+                   { "id" => "row00002", "link" => "/about", "label" => "About" } ], site.reload.data["utility_links"]
+    assert_equal [ { "id" => "set00001", "type" => "cta", "link" => "/business", "label" => "Business" },
+                   { "id" => "set00002", "type" => "note", "link" => "/list-your-business" } ], site.data["blocks"],
+                 "a block whose set has no label isn't a row the change fits"
+
+    migration("2026_10_12_links_again", *operations)
+    assert_equal [ 0, 0 ], run_migrations.first.counts.map(&:last)
+  end
+
+  test "a collection's entries change in every locale, and a draft changes only while it still holds the old value" do
+    in_two_locales do
+      english = create_entry("articles", { "title" => "One", "summary" => "Old" })
+      french = lifecycle(Nibble::Records::Entry.new(collection: "articles", locale: "fr"), :create, { "title" => "Un", "summary" => "Old" }).record
+      mine = create_entry("articles", { "title" => "Two", "summary" => "Mine" })
+      drafted, edited = %w[Three Four].map do |title|
+        entry = publish_entry(create_entry("articles", { "title" => title, "summary" => "Old" }))
+        lifecycle(entry.reload, :save, { "title" => "#{title} again" })
+        entry.reload
+      end
+      edited.draft.update_columns(data: edited.draft.data.merge("summary" => "Rewritten"))
+      migration("2026_10_13_summary", { "set_value" => { "collection" => "articles", "field" => "summary", "from" => "Old", "to" => "New" } })
+
+      assert_equal 4, run_migrations.first.counts.sole.last
+
+      assert_equal [ "New", "New", "Mine" ], [ english, french, mine ].map { |entry| entry.reload.data["summary"] }
+      assert_equal [ "New", "New" ], [ drafted.reload.data["summary"], drafted.draft.data["summary"] ]
+      assert_equal [ "New", "Rewritten" ], [ edited.reload.data["summary"], edited.draft.data["summary"] ]
+    end
+  end
+
+  test "a taxonomy's terms change too" do
+    @nibble_themes.join("records/schema/blueprints/taxonomies/tags/tag.yml").write({ "title" => "Tag", "tabs" => { "main" => { "sections" => [ { "fields" => [
+      { "handle" => "title", "field" => { "type" => "text", "required" => true } }, { "handle" => "colour", "field" => { "type" => "text" } }
+    ] } ] } } }.to_yaml)
+    Nibble.reset_schema!
+    teal, red = [ %w[Design teal], %w[Colour red] ].map do |title, colour|
+      lifecycle(Nibble::Records::Term.new(taxonomy: "tags"), :create, { "title" => title, "colour" => colour }).record
+    end
+    migration("2026_10_14_colour", { "set_value" => { "taxonomy" => "tags", "field" => "colour", "from" => "teal", "to" => "sea green" } })
+
+    run_migrations
+
+    assert_equal [ "sea green", "red" ], [ teal.reload.data["colour"], red.reload.data["colour"] ]
+  end
+
+  test "a set_value is refused when it couldn't change the value safely" do
+    links_schema
+    site = save_global("site", "en", "apply_url" => "/a")
+    row = { "global" => "site", "field" => "utility_links", "where" => { "link" => "/a" } }
+    refusals = {
+      { "global" => "site", "from" => "/a", "to" => "/b" } => "needs a field",
+      { "global" => "site", "field" => "apply_url", "to" => "/b" } => "needs one of from and where, not both",
+      row.merge("from" => nil, "to" => { "link" => "/b" }) => "needs one of from and where, not both",
+      { "global" => "site", "field" => "apply_url", "from" => "/a" } => "needs a to",
+      { "global" => "site", "field" => "apply_url", "from" => "/a", "to" => "/a" } => "from and to are the same value",
+      { "global" => "site", "field" => "seats", "from" => "5", "to" => 5 } => "from and to are the same value",
+      { "global" => "site", "field" => "apply_url", "where" => { "link" => "/a" }, "to" => { "link" => "/b" } } => "where is only for a grid or replicator field",
+      row.merge("to" => "/b") => "where and to each need a mapping of row keys",
+      row.merge("to" => { "url" => "/b" }) => "url isn't a field of the rows of utility_links",
+      row.merge("where" => { "href" => "/a" }, "to" => { "link" => "/b" }) => "href isn't a field of the rows of utility_links",
+      { "global" => "site", "field" => "blocks", "where" => { "type" => "hero" }, "to" => { "link" => "/b" } } => "blocks has no set 'hero'",
+      { "global" => "site", "field" => "phone", "from" => "/a", "to" => "/b" } => "phone isn't a field of site",
+      { "collection" => "articles", "field" => "title", "from" => "One", "to" => "Two" } => "title isn't a field that can be set",
+      { "global" => "site", "field" => "token", "from" => nil, "to" => "plain" } => "token isn't a field that can be set",
+      { "global" => "site", "field" => "apply_url", "from" => "/a", "to" => "javascript:alert(1)" } => "to isn't a value apply_url accepts",
+      { "global" => "site", "field" => "seats", "from" => 1, "to" => 11 } => "to isn't a value seats accepts",
+      row.merge("to" => { "link" => "javascript:alert(1)" }) => "to isn't a value link accepts",
+      row.merge("to" => { "label" => nil }) => "to isn't a value label accepts"
+    }
+
+    refusals.each do |operation, message|
+      migration("2026_10_30_refused", { "set_value" => operation })
+      assert_match message, assert_raises(Nibble::Error) { run_migrations }.message
+    end
+    assert_equal "/a", site.reload.data["apply_url"]
+  end
+
+  test "a dry run names each record and locale a set_value would change, and changes none of them" do
+    links_schema
+    in_two_locales do
+      english = save_global("site", "en", "apply_url" => "/list-your-business")
+      save_global("site", "fr", "apply_url" => "/join-us")
+      set_apply_url("2026_10_09_apply_url")
+
+      results = run_migrations(dry_run: true)
+
+      assert_equal [ [ "set site.apply_url in global #{english.id} (en)", 1 ] ], results.first.counts
+      assert_equal "/list-your-business", english.reload.data["apply_url"]
+      assert_equal 0, Nibble::Records::ContentMigration.count
+    end
+  end
 end

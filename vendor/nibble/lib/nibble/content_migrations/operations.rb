@@ -1,7 +1,7 @@
 module Nibble
   module ContentMigrations
     module Operations
-      NAMES = %w[rename_field change_blueprint set_default move_to_taxonomy delete_collection rename_collection move_field remove_field
+      NAMES = %w[rename_field change_blueprint set_default set_value move_to_taxonomy delete_collection rename_collection move_field remove_field
                  rename_navigation delete_navigation rename_global delete_global].freeze
       REMOVED = %w[delete_collection rename_collection rename_navigation delete_navigation rename_global delete_global].freeze
       COLUMNS = %w[title slug].freeze
@@ -44,6 +44,58 @@ module Nibble
           data.merge(field => value) if data[field].nil?
         end
       end
+
+      def set_value(args)
+        field = args["field"]
+        message = "set #{label(args)}.#{field}"
+        changed = []
+        count = change_data(args, message) do |data, record|
+          definition = record.blueprint_fields.get(field) or next
+          value = args.key?("where") ? set_rows(definition, data[field], args) : set_whole(definition, data[field], args)
+          next if value == data[field]
+
+          changed << record
+          value.nil? ? data.except(field) : data.merge(field => value)
+        end.last
+        changed = changed.uniq.map { |record| "#{record.record_type} #{record.id} (#{record.locale})" }
+        [ changed.empty? ? message : "#{message} in #{changed.join(', ')}", count ]
+      end
+
+      def set_whole(definition, current, args)
+        return current unless stored_form(definition, current) == stored_form(definition, args["from"])
+
+        stored(definition, definition.fieldtype.carry_row_ids(current, args["to"]))
+      end
+
+      def set_rows(definition, rows, args)
+        return rows unless rows.is_a?(Array)
+
+        where, to = args.values_at("where", "to").map { |keys| keys.to_h.stringify_keys }
+        rows.each_with_index.map do |row, index|
+          fields = row.is_a?(Hash) && row_fields(definition, row["type"], index)
+          next row unless fields && to.keys.all? { |key| fields.has?(key) } && where.all? { |key, value| row_value(fields, key, row[key]) == row_value(fields, key, value) }
+
+          to.reduce(row) { |merged, (key, value)| stored(fields.get(key), value).then { |kept| kept.nil? ? merged.except(key) : merged.merge(key => kept) } }
+        end
+      end
+
+      def row_fields(definition, set, index)
+        return definition.fieldtype.row_fields(index) if definition.type == "grid"
+
+        definition.fieldtype.set_fields(set, index) if definition.fieldtype.sets_config.dig(set.to_s, "fields")
+      end
+
+      def row_value(fields, key, value) = fields.has?(key) ? stored(fields.get(key), value) : value
+
+      def stored(definition, value) = definition.with_value(value).process.value
+
+      # Rows a migration names carry no ids, and ids are bookkeeping rather than content.
+      def stored_form(definition, value)
+        value = stored(definition, value)
+        rows?(definition) && value.is_a?(Array) ? value.map { |row| row.except(Fieldtypes::HasSets::ROW_ID) } : value
+      end
+
+      def rows?(definition) = %w[grid replicator].include?(definition.type)
 
       def change_blueprint(args)
         from, to = args.values_at("from", "to")
@@ -212,6 +264,70 @@ module Nibble
         return "needs a field" if args["field"].blank?
 
         "needs a value" unless args.key?("value")
+      end
+
+      def set_value_problem(args, item)
+        field = args["field"]
+        return "needs a field" if field.blank?
+        return "needs one of from and where, not both" unless args.key?("from") ^ args.key?("where")
+        return "needs a to" unless args.key?("to")
+
+        definitions = scope_fields(args, item).filter_map { |fields| fields.get(field) }
+        return "#{field} isn't a field that can be set" if column?(args) || definitions.any? { |definition| definition.type == "secret" }
+        return "#{field} isn't a field of #{label(args)}" if definitions.empty?
+
+        args.key?("where") ? set_rows_problem(field, definitions, args) : set_whole_problem(definitions, args)
+      end
+
+      def set_whole_problem(definitions, args)
+        return "from and to are the same value" if definitions.any? { |definition| stored_form(definition, args["from"]) == stored_form(definition, args["to"]) }
+
+        definitions.lazy.filter_map { |definition| unfit(definition, args["to"]) }.first
+      end
+
+      def set_rows_problem(field, definitions, args)
+        return "where is only for a grid or replicator field" unless definitions.all? { |definition| rows?(definition) }
+
+        where, to = args.values_at("where", "to")
+        return "where and to each need a mapping of row keys" unless [ where, to ].all? { |keys| keys.is_a?(Hash) && keys.any? }
+
+        where, to = [ where, to ].map(&:stringify_keys)
+        sets = definitions.flat_map { |definition| row_sets(definition, where) }
+        return "#{field} has no set '#{where['type']}'" if sets.empty?
+
+        fitting = sets.select { |fields, keys| (keys + to.keys).all? { |key| fields.has?(key) } }
+        if fitting.empty?
+          keys = sets.flat_map { |_, named| named + to.keys }.uniq
+          missing = keys.find { |key| sets.none? { |fields, _| fields.has?(key) } }
+          return missing ? "#{missing} isn't a field of the rows of #{field}" : "no row of #{field} has all of #{keys.join(', ')}"
+        end
+
+        fitting.lazy.flat_map { |fields, _| to.map { |key, value| unfit(fields.get(key), value) } }.compact.first
+      end
+
+      # A replicator's rows are told apart by their set, which `where` may name as `type`.
+      def row_sets(definition, where)
+        return [ [ definition.fieldtype.row_fields, where.keys ] ] if definition.type == "grid"
+
+        type = definition.fieldtype
+        sets = type.sets_config.select { |set, config| config["fields"] && (!where.key?("type") || set == where["type"].to_s) }.keys
+        sets.map { |set| [ type.set_fields(set), where.keys - [ "type" ] ] }
+      end
+
+      # Judged on the value alone: rules that read the rest of the record have no record to read here.
+      def unfit(definition, value)
+        config = definition.config.except(*Field::CONDITION_KEYS)
+        config = config.except("required") if config["required"].is_a?(Hash)
+        fields = Fields.new(nil, fields: { definition.handle => definition.with(config:) })
+        errors = Validator.new(fields, locale: Nibble.config.default_locale.code).validate(definition.handle => value).errors
+        "to isn't a value #{definition.handle} accepts: #{errors.values.flatten.join(' ')}" if errors.any?
+      end
+
+      def scope_fields(args, item)
+        return [ Records::GlobalSet.new(handle: item.handle).blueprint_fields ] if args["global"]
+
+        model, key = args["collection"] ? [ Records::Entry, :collection ] : [ Records::Term, :taxonomy ]
+        Nibble.schema.blueprints_for(item).map { |blueprint| model.new(key => item.handle, blueprint: blueprint.handle).blueprint_fields }
       end
 
       def move_field_problem(args, _item)
