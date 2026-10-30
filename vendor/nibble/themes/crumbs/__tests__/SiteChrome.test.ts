@@ -209,6 +209,14 @@ describe('crumbs SiteFooter', () => {
     expect(anchor(flat, 'Privacy')).toContain('aria-current="page"')
   })
 
+  it('lists the topics the layout queries, linked as site pages, and nothing when there are none', async () => {
+    const topics = [{ id: 1, type: 'term' as const, title: 'Slow work', uri: '/topics/slow-work', url: null }]
+    const html = await render(SiteFooter, { topics })
+    expect(anchor(html, 'Slow work')).toContain('href="/topics/slow-work"')
+    expect(anchor(html, 'Slow work')).toContain('data-inertia')
+    expect(await render(SiteFooter, { topics: [] })).not.toContain('aria-label="Topics"')
+  })
+
   it('prints no year, which would differ between the server, a cached copy and the browser', async () => {
     expect(await render(SiteFooter)).not.toMatch(/\b20\d\d\b/)
   })

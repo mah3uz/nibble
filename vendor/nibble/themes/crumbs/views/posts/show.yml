@@ -1,3 +1,5 @@
+page:
+  include: [authors]
 related:
   from: entries:posts
   where:

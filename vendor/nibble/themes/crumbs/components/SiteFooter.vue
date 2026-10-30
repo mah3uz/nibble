@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import { Link } from '@inertiajs/vue3'
 import { useGlobals, useNavigation } from '@nibble'
 import { computed } from 'vue'
-import type { SiteGlobals } from '@site/types'
+import type { LayoutProps, SiteGlobals } from '@site/types'
 import MenuLink from './MenuLink.vue'
+
+defineProps<{ topics?: LayoutProps['default']['footer_topics'] }>()
 
 const site = useGlobals<SiteGlobals>('site')
 const footer = useNavigation('footer')
@@ -42,6 +45,14 @@ const columns = computed(() => links.value.some((link) => link.kind === 'heading
           </div>
           <MenuLink v-else :item="link" class="py-3 hover:text-accent" />
         </template>
+      </nav>
+      <nav v-if="topics?.length" aria-label="Topics" class="min-w-36 text-base sm:text-sm">
+        <h2 class="py-3 font-mono text-accent">Topics</h2>
+        <ul role="list">
+          <li v-for="topic in topics" :key="topic.id">
+            <Link :href="topic.uri ?? '#'" class="block py-2 hover:text-accent">{{ topic.title }}</Link>
+          </li>
+        </ul>
       </nav>
       <ul v-if="site.social_links?.length" class="flex gap-4 text-base sm:text-sm" role="list">
         <li v-for="social in site.social_links" :key="social.id">

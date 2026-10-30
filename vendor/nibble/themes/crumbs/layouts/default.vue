@@ -3,6 +3,9 @@ import { Head } from '@inertiajs/vue3'
 import { PreviewBar, SeoHead } from '@nibble'
 import SiteFooter from '../components/SiteFooter.vue'
 import SiteHeader from '../components/SiteHeader.vue'
+import type { LayoutProps } from '@site/types'
+
+defineProps<LayoutProps['default']>()
 </script>
 
 <template>
@@ -24,6 +27,6 @@ import SiteHeader from '../components/SiteHeader.vue'
     <main id="main" tabindex="-1" class="isolate mx-auto max-w-7xl px-5 py-12 sm:px-10 lg:py-16">
       <slot />
     </main>
-    <SiteFooter />
+    <SiteFooter :topics="footer_topics" />
   </div>
 </template>

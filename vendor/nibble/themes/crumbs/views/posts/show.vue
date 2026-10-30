@@ -7,7 +7,7 @@ import type { PostsPost, ViewProps } from '@site/types'
 import PostCard from '../../components/PostCard.vue'
 import { isoDate, useFormatDate } from '../../lib/format'
 
-const props = defineProps<ViewProps['posts/show'] & { page: PostsPost }>()
+const props = defineProps<ViewProps['posts/show'] & { page: Omit<PostsPost, 'authors'> }>()
 
 const formatDate = useFormatDate()
 
@@ -63,6 +63,20 @@ const readingTime = computed(() => {
       <div class="prose dark:prose-invert">
         <Prose :value="page.body" />
       </div>
+      <aside
+        v-if="page.authors?.bio"
+        class="mt-12 border-t border-current/20 pt-8 text-base sm:text-sm"
+        aria-label="About the author"
+      >
+        <p class="font-mono text-accent">Written by</p>
+        <Link :href="page.authors.uri ?? '#'" class="font-display mt-2 block text-3xl uppercase">{{
+          page.authors.title
+        }}</Link>
+        <p class="mt-3 leading-7 text-gray-600 dark:text-gray-300">{{ page.authors.bio }}</p>
+        <a v-if="page.authors.website" :href="page.authors.website" class="mt-3 inline-block underline">{{
+          page.authors.website.replace(/^https?:\/\//, '')
+        }}</a>
+      </aside>
     </div>
     <section v-if="related.length" class="mt-16 border-t border-current/20 pt-10" aria-labelledby="related-heading">
       <h2 id="related-heading" class="font-display mb-8 text-4xl uppercase">More from this batch</h2>
