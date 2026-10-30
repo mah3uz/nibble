@@ -140,7 +140,7 @@ module Nibble
     def sidecar_props(name, sidecars)
       sidecars = sidecars.map do |sidecar|
         props = sidecar.queries.map { |prop, raw| "    #{prop}: #{query_type(Query::Spec.parse(raw, schema: @schema))}" }
-        props.unshift("    page: #{page_type(sidecar.page_include)}") if sidecar.page_include.any?
+        props.unshift("    page: #{page_type(sidecar.page_include, rendered_by(name, sidecar.view))}") if sidecar.page_include.any?
         "  '#{sidecar.view}': {\n#{props.join("\n")}\n  }"
       end
       "export interface #{name} {\n#{sidecars.join("\n")}\n}\n"
@@ -161,16 +161,30 @@ module Nibble
     def child_type(spec) = spec.fields ? picked(record_type(spec), spec.fields) : record_type(spec)
 
     # Only the included fields: a view already types its page and joins this to it.
-    def page_type(include)
-      fields = (@schema.collections + @schema.taxonomies).flat_map { |parent| @schema.blueprints_for(parent) }
+    def page_type(include, parents)
+      fields = parents.flat_map { |parent| @schema.blueprints_for(parent) }
         .flat_map { |item| Blueprint.new(item, schema: @schema).fields.all.values }
       members = include.filter_map do |handle|
-        next "children: #{union(@schema.collections.select { |item| item['structure'].is_a?(Hash) })}[]" if handle == "children"
+        if handle == "children"
+          structured = parents.select { |item| item["structure"].is_a?(Hash) }
+          next "children: #{structured.empty? ? 'never' : union(structured)}[]"
+        end
 
         types = fields.select { |field| field.handle == handle && field.fieldtype_class&.relationship }.map { |field| included_type(field) }.uniq
         "#{handle}: #{types.join(' | ')}" if types.any?
       end
       object_type(members)
+    end
+
+    # The collections and taxonomies whose records a view or layout renders; all of them when none names it.
+    def rendered_by(props, name)
+      items = @schema.collections + @schema.taxonomies
+      found = items.select do |item|
+        if props == "LayoutProps" then (item["layout"] || "default") == name
+        else item["template"] == name || @schema.blueprints_for(item).any? { |blueprint| blueprint["template"] == name }
+        end
+      end
+      found.empty? ? items : found
     end
 
     # A record has no parent key: the presenter adds one only when asked, so it can't be picked from the record.

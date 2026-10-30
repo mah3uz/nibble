@@ -33,17 +33,20 @@ class Nibble::TypeGeneratorTest < ActiveSupport::TestCase
     end
   end
 
-  # Inertia hands a layout the page's props, so a layout types them as a view does, with only the page fields it includes.
+  # Inertia hands a layout the page's props, so a layout types them as a view does, with only the page fields it includes,
+  # from the collections the view or layout renders.
   test "layout sidecars become LayoutProps, and page.include types just the included fields" do
     with_copied_theme do |types, _|
       layouts = types.dirname.join("starter/layouts")
       layouts.mkpath
       layouts.join("default.yml").write({ "page" => { "include" => %w[related] }, "footer" => { "from" => "terms:topics", "fields" => %w[title] } }.to_yaml)
       types.dirname.join("starter/views/posts/show.yml").write({ "page" => { "include" => %w[topics children] } }.to_yaml)
+      types.dirname.join("starter/views/docs/show.yml").write({ "page" => { "include" => %w[children] } }.to_yaml)
       Nibble.reset_schema!
 
       assert_match "export interface LayoutProps {\n  'default': {\n    page: { related: (PostsPost)[] }\n    footer: Pick<(TopicsTopic), 'title' | 'id' | 'type' | 'uri' | 'url'>[]\n  }\n}", generated
-      assert_match "'posts/show': {\n    page: { topics: (TopicsTopic)[]; children: (DocsDoc | PagesPage)[] }\n  }", generated
+      assert_match "'posts/show': {\n    page: { topics: (TopicsTopic)[]; children: never[] }\n  }", generated, "posts isn't structured, so its pages have no children"
+      assert_match "'docs/show': {\n    page: { children: (DocsDoc)[] }\n  }", generated, "only docs renders with docs/show, though pages is structured too"
     end
   end
 
