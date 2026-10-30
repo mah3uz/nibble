@@ -148,13 +148,21 @@ A menu is a list of items, and `useNavigation('footer')` returns it:
 
 | Key | Value |
 |---|---|
-| `type` | `url` for an address someone typed, otherwise `entry` or `term` |
-| `id` | the record's id, for a record link |
+| `kind` | `link`, or `heading` in a menu that allows headings |
+| `type` | what a link points at: `url` for an address someone typed, `entry`, `term`, `global` or `asset`; `null` for a heading |
+| `id` | the record's id, for an entry, term or asset link |
 | `title` | the label; for a record link, its title unless the menu overrode it |
-| `url` | the address as typed for `url`; the record's path for a record link |
+| `url` | the address as typed for `url`; the record's path, the global field's value or the file's address otherwise; `null` for a heading |
+| `new_tab` | `true` when the item should open in a new tab |
+| `current` | `true` when the item's address is this page |
+| `in_trail` | `true` when the item is current, a child is in the trail, or this page is under the item's path |
+| `fields` | the item's own fields, from the menu's `item_fields`, shaped as in section 3 |
+| `entry` | the linked entry's `entry_fields`, shaped as in section 3, or `null` |
 | `children` | the same items, nested |
 
-A link to a record that no longer exists is left out of the menu.
+A link to a record that no longer exists, or to a global field holding no safe address, is left out of the menu, and
+so is a hidden item with everything under it. A menu built from files gives each page's id as `entry`, and no `type`.
+See [Globals and navigation](../modelling/globals-and-navigation.md#3-reading-them-in-a-theme).
 
 ## 6. The generated types
 
