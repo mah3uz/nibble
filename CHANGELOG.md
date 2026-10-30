@@ -12,6 +12,13 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+> **Menus that do more, and blocks you add instead of copy.** Menus gain headings, fields and kinds of their own,
+> lists that fill themselves and show dates; a theme adds blocks to Nibble's standard ones; and crumbs, the theme
+> every site starts from, uses all of it.
+
+This release is mostly menus, blocks and the default theme. It adds no database migrations; its content migrations
+for menus and global sets run only when a site writes them.
+
 ### What's new
 
 - **`bin/rails nibble:schema:types --without-site`** writes a theme's types from Nibble's schema and the theme's
