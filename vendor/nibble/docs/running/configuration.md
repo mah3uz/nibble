@@ -204,8 +204,8 @@ The installer created `config/credentials.yml.enc`, which is committed, and `con
 Some settings are nobody's business but the people using the site, and asking for a deploy to change them would be
 absurd:
 
-- **Globals → Integrations** — CAPTCHA keys, who mail comes from, analytics IDs, code for the page's head and body.
-- **Globals → SEO** — the title template and the defaults for search results and share cards.
+- **Site settings → Integrations** — CAPTCHA keys, who mail comes from, analytics IDs, code for the page's head and body.
+- **Site settings → SEO** — the title template and the defaults for search results and share cards.
 - **Updates** — whether Nibble checks for new releases.
 
 They take effect as soon as they are saved.

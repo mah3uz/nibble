@@ -75,7 +75,7 @@ spam:
 ```
 
 Then choose the provider — Cloudflare Turnstile or Google reCAPTCHA — and paste its keys under
-**Globals → Integrations**. Google reCAPTCHA v3 scores each visitor from 0.0 (likely a bot) to 1.0, and a submission scoring below the
+**Site settings → Integrations**. Google reCAPTCHA v3 scores each visitor from 0.0 (likely a bot) to 1.0, and a submission scoring below the
 **Minimum score** there, 0.5 unless set, is refused. The theme's form component renders the widget from the form's definition. Nibble checks
 each token with the provider's own verification address, which `outbound.allowed_hosts` doesn't need to list.
 

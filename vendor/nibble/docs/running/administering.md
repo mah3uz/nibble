@@ -33,8 +33,8 @@ tokens, under **API tokens**; give each the narrowest scope and revoke ones you 
 
 | Where | What |
 |---|---|
-| **Globals → Integrations** | CAPTCHA keys, who mail comes from, analytics IDs, code for the page's head and body |
-| **Globals → SEO** | the title template, and defaults for search results and share cards |
+| **Site settings → Integrations** | CAPTCHA keys, who mail comes from, analytics IDs, code for the page's head and body |
+| **Site settings → SEO** | the title template, and defaults for search results and share cards |
 | **Updates** | whether Nibble checks for new releases |
 | **Redirects** | where old addresses should go |
 | **Webhooks** | telling another application when content changes: [Webhooks](webhooks.md) |

@@ -62,7 +62,7 @@ again** on a submission sends them again for anyone who can edit the form. `bin/
 reference to a field or global that doesn't exist.
 
 > [!IMPORTANT]
-> The address mail is sent *from* is a site setting: **Globals → Integrations**. Set it, and the SMTP settings in
+> The address mail is sent *from* is a site setting: **Site settings → Integrations**. Set it, and the SMTP settings in
 > [configuration](../running/configuration.md#6-environment-and-credentials), before relying on email.
 
 `cp_notify: true` also notifies Control Plane users who can see the form's submissions.

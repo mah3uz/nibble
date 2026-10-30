@@ -93,7 +93,7 @@ An API connection is its own file in `site/schema/apis/<handle>.yml`:
 | `spam.rate_limit` | map | | accepted submissions per address | [Spam](form-spam-and-privacy.md#1-spam) |
 | `spam.rate_limit.requests` | whole number | `5` | submissions allowed in the window | [Spam](form-spam-and-privacy.md#1-spam) |
 | `spam.rate_limit.per_minutes` | whole number | `1` | the window, in minutes | [Spam](form-spam-and-privacy.md#1-spam) |
-| `spam.captcha` | true / false | `false` | require a CAPTCHA; keys are set under **Globals → Integrations** | [Spam](form-spam-and-privacy.md#1-spam) |
+| `spam.captcha` | true / false | `false` | require a CAPTCHA; keys are set under **Site settings → Integrations** | [Spam](form-spam-and-privacy.md#1-spam) |
 | `spam.min_seconds` | whole number | off | a submission sent sooner than this after the form was shown is spam | [Spam](form-spam-and-privacy.md#1-spam) |
 | `spam.max_links` | whole number | off | more links than this in the text fields is spam; `0` allows none | [Spam](form-spam-and-privacy.md#1-spam) |
 | `spam.retention_days` | whole number | `30` | delete spam after this many days | [Spam](form-spam-and-privacy.md#1-spam) |

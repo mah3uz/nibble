@@ -48,7 +48,7 @@ tags, structured data and verification tags from the HTML Nibble sends. See
 
 ## 2. Site-wide defaults
 
-**Globals → SEO** holds the defaults:
+**Site settings → SEO** holds the defaults:
 
 | Field | Tidewater's |
 |---|---|

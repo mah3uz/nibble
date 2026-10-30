@@ -27,8 +27,8 @@ After reading this guide, you will know:
 | **Form submission** | a form with a `notify` list is submitted | the addresses in [`notify`](../modelling/form-delivery.md#1-emailing-submissions) |
 | **Notification** | a review is requested, an entry is approved or sent back, someone is mentioned, a form is submitted, a webhook is turned off | the person it is for, unless they turned email notifications off |
 
-Every email comes from the **Sender name** and **Sender address** in **Globals → Integrations**, and names the site with
-the **Name** in **Globals → Site**.
+Every email comes from the **Sender name** and **Sender address** in **Site settings → Integrations**, and names the site with
+the **Name** in **Site settings → Site**.
 
 ## 2. Your own design
 
@@ -84,7 +84,7 @@ The emails themselves are plain HTML, so the layout's `<style>` decides how they
 | `blockquote` | a comment someone left |
 | `table`, `th`, `td` | a form submission's fields and values |
 
-`site_name` is the **Name** from **Globals → Site**, or "the site" until one is set.
+`site_name` is the **Name** from **Site settings → Site**, or "the site" until one is set.
 
 > [!TIP]
 > Email clients are not browsers. Lay the page out with tables, put the styles that matter most inline, and leave out
