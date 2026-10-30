@@ -156,6 +156,7 @@ class Nibble::ContentMigrationsTest < ActiveSupport::TestCase
     Nibble::Records::Draft.create!(record: doc, data: { "title" => "Unpublished" })
     Nibble::Records::Relation.create!(source: doc, target_type: "asset", target_id: 1, field: "image", locale: "en")
     Nibble::Records::Relation.create!(source: kept, target_type: "entry", target_id: doc.id, field: "related", locale: "en")
+    role = Nibble::Role.create!(handle: "specific", title: "Specific", abilities: %w[entries.docs.edit entries.*.view])
     @nibble_themes.join("records/schema/collections/docs.yml").delete
     FileUtils.rm_rf(@nibble_themes.join("records/schema/blueprints/collections/docs"))
     Nibble.reset_schema!
@@ -170,6 +171,7 @@ class Nibble::ContentMigrationsTest < ActiveSupport::TestCase
     assert_empty Nibble::Records::Relation.where(target_type: "entry", target_id: doc.id),
                  "a relation left pointing at a deleted entry would resurface under a reused id"
     assert_equal "Still here", kept.reload.title, "only the removed collection's records go"
+    assert_equal %w[entries.*.view], role.reload.abilities, "a collection given the handle later starts with nobody holding it"
   end
 
   # The handle is a column on every record, so a site that renames a collection in its schema strands all of

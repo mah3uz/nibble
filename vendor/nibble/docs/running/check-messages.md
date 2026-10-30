@@ -97,9 +97,11 @@ These run against the database, so a build with no database does not show them.
 | `<scope>: <field> was removed and N records still hold it` | you took a field out of a blueprint while entries still store a value for it | add a [content migration](../modelling/changing-schema.md) to move or delete the value, or put the field back; `--allow-data-loss` accepts losing it |
 | `<scope>: <field> changed from A to B and N records hold a value` | the field's type changed under stored values | write a migration to convert them |
 | `blueprint '…' was removed and N records still use it` | as above, for a whole blueprint | add a `change_blueprint` migration |
-| `collection '…' was removed and N records still belong to it` | a collection left the schema with entries in it | restore it, or add a migration that deletes or renames it |
+| `collection '…' was removed and N records still belong to it` | a collection left the schema with entries in it | restore it, or add a `rename_collection` or `delete_collection` migration |
+| `global set '…' was removed and N records still belong to it` | a global set left the schema with values saved in it | restore it, or add a `rename_global` or `delete_global` migration |
+| `navigation '…' has a menu saved in N locales but isn't in the schema …` (warning) | a navigation left the schema with its menus still stored; nothing shows them | restore it, or add a `rename_navigation` or `delete_navigation` migration |
 | `site/schema/migrations: …` | a pending content migration is invalid | fix the migration file named |
-| `role '…': ability '…' doesn't match anything in this site's schema` | a custom role grants an ability on a collection or form that no longer exists | edit the role under **Roles** |
+| `role '…': ability '…' doesn't match anything in this site's schema` | a custom role grants an ability on a collection or form that no longer exists | edit the role under **Roles**; a pending migration that renames or deletes the handle answers it |
 | `collection '…' has N entries not at the address the route gives; bin/rails nibble:prepare moves them` (warning) | a route changed and the saved addresses are stale | run `nibble:prepare` (a deploy does) |
 | `N entries have the required toggle '…' switched off, so they can't be published until …` (warning) | a toggle marked required is off on existing records | switch it on or make the field optional |
 | `N entries (…) have a value in the email field '…' that fails its format check …` (warning) | stored values that no longer pass the field's format | correct them in the entries named |

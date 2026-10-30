@@ -27,7 +27,7 @@ After reading this guide, you will know:
 | add a field, a blueprint, a collection | nothing; the field is empty until someone fills it, even if it has a `default` — [`set_default`](#42-set_default) fills it |
 | change a collection's or taxonomy's `route` | `nibble:prepare` moves every record to its new address, with a 301 from each live one |
 | make a field required | existing entries are fine until next saved, when they must fill it |
-| rename a field or a collection | the old values are stranded under the old name — **migrate** |
+| rename a field, a collection, a navigation or a global set | the old values are stranded under the old name — **migrate** |
 | change a field's type | values stored as the old type may not fit — **check first** |
 | remove a field, a set or a collection | the values are orphaned — **migrate them away, or accept losing them** |
 
@@ -153,6 +153,14 @@ entry points at it through the `to` field. The text field is removed.
 Moves every entry to the collection's new handle. Rename the collection's file first: the operation refuses while
 the old handle is still in the schema, or before the new one is. **URLs are left alone** — a rename is not a move.
 
+Permissions move too. A role or a connected app that could edit `stories` can edit `customers`, approve its entries
+if it could approve them before, and the collection keeps its row under **Agent access**. Permissions that name every
+collection, such as `entries.*`, already cover the new handle and are left alone.
+
+When the new handle already has entries — two collections merged into one — the old permissions are dropped instead,
+because carried over they would reach the entries that were there first. The migration's report says so; tick what
+each role should have under **Roles**.
+
 ### 4.6 `delete_collection`
 
 ```yaml
@@ -160,7 +168,8 @@ the old handle is still in the schema, or before the new one is. **URLs are left
 ```
 
 Deletes every entry of a collection that is no longer in the schema, with its drafts, revisions and
-relationships.
+relationships, and takes the collection's permissions out of every role and connected app, so a collection given the
+same handle later starts with nobody holding them.
 
 > [!CAUTION]
 > `delete_collection` removes entries outright — there is no trash to restore them from, because there is no
@@ -207,6 +216,38 @@ Removes a field's stored values once it is no longer in the schema, so `nibble:c
 
 Each record it changes gets a revision, and the one before still holds the value. A draft's value goes too, and a
 draft has no revisions.
+
+### 4.9 `rename_navigation` and `rename_global`
+
+```yaml
+- rename_navigation: { from: footer, to: site_footer }
+- rename_global: { from: contact, to: company }
+```
+
+Moves a menu, or a global set, to its new handle in every locale. Rename its file first: each refuses while the old
+handle is still in the schema, or before the new one is. The records keep their ids, so their revisions and drafts
+come with them, and so do the permissions of roles and connected apps: whoever could edit `footer` can edit
+`site_footer`.
+
+A locale where the new handle already has a menu or values is left as it is, under the old handle, and named in the
+report:
+
+```
+rename navigation footer to site_footer, leaving fr where site_footer already has one: 1
+```
+
+The permissions are dropped rather than carried in that case, as for a merged collection.
+
+### 4.10 `delete_navigation` and `delete_global`
+
+```yaml
+- delete_navigation: { navigation: footer }
+- delete_global: { global: contact }
+```
+
+Deletes a menu, or a global set, that is no longer in the schema, in every locale, with its drafts, revisions and
+relationships, and takes its permissions out of every role and connected app. Each refuses while the handle is still
+in the schema. Like `delete_collection`, there is no trash to restore from.
 
 ## 5. Changing a field's type
 
