@@ -133,7 +133,10 @@ module Nibble
     end
 
     def option_union(field)
-      choices = field.fieldtype.options.map { |option| "'#{option['value'].to_s.gsub(/['\\]/) { |char| "\\#{char}" }}'" }
+      source = Options.for(field)
+      return "string" if source.content?
+
+      choices = source.options.map { |option| "'#{option['value'].to_s.gsub(/['\\]/) { |char| "\\#{char}" }}'" }
       choices.empty? ? "string" : choices.join(" | ")
     end
 

@@ -1,5 +1,5 @@
 export { useGlobals, useLocale, useNavigation, useSite } from './composables'
-export { useNibbleForm } from './useNibbleForm'
+export { optionsFor, useNibbleForm } from './useNibbleForm'
 export { default as Blocks } from './Blocks.vue'
 export { default as Image } from './Image.vue'
 export { default as Pagination } from './Pagination.vue'

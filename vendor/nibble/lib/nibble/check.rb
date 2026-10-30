@@ -31,7 +31,7 @@ module Nibble
     def run
       schema = capture("schema") { Schema.load(@config) } or return self
 
-      schema.fieldsets.each { |item| capture(item.path) { check_fields(Fields.new(item["fields"], schema:, source: item.path, key: "fields"), item.path, calculations: true) } }
+      schema.fieldsets.each { |item| capture(item.path) { check_fields(Fields.new(item["fields"], schema:, source: item.path, key: "fields"), item.path, form: true) } }
       (schema.collections + schema.taxonomies).each do |parent|
         schema.blueprints_for(parent).each do |item|
           capture(item.path) do
@@ -47,7 +47,7 @@ module Nibble
       schema.forms.each do |item|
         capture(item.path) do
           form = Forms::Form.new(item:)
-          check_fields(form.fields(schema:), item.path, calculations: true, unique: form.unique.map(&:to_s))
+          check_fields(form.fields(schema:), item.path, form: true, unique: form.unique.map(&:to_s))
           Forms.problems(form, schema:).each { |message| problem(item.path, message) }
           Forms.locale_problems(form, schema:, locales: @config.locales.map(&:code)).each { |message| problem(item.path, message) }
           Forms.warnings(form).each { |message| @warnings << Problem.new(source: item.path.to_s.delete_prefix("#{Rails.root}/"), message:, level: :warning) }
@@ -78,7 +78,7 @@ module Nibble
       nil
     end
 
-    def check_fields(fields, source, calculations: false, unique: [])
+    def check_fields(fields, source, form: false, unique: [])
       fields.each do |field|
         rule_names = (field.validation_rules + Validation.explode(field.fieldtype.rules)).map { |rule| rule.to_s.split(":", 2).first }
         rule_names.each do |name|
@@ -88,7 +88,8 @@ module Nibble
         check_messages(field, rule_names, source, unique:)
         check_required_condition(field, fields, source)
         problem(source, "field '#{field.path}' is a note, which only displays text: it can't be required, hidden, encrypted or have a default") if note_with_storage_options?(field)
-        problem(source, "field '#{field.path}' is a calculation, which only a form can have") if field.type == Forms::Calculations::TYPE && !calculations
+        problem(source, "field '#{field.path}' is a calculation, which only a form can have") if field.type == Forms::Calculations::TYPE && !form
+        problem(source, "field '#{field.path}' takes its options from content, which only a form's field can") if Options.content?(field.get("options")) && !form
         if field.computed_default? && !Defaults.registered?(name = field.get("default").delete_prefix(Field::COMPUTED_DEFAULT_PREFIX))
           problem(source, "field '#{field.path}' has computed default '#{name}', which isn't registered")
         end
@@ -96,7 +97,7 @@ module Nibble
           @warnings << Problem.new(source:, level: :warning,
             message: "field '#{field.path}' is a #{field.type}, which apps can't be told how to write: give the fieldtype a json_schema")
         end
-        field.fieldtype.nested_fields.each { |nested| check_fields(nested, source, calculations:) }
+        field.fieldtype.nested_fields.each { |nested| check_fields(nested, source, form:) }
       end
     end
 
@@ -111,6 +112,7 @@ module Nibble
       rule_names += [ "required" ] if field.get("required") == true || field.required_condition
       rule_names += [ "step" ] if field.type == "integer" && field.get("step")
       rule_names += [ "unique" ] if unique.include?(field.handle)
+      rule_names += [ "in" ] if Options.content?(field.get("options"))
       locales = @config.locales.map(&:code)
       messages.each do |rule, message|
         problem(source, "field '#{field.path}' has a message for '#{rule}', which it has no rule for") unless rule_names.include?(rule)

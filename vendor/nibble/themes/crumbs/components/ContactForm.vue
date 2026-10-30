@@ -75,7 +75,7 @@ const joined = (field: NibbleFormField) => field.type === 'button_group' || swat
 const choices = (field: NibbleFormField) =>
   swatchesOnly(field)
     ? (field.swatches ?? []).map((swatch) => ({ value: swatch, label: swatch }))
-    : (field.options ?? [])
+    : contact.options(field)
 
 function bound(field: NibbleFormField, date: string | undefined, time: string) {
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return undefined
@@ -209,7 +209,11 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
               </label>
             </div>
             <div v-else :class="field.inline ? 'flex flex-wrap gap-x-6 gap-y-3' : 'grid gap-3'">
-              <label v-for="(option, optionIndex) in field.options" :key="option.value" class="flex items-center gap-3">
+              <label
+                v-for="(option, optionIndex) in contact.options(field)"
+                :key="option.value"
+                class="flex items-center gap-3"
+              >
                 <input
                   :id="optionId(field, optionIndex)"
                   v-model="contact.values[field.handle]"
@@ -329,7 +333,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
                 {{ field.placeholder || t('choose') }}
               </option>
               <option
-                v-for="option in field.options"
+                v-for="option in contact.options(field)"
                 :key="option.value"
                 :value="option.value"
                 :selected="chosen(field, option.value)"

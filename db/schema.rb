@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_29_170200) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_31_100000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -223,6 +223,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_170200) do
     t.datetime "handled_at"
     t.integer "handled_by_id"
     t.string "ip_hash"
+    t.json "labels"
     t.string "locale"
     t.datetime "read_at"
     t.string "status", default: "received", null: false

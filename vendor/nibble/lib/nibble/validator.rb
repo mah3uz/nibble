@@ -4,8 +4,8 @@ module Nibble
       def valid? = errors.empty?
     end
 
-    Entry = Data.define(:rules, :attribute, :messages, :toggle) do
-      def initialize(rules:, attribute:, messages: {}, toggle: false) = super
+    Entry = Data.define(:rules, :attribute, :messages, :toggle, :problem) do
+      def initialize(rules:, attribute:, messages: {}, toggle: false, problem: nil) = super
     end
 
     ACCEPTED = [ "yes", "on", "1", 1, true, "true" ].freeze
@@ -21,8 +21,10 @@ module Nibble
 
         list = [ *("required" if field.required_for?(values, root_values:, path:)), *field.validation_rules, *Validation.explode(field.fieldtype.rules) ]
         parsed = list.uniq.map { |rule| Validation.parse(rule, prefix:, replacements:) }
-        rules[path] = Entry.new(rules: parsed, attribute: field.display(locale), messages: field.get("messages", {}), toggle: field.type == "toggle")
-        field.with_value(values[field.handle]).fieldtype.extra_rules(root_values:, prefix: "#{path}.", replacements:).each do |nested_path, entry|
+        fieldtype = field.with_value(values[field.handle]).fieldtype
+        problem = ->(value, root) { fieldtype.value_problem(value, root_values: root, fields:, locale:) }
+        rules[path] = Entry.new(rules: parsed, attribute: field.display(locale), messages: field.get("messages", {}), toggle: field.type == "toggle", problem:)
+        fieldtype.extra_rules(root_values:, prefix: "#{path}.", replacements:).each do |nested_path, entry|
           rules[nested_path] = entry
         end
       end
@@ -62,6 +64,8 @@ module Nibble
         messages << message
         break if implicit?(rule.name)
       end
+      key = entry.problem&.call(value, root) if messages.empty? && !blank?(value)
+      messages << Validation.message(key, attribute: entry.attribute, override: entry.messages[key], locale: @locale) if key
       messages
     end
 

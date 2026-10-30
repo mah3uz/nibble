@@ -36,7 +36,7 @@ module Nibble
       def self.json(submissions, partials = [])
         (submissions.to_a + partials.to_a).map do |submission|
           { form: submission.form, id: submission.id, created_at: submission.created_at.utc.iso8601, status: submission.status,
-            values: submission.data }
+            values: submission.data, labels: (submission.labels if submission.respond_to?(:labels)).presence }.compact
         end
       end
 

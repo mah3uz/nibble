@@ -169,8 +169,15 @@ module Nibble
       end
 
       def receive(data, **attributes)
-        Records::FormSubmission.receive!(data, encrypt: @form.encrypted_handles, form: @form.handle, ip_hash: @ip_hash, user_agent: @user_agent,
-          locale: @locale, **attributes)
+        Records::FormSubmission.receive!(data, encrypt: @form.encrypted_handles, labels: labels(data), form: @form.handle, ip_hash: @ip_hash,
+          user_agent: @user_agent, locale: @locale, **attributes)
+      end
+
+      def labels(data)
+        @form.fields.all.values.select { |field| Definition::OPTION_TYPES.include?(field.type) }.to_h do |field|
+          options = field.fieldtype.options(@locale).to_h { |option| [ option["value"].to_s, option["label"].to_s ] }
+          [ field.handle, Array.wrap(data[field.handle]).map(&:to_s).select { |value| options.key?(value) }.index_with { |value| options[value] } ]
+        end.compact_blank
       end
 
       def plain?(value) = Array.wrap(value).all? { |item| SPAM_VALUE.any? { |type| item.is_a?(type) } }
@@ -236,7 +243,7 @@ module Nibble
         Records::FormSubmission.transaction do
           next false if Records::FormSubmission.where(id: submission.id, status: "spam").update_all(status: "received").zero?
 
-          submission.reload.keep!(data, encrypt: @form.encrypted_handles, deliveries:)
+          submission.reload.keep!(data, encrypt: @form.encrypted_handles, labels: labels(data), deliveries:)
           submission.unique_keys.create!(unique_keys(data))
           announce(submission)
           Records::AuditEntry.create!(action: "form.not_spam", actor_type: "user", actor_id: user.id, subject_type: submission.record_type,

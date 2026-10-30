@@ -98,7 +98,7 @@ module Nibble
         when "status" then record.status
         else
           field = fields.find { |item| item.handle == handle }
-          field && Forms.display_value(field, record.data[handle])
+          field && Forms.display_value(field, record.data[handle], labels: record.labels[handle])
         end
       end
 

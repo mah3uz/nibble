@@ -3,17 +3,8 @@ module Nibble
     module HasSelectOptions
       def multiple? = config("multiple") == true
 
-      def options(locale = nil)
-        raw = config("options") || []
-        pairs = case raw
-        when Hash then raw.map { |value, label| [ value, label ] }
-        else
-          raw.map do |item|
-            item.is_a?(Hash) ? [ item["key"] || item["value"], item["label"] || item["value"] ] : [ item, item ]
-          end
-        end
-        pairs.map { |value, label| { "value" => value, "label" => label.nil? ? value : Localized.resolve(label, locale) } }
-      end
+      def options_source = field ? field.options_source : Options::Static.new(nil)
+      def options(locale = nil) = options_source.options(locale)
 
       def preload = { "options" => options }
 
@@ -42,9 +33,14 @@ module Nibble
       end
 
       def rules
-        return [] if config("taggable") == true || options.empty?
+        return [] if config("taggable") == true || options_source.content? || options.empty?
 
         [ "in:#{options.map { |option| option['value'].to_s }.join(',')}" ]
+      end
+
+      def value_problem(value, root_values:, fields: nil, locale: nil)
+        source = Options.for(field, fields)
+        source.problem(value, root_values, locale) if source.content?
       end
 
       def search_text(value) = Array.wrap(augment(value)).filter_map { |item| item["label"]&.to_s }.join(" ").presence

@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/vue3'
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { passes } from '../nibble-cp/conditions'
 import { useLocale } from './composables'
 import { calculate, formatCalculation } from './formula'
@@ -85,6 +85,29 @@ export function isFieldRequired(field: NibbleFormField, values: Record<string, u
   return required.show ? passed : !passed
 }
 
+export function optionsFor(field: NibbleFormField, values: Record<string, unknown>) {
+  const options = field.options ?? []
+  if (!field.parent) return options
+  const chosen = new Set(
+    [values[field.parent]]
+      .flat()
+      .filter((value) => value !== '' && value != null)
+      .map(String),
+  )
+  return options.filter((option) => option.parents?.some((parent) => chosen.has(String(parent))))
+}
+
+function prune(fields: NibbleFormField[], state: Record<string, NibbleFormValue>) {
+  fields.forEach((field) => {
+    const allowed = new Set(optionsFor(field, state).map((option) => String(option.value)))
+    const value = state[field.handle]
+    if (Array.isArray(value)) {
+      const kept = (value as (string | number)[]).filter((item) => allowed.has(String(item)))
+      if (kept.length !== value.length) state[field.handle] = kept
+    } else if (value !== '' && value != null && !allowed.has(String(value))) state[field.handle] = ''
+  })
+}
+
 export function fileLimits(field: NibbleFormField) {
   if (field.type !== 'files') return null
   const several = (field.max_files ?? 1) > 1
@@ -127,6 +150,13 @@ export function useNibbleForm<Values extends Record<string, unknown> = Record<st
       definition.fields.map((field) => [field.handle, refilled(field, definition.result) ?? initialValue(field)]),
     ),
   )
+  const children = definition.fields.filter((field) => field.parent)
+  if (children.length)
+    watch(
+      () => children.map((field) => state[field.parent!]),
+      () => prune(children, state),
+      { deep: true, flush: 'sync' },
+    )
   const trap = ref('')
   const errors = ref<Record<string, string>>(
     definition.result?.status === 'invalid' ? (definition.result.errors ?? {}) : {},
@@ -153,6 +183,8 @@ export function useNibbleForm<Values extends Record<string, unknown> = Record<st
     return many(field) ? `${field.handle}[]` : field.handle
   }
 
+  // Without JavaScript nothing narrows the list, so every option is drawn and the server checks the pairing.
+  const options = (field: NibbleFormField) => (enhanced.value ? optionsFor(field, state) : (field.options ?? []))
   const isVisible = (field: NibbleFormField) => isFieldVisible(field, state)
   const isRequired = (field: NibbleFormField) => isFieldRequired(field, state)
   const calculations = computed(() => calculate(definition.fields, state, isVisible))
@@ -430,6 +462,7 @@ export function useNibbleForm<Values extends Record<string, unknown> = Record<st
     setFiles,
     submit,
     reset,
+    options,
     isVisible,
     isRequired,
     calculated,

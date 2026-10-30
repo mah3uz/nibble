@@ -86,6 +86,8 @@ module Nibble
     def pre_process_validatable(value) = value
     def rules = []
     def extra_rules(root_values: nil, prefix: "", replacements: {}) = {}
+    # The key of the field's message for a value no rule string can refuse, such as one that depends on content; nil when it passes.
+    def value_problem(_value, root_values:, fields: nil, locale: nil) = nil
     def process(value) = value
     # What a cleared field holds once processed. An empty value is stored as no value at all.
     def empty?(value) = value.nil? || ((value.is_a?(String) || value.is_a?(Array) || value.is_a?(Hash)) && value.empty?)
