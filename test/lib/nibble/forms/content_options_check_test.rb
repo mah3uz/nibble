@@ -26,7 +26,8 @@ class Nibble::Forms::ContentOptionsCheckTest < ActiveSupport::TestCase
   end
 
   def problems(file)
-    config = Nibble::Config.new({ "theme" => "check", "locales" => [ { "code" => "en", "default" => true } ] }, themes_path: @themes)
+    config = Nibble::Config.new({ "theme" => "check", "locales" => [ { "code" => "en", "default" => true } ] }, themes_path: @themes,
+      site_schema_path: Rails.root.join("test/nibble_themes/no_site_schema"))
     Nibble::Check.run(config:, static: true).problems.map { |problem| problem.to_s.sub(%r{\A.*/check/schema/}, "") }
       .grep(/\A#{Regexp.escape(file)}/).map { |problem| problem.delete_prefix("#{file}: ") }
   end
