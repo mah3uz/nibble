@@ -200,6 +200,8 @@ class Nibble::OperationsTest < ActiveSupport::TestCase
       assert_equal %w[articles], node.dig("query", "properties", "collection", "enum")
       assert_equal "integer", menu.dig("kinds", "featured", "fields", "properties", "badge", "type")
       assert_equal %w[badge], menu.dig("kinds", "featured", "fields", "required")
+      assert_equal "string", menu.dig("kinds", "featured", "fields", "properties", "icon", "type"), "a custom kind's items carry the menu's item fields too"
+      assert_equal 50, node.dig("query", "properties", "limit", "maximum")
     end
   end
 

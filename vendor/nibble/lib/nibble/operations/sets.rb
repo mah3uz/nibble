@@ -31,20 +31,22 @@ module Nibble
         )
         properties = properties.merge("query" => query_schema(menu)) if menu.queries.any?
         { "tree" => { "type" => "array", "items" => NODE.merge("properties" => properties) },
-          "kinds" => menu.kinds.to_h { |kind| [ kind.handle, kind_schema(kind) ] }.presence }.compact
+          "kinds" => menu.kinds.to_h { |kind| [ kind.handle, kind_schema(kind, menu) ] }.presence }.compact
       end
 
-      def kind_schema(kind)
+      def kind_schema(kind, menu)
         { "title" => kind.display, "link" => kind.link, "children" => kind.children,
-          "fields" => { "type" => "object", "description" => "The fields of a #{kind.handle} item, in its `fields`" }.merge(FieldSchema.object(kind.fields)) }
+          "fields" => { "type" => "object", "description" => "The fields of a #{kind.handle} item, in its `fields`: its own and the menu's item fields" }
+            .merge(FieldSchema.object(menu.fields_for(kind.handle))) }
       end
 
       def query_schema(menu)
         { "type" => "object", "description" => "For a query item: lists entries of one collection as its children",
           "properties" => { "collection" => { "type" => "string", "enum" => menu.queries },
-                            "parent" => { "type" => "integer", "description" => "Entry id; lists its children" },
+                            "parent" => { "type" => "integer", "description" => "Entry id of the collection, in the menu's locale; lists its children" },
                             "term" => { "type" => "object", "properties" => { "taxonomy" => { "type" => "string" }, "id" => { "type" => "integer" } } },
-                            "sort" => { "type" => "string" }, "limit" => { "type" => "integer" } },
+                            "sort" => { "type" => "string", "description" => "A field or column, with :desc to reverse it. The collection's own sort when left out" },
+                            "limit" => { "type" => "integer", "minimum" => 1, "maximum" => MenuQuery::LIMIT, "description" => "#{MenuQuery::LIMIT} when left out" } },
           "required" => %w[collection] }
       end
 
