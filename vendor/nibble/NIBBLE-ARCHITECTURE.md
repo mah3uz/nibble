@@ -57,7 +57,7 @@ evaluates `vendor/nibble/Gemfile`, which loads `Nibble::Engine`; `config/applica
   `cp/slots/*.vue` replacing chrome; `site/types.d.ts` is generated from the schema and imported as `@site/types`.
   `bin/rails nibble:eject <path>` is how a site takes one of our files over, recorded in `config/nibble.yml`.
 - Themes: `site/themes/<theme>/` is looked in first, then `vendor/nibble/themes/<theme>/`, where `crumbs` ships.
-  Each has `layouts/`, `views/` (each `.vue` may have a `.yml` query sidecar), `views/sets/`,
+  Each has `layouts/`, `views/` (each `.vue` may have a `.yml` query sidecar, layouts too), `views/sets/`,
   `components/`, `styles/`, `schema/`; **a theme never ships content**; `@theme` resolves to the active one,
   named in `config/nibble.yml`, then `NIBBLE_THEME`, defaulting to `crumbs`. `nibble:generate:theme` starts one.
 - The documentation is not here. It is the site at `~/Projects/nibble_site`, whose `content/docs/` it is.
@@ -66,7 +66,7 @@ evaluates `vendor/nibble/Gemfile`, which loads `Nibble::Engine`; `config/applica
 1. `NibbleRedirectsMiddleware`, backed by the `redirects` table and cached.
 2. Fixed routes: `/media/:uuid/…`, `POST /forms/:handle`, `/robots.txt`, `/sitemap.xml`, `/sitemap-:handle.xml`.
 3. The catch-all `SiteController#show` calls `Nibble::Routing.resolve`, which returns an entry, term, redirect or nothing.
-4. `Nibble::PageProps` runs the view's query sidecar through `Nibble::Query` and the `Nibble::Presenter`.
+4. `Nibble::PageProps` runs the view's and its layout's query sidecars through `Nibble::Query` and the `Nibble::Presenter`.
 5. Inertia SSR renders `theme/<view>` from the active theme.
 6. `Nibble::PageCache` stores the response against the tags `Nibble::Dependencies` collected, echoed as `Surrogate-Key`.
 

@@ -25,6 +25,7 @@ in `config/nibble.yml` (`theme:`), then `NIBBLE_THEME`, and is looked for in `si
 | `views/<name>.yml` | the view's query sidecar: each key becomes a prop |
 | `views/sets/<set>.vue` | one block of a replicator field, given the set's fields as props |
 | `layouts/<name>.vue` | the frame around a page; `default` unless a collection names another |
+| `layouts/<name>.yml` | the layout's query sidecar: its props reach every page using it, so keep it small; a missing layout uses `default`'s |
 | `components/` | the theme's own components |
 | `styles/theme.css` | the theme's stylesheet (Tailwind) |
 | `schema/` | the theme's schema layer, read after Nibble's and before the site's |
@@ -63,6 +64,10 @@ related:
 
 Sources: `entries:<collection>`, `terms:<taxonomy>`, `search:<index>`, `form:<handle>`. Variables: `$entry`,
 `$term`, `$set`, `$params.<name>`, `$now`, `$locale`. `paginate: { per_page: 12 }` makes the prop `{ data, meta }`.
+`include: [children]` on a structured collection gives each entry its published children (top level:
+`where: { parent_id: { null: true } }`). `page: { include: [authors] }` expands the page's own relationship fields.
+A layout's props are typed `LayoutProps['default']`; a layout query may not be named `page`, `layout`, `site`, `seo`
+or `preview`.
 
 ## The loop
 

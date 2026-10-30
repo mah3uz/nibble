@@ -115,6 +115,9 @@ layout: help
 Tidewater's help centre uses `layouts/help.vue` — a slimmer header with a search box and no marketing navigation.
 A layout name that does not exist falls back to `default`.
 
+A layout may have a query sidecar, `layouts/<name>.yml`, so the header and footer get their content without every view
+asking for it, and it receives the results as props. See [Queries](queries.md#9-the-page-and-layouts).
+
 ```vue
 <!-- site/themes/tidewater/layouts/default.vue -->
 <script setup lang="ts">

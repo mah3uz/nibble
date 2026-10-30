@@ -115,7 +115,12 @@ These run against the database, so a build with no database does not show them.
 | `icon '…' isn't one of the Control Plane icons` | an unknown `icon:` on a collection or taxonomy | use one of the named icons |
 | `index '…' uses missing collection '…'`, `… searches field '…', which no blueprint of its collections defines` | search settings name something that is not there | correct `search.yml` |
 | `index '…' lists collections, which are no longer read: give each one search: …` | the old way of assigning a collection to an index | put `search: <index>` in the collection's own file |
-| `query '…' …` | a view's `.yml` sidecar has an invalid query | the message says which part |
+| `query '…' …` | a view's or layout's `.yml` sidecar has an invalid query | the message says which part |
+| `page.<key> isn't a page key (use include)` | a `page:` entry in a sidecar with a key other than `include` | use `include` |
+| `page.include '…' isn't a relationship field in any blueprint`, `page.include 'children' needs a structured collection` | `page: { include: … }` names something that can't be expanded | name an `entries` or `terms` field, or `children` once a collection is structured |
+| `query '…' is named like the … prop every page is given` | a layout's query is called `page`, `layout`, `site`, `seo` or `preview` | rename it |
+| `query '…' is also a view's query, so one would hide the other` | a layout and a view use the same query name | rename one |
+| `query '…' hides the … prop every view is given; rename the query` (warning) | a view's query is called `page`, `layout`, `site`, `seo` or `preview` | rename it |
 | `theme.yml: '…' is required`, `… isn't a manifest key`, `handle … must match the folder name`, `nibble … isn't compatible with theme API …` | the theme's manifest | fix `theme.yml` |
 | `required view '….vue' is missing`, `required layout 'default.vue' is missing`, `set '…' has no view sets/….vue` | the theme lacks a view the site needs | add the view |
 | `index_route needs the view … .vue, which … doesn't have` | a collection with an index page and a theme with no view for it | add the view or set `index_template` |

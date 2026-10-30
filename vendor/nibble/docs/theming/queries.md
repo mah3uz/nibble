@@ -42,6 +42,9 @@ topics:
 
 The view receives `latest` and `topics` as props, typed for it in `ViewProps['pages/show']`.
 
+A layout may have a sidecar too, in the same form, and a view's sidecar may expand the page's own relationship fields:
+see [the page and layouts](#9-the-page-and-layouts).
+
 ## 2. Sources
 
 `from` is required; everything else is optional.
@@ -65,7 +68,7 @@ Only published content is ever returned to a public page.
 | `limit`, `offset` | a fixed slice |
 | `paginate` | `{ per_page, param }` — pages, driven by a URL parameter; a bare number, `paginate: 12`, is `per_page` alone |
 | `counts` | on a `terms:` source, a collection handle; each term gets `entries_count`, the entries of that collection related to it |
-| `include` | relationship fields to load in full rather than as references |
+| `include` | relationship fields to load in full rather than as references; on a structured collection, `children` for the entries beneath each one |
 | `fields` | only these fields of the blueprint — smaller pages, fewer queries. The keys every record has (`id`, `uri`, `url`, `title`…) always come too; `parent` adds the title and address of the page above |
 | `locale` | a locale other than the page's |
 | `q` | the search terms, for a `search:` source |
@@ -263,10 +266,62 @@ async function results(q: string) {
 Wait for a pause in typing before asking, and cancel the request the next keystroke replaces. The answer is the same
 query the page runs, published content only, so there is nothing new to secure.
 
-## 8. Mistakes are caught, not ignored
+## 8. Children of a structured collection
+
+On an `entries:` query of a [structured collection](../modelling/collections.md), `include: [children]` gives each
+entry its published children, in tree order, one level down. A top-level query starts from the entries with no parent:
+
+```yaml
+# site/themes/tidewater/layouts/default.yml
+menu:
+  from: entries:pages
+  where: { parent_id: { null: true } }
+  include: [children]
+  fields: [title, url]
+```
+
+Each entry arrives with a `children` list, which a mega-menu draws as columns. Children are not expanded further, and
+`fields` applies to them as well.
+
+## 9. The page and layouts
+
+A layout has a sidecar of its own, `layouts/<name>.yml`, in the same form as a view's. Its props reach every page that
+uses the layout, the 404, search and preview pages included, and the layout receives them as props:
+
+```vue
+<script setup lang="ts">
+import type { LayoutProps } from '@site/types'
+
+defineProps<LayoutProps['default']>()
+</script>
+```
+
+A layout the theme does not have renders as `default`, so it takes `default`'s sidecar. Its `params` are declared for
+every page.
+
+A layout's queries run for every page, so keep them small. Editing an entry of a collection a layout queries clears
+every page that uses the layout.
+
+`page` is the record being rendered, so a sidecar key named `page` with no `from` is not a query: `include` under it
+expands the page's own relationship fields.
+
+```yaml
+# site/themes/tidewater/views/posts/show.yml
+page:
+  include: [authors]
+```
+
+A view's and its layout's lists are combined. A record whose blueprint lacks a listed field is skipped, so one
+sidecar can serve blueprints that differ. `children` may be listed here too. A `page` entry with a `from` is an
+ordinary query that hides the page, and `nibble:check` warns about it.
+
+A layout's query may not be named `page`, `layout`, `site`, `seo` or `preview`, which every page already has, nor like
+one of a view's queries; if they clash anyway, the view's wins.
+
+## 10. Mistakes are caught, not ignored
 
 An unknown key, an unknown field, an operator a field does not support, or a variable that does not exist is an
-error — at render time in development, and in `bin/rails nibble:check`, which reads every sidecar in the theme:
+error — at render time in development, and in `bin/rails nibble:check`, which reads every view and layout sidecar in the theme:
 
 ```
 ✗ site/themes/tidewater/views/posts/show.yml: query 'related' where.featured: isn't filterable (only columns and relationship fields are)

@@ -46,7 +46,7 @@ beside it rather than inside it. A site's views are looked in first.
    under `/nibble-assets/`.
 3. **The catch-all**, `SiteController#show`, asks `Nibble::Routing.resolve` what the path is: a page written as a
    file (a hash lookup in the in-memory index), an entry, a term, a taxonomy's or collection's index, or nothing.
-4. **`Nibble::PageProps`** runs the view's query sidecar through `Nibble::Query` and `Nibble::Presenter`.
+4. **`Nibble::PageProps`** runs the view's and its layout's query sidecars through `Nibble::Query` and `Nibble::Presenter`.
 5. **Inertia renders** `theme/<view>` from the active theme, on the server.
 6. **`Nibble::PageCache`** stores the response against the tags `Nibble::Dependencies` collected, echoed as
    `Surrogate-Key`.

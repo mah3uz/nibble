@@ -24,7 +24,7 @@ After reading this guide, you will know:
 | Prop | What it is |
 |---|---|
 | `page` | the entry, term or file page being rendered: the [record](#2-the-shape-of-a-record) and its fields |
-| one prop per sidecar query | whatever the [query sidecar](queries.md) asked for, under the name the sidecar gave it |
+| one prop per sidecar query | whatever the [query sidecar](queries.md) asked for, under the name the sidecar gave it, and the queries of the [layout's sidecar](queries.md#9-the-page-and-layouts) |
 | `site` | `locale`, `time_zone` (the site's time zone as an IANA name, such as `Australia/Sydney`), `url` (this page's absolute URL), `params`, `globals` and `navigation` |
 | `seo` | the title, description, canonical URL, robots and image `SeoHead` renders |
 | `layout` | the name of the layout wrapping the page |
@@ -179,6 +179,7 @@ Import from `@site/types`.
 | `Paginated<T>`, `PaginationMeta` | `{ data: T[]; meta }` for a [paginated query](queries.md#6-pagination), and its `meta` |
 | `ViewProps['posts/index']` | the props one view's sidecar produces, keyed by view name |
 | `ViewProps['sets/pricing']` | the same for a set's sidecar, as its `queries` prop |
+| `LayoutProps['default']` | the props a layout's sidecar produces, keyed by layout name |
 | `SiteGlobals`, `<Handle>Globals` | a global's fields |
 | `FormValues['demo']`, `DemoFormValues` | the values a form collects; see [Forms](forms-in-your-theme.md) |
 | `MainNavigationItem`, `<Menu>NavigationItem` | one item of a menu, with its `fields`, its `entry` and its custom kinds typed from the menu's schema |
