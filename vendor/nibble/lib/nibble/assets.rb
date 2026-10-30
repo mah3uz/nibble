@@ -54,7 +54,11 @@ module Nibble
       def uploadable?(filename) = (UPLOADABLE + Nibble.config.asset_extensions).include?(extension(filename))
       def transformable?(asset) = TRANSFORMABLE.include?(extension(asset.filename))
       def previewable?(asset) = asset.kind == "video" && ActiveStorage::Previewer::VideoPreviewer.ffmpeg_exists?
-      def edited?(asset) = transformable?(asset) && Transform.encodable?(asset.extension) && Transform.edits(asset).any?
+      # An animation edited before edits were refused for one keeps its frames: it is served as uploaded.
+      def edited?(asset)
+        transformable?(asset) && Transform.encodable?(asset.extension) && Transform.edits(asset).any? &&
+          !Rails.cache.fetch("nibble:animated:#{asset.blob.key}") { animated?(asset) }
+      end
 
       # libvips counts the frames of a WebP or AVIF but reads an APNG as its first frame alone.
       def animated?(asset)

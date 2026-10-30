@@ -124,4 +124,14 @@ class Nibble::AssetsTest < ActiveSupport::TestCase
     end
     assert_equal({ "loop.webp" => false, "loop.png" => false, "still.png" => true }, results)
   end
+
+  test "an animation edited before edits were refused for one is still served whole, at its own size" do
+    frames = Vips::Image.black(4, 4).join(Vips::Image.black(4, 4) + 255, :vertical).cast(:uchar)
+      .mutate { |image| image.set_type!(GObject::GINT_TYPE, "page-height", 4) }
+    asset = create_asset(blob: ActiveStorage::Blob.create_and_upload!(io: StringIO.new(frames.write_to_buffer(".webp")), filename: "loop.webp"))
+    asset.update_columns(width: 4, height: 4, edits: { "crop" => { "x" => 0, "y" => 0, "width" => 0.5, "height" => 0.5 } })
+
+    assert_not Nibble::Assets.edited?(asset.reload)
+    assert_equal [ 4, 4 ], Nibble::Assets.output_size(asset, nil)
+  end
 end
