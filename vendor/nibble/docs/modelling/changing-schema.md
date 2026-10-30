@@ -102,8 +102,8 @@ runs twice.
 
 ## 4. The operations
 
-Each operation names a `collection` or a `taxonomy` to work on. `rename_field`, `set_default`, `move_field` and
-`remove_field` also take a `global`, and change that global in every locale:
+Each operation names a `collection` or a `taxonomy` to work on. `rename_field`, `set_default`, `set_value`,
+`move_field` and `remove_field` also take a `global`, and change that global in every locale:
 
 ```yaml
 - rename_field: { global: site, from: phone, to: telephone }
@@ -248,6 +248,53 @@ The permissions are dropped rather than carried in that case, as for a merged co
 Deletes a menu, or a global set, that is no longer in the schema, in every locale, with its drafts, revisions and
 relationships, and takes its permissions out of every role and connected app. Each refuses while the handle is still
 in the schema. Like `delete_collection`, there is no trash to restore from.
+
+### 4.11 `set_value`
+
+```yaml
+- set_value:
+    global: site
+    field: apply_url
+    from: /list-your-business
+    to: /business
+```
+
+Changes a value the site already holds, on every record and in every locale where it still equals `from`. A record
+where an editor has since put something else is left as it is, and so is one where the field is empty — unless `from`
+is `null`, which fills the empty ones as `set_default` does. Values are compared as the field stores them, so
+`from: "4"` matches a stored `4` in a number field.
+
+For the rows of a grid or a replicator, `where` picks the rows and `to` names the keys to write in each:
+
+```yaml
+- set_value:
+    global: site
+    field: utility_links
+    where: { link: /list-your-business }
+    to: { link: /business, label: Business }
+```
+
+A row matches when each key in `where` equals its value. Only the keys in `to` change; the row keeps its id and
+everything else. In a replicator, `where` can name the set as `type`, and a block whose set has no field for a key in
+`to` is left alone.
+
+`to` must be a value the Control Plane would accept: the migration is refused when it fails the field's own type and
+validation — a link that isn't safe, a number past its `max`, an option the field doesn't offer, a required value left
+empty. Rules that compare it with the record's other fields can't be judged without a record, so they aren't checked.
+`title`, `slug` and the other columns, and secret fields, can't be set.
+
+A pending draft changes too, but only while it still holds `from`; a draft where an editor has already changed the
+value keeps theirs. Each record it changes gets a revision, and the one before holds the old value. The report names
+each record and locale it changed, in a dry run too:
+
+```
+set site.apply_url in global 3 (en), global 4 (fr): 2
+```
+
+Use `set_default` to fill a field wherever it is empty. Use `set_value` to replace a value that was shipped — by a
+theme, a package or an earlier release of the site — when editors may have changed it since. A
+[package re-import](../running/content-packages.md#4-importing) with `--mode=update` replaces whole records with the
+package's version, editors' changes included; `set_value` changes one value and leaves the rest of each record alone.
 
 ## 5. Changing a field's type
 
