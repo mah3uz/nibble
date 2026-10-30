@@ -50,8 +50,10 @@ the same; drop the Tailwind lines and the dependency stays unused.
 
 ### Fonts
 
-Load a font with `@import url(...)` at the top of `theme.css`, as `crumbs` does with Google Fonts, or self-host a file
-under the theme and reference it with `@font-face`. Name it in `@theme` as a `--font-*` token so utilities use it.
+Load a hosted font with a stylesheet `<link>` in a [`Head`](#3-the-html-shell) in the layout, as `crumbs` does with
+Google Fonts, so the browser fetches it alongside `theme.css`; an `@import url(...)` in `theme.css` also works, but
+waits for `theme.css` to arrive first. Or self-host a file under the theme and reference it with `@font-face`. Name it
+in `@theme` as a `--font-*` token so utilities use it.
 
 ## 2. Light and dark
 
@@ -85,11 +87,7 @@ document.documentElement.dataset.theme = theme
 The shell reads that cookie and writes it into `<html data-theme>` on the server, so a returning visitor's page
 arrives already in their register, with no flash of the other one. Any other value is ignored. Because the cookie
 changes the HTML, the [page cache](index.md#3-how-a-page-is-rendered) keeps a separate copy per choice, so a visitor
-who has chosen never gets another visitor's copy.
-
-> [!NOTE]
-> The theme switch in `crumbs` keeps the choice in `localStorage` instead, so a returning visitor's saved dark mode is
-> applied after the page loads. Write the cookie as above in your own theme and the page is right from the first paint.
+who has chosen never gets another visitor's copy. The theme switch in `crumbs` works this way.
 
 ## 3. The HTML shell
 

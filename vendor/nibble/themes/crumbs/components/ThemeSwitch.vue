@@ -1,20 +1,28 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-const STORAGE_KEY = 'crumbs-theme'
+const LEGACY_KEY = 'crumbs-theme'
 const dark = ref(false)
 
+// The shell reads this cookie into <html data-theme>, so the next page arrives in the chosen register.
+function remember(theme: string) {
+  document.cookie = `nibble_theme=${theme}; path=/; max-age=31536000; samesite=lax`
+  document.documentElement.dataset.theme = theme
+}
+
 onMounted(() => {
-  const saved = localStorage.getItem(STORAGE_KEY)
-  dark.value = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches
-  if (saved) document.documentElement.dataset.theme = saved
+  const legacy = localStorage.getItem(LEGACY_KEY)
+  if (legacy) {
+    localStorage.removeItem(LEGACY_KEY)
+    if (!document.documentElement.dataset.theme) remember(legacy)
+  }
+  const theme = document.documentElement.dataset.theme
+  dark.value = theme ? theme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches
 })
 
 function toggle() {
   dark.value = !dark.value
-  const theme = dark.value ? 'dark' : 'light'
-  document.documentElement.dataset.theme = theme
-  localStorage.setItem(STORAGE_KEY, theme)
+  remember(dark.value ? 'dark' : 'light')
 }
 </script>
 
