@@ -16,6 +16,7 @@ After reading this guide, you will know:
 - Which globals Nibble ships, and how to declare one of your own.
 - How a rich-text link can follow an address kept in a global.
 - How to declare a menu, limit what it can link to, and give its items fields of their own.
+- How a menu can hold items of your own kind, list a collection's pages by itself, or show an item only for a while.
 - How a menu can be built from a folder of files instead.
 - How a theme reads both.
 
@@ -114,9 +115,11 @@ collections: [pages, posts]
 | `headings` | `true` lets an item be a heading, with a title and no link |
 | `item_fields` | fields every item has, written like a blueprint's |
 | `entry_fields` | fields of a linked entry the theme receives with the item |
+| `kinds` | kinds of item of your own, each with a `display` name, a `link` rule, `children` and `fields`; see [2.3](#23-kinds-of-your-own) |
+| `queries` | collections an item may list by itself; see [2.4](#24-items-that-list-a-collection) |
 
 A typed URL is always allowed. A menu that declares none of the keys from `globals` down holds links only, as it
-always has.
+always has. Every item, of any kind, can also be given a [window in which it shows](#25-showing-an-item-for-a-while).
 
 Tidewater's main menu links to the Pricing and Book a demo pages, and to `/blog` and `/help` by URL.
 
@@ -170,7 +173,114 @@ entry_fields: [icon]
 already has, so editors don't type it twice. Only the fields listed are sent. `bin/rails nibble:check` reports an item
 field it can't build and an entry field no blueprint of the menu's collections has.
 
-### 2.3 A menu built from files
+### 2.3 Kinds of your own
+
+`kinds` adds kinds of item beside `link` and `heading`. Tidewater's header has a "Featured" item: a card with an image
+and a line of text that sits in a dropdown and links nowhere by itself.
+
+```yaml
+# site/schema/navigation/main.yml
+kinds:
+  featured:
+    display: Featured
+    link: optional
+    children: false
+    fields:
+      - handle: image
+        field: { type: asset }
+      - handle: blurb
+        field: { type: text }
+```
+
+| Key | What it does |
+|---|---|
+| `display` | what the Control Plane calls the kind; defaults to the handle, capitalised |
+| `link` | `optional` (the default) lets the item link, or not; `required` makes it link; `none` forbids a link |
+| `children` | `false` stops the item holding items under it; defaults to `true` |
+| `fields` | fields only this kind has, written like `item_fields` |
+
+The menu's `item_fields` apply to a custom kind too. The kind's own `fields` come after them, and win a handle both
+declare. `link`, `heading` and `query` are built in and can't be redefined here.
+
+An editor picks the kind when adding an item. An item of a kind the menu doesn't list, or one that breaks its `link`
+or `children` rule, is rejected on save.
+
+### 2.4 Items that list a collection
+
+`queries` lists the collections an item may list by itself. Tidewater's header has a "Latest from the blog" dropdown
+that should always show the newest posts, without an editor adding each one.
+
+```yaml
+# site/schema/navigation/main.yml
+queries: [posts, pages]
+```
+
+An item of kind `query` has a title and no link, and its items aren't added by hand. The editor chooses:
+
+| Setting | What it does |
+|---|---|
+| collection | which of the menu's `queries` it lists; a collection written as files can't be listed |
+| parent page | only the pages directly under this page |
+| term | only the pages tagged with this term; the collection needs a field for that taxonomy |
+| sort | `field:asc` or `field:desc`, as in a [query's `sort`](../theming/queries.md); without it, the collection's own order |
+| limit | how many to list, from 1 to 50; 50 without it |
+
+The children are filled in on the site, when the page is rendered. They are the collection's published entries in the
+page's locale, each a plain `link`, so a page published tomorrow appears in the menu without anyone editing it.
+
+> [!WARNING]
+> A query item makes every page that shows the menu depend on the whole collection. Any change to that collection
+> (publishing, editing or trashing one entry) clears each of those cached pages, which is usually every
+> page on the site. That is fine for a collection of a few hundred pages edited now and then. On a big or busy one,
+> such as a blog or a collection that is imported often, list a few pages by hand, or link the menu to an index page
+> that lists the collection, instead.
+
+### 2.5 Showing an item for a while
+
+Any item can be given **Show from** and **Show until** dates. Outside that window the item, and everything under it,
+is absent from the menu the theme reads. A window with no start shows until its end; one with no end shows from its
+start. Until must come after from.
+
+Tidewater's header can carry a "Summer sale" link that appears on the 1st of December and goes on the 1st of January.
+Cached pages are refreshed at each date, a few seconds after it, so the menu changes without anyone saving. That relies
+on the job runner (Solid Queue) running, as [Deploying](../running/deploying.md) describes; where it doesn't run, a
+page already cached keeps showing the old menu until something else clears it.
+
+Through the [management API](../extending/management-api.md) the dates are `show_from` and `show_until` on the item,
+written like `2026-12-01T09:00:00+10:00`.
+
+### 2.6 A mega-menu
+
+Tidewater's header puts these together: a Products column with a heading, two pages and a featured card, and the
+newest posts.
+
+```yaml
+# site/schema/navigation/main.yml
+schema: 1
+title: Main
+max_depth: 3
+collections: [pages, posts]
+headings: true
+queries: [posts]
+item_fields:
+  - handle: icon
+    field: { type: text }
+kinds:
+  featured:
+    display: Featured
+    link: optional
+    children: false
+    fields:
+      - handle: image
+        field: { type: asset }
+      - handle: blurb
+        field: { type: text }
+```
+
+An editor builds the tree in the Control Plane: a heading **Products**, under it links to Pricing and Book a demo and a
+Featured item, and beside it a **Latest from the blog** query item listing `posts` with a limit of 3.
+
+### 2.7 A menu built from files
 
 When a navigation has the same handle as a [collection written as files](content-as-files.md), its tree is built
 from the folders instead: a folder's `index.md` is a branch, the files in it are its children, and `order` in their
@@ -216,7 +326,7 @@ down, whether the menu was arranged by an editor or built from files. It also ha
 
 | Key | Value |
 |---|---|
-| `kind` | `link`, or `heading`, whose `url` is `null` |
+| `kind` | `link`; `heading`, or `query`, whose `url` is `null`; or a kind of your own |
 | `new_tab` | whether the editor asked for a new tab |
 | `current` | the item's address is the page being shown |
 | `in_trail` | the item is current, one of its children is in the trail, or the page is under the item's path |
@@ -238,6 +348,44 @@ or a phone number, or a link with a `#` fragment, is never current.
         {{ item.title }}<span v-if="item.new_tab" class="sr-only"> (opens in a new tab)</span>
       </a>
     </template>
+  </nav>
+</template>
+```
+
+Narrow on `kind` when a menu has more than one. A `query` item has a title and no url, and its `children` are links
+to the pages it lists. A custom kind carries its own `fields`, and its `url` is `null` when it has no link. For Tidewater's
+header above:
+
+```vue
+<script setup lang="ts">
+import { useNavigation } from '@nibble'
+
+const main = useNavigation('main')
+</script>
+
+<template>
+  <nav>
+    <div v-for="item in main" :key="item.title">
+      <template v-if="item.kind === 'heading'">
+        <strong>{{ item.title }}</strong>
+        <template v-for="child in item.children" :key="child.title">
+          <figure v-if="child.kind === 'featured'">
+            <img :src="child.fields.image?.url" :alt="child.fields.image?.alt ?? ''" />
+            <figcaption>
+              <a v-if="child.url" :href="child.url">{{ child.title }}</a>
+              <span v-else>{{ child.title }}</span>
+              {{ child.fields.blurb }}
+            </figcaption>
+          </figure>
+          <a v-else :href="child.url ?? undefined">{{ child.title }}</a>
+        </template>
+      </template>
+      <template v-else-if="item.kind === 'query'">
+        <strong>{{ item.title }}</strong>
+        <a v-for="post in item.children" :key="post.url" :href="post.url ?? undefined">{{ post.title }}</a>
+      </template>
+      <a v-else :href="item.url ?? undefined">{{ item.title }}</a>
+    </div>
   </nav>
 </template>
 ```

@@ -148,20 +148,20 @@ A menu is a list of items, and `useNavigation('footer')` returns it:
 
 | Key | Value |
 |---|---|
-| `kind` | `link`, or `heading` in a menu that allows headings |
-| `type` | what a link points at: `url` for an address someone typed, `entry`, `term`, `global` or `asset`; `null` for a heading |
+| `kind` | `link`; `heading` in a menu that allows headings; `query` for an item that lists a collection; or a kind the menu declares |
+| `type` | what a link points at: `url` for an address someone typed, `entry`, `term`, `global` or `asset`; `null` for a heading, a query, or a custom kind without a link |
 | `id` | the record's id, for an entry, term or asset link |
 | `title` | the label; for a record link, its title unless the menu overrode it |
-| `url` | the address as typed for `url`; the record's path, the global field's value or the file's address otherwise; `null` for a heading |
+| `url` | the address as typed for `url`; the record's path, the global field's value or the file's address otherwise; `null` for a heading, a query, or a custom kind without a link |
 | `new_tab` | `true` when the item should open in a new tab |
 | `current` | `true` when the item's address is this page |
 | `in_trail` | `true` when the item is current, a child is in the trail, or this page is under the item's path |
-| `fields` | the item's own fields, from the menu's `item_fields`, shaped as in section 3 |
+| `fields` | the item's own fields, from the menu's `item_fields` and, for a custom kind, the kind's `fields`, shaped as in section 3 |
 | `entry` | the linked entry's `entry_fields`, shaped as in section 3, or `null` |
-| `children` | the same items, nested |
+| `children` | the same items, nested; for a `query` item, links to the pages it lists |
 
 A link to a record that no longer exists, or to a global field holding no safe address, is left out of the menu, and
-so is a hidden item with everything under it. A menu built from files gives each page's id as `entry`, and no `type`.
+so is a hidden item with everything under it, and an item outside its `show_from` and `show_until` dates. A `query` item whose settings no longer hold, such as a deleted parent page, is left out too. Menu kinds, query items and show dates are described in [Globals and navigation](../modelling/globals-and-navigation.md#23-kinds-of-your-own); a theme switches on `kind` to draw each one. A menu built from files gives each page's id as `entry`, and no `type`.
 See [Globals and navigation](../modelling/globals-and-navigation.md#3-reading-them-in-a-theme).
 
 ## 6. The generated types
@@ -193,8 +193,8 @@ defineProps<ViewProps['posts/show'] & { page: PostsPost }>()
 
 `useNavigation('main')` returns that menu's items typed with `MainNavigationItem`, so `item.fields.icon` compiles only
 when the menu's `item_fields` declare `icon`, and `item.entry` holds the `entry_fields` the menu lists. A custom kind
-has its own member of the union, as does `heading` when the menu sets `headings: true`: narrow on `item.kind` to read
-the fields only that kind has, and to see that a heading has no `url`. A menu with none of these is link-only, with `url`
+has its own member of the union, as do `heading` when the menu sets `headings: true` and `query` when it lists `queries`: narrow on `item.kind` to read
+the fields only that kind has, and to see that a heading or a query has no `url`, and a custom kind's `url` is `null` when it can't link. A menu with none of these is link-only, with `url`
 a string. A menu the schema doesn't name returns `NavigationItem`, whose `fields` and `entry` are loose.
 
 `@nibble` exports a few types of its own for the shared props: `SiteProps`, `Link` (a menu item), `RecordSummary`,
