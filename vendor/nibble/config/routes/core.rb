@@ -17,7 +17,6 @@ Rails.application.routes.draw do
       get "terms/:id", to: "terms#show"
       get "globals/:id", to: "globals#show"
       get "navigation/:id", to: "navigation#show"
-      get "assets/:id", to: "assets#show"
       get "routes", to: "routes#show"
       get "schema", to: "schema#show"
       get "health", to: "health#show"

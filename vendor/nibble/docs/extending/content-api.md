@@ -83,13 +83,13 @@ Each token may make 300 requests a minute.
 | `GET /api/v1/terms/:uuid` | one term |
 | `GET /api/v1/globals/:handle` | a global's fields |
 | `GET /api/v1/navigation/:handle` | a menu |
-| `GET /api/v1/assets/:uuid` | one asset, as an asset field holds it |
 | `GET /api/v1/routes` | every public URL the site serves |
 | `GET /api/v1/schema` | the collections and taxonomies the API serves, and their fields |
 | `GET /api/v1/health` | whether the site is healthy |
 
 Content comes back in the shape a view receives (see [Content in views](../theming/content-in-views.md)), so a field
-means the same thing in a template and in a JSON response. The one difference is `api: false` fields, which the API
+means the same thing in a template and in a JSON response. An asset arrives inside the field that uses it, with its
+`url`, size, `alt` and `srcset`; the file itself is served from that `url`. The one difference is `api: false` fields, which the API
 leaves out.
 
 > [!TIP]

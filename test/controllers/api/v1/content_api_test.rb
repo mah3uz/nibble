@@ -161,19 +161,4 @@ class Api::V1::ContentApiTest < ActionDispatch::IntegrationTest
     get "/api/v1/entries/#{entry.uuid}", headers: auth
     assert_equal "secret", body["data"]["internal_note"]
   end
-
-  # An asset is a file, not a record with a slug or a URI, so it answers with the value an asset field holds.
-  test "an asset answers with the same value an asset field gives a theme" do
-    asset = create_asset({ "alt" => "A harbour" })
-
-    get "/api/v1/assets/#{asset.uuid}", headers: auth
-    assert_response :success
-    data = body["data"]
-    assert_equal asset.uuid, data["uuid"]
-    assert_equal Nibble::Records::AssetResolver.new.summary(asset).as_json, data.except("uuid")
-    assert_equal "A harbour", data["alt"]
-
-    get "/api/v1/assets/#{SecureRandom.uuid}", headers: auth
-    assert_response :not_found
-  end
 end

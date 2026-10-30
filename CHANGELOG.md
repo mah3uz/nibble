@@ -46,12 +46,12 @@ back, but the snapshot taken before an upgrade is the surest way back.
   shows the edited image at its edited size, and **Reset** brings the original back everywhere. The crop editor and
   **Download** in the Control Plane still work from the original. An animated image can't be edited, since its uses
   would show a single frame; one edited before keeps being served as uploaded.
-- **`GET /api/v1/assets/:uuid` answers.** It failed on every request; it now returns the asset as an asset field holds
-  it, with its `uuid`.
 
 ### Changed
 
 - crumbs lists topics in its footer from a layout query, and a post shows its author's bio.
+- **`GET /api/v1/assets/:id` is gone.** It failed on every request, so nothing could have relied on it. An asset's
+  facts arrive in the field that uses it, and an app connected through the management API has `get_asset`.
 - An image that already has edits gets a new address, so a cache holding its original under the old one can't keep
   serving it; the old address redirects.
 
