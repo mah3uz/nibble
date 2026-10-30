@@ -296,6 +296,23 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     assert_match "collection 'evnts' doesn't exist", messages
   end
 
+  test "a menu's item fields are checked like any fields, and its entry fields must exist on its collections" do
+    theme_file("collections/events.yml", title: "Events", blueprints: [ "event" ])
+    theme_file("blueprints/collections/events/event.yml", title: "Event", tabs: { main: { sections: [ { fields: [
+      { handle: "title", field: { type: "text" } }, { handle: "icon", field: { type: "text" } }
+    ] } ] } })
+    theme_file("navigation/events.yml", title: "Events", collections: [ "events" ], entry_fields: [ "icon", "colour" ], globals: [ "nope" ],
+      item_fields: [ { handle: "badge", field: { type: "text", validate: [ "postcode" ] } } ])
+    theme_file("navigation/loose.yml", title: "Loose", entry_fields: [ "icon" ])
+
+    messages = check.problems.select { |problem| problem.source.include?("navigation/") }.map(&:to_s).join("\n")
+    assert_match "field 'badge' uses unknown validation rule 'postcode'", messages
+    assert_match "entry field 'colour' isn't a field of any blueprint in events", messages
+    assert_no_match "entry field 'icon'", messages
+    assert_match "global 'nope' doesn't exist", messages
+    assert_match "loose.yml: entry_fields needs collections", messages
+  end
+
   test "a routed collection whose entries resolve to a view the theme lacks warns, and one with a template that exists does not" do
     theme_file("collections/events.yml", title: "Events", route: "/events/{slug}", blueprints: [ "event" ])
     theme_file("blueprints/collections/events/event.yml", title: "Event", tabs: { main: { sections: [ { fields: [

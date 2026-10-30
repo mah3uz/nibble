@@ -325,6 +325,23 @@ module Nibble
       schema.navigations.each do |item|
         Array(item["collections"]).each { |handle| problem(item.path, "collection '#{handle}' doesn't exist") unless schema.collection(handle) }
         Array(item["taxonomies"]).each { |handle| problem(item.path, "taxonomy '#{handle}' doesn't exist") unless schema.taxonomy(handle) }
+        (item["globals"].is_a?(Array) ? item["globals"] : []).each { |handle| problem(item.path, "global '#{handle}' doesn't exist") unless schema.find(:globals, handle) }
+        capture(item.path) { check_fields(Fields.new(item["item_fields"], schema:, source: item.path, key: "item_fields"), item.path) } if item["item_fields"]
+        check_entry_fields(item, schema)
+      end
+    end
+
+    def check_entry_fields(item, schema)
+      handles = Array(item["entry_fields"])
+      return if handles.empty?
+
+      collections = Array(item["collections"]).filter_map { |handle| schema.collection(handle) }
+      return problem(item.path, "entry_fields needs collections, the entries whose fields it shows") if collections.empty?
+
+      available = collections.flat_map { |collection| schema.blueprints_for(collection) }
+        .flat_map { |blueprint| capture(blueprint.path) { Blueprint.new(blueprint, schema:).fields.handles } || [] }
+      (handles - available).each do |handle|
+        problem(item.path, "entry field '#{handle}' isn't a field of any blueprint in #{collections.map(&:handle).join(', ')}")
       end
     end
 
