@@ -8,7 +8,7 @@ module Nibble
     }.freeze
 
     UPLOADABLE = %w[
-      7z aac aiff asc asf avi avif bmp cap cin csv dfxp doc docx dotm dotx fla flac flv gif gz gzip h264 heic heif hevc itt
+      7z aac aiff asc asf avi avif bmp cap cin csv dfxp doc docx dotm dotx fla flac flv gif gz gzip h264 heic heif hevc ico itt
       jp2 jpeg jpg jpx js json lrc m2t m4a m4v mcc md mid mkv mov mp3 mp4 mpc mpeg mpg mpsub ods odt ogg ogv pdf png potx pps
       ppsm ppsx ppt pptm pptx ppz pxd qt ram rar rm rmi rmvb rt rtf sami sbv scc sdc sitd smi srt stl sub svg swf sxc sxw tar
       tds tgz tif tiff ttml txt vob vsd vtt wav webm webp wma wmv xls xlsx zip

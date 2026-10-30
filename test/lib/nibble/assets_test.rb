@@ -50,6 +50,20 @@ class Nibble::AssetsTest < ActiveSupport::TestCase
     assert_nil Nibble::Assets::Upload.refusal("Report.PDF", 1)
   end
 
+  test "every type a core assets field allows can be uploaded, so a field never asks for a file the library refuses" do
+    walk = ->(node) do
+      case node
+      when Hash then Array(node["allowed_types"]) + node.values.flat_map(&walk)
+      when Array then node.flat_map(&walk)
+      else []
+      end
+    end
+    allowed = Nibble.core_schema_path.glob("**/*.yml").flat_map { |path| walk.(YAML.load_file(path)) }.map(&:to_s)
+
+    assert_includes allowed, "ico"
+    assert_empty allowed.uniq.reject { |type| Nibble::Assets.uploadable?("file.#{type}") }
+  end
+
   test "an upload gets a clean filename and its kind from the extension" do
     blob = ActiveStorage::Blob.create_and_upload!(io: file_fixture("photo.jpg").open, filename: "Summer Trip (1).JPG")
     asset = Nibble::Assets::Upload.call(blob, actor: Nibble::Principal.system).record

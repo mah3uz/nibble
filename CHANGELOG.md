@@ -22,6 +22,9 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
   back, such as a preview, left its server thread believing a delivery was already on the way, so that thread
   queued none for its later changes; their webhooks, search updates and cache purges waited for another thread's
   delivery or a restart. A rollback clears that mark now.
+- **A favicon can be an `.ico` file.** Site settings' Favicon field offers `.ico`, but the asset library refused to
+  upload one, so a package setting an `.ico` favicon imported without it. `.ico` files upload now, and are served as
+  they are.
 
 ## 0.23.0 — 2026-10-30 20:09 +0600
 
