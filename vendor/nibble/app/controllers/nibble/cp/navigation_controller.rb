@@ -16,9 +16,10 @@ module Nibble
 
         tree = record(item)
         render inertia: "cp/navigation/Edit", props: {
-          menu: { handle: item.handle, title: item["title"], max_depth: item["max_depth"] || 3, locale: tree.locale },
-          tree: to_tree_items(tree.tree.to_a),
-          records: linkable(item)
+          menu: menu(item, tree.locale).merge(item_fields: tree.item_fields.to_publish_a),
+          tree: to_tree_items(tree.tree.to_a, tree.item_fields),
+          records: linkable(item),
+          assets: Nibble::Resolvers.find("asset").find(tree.links.select { |node| node["type"] == "asset" }.map { |node| node["id"].to_s }.uniq)
         }
       end
 
@@ -45,7 +46,7 @@ module Nibble
 
       def render_files_menu(item)
         render inertia: "cp/navigation/Edit", props: {
-          menu: { handle: item.handle, title: item["title"], max_depth: item["max_depth"] || 3, locale: Nibble.config.default_locale.code },
+          menu: menu(item, Nibble.config.default_locale.code),
           tree: [], records: [],
           source: { folder: files_folder(item), links: flatten(Nibble::Files.index.tree(item.handle)) }
         }
@@ -53,6 +54,13 @@ module Nibble
 
       def flatten(links, depth = 0)
         links.flat_map { |link| [ { title: link["title"], url: link["url"], depth: }, *flatten(link["children"], depth + 1) ] }
+      end
+
+      def menu(item, locale)
+        globals = item["globals"]
+        { handle: item.handle, title: item["title"], max_depth: item["max_depth"], locale:,
+          headings: item["headings"] == true, assets: item["assets"] == true,
+          globals: globals ? Nibble::GlobalLinks.choices.select { |choice| globals == true || Array(globals).include?(choice["handle"]) } : [] }
       end
 
       def load_item
@@ -78,10 +86,23 @@ module Nibble
           status: record.respond_to?(:status) ? record.status : "published", live: record.live? }
       end
 
-      def to_tree_items(nodes)
+      def to_tree_items(nodes, fields)
         nodes.map do |node|
-          link = node["type"] == "url" ? { type: "url", url: node["url"] } : { type: node["type"], id: node["id"] }
-          { id: SecureRandom.uuid, title: node["title"], link:, children: to_tree_items(node["children"].to_a) }
+          kind = Nibble::Records::NavigationTree.kind(node)
+          values = node["fields"].to_h
+          editing = fields.add_values(values.slice(*fields.handles))
+          { id: SecureRandom.uuid, kind:, title: node["title"], link: (tree_link(node) if kind == "link"),
+            new_tab: node["new_tab"] == true, hidden: node["hidden"] == true,
+            fields: values.except(*fields.handles).merge(editing.pre_process.values), field_meta: editing.meta,
+            children: to_tree_items(node["children"].to_a, fields) }
+        end
+      end
+
+      def tree_link(node)
+        case node["type"]
+        when "url" then { type: "url", url: node["url"] }
+        when "global" then { type: "global", ref: node["ref"] }
+        else { type: node["type"], id: node["id"] }
         end
       end
 
@@ -92,9 +113,21 @@ module Nibble
           item = item.respond_to?(:to_unsafe_h) ? item.to_unsafe_h : item
           next unless item.is_a?(Hash)
 
-          link = item["link"].to_h
-          node = link["type"] == "url" ? { "type" => "url", "url" => link["url"] } : { "type" => link["type"], "id" => link["id"].to_i }
-          node.merge("title" => item["title"], "children" => from_tree_items(item["children"]))
+          kind = item["kind"].presence || "link"
+          node = kind == "link" ? stored_link(item["link"].to_h) : { "kind" => kind }
+          node["title"] = item["title"]
+          node["new_tab"] = true if ActiveModel::Type::Boolean.new.cast(item["new_tab"])
+          node["hidden"] = true if ActiveModel::Type::Boolean.new.cast(item["hidden"])
+          node["fields"] = item["fields"].to_hash if item["fields"].is_a?(Hash) && item["fields"].present?
+          node.merge("children" => from_tree_items(item["children"]))
+        end
+      end
+
+      def stored_link(link)
+        case link["type"]
+        when "url" then { "type" => "url", "url" => link["url"] }
+        when "global" then { "type" => "global", "ref" => link["ref"] }
+        else { "type" => link["type"], "id" => link["id"].to_i }
         end
       end
     end
