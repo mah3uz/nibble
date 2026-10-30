@@ -1,7 +1,8 @@
 title: Contact
 cp_notify: true
 spam:
-  captcha: true
+  min_seconds: 3
+  max_links: 2
 success:
   message: Thanks for writing in. We'll get back to you soon.
 fields:

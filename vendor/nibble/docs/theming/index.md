@@ -74,10 +74,12 @@ run `npm install` if the theme has a `package.json`, so the workspace is registe
 To copy crumbs yourself, copy `vendor/nibble/themes/crumbs` and edit `theme.yml` and the package name as the
 generator does. Either way, the copy brings crumbs' `schema/` with it, and that schema is the site's from then on:
 
-- `forms/contact.yml`, a `contact` form with `captcha: true`, which `views/about.vue` draws through
-  `components/ContactForm.vue`. Remove the form, the `contact` query in `views/about.yml` and the component
-  together, or adapt them. With no CAPTCHA keys configured, `nibble:check` warns that the form refuses every
-  submission.
+- `forms/contact.yml`, a `contact` form that `views/about.vue` draws through `components/ContactForm.vue`. Remove
+  the form, the `contact` query in `views/about.yml` and the component together, or adapt them. Besides the
+  honeypot, it treats a message sent within 3 seconds of the page loading, or holding more than 2 links, as spam
+  (`spam.min_seconds` and `spam.max_links`), so it works with no keys to set up. To stop determined bots, add
+  `captcha: true` to its `spam` and the keys under **Integrations**; see
+  [Spam](../modelling/form-spam-and-privacy.md#1-spam).
 - `taxonomies/authors.yml` and `topics.yml`, with the `blueprints/` for pages and posts. The `about`, `home`,
   `posts/show`, `authors/show` and `topics/*` views read the authors and topics, so keep the schema or change those
   views with it.

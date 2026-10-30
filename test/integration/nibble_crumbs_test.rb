@@ -120,6 +120,24 @@ class NibbleCrumbsTest < ActionDispatch::IntegrationTest
     assert_equal 6, Nokogiri::XML(response.body).remove_namespaces!.xpath("//url").size
   end
 
+  test "the About page's contact form takes a message on a fresh install, paced from each visit's own timestamp" do
+    get "/about"
+    contact = props["props"]["contact"]
+    assert_nil contact["captcha"], "a form that needs CAPTCHA keys refuses everyone until they are set"
+    assert contact["timestamp"].present?
+
+    message = { name: "Ada", email: "ada@example.com", message: "Hello", _nibble_t: contact["timestamp"] }
+    travel 5.seconds do
+      assert_difference -> { Nibble::Records::FormSubmission.where(form: "contact", status: "received").count } do
+        post "/forms/contact", params: message, headers: { "Referer" => "http://www.example.com/about" }
+      end
+    end
+
+    get "/about"
+    assert_not_equal "hit", response.headers["X-Nibble-Cache"]
+    assert_not_equal contact["timestamp"], props["props"]["contact"]["timestamp"]
+  end
+
   test "an unknown path renders the theme's own 404" do
     get "/no-such-crumb"
     assert_response :not_found
