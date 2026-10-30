@@ -104,6 +104,13 @@ describe('crumbs ContactForm', () => {
     expect(html).not.toContain('role="alert"')
   })
 
+  it('carries the signed timestamp of a paced form, so a post without JavaScript is not taken for a bot', async () => {
+    expect(await render(form({ timestamp: 'signed-at' }))).toMatch(
+      /<input type="hidden" name="_nibble_t" value="signed-at">/,
+    )
+    expect(await render(form({ timestamp: null }))).not.toContain('_nibble_t')
+  })
+
   it('says so when a resume link has expired', async () => {
     const html = await render(
       form({

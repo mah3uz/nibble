@@ -463,6 +463,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
       class="absolute -left-[9999px] h-px w-px overflow-hidden"
     />
     <input v-if="form.resume?.token" type="hidden" name="_nibble_resume" :value="form.resume.token" />
+    <input v-if="form.timestamp" type="hidden" name="_nibble_t" :value="form.timestamp" />
     <div :ref="(el) => (contact.captchaEl.value = el as HTMLElement | null)" />
 
     <div class="flex flex-wrap items-center gap-x-6 gap-y-4">
