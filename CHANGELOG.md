@@ -12,6 +12,8 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+## 0.25.0 — 2026-10-30 23:27 +0600
+
 > **One way to bring content in, wherever a page needs it.** The queries a view's sidecar runs now work for layouts,
 > for the page's own linked records, and for a form's choices.
 
