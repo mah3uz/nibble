@@ -108,8 +108,10 @@ adds the same tag to all of them. **Esc** deselects.
 
 ### 5.3 Crop
 
-In an image's editor, choose **Crop** to cut the picture down. **Apply** changes the asset. **Save as copy**
-keeps the original and makes a cropped copy. **Reset** starts over.
+In an image's editor, choose **Crop** to cut the picture down, turn it or flip it. **Apply** changes the asset
+everywhere it is used. **Save as copy** keeps the original and makes a cropped copy. **Reset** starts over, and
+applying it brings the whole picture back everywhere. **Download** always gives the file as it was uploaded. An
+animated image can't be cropped.
 
 ## 6. Before you delete
 
