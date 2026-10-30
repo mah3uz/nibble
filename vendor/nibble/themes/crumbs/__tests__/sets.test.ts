@@ -20,6 +20,11 @@ vi.mock('@inertiajs/vue3', async () => {
   }
 })
 
+vi.mock('@nibble', async () => ({
+  ...(await import('../../../frontend/nibble/composables')),
+  Image: (await import('../../../frontend/nibble/Image.vue')).default,
+}))
+
 const render = (component: object, props: Record<string, unknown>) => renderToString(createSSRApp(component, props))
 
 describe('embedSrc', () => {

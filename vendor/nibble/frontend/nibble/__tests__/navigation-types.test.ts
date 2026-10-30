@@ -6,7 +6,7 @@ type LinkOnlyNavigationItem = NavigationItemBase<LinkOnlyNavigationItem> & {
   kind: 'link'
   type: NavigationLinkType
   url: string
-  fields: {}
+  fields: Record<string, never>
   entry: null
 }
 

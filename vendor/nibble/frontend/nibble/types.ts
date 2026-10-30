@@ -20,6 +20,7 @@ export interface NavigationItem extends NavigationItemBase<NavigationItem> {
 }
 
 // The generated site types add each menu here, so useNavigation('main') knows its item fields.
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface NavigationMenus {}
 
 export type SiteProps = {
