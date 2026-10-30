@@ -4,7 +4,7 @@ module Nibble
       NODE = {
         "type" => "object",
         "properties" => {
-          "kind" => { "type" => "string", "enum" => %w[link heading], "description" => "link when left out. A heading has no link; its children sit under it" },
+          "kind" => { "type" => "string", "enum" => %w[link], "description" => "link when left out. A heading, where the menu allows one, has no link; its children sit under it" },
           "type" => { "type" => "string", "enum" => %w[url entry term global asset], "description" => "What a link points at. Required unless the item is a heading or a kind without a link" },
           "id" => { "type" => "integer", "description" => "For entry, term and asset links" },
           "url" => { "type" => "string", "description" => "For url links: https, mailto, tel, or a path like /about" },

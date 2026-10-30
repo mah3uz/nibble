@@ -1,7 +1,6 @@
 module Nibble
   # What a navigation menu's schema says about its items' fields, shared by the generated types and the agent schema.
   class MenuSchema
-    BUILT_IN_KINDS = %w[link heading].freeze
     Kind = Data.define(:handle, :display, :link, :children, :fields)
 
     attr_reader :item
@@ -14,6 +13,7 @@ module Nibble
     def handle = item.handle
     def item_fields = fields(item["item_fields"], "item_fields")
     def entry_fields = Array(item["entry_fields"]).map(&:to_s)
+    def headings? = item["headings"] == true
     def queries = Array(item["queries"]).map(&:to_s)
 
     def kinds
@@ -24,7 +24,7 @@ module Nibble
       end
     end
 
-    def kind_handles = [ *BUILT_IN_KINDS, *("query" if queries.any?), *kinds.map(&:handle) ].uniq
+    def kind_handles = [ "link", *("heading" if headings?), *("query" if queries.any?), *kinds.map(&:handle) ].uniq
 
     def entry_field(handle)
       parents = Array(item["collections"]).filter_map { |collection| @schema.collection(collection) }

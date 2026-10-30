@@ -171,10 +171,10 @@ class Nibble::OperationsTest < ActiveSupport::TestCase
     assert_equal "array", fields.dig("related", "schema", "type")
   end
 
-  def with_menu_schema
+  def with_menu_schema(**extra)
     site = Pathname(Dir.mktmpdir("nibble-menu-schema"))
     site.join("navigation").mkpath
-    site.join("navigation/main.yml").write({ "schema" => 1, "title" => "Main", "collections" => [ "articles" ], "queries" => [ "articles" ],
+    site.join("navigation/main.yml").write({ "schema" => 1, "title" => "Main", "collections" => [ "articles" ], "queries" => [ "articles" ], **extra.stringify_keys,
       "item_fields" => [ { "handle" => "icon", "field" => { "type" => "text", "instructions" => "An icon name" } } ],
       "kinds" => { "featured" => { "display" => "Featured", "link" => "required",
                                    "fields" => [ { "handle" => "badge", "field" => { "type" => "integer", "required" => true } } ] } } }.to_yaml)
@@ -193,13 +193,20 @@ class Nibble::OperationsTest < ActiveSupport::TestCase
       menu = run_op("describe_schema", "kind" => "navigation", "handle" => "main")
       node = menu.dig("tree", "items", "properties")
 
-      assert_equal %w[link heading query featured], node.dig("kind", "enum")
+      assert_equal %w[link query featured], node.dig("kind", "enum")
       assert_equal %w[url entry term global asset], node.dig("type", "enum")
       assert_empty %w[id url ref title new_tab hidden fields query show_from show_until children] - node.keys
       assert_equal "string", node.dig("fields", "properties", "icon", "type")
       assert_equal %w[articles], node.dig("query", "properties", "collection", "enum")
       assert_equal "integer", menu.dig("kinds", "featured", "fields", "properties", "badge", "type")
       assert_equal %w[badge], menu.dig("kinds", "featured", "fields", "required")
+    end
+  end
+
+  test "the heading kind is offered only to a menu that allows headings" do
+    @grant = grant_for(users(:editor), preset: "read")
+    with_menu_schema(headings: true) do
+      assert_equal %w[link heading query featured], run_op("describe_schema", "kind" => "navigation", "handle" => "main").dig("tree", "items", "properties", "kind", "enum")
     end
   end
 

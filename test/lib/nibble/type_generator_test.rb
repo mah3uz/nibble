@@ -70,11 +70,11 @@ class Nibble::TypeGeneratorTest < ActiveSupport::TestCase
     end
   end
 
-  def with_menu(handle = "main")
+  def with_menu(handle = "main", **extra)
     with_copied_theme do |types, _|
       types.dirname.join("starter/schema/navigation").mkpath
       types.dirname.join("starter/schema/navigation/#{handle}.yml").write(
-        { "schema" => 1, "title" => "Menu", "collections" => [ "posts" ], "entry_fields" => [ "title" ],
+        { "schema" => 1, "title" => "Menu", "collections" => [ "posts" ], "entry_fields" => [ "title" ], **extra.stringify_keys,
           "item_fields" => [ { "handle" => "icon", "field" => { "type" => "text" } }, { "handle" => "dense", "field" => { "type" => "toggle" } } ],
           "kinds" => { "featured" => { "display" => "Featured", "link" => "required",
                                          "fields" => [ { "handle" => "badge", "field" => { "type" => "integer" } } ] } } }.to_yaml
@@ -88,9 +88,20 @@ class Nibble::TypeGeneratorTest < ActiveSupport::TestCase
   test "a menu's item fields, entry fields and kinds are typed in its own item type" do
     with_menu do
       assert_match "export type MainNavigationItem =", generated
-      assert_match "kind: 'link' | 'heading'; fields: { icon: string | null; dense: boolean }; entry: MainNavigationEntry | null", generated
-      assert_match "kind: 'featured'; fields: { icon: string | null; dense: boolean; badge: number | null }", generated
+      assert_match "kind: 'link'; url: string; fields: { icon: string | null; dense: boolean }; entry: MainNavigationEntry | null", generated
+      assert_match "kind: 'featured'; url: string; fields: { icon: string | null; dense: boolean; badge: number | null }", generated
       assert_match "export type MainNavigationEntry = { title: string | null }", generated
+    end
+  end
+
+  # Headings are opt-in, so a menu that doesn't allow them keeps its url a string and existing themes keep compiling.
+  test "a menu without headings types url as a string, and one with them narrows on kind" do
+    with_menu do
+      assert_no_match "'heading'", generated.slice(/export type MainNavigationItem =.*?\n\n/m)
+    end
+    with_menu("main", headings: true) do
+      assert_match "kind: 'heading'; url: null;", generated
+      assert_match "kind: 'link'; url: string;", generated
     end
   end
 

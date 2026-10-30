@@ -90,10 +90,13 @@ module Nibble
         "#{handle}: #{types.empty? ? 'unknown' : types.join(' | ')}"
       end
       shared = members.(menu.item_fields)
-      variants = [ [ menu.kind_handles - menu.kinds.map(&:handle), shared ] ] +
-        menu.kinds.map { |kind| [ [ kind.handle ], shared + members.(kind.fields) ] }
-      lines = variants.map do |kinds, own|
-        "  | (NavigationItemBase<#{name}Item> & { kind: #{kinds.map { |kind| "'#{kind}'" }.join(' | ')}; fields: #{object_type(own)}; entry: #{name}Entry | null })"
+      urls = { "none" => "null", "required" => "string", "optional" => "string | null" }
+      variants = [ [ "link", "string", shared ] ]
+      variants << [ "heading", "null", shared ] if menu.headings?
+      variants << [ "query", "null", shared ] if menu.queries.any?
+      variants += menu.kinds.map { |kind| [ kind.handle, urls.fetch(kind.link, "string | null"), shared + members.(kind.fields) ] }
+      lines = variants.map do |kind, url, own|
+        "  | (NavigationItemBase<#{name}Item> & { kind: '#{kind}'; url: #{url}; fields: #{object_type(own)}; entry: #{name}Entry | null })"
       end
       "export type #{name}Entry = #{object_type(entry)}\nexport type #{name}Item =\n#{lines.join("\n")}\n"
     end

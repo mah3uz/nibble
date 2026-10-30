@@ -193,8 +193,9 @@ defineProps<ViewProps['posts/show'] & { page: PostsPost }>()
 
 `useNavigation('main')` returns that menu's items typed with `MainNavigationItem`, so `item.fields.icon` compiles only
 when the menu's `item_fields` declare `icon`, and `item.entry` holds the `entry_fields` the menu lists. A custom kind
-has its own member of the union: narrow on `item.kind` to read the fields only that kind has. A menu the schema
-doesn't name returns `NavigationItem`, whose `fields` and `entry` are loose.
+has its own member of the union, as does `heading` when the menu sets `headings: true`: narrow on `item.kind` to read
+the fields only that kind has, and to see that a heading has no `url`. A menu with none of these is link-only, with `url`
+a string. A menu the schema doesn't name returns `NavigationItem`, whose `fields` and `entry` are loose.
 
 `@nibble` exports a few types of its own for the shared props: `SiteProps`, `Link` (a menu item), `RecordSummary`,
 `SetBlock`, `RichTextValue`, `ImageValue`, `PaginationMeta`, `SeoProps`, and the form types `NibbleForm`,
