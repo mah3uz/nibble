@@ -421,6 +421,62 @@ describe('useNibbleForm steps and saving for later', () => {
   })
 })
 
+describe('options narrowed by a parent choice', () => {
+  const section = field({
+    handle: 'section',
+    type: 'checkboxes',
+    options: [
+      { value: 'billing', label: 'Billing' },
+      { value: 'support', label: 'Support' },
+    ],
+  })
+  const page = field({
+    handle: 'page',
+    type: 'select',
+    parent: 'section',
+    options: [
+      { value: 'invoices', label: 'Invoices', parents: ['billing'] },
+      { value: 'outages', label: 'Outages', parents: ['support'] },
+      { value: 'contact', label: 'Contact', parents: ['billing', 'support'] },
+    ],
+  })
+
+  it('offers only the options of a chosen parent, any of several, and none before one is chosen', async () => {
+    const { optionsFor } = await import('../useNibbleForm')
+    const values = (chosen: string[]) => optionsFor(page, { section: chosen }).map((option) => option.value)
+
+    expect(values([])).toEqual([])
+    expect(values(['billing'])).toEqual(['invoices', 'contact'])
+    expect(values(['billing', 'support'])).toEqual(['invoices', 'outages', 'contact'])
+    expect(optionsFor(section, {})).toEqual(section.options)
+  })
+
+  it("clears an answer that no longer fits when the parent changes, so the visitor can't send a pairing the server refuses", async () => {
+    const { useNibbleForm } = await import('../useNibbleForm')
+    const contact = useNibbleForm(form([section, page]))
+    const values = contact.values as Record<string, unknown>
+
+    values.section = ['billing']
+    values.page = 'contact'
+    values.section = ['support']
+    expect(values.page).toBe('contact')
+
+    values.page = 'outages'
+    values.section = ['billing']
+    expect(values.page).toBe('')
+  })
+
+  it('draws every option before JavaScript runs, so the form still works without it', async () => {
+    const { useNibbleForm } = await import('../useNibbleForm')
+    mounted.length = 0
+    const contact = useNibbleForm(form([section, page]))
+
+    expect(contact.options(page)).toHaveLength(3)
+    mounted.splice(0).forEach((fn) => fn())
+    expect(contact.options(page)).toEqual([])
+  })
+})
+
 describe('useNibbleForm value types', () => {
   type ContactValues = { name: string; topic: 'sales' | 'support' | ''; files: File[] }
   type Form = ReturnType<typeof useNibbleForm<ContactValues>>

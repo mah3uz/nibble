@@ -66,7 +66,7 @@ export type NibbleFormConditions = {
   rules: { field: string | null; operator: NibbleFormConditionOperator; value: string }[]
 }
 
-type NibbleFormOption = { value: string; label: string }
+export type NibbleFormOption = { value: string; label: string; parents?: string[] }
 
 type NibbleFormFieldBase = {
   handle: string
@@ -106,19 +106,20 @@ type NibbleFormFieldTypes = {
   select: {
     placeholder?: string
     options: NibbleFormOption[]
+    parent?: string
     multiple?: boolean
     max_items?: number
     clearable?: boolean
   }
-  radio: { options: NibbleFormOption[]; inline?: boolean }
-  checkboxes: { options: NibbleFormOption[]; inline?: boolean }
+  radio: { options: NibbleFormOption[]; parent?: string; inline?: boolean }
+  checkboxes: { options: NibbleFormOption[]; parent?: string; inline?: boolean }
   date: { inline?: boolean; time_enabled?: boolean; earliest_date?: string; latest_date?: string; time_zone?: string }
   files: { max_files?: number; max_file_size?: number; extensions?: string[] }
   calculation: { formula: string; decimals?: number; prepend?: string; append?: string }
   note: { text_html?: string }
   time: { placeholder?: string; seconds?: boolean; earliest?: string; latest?: string }
   color: { swatches: string[]; allow_any: boolean }
-  button_group: { options: NibbleFormOption[] }
+  button_group: { options: NibbleFormOption[]; parent?: string }
 }
 
 type NibbleFormFieldKey = {
