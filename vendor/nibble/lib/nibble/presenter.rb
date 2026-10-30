@@ -37,7 +37,9 @@ module Nibble
     def present_navigation(tree)
       Dependencies.add("navigation:#{tree.handle}")
       @preload.load([ tree ])
-      nodes(tree.tree.to_a)
+      entry_fields = Array(tree.item&.[]("entry_fields"))
+      @preload.load(tree.links.filter_map { |node| @preload.record("entry", node["id"]) if node["type"] == "entry" }) if entry_fields.any?
+      nodes(tree.tree.to_a, tree.item_fields, entry_fields, headings: tree.item&.[]("headings") == true)
     end
 
     private
@@ -103,17 +105,45 @@ module Nibble
       { "id" => user.id, "name" => user.name }
     end
 
-    def nodes(list)
+    def nodes(list, item_fields, entry_fields, headings:)
       list.filter_map do |node|
-        children = nodes(node["children"].to_a)
-        if node["type"] == "url"
-          { "type" => "url", "title" => node["title"], "url" => node["url"], "children" => children }
-        else
-          target = @preload.record(node["type"], node["id"]) or next
-          Dependencies.add("#{target.record_type}:#{target.id}")
-          { "type" => node["type"], "id" => target.id, "title" => node["title"].presence || target.title, "url" => target.uri, "children" => children }
+        next if node["hidden"] == true
+
+        kind = Records::NavigationTree.kind(node)
+        link = case kind
+        when "link" then link(node)
+        when "heading" then { "type" => nil, "title" => node["title"], "url" => nil } if headings
         end
+        next unless link
+
+        target = link.delete("target")
+        link.merge(
+          "kind" => kind, "new_tab" => node["new_tab"] == true,
+          "fields" => augmented(item_fields, node["fields"]),
+          "entry" => (augmented(target.blueprint_fields.only(entry_fields), target.values) if target.is_a?(Records::Entry) && entry_fields.any?),
+          "children" => nodes(node["children"].to_a, item_fields, entry_fields, headings:)
+        )
       end
+    end
+
+    def link(node)
+      case node["type"]
+      when "url" then { "type" => "url", "title" => node["title"], "url" => node["url"] }
+      when "global"
+        url = GlobalLinks.address(node["ref"]).presence or return nil
+        { "type" => "global", "title" => node["title"], "url" => url }
+      when *Records::NavigationTree::RECORD_LINKS
+        target = @preload.record(node["type"], node["id"]) or return nil
+        Dependencies.add("#{target.record_type}:#{target.id}")
+        title, url = target.is_a?(Records::Asset) ? [ target.display_title, target.url ] : [ target.title, target.uri ]
+        { "type" => node["type"], "id" => target.id, "title" => node["title"].presence || title, "url" => url, "target" => target }
+      end
+    end
+
+    def augmented(fields, values)
+      return {} if fields.empty?
+
+      Resolvers.with_overrides(@preload.resolvers) { fields.add_values(values.to_h.stringify_keys).augment.values.except(*hidden(fields)) }
     end
 
     def key(record) = "#{record.record_type}:#{record.id}"

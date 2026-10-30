@@ -124,12 +124,44 @@ module Nibble
 
     def present_navigation(presenter, record, handle)
       # A folder is its own tree, so a navigation named after one is read from the files rather than a record.
-      return Files.index.tree(handle) if Files.collections.any? { |item| item.handle == handle }
-      return presenter.present_navigation(record) if record
+      return with_trail(file_links(Files.index.tree(handle))) if Files.collections.any? { |item| item.handle == handle }
+      return with_trail(presenter.present_navigation(record)) if record
 
       Dependencies.add("navigation:#{handle}")
       []
     end
+
+    def file_links(links) = links.map { |link| link.merge("kind" => "link", "new_tab" => false, "fields" => {}, "children" => file_links(link["children"])) }
+
+    def with_trail(items)
+      items.map do |item|
+        children = with_trail(item["children"].to_a)
+        path = site_path(item["url"])
+        current = !path.nil? && path == page_path
+        trail = current || children.any? { |child| child["in_trail"] } || (path.present? && path != "/" && page_path.start_with?("#{path}/"))
+        item.merge("current" => current, "in_trail" => trail, "children" => children)
+      end
+    end
+
+    def page_path = @page_path ||= trimmed(@request_path.to_s.split("?", 2).first.to_s)
+
+    # A link with a fragment points into a page rather than at it, so it is never the current item.
+    def site_path(url)
+      url = url.to_s.strip
+      return nil if url.empty? || url.include?("#")
+
+      unless url.start_with?("/") && !url.start_with?("//")
+        uri = URI.parse(url)
+        return nil unless [ nil, "http", "https" ].include?(uri.scheme&.downcase) && uri.host&.casecmp?(URI.parse(Nibble.config.url.to_s).host.to_s)
+
+        url = uri.path.presence || "/"
+      end
+      trimmed(url.split("?", 2).first)
+    rescue URI::InvalidURIError
+      nil
+    end
+
+    def trimmed(path) = path.length > 1 ? path.chomp("/") : path
 
     def layout_for
       @match.item&.[]("layout") || "default"

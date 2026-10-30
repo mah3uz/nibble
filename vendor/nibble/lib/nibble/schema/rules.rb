@@ -44,7 +44,10 @@ module Nibble
         },
         "navigation" => {
           required: %w[title],
-          keys: { "title" => STRING, "max_depth" => INTEGER, "collections" => STRINGS, "taxonomies" => STRINGS }
+          keys: {
+            "title" => STRING, "max_depth" => INTEGER, "collections" => STRINGS, "taxonomies" => STRINGS,
+            "globals" => ->(value) { BOOLEAN.(value) || STRINGS.(value) }, "assets" => BOOLEAN, "headings" => BOOLEAN, "item_fields" => ARRAY, "entry_fields" => STRINGS
+          }
         },
         "forms" => {
           required: %w[title],
