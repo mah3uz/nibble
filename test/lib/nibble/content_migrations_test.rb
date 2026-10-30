@@ -408,6 +408,239 @@ class Nibble::ContentMigrationsTest < ActiveSupport::TestCase
     assert_equal %w[theme/2026_10_01_first theme/2026_10_02_second], Nibble::ContentMigrations.pending.map(&:name)
   end
 
+  def move_schema(kind, from, to)
+    folder = @nibble_themes.join("records/schema/#{kind}")
+    folder.join("#{from}.yml").rename(folder.join("#{to}.yml"))
+    blueprints = @nibble_themes.join("records/schema/blueprints/#{kind}/#{from}")
+    blueprints.rename(blueprints.dirname.join(to)) if blueprints.exist?
+    Nibble.reset_schema!
+  end
+
+  def drop_schema(kind, handle)
+    @nibble_themes.join("records/schema/#{kind}/#{handle}.yml").delete
+    FileUtils.rm_rf(@nibble_themes.join("records/schema/blueprints/#{kind}/#{handle}"))
+    Nibble.reset_schema!
+  end
+
+  def save_menu(locale, tree)
+    record = Nibble::Records::NavigationTree.find_or_initialize_by(handle: "docs_menu", locale:)
+    assert lifecycle(record, :save, "tree" => tree).ok?
+    record.reload
+  end
+
+  # One person holding the abilities through a role, and an app they connected with the same abilities granted.
+  def delegate(*abilities)
+    role = Nibble::Role.create!(handle: "specific", title: "Specific", abilities: abilities + %w[apps.connect])
+    users(:author).roles = [ role ]
+    Nibble::Grant.create!(user: users(:author), oauth_client: Nibble::OauthClient.cli, kind: "app", name: "Claude", preset: "custom", abilities:)
+    Nibble::AgentAccess.update!(enabled: true, areas: { "navigation" => { "read" => true, "write" => true }, "globals" => { "read" => true, "write" => true } })
+  end
+
+  def person_and_app_can?(ability)
+    user = Nibble::User.find(users(:author).id)
+    grant = Nibble::Grant.find_by!(name: "Claude")
+    [ nil, grant ].map { |held| Nibble::Policy.can?(Nibble::Principal.new(user:, grant: held), ability) }
+  end
+
+  def run_again
+    Nibble::Records::ContentMigration.delete_all
+    run_migrations
+  end
+
+  test "a renamed menu keeps every item in every locale, and whoever could edit it still can" do
+    in_two_locales do
+      doc = create_entry("docs", { "title" => "Guide" })
+      english = save_menu("en", [ { "type" => "entry", "id" => doc.id, "children" => [ { "type" => "url", "title" => "Home", "url" => "/" } ] } ])
+      french = save_menu("fr", [ { "type" => "url", "title" => "Accueil", "url" => "/fr" } ])
+      delegate("navigation.docs_menu.edit")
+      move_schema("navigation", "docs_menu", "guide_menu")
+      migration("2026_10_30_rename_menu", { "rename_navigation" => { "from" => "docs_menu", "to" => "guide_menu" } })
+      editor = roles(:editor).abilities
+
+      results = run_migrations
+
+      assert_equal [ [ "rename navigation docs_menu to guide_menu", 2 ] ], results.first.counts
+      assert_empty Nibble::Records::NavigationTree.where(handle: "docs_menu")
+      assert_equal [ "guide_menu", english.tree ], [ english.reload.handle, english.tree ]
+      assert_equal [ "guide_menu", french.tree ], [ french.reload.handle, french.tree ]
+      assert english.revisions.any?, "the id is kept, so the menu's history follows it"
+      assert_equal [ doc.id ], Nibble::Records::Relation.where(source_type: "navigation", source_id: english.id).pluck(:target_id)
+      assert_equal [ true, true ], person_and_app_can?("navigation.guide_menu.edit")
+      assert_equal editor, roles(:editor).reload.abilities, "a wildcard already covers the new handle and is left alone"
+
+      run_again
+
+      assert_equal [ english.tree, french.tree ], [ english.reload.tree, french.reload.tree ]
+      assert_equal %w[navigation.guide_menu.edit apps.connect], Nibble::Role.find_by!(handle: "specific").abilities
+      assert_equal %w[navigation.guide_menu.edit], Nibble::Grant.find_by!(name: "Claude").abilities
+    end
+  end
+
+  test "a rename leaves a locale where the new menu already has one, instead of overwriting it" do
+    in_two_locales do
+      old = save_menu("en", [ { "type" => "url", "title" => "Old", "url" => "/old" } ])
+      moved = save_menu("fr", [ { "type" => "url", "title" => "Vieux", "url" => "/fr/old" } ])
+      move_schema("navigation", "docs_menu", "guide_menu")
+      kept = Nibble::Records::NavigationTree.create!(handle: "guide_menu", locale: "en", tree: [ { "type" => "url", "title" => "New", "url" => "/new" } ])
+      migration("2026_10_30_rename_menu", { "rename_navigation" => { "from" => "docs_menu", "to" => "guide_menu" } })
+
+      results = run_migrations
+
+      assert_equal [ [ "rename navigation docs_menu to guide_menu, leaving en where guide_menu already has one", 1 ] ], results.first.counts
+      assert_equal [ "docs_menu", "Old" ], [ old.reload.handle, old.tree.first["title"] ]
+      assert_equal [ "guide_menu", "New" ], [ kept.reload.handle, kept.tree.first["title"] ]
+      assert_equal "guide_menu", moved.reload.handle
+    end
+  end
+
+  test "a deleted menu leaves no rows, history, drafts, relations or permissions behind" do
+    doc = create_entry("docs", { "title" => "Guide" })
+    menu = save_menu("en", [ { "type" => "entry", "id" => doc.id } ])
+    Nibble::Records::Draft.create!(record: menu, data: { "tree" => [] })
+    delegate("navigation.docs_menu.edit", "navigation.*.view")
+    drop_schema("navigation", "docs_menu")
+    migration("2026_10_30_drop_menu", { "delete_navigation" => { "navigation" => "docs_menu" } })
+
+    assert_equal [ [ "delete navigation docs_menu", 1 ] ], run_migrations.first.counts
+
+    assert_empty Nibble::Records::NavigationTree.where(handle: "docs_menu")
+    assert_empty Nibble::Records::Revision.where(record_type: "navigation", record_id: menu.id)
+    assert_empty Nibble::Records::Draft.where(record_type: "navigation", record_id: menu.id)
+    assert_empty Nibble::Records::Relation.where(source_type: "navigation", source_id: menu.id)
+    assert_equal %w[navigation.*.view apps.connect], Nibble::Role.find_by!(handle: "specific").abilities,
+                 "a permission left on the handle would come back with any menu given that name later"
+    assert_equal %w[navigation.*.view], Nibble::Grant.find_by!(name: "Claude").abilities
+    assert_equal "Guide", doc.reload.title
+
+    assert_equal [ [ "delete navigation docs_menu", 0 ] ], run_again.first.counts
+  end
+
+  test "a renamed global set keeps its values in every locale, and whoever could edit it still can" do
+    global_schema("contact", "phone" => "text")
+    in_two_locales do
+      english = save_global("contact", "en", "phone" => "555 0100")
+      french = save_global("contact", "fr", "phone" => "01 23 45")
+      delegate("globals.contact.edit")
+      @nibble_themes.join("records/schema/globals/contact.yml").delete
+      global_schema("details", "phone" => "text")
+      migration("2026_10_30_rename_contact", { "rename_global" => { "from" => "contact", "to" => "details" } })
+
+      assert_empty Nibble::Drift.issues, "the pending rename answers the removed global set"
+
+      assert_equal [ [ "rename global contact to details", 2 ] ], run_migrations.first.counts
+      assert_equal [ "details", "555 0100" ], [ english.reload.handle, english.data["phone"] ]
+      assert_equal [ "details", "01 23 45" ], [ french.reload.handle, french.data["phone"] ]
+      assert english.revisions.any?
+      assert_equal [ true, true ], person_and_app_can?("globals.details.edit")
+      assert_empty Nibble::Drift.issues
+
+      assert_equal [ [ "rename global contact to details", 0 ] ], run_again.first.counts
+      assert_equal [ true, true ], person_and_app_can?("globals.details.edit")
+    end
+  end
+
+  test "a deleted global set leaves no rows, history, relations or permissions behind" do
+    global_schema("contact", "phone" => "text")
+    global_schema("hours", "open" => "text")
+    contact = save_global("contact", "en", "phone" => "555 0100")
+    hours = save_global("hours", "en", "open" => "9–5")
+    article = create_entry("articles", { "title" => "Linked" })
+    Nibble::Records::Relation.create!(source: article, target_type: "global", target_id: contact.id, field: "related", locale: "en")
+    delegate("globals.contact.edit")
+    drop_schema("globals", "contact")
+    migration("2026_10_30_drop_contact", { "delete_global" => { "global" => "contact" } })
+
+    run_migrations
+
+    assert_empty Nibble::Records::GlobalSet.where(handle: "contact")
+    assert_empty Nibble::Records::Revision.where(record_type: "global", record_id: contact.id)
+    assert_empty Nibble::Records::Relation.where(target_type: "global", target_id: contact.id)
+    assert_equal %w[apps.connect], Nibble::Role.find_by!(handle: "specific").abilities
+    assert_equal "9–5", hours.reload.data["open"], "only the named set goes"
+    assert_empty Nibble::Drift.issues
+  end
+
+  test "a menu or global set still in the schema is never renamed away from or deleted, nor renamed to one it lacks" do
+    save_menu("en", [ { "type" => "url", "title" => "Home", "url" => "/" } ])
+    refusals = {
+      { "rename_navigation" => { "from" => "docs_menu", "to" => "main" } } => "navigation 'docs_menu' is still in the schema",
+      { "delete_navigation" => { "navigation" => "docs_menu" } } => "navigation 'docs_menu' is still in the schema",
+      { "rename_navigation" => { "from" => "gone", "to" => "nowhere" } } => "navigation 'nowhere' isn't in the schema",
+      { "rename_global" => { "from" => "site", "to" => "seo" } } => "global set 'site' is still in the schema",
+      { "delete_global" => { "global" => "integrations" } } => "global set 'integrations' is still in the schema",
+      { "rename_global" => { "from" => "gone", "to" => "nowhere" } } => "global set 'nowhere' isn't in the schema",
+      { "delete_global" => {} } => "only deletes a global set"
+    }
+
+    refusals.each do |operation, message|
+      migration("2026_10_30_refused", operation)
+      assert_match message, assert_raises(Nibble::Error) { run_migrations }.message
+    end
+    assert Nibble::Records::NavigationTree.exists?(handle: "docs_menu")
+  end
+
+  # Abilities name the handle, so without this a rename leaves editors and apps locked out of the collection.
+  test "a renamed collection carries its permissions and its agent access settings" do
+    delegate("entries.docs.edit", "workflow.approve.docs")
+    Nibble::AgentAccess.update!(areas: { "entries.docs" => { "read" => true, "write" => false } })
+    move_schema("collections", "docs", "guides")
+    migration("2026_10_30_rename_docs", { "rename_collection" => { "from" => "docs", "to" => "guides" } })
+
+    run_migrations
+
+    assert_equal [ true, false ], person_and_app_can?("entries.guides.edit"),
+                 "an administrator who stopped apps writing to the collection still has them stopped under its new handle"
+    assert_equal [ true, false ], person_and_app_can?("workflow.approve.guides")
+    assert_equal %w[entries.guides.edit workflow.approve.guides], Nibble::Grant.find_by!(name: "Claude").abilities
+    assert_nil Nibble::AgentAccess.settings.dig("areas", "entries.docs")
+  end
+
+  test "a collection merged into one that has records drops the old permissions rather than widen them to those records" do
+    create_entry("docs", { "title" => "Merged" })
+    create_entry("articles", { "title" => "Already here" })
+    delegate("entries.docs.edit")
+    drop_schema("collections", "docs")
+    migration("2026_10_30_merge_docs", { "rename_collection" => { "from" => "docs", "to" => "articles" } })
+
+    assert_match "dropping docs's permissions from 2 roles and apps", run_migrations.first.counts.first.first
+    assert_equal [ false, false ], person_and_app_can?("entries.articles.edit")
+    assert_equal %w[apps.connect], Nibble::Role.find_by!(handle: "specific").abilities
+  end
+
+  test "a dry run of a rename moves no menu and no permission" do
+    menu = save_menu("en", [ { "type" => "url", "title" => "Home", "url" => "/" } ])
+    delegate("navigation.docs_menu.edit")
+    move_schema("navigation", "docs_menu", "guide_menu")
+    migration("2026_10_30_rename_menu", { "rename_navigation" => { "from" => "docs_menu", "to" => "guide_menu" } })
+
+    assert_equal 1, run_migrations(dry_run: true).first.counts.first.last
+    assert_equal "docs_menu", menu.reload.handle
+    assert_equal %w[navigation.docs_menu.edit apps.connect], Nibble::Role.find_by!(handle: "specific").abilities
+  end
+
+  test "nibble:check warns about a stored menu the schema no longer has, until a migration is written for it" do
+    save_menu("en", [ { "type" => "url", "title" => "Home", "url" => "/" } ])
+    drop_schema("navigation", "docs_menu")
+
+    warning = Nibble::Check.run.warnings.find { |item| item.source == "navigation 'docs_menu'" }
+    assert_match "isn't in the schema; add a rename_navigation or delete_navigation migration", warning&.message
+
+    migration("2026_10_30_drop_menu", { "delete_navigation" => { "navigation" => "docs_menu" } })
+    assert_nil Nibble::Check.run.warnings.find { |item| item.source == "navigation 'docs_menu'" }
+  end
+
+  # The check runs before content migrations on every deploy, so an error here would stop the very deploy that fixes it.
+  test "a role naming a handle that a pending migration renames doesn't stop the deploy" do
+    save_menu("en", [ { "type" => "url", "title" => "Home", "url" => "/" } ])
+    Nibble::Role.create!(handle: "specific", title: "Specific", abilities: %w[navigation.docs_menu.edit])
+    move_schema("navigation", "docs_menu", "guide_menu")
+
+    assert(Nibble::Check.run.problems.any? { |problem| problem.message.include?("'navigation.docs_menu.edit' doesn't match") })
+
+    migration("2026_10_30_rename_menu", { "rename_navigation" => { "from" => "docs_menu", "to" => "guide_menu" } })
+    assert_not(Nibble::Check.run.problems.any? { |problem| problem.source == "role 'specific'" })
+  end
+
   test "a site's own migrations belong to that site, not to whatever runs these tests" do
     site_layer = Nibble::ContentMigrations.layers.to_h.fetch(:site)
 

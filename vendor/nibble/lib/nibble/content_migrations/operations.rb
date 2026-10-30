@@ -1,8 +1,9 @@
 module Nibble
   module ContentMigrations
     module Operations
-      NAMES = %w[rename_field change_blueprint set_default move_to_taxonomy delete_collection rename_collection move_field remove_field].freeze
-      REMOVED = %w[delete_collection rename_collection].freeze
+      NAMES = %w[rename_field change_blueprint set_default move_to_taxonomy delete_collection rename_collection move_field remove_field
+                 rename_navigation delete_navigation rename_global delete_global].freeze
+      REMOVED = %w[delete_collection rename_collection rename_navigation delete_navigation rename_global delete_global].freeze
       COLUMNS = %w[title slug].freeze
 
       module_function
@@ -107,6 +108,7 @@ module Nibble
         PageCache.purge("collection:#{handle}")
         Records::Entry.where(collection: handle).update_all(parent_id: nil)
         entries.delete_all
+        Abilities.carry!("entry", handle, nil)
         [ "delete #{handle}", count ]
       end
 
@@ -116,11 +118,72 @@ module Nibble
         from, to = args.values_at("from", "to")
         entries = Records::Entry.where(collection: from)
         count = entries.count
+        merged = Records::Entry.where(collection: to).exists?
         entries.update_all(collection: to)
         # The index files a record under its collection, so every one of them is now under the wrong scope.
         Records::Entry.where(collection: to).find_each { |entry| Search.index_record(entry) }
         PageCache.purge("collection:#{from}")
-        [ "rename #{from} to #{to}", count ]
+        [ "rename #{from} to #{to}#{carry_permissions(Records::Entry, from, to, merged)}", count ]
+      end
+
+      def rename_navigation(args) = rename_set(Records::NavigationTree, args)
+      def rename_global(args) = rename_set(Records::GlobalSet, args)
+      def delete_navigation(args) = delete_set(Records::NavigationTree, args["navigation"])
+      def delete_global(args) = delete_set(Records::GlobalSet, args["global"])
+
+      # Ids are kept, so revisions, drafts and relations follow. A locale the new handle already has is left as it
+      # is rather than overwritten.
+      def rename_set(model, args)
+        from, to = args.values_at("from", "to")
+        type = model.record_type
+        taken = model.where(handle: to).pluck(:locale)
+        count = model.where(handle: from).where.not(locale: taken).update_all(handle: to, updated_at: Time.current)
+        left = model.where(handle: from).order(:locale).pluck(:locale)
+        PageCache.purge("#{type}:#{from}", "#{type}:#{to}")
+        message = "rename #{type} #{from} to #{to}#{carry_permissions(model, from, to, taken.any?)}"
+        [ left.empty? ? message : "#{message}, leaving #{left.join(', ')} where #{to} already has one", count ]
+      end
+
+      def delete_set(model, handle)
+        type = model.record_type
+        records = model.where(handle:)
+        ids = records.ids
+        Records::Draft.where(record_type: type, record_id: ids).delete_all
+        Records::Revision.where(record_type: type, record_id: ids).delete_all
+        Records::Relation.where(source_type: type, source_id: ids).delete_all
+        Records::Relation.where(target_type: type, target_id: ids).delete_all
+        records.update_all(origin_id: nil) if model.column_names.include?("origin_id")
+        records.delete_all
+        Abilities.carry!(type, handle, nil)
+        PageCache.purge("#{type}:#{handle}")
+        [ "delete #{type} #{handle}", ids.size ]
+      end
+
+      # Carried into a handle that already holds records, the old permissions would reach those records too.
+      def carry_permissions(model, from, to, merged)
+        dropped = Abilities.carry!(model.record_type, from, merged ? nil : to)
+        holders = dropped == 1 ? "role or app" : "roles and apps"
+        ", dropping #{from}'s permissions from #{dropped} #{holders} as #{to} already had records" if merged && dropped.positive?
+      end
+
+      def rename_navigation_problem(args, _item) = rename_problem(:navigation, "navigation", args)
+      def rename_global_problem(args, _item) = rename_problem(:globals, "global set", args)
+      def delete_navigation_problem(args, _item) = delete_problem(:navigation, "navigation", args["navigation"])
+      def delete_global_problem(args, _item) = delete_problem(:globals, "global set", args["global"])
+
+      def rename_problem(kind, noun, args)
+        from, to = args.values_at("from", "to")
+        return "needs from and to" if from.blank? || to.blank?
+        return "from and to are the same #{noun}" if from == to
+        return "#{noun} '#{from}' is still in the schema" if Nibble.schema.find(kind, from.to_s)
+
+        "#{noun} '#{to}' isn't in the schema" unless Nibble.schema.find(kind, to.to_s)
+      end
+
+      def delete_problem(kind, noun, handle)
+        return "only deletes a #{noun}" if handle.blank?
+
+        "#{noun} '#{handle}' is still in the schema" if Nibble.schema.find(kind, handle.to_s)
       end
 
       def rename_collection_problem(args, _item)

@@ -41,7 +41,9 @@ module Nibble
 
     def removed_parent(kind, handle, count)
       noun = kind == "globals" ? "global set" : kind.singularize
-      Issue.new(source: "#{kind}/#{handle}", message: "#{noun} '#{handle}' was removed and #{count} #{'record'.pluralize(count)} still belong to it")
+      operation = Coverage::PARENTS[kind]
+      Issue.new(source: "#{kind}/#{handle}", message: "#{noun} '#{handle}' was removed and #{count} #{'record'.pluralize(count)} still belong to it; " \
+                                                      "add a rename_#{operation} or delete_#{operation} migration in site/schema/migrations")
     end
 
     def removed_blueprint(scope, blueprint, count)
@@ -71,6 +73,8 @@ module Nibble
     end
 
     class Coverage
+      PARENTS = { "collections" => "collection", "globals" => "global", "navigation" => "navigation" }.freeze
+
       def initialize(migrations)
         @operations = migrations.flat_map(&:operations).map { |operation| [ operation.keys.first.to_s, operation.values.first.to_h.stringify_keys ] }
       end
@@ -90,14 +94,13 @@ module Nibble
         @operations.any? { |name, args| name == "change_blueprint" && scope == Drift.scope_of(args) && args["from"] == blueprint }
       end
 
-      # The operations that exist to empty a collection of its records, so a migration written to answer this
-      # very issue is not reported as the reason a site cannot boot.
+      # The operations that exist to empty a collection, global set or navigation of its records, so a migration
+      # written to answer this very issue is not reported as the reason a site cannot boot.
       def parent?(kind, handle)
-        return false unless kind == "collections"
+        noun = PARENTS[kind] or return false
 
         @operations.any? do |name, args|
-          (name == "delete_collection" && args["collection"] == handle) ||
-            (name == "rename_collection" && args["from"] == handle)
+          (name == "delete_#{noun}" && args[noun] == handle) || (name == "rename_#{noun}" && args["from"] == handle)
         end
       end
     end

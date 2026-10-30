@@ -153,6 +153,7 @@ module Nibble
       check_roles(schema)
       check_captcha(schema)
       check_removed_forms(schema)
+      check_removed_navigations(schema)
       capture("site/schema/migrations") { ContentMigrations.pending } if @config.equal?(Nibble.config)
       check_drift(schema) if @config.equal?(Nibble.config)
       check_uris(schema) if @config.equal?(Nibble.config)
@@ -170,6 +171,27 @@ module Nibble
       end
     rescue ActiveRecord::StatementInvalid
       nil
+    end
+
+    def check_removed_navigations(schema)
+      covered = Drift::Coverage.new(pending_migrations)
+      Records::NavigationTree.group(:handle).count.except(*schema.navigations.map(&:handle)).each do |handle, count|
+        next if covered.parent?("navigation", handle)
+
+        @warnings << Problem.new(source: "navigation '#{handle}'", level: :warning,
+          message: "has a menu saved in #{count} #{'locale'.pluralize(count)} but isn't in the schema; " \
+                   "add a rename_navigation or delete_navigation migration in site/schema/migrations")
+      end
+    rescue ActiveRecord::StatementInvalid
+      nil
+    end
+
+    def pending_migrations
+      return [] unless @config.equal?(Nibble.config)
+
+      ContentMigrations.pending
+    rescue Error
+      []
     end
 
     def check_captcha(schema)
@@ -275,8 +297,9 @@ module Nibble
     def check_roles(schema)
       return unless @config.equal?(Nibble.config)
 
+      pending = pending_migrations
       Nibble::Role.where(superuser: false).find_each do |role|
-        Access::Catalogue.unknown(role.abilities, schema:).each do |ability|
+        Access::Catalogue.unknown(ContentMigrations::Abilities.after(role.abilities, pending), schema:).each do |ability|
           problem("role '#{role.handle}'", "ability '#{ability}' doesn't match anything in this site's schema")
         end
       end

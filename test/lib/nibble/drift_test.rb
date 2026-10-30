@@ -98,7 +98,7 @@ class Nibble::DriftTest < ActiveSupport::TestCase
   test "records in a collection the schema dropped are reported" do
     create_entry("articles", { "title" => "A" }).update_columns(collection: "news")
 
-    assert_equal [ "collections/news: collection 'news' was removed and 1 record still belong to it" ], issues
+    assert_equal [ "collections/news: collection 'news' was removed and 1 record still belong to it; add a rename_collection or delete_collection migration in site/schema/migrations" ], issues
   end
 
   # An upgrade checks for drift before it runs content migrations and refuses to boot on what it finds. A
@@ -123,7 +123,16 @@ class Nibble::DriftTest < ActiveSupport::TestCase
     create_entry("articles", { "title" => "A" }).update_columns(collection: "news")
 
     migration("2026_10_02_other", { "delete_collection" => { "collection" => "bulletins" } })
-    assert_equal [ "collections/news: collection 'news' was removed and 1 record still belong to it" ], issues
+    assert_equal [ "collections/news: collection 'news' was removed and 1 record still belong to it; add a rename_collection or delete_collection migration in site/schema/migrations" ], issues
+  end
+
+  test "a global set the schema dropped is reported with the migrations that clear it, until one is pending" do
+    Nibble::Records::GlobalSet.create!(handle: "site", locale: "en", data: {}).update_columns(handle: "contact")
+
+    assert_equal [ "globals/contact: global set 'contact' was removed and 1 record still belong to it; add a rename_global or delete_global migration in site/schema/migrations" ], issues
+
+    migration("2026_10_02_drop", { "delete_global" => { "global" => "contact" } })
+    assert_empty issues
   end
 
   test "a field whose type changed while holding data is caught against the last snapshot" do
