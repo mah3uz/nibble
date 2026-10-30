@@ -12,6 +12,18 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+> **Change what a site already holds, safely.** A content migration can replace a shipped value where editors haven't
+> changed it, and this release fixes the deploy of a site whose form emails a site setting.
+
+It adds no database migrations.
+
+### What's new
+
+- **A content migration can change a value editors may have kept.** `set_value` replaces a stored value on every
+  record and locale where it still equals `from`, or the keys of grid and replicator rows that match `where`. A value
+  an editor has changed since, in the record or its draft, is left alone, a second run changes nothing, and `to` is
+  checked against the field's own validation before anything runs.
+
 ### What's fixed
 
 - **A site whose form emails a global's address builds again.** `bin/rails nibble:build` checked a `notify` recipient
