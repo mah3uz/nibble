@@ -22,6 +22,7 @@ module NibbleApp
     # in config/environments, which are processed later.
     #
     # config.time_zone = "Central Time (US & Eastern)"
+    config.time_zone = "Asia/Dhaka"
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end
