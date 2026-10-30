@@ -8,7 +8,7 @@ class Nibble::PackagesNavigationTest < ActiveSupport::TestCase
   setup do
     use_site_addresses(apply_url: "https://apply.example.test/one")
     @nibble_themes.join("records", "schema", "navigation", "full.yml").write({
-      "title" => "Full", "collections" => [ "articles" ], "taxonomies" => [ "tags" ], "headings" => true, "globals" => [ "site" ],
+      "title" => "Full", "collections" => [ "articles" ], "taxonomies" => [ "tags" ], "headings" => true, "globals" => [ "site" ], "queries" => [ "articles" ],
       "assets" => true,
       "item_fields" => [ { "handle" => "badge", "field" => { "type" => "text" } },
                          { "handle" => "featured", "field" => { "type" => "toggle" } },
@@ -38,15 +38,6 @@ class Nibble::PackagesNavigationTest < ActiveSupport::TestCase
     dir
   end
 
-  # Menus don't validate query items yet, so one is saved as a heading would be.
-  def accepting_query_items
-    original = Tree.method(:kind)
-    Tree.define_singleton_method(:kind) { |node| node["kind"] == "query" ? "heading" : original.call(node) }
-    yield
-  ensure
-    Tree.define_singleton_method(:kind, original)
-  end
-
   def full_tree(post:, other:, tag:, asset:)
     [ { "kind" => "heading", "title" => "Company", "children" => [
         { "type" => "entry", "id" => post.id, "title" => "Post", "new_tab" => true, "children" => [] },
@@ -66,32 +57,30 @@ class Nibble::PackagesNavigationTest < ActiveSupport::TestCase
   end
 
   test "every kind of menu item survives an export and an import into a fresh database, with its references found again" do
-    accepting_query_items do
-      records = { post: article("Post"), other: article("Other"), tag: create_term("Ruby"), asset: create_asset({ "title" => "Price list" }) }
-      save!(full_tree(**records))
-      dir = export
+    records = { post: article("Post"), other: article("Other"), tag: create_term("Ruby"), asset: create_asset({ "title" => "Price list" }) }
+    save!(full_tree(**records))
+    dir = export
 
-      assert_equal [
-        { "kind" => "heading", "title" => "Company", "children" => [
-          { "entry" => "articles/post", "title" => "Post", "new_tab" => true },
-          { "ref" => "global:site.apply_url", "title" => "Apply", "hidden" => true }
-        ] },
-        { "asset" => "photo.jpg", "title" => "Prices", "fields" => { "badge" => "New", "featured" => true, "related" => [ "articles/other" ] } },
-        { "term" => "tags/ruby", "title" => "Ruby" },
-        { "kind" => "query", "title" => "Latest",
-          "query" => { "collection" => "articles", "parent" => "articles/post", "term" => { "taxonomy" => "tags", "id" => "tags/ruby" }, "sort" => "title", "limit" => 3 } }
-      ], read(dir, "navigation/full/en.yml")["tree"], "a package names records by key, since their ids mean nothing on the site importing it"
+    assert_equal [
+      { "kind" => "heading", "title" => "Company", "children" => [
+        { "entry" => "articles/post", "title" => "Post", "new_tab" => true },
+        { "ref" => "global:site.apply_url", "title" => "Apply", "hidden" => true }
+      ] },
+      { "asset" => "photo.jpg", "title" => "Prices", "fields" => { "badge" => "New", "featured" => true, "related" => [ "articles/other" ] } },
+      { "term" => "tags/ruby", "title" => "Ruby" },
+      { "kind" => "query", "title" => "Latest",
+        "query" => { "collection" => "articles", "parent" => "articles/post", "term" => { "taxonomy" => "tags", "id" => "tags/ruby" }, "sort" => "title", "limit" => 3 } }
+    ], read(dir, "navigation/full/en.yml")["tree"], "a package names records by key, since their ids mean nothing on the site importing it"
 
-      dir.join("assets").mkpath
-      dir.join("assets", "photo.jpg").binwrite(records[:asset].blob.download)
-      wipe_content!
-      import(dir)
+    dir.join("assets").mkpath
+    dir.join("assets", "photo.jpg").binwrite(records[:asset].blob.download)
+    wipe_content!
+    import(dir)
 
-      fresh = { post: Nibble::Records::Entry.find_by!(slug: "post"), other: Nibble::Records::Entry.find_by!(slug: "other"),
-                tag: Nibble::Records::Term.find_by!(slug: "ruby"), asset: Nibble::Records::Asset.kept.find_by!(filename: "photo.jpg") }
-      assert_not_equal records[:post].id, fresh[:post].id, "the fresh database gave the records new ids"
-      assert_equal full_tree(**fresh), menu.tree
-    end
+    fresh = { post: Nibble::Records::Entry.find_by!(slug: "post"), other: Nibble::Records::Entry.find_by!(slug: "other"),
+              tag: Nibble::Records::Term.find_by!(slug: "ruby"), asset: Nibble::Records::Asset.kept.find_by!(filename: "photo.jpg") }
+    assert_not_equal records[:post].id, fresh[:post].id, "the fresh database gave the records new ids"
+    assert_equal full_tree(**fresh), menu.tree
   end
 
   test "importing a package again leaves the menu as it is, even where a save stores a value differently from how the package spells it" do
