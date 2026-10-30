@@ -12,6 +12,12 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+### What's new
+
+- **`bin/rails nibble:schema:types --without-site`** writes a theme's types from Nibble's schema and the theme's
+  alone, leaving out `site/schema`, so a theme you publish can be type-checked as it ships, whatever the site you
+  develop it in changes.
+
 ### What's fixed
 
 - **`nibble:check` accepts `messages.unique` on a field the form's `limits.unique` names.** It said the field had no

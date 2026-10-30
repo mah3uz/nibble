@@ -42,6 +42,7 @@ bin/rails nibble:generate:form demo
 bin/rails nibble:generate:plugin acme            # refuses: there is no extension API yet
 bin/rails nibble:schema:show                  # the schema after all three layers
 bin/rails nibble:schema:types                 # regenerate site/types.d.ts
+bin/rails nibble:schema:types --without-site --output tmp/theme.d.ts  # the theme's types as it ships, without site/schema
 bin/rails nibble:schema:snapshot              # record field types as the baseline for nibble:check
 ```
 

@@ -6,7 +6,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "check": "NIBBLE_THEME=crumbs bin/rails nibble:schema:types --output tmp/nibble/crumbs-types.d.ts > /dev/null && vue-tsc -p tsconfig.app.json && tsc -p tsconfig.node.json",
+    "check": "NIBBLE_THEME=crumbs bin/rails nibble:schema:types --without-site --output tmp/nibble/crumbs-types.d.ts > /dev/null && vue-tsc -p tsconfig.app.json && tsc -p tsconfig.node.json",
     "lint": "eslint .",
     "format": "prettier --write --no-error-on-unmatched-pattern vendor/nibble/frontend vendor/nibble/themes site/themes",
     "format:check": "prettier --check --no-error-on-unmatched-pattern vendor/nibble/frontend vendor/nibble/themes site/themes",

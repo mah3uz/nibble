@@ -53,7 +53,7 @@ Individually:
 bin/rails test          # build test assets first if Vite has not: RAILS_ENV=test bin/vite build
 npm run lint            # ESLint
 npm run format:check    # Prettier
-npm run check           # vue-tsc
+npm run check           # vue-tsc, typing crumbs against its own schema, without site/schema
 npm run test:js         # frontend unit tests
 bin/rubocop
 bin/ssr-smoke

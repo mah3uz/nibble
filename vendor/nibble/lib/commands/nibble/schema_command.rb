@@ -28,6 +28,7 @@ class NibbleSchemaCommand < Rails::Command::Base
 
   desc "types", "Generate TypeScript types for schema-defined content (site/types.d.ts by default)"
   option :output, desc: "Write the types here instead"
+  option :without_site, type: :boolean, desc: "Leave out site/schema, to type a theme as it ships"
   def types
     boot_application!
     output = if options[:output]
@@ -35,8 +36,14 @@ class NibbleSchemaCommand < Rails::Command::Base
     else
       Nibble::TypeGenerator.output || Rails.root.join("tmp/nibble/schema.d.ts")
     end
+    generator = if options[:without_site]
+      config = Nibble::Config.new(Nibble.config_values, site_schema_path: Rails.root.join("tmp/nibble/without-site"))
+      Nibble::TypeGenerator.new(Nibble::Schema.load(config), config:)
+    else
+      Nibble::TypeGenerator.new
+    end
     FileUtils.mkdir_p(output.dirname)
-    output.write(Nibble::TypeGenerator.new.generate)
+    output.write(generator.generate)
     puts "Wrote #{output.relative_path_from(Rails.root)}"
   end
 end
