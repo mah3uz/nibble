@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "nibble-ink": {
+      "type": "http",
+      "url": "https://nibble.ink/mcp"
+    }
+  }
+}
