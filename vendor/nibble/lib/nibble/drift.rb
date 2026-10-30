@@ -1,6 +1,8 @@
 module Nibble
   module Drift
-    Issue = Data.define(:source, :message)
+    Issue = Data.define(:source, :message, :level) do
+      def initialize(source:, message:, level: :error) = super
+    end
 
     HINT = "add a migration in site/schema/migrations, or run nibble:check --allow-data-loss".freeze
     DRAFT_COLUMNS = %w[title slug parent_id position published_at unpublish_at template blueprint locale status author_id].freeze
@@ -51,7 +53,7 @@ module Nibble
     end
 
     def removed_set(scope, field, set, count)
-      Issue.new(source: scope, message: "set '#{set}' of #{field} was removed and #{count} #{'block'.pluralize(count)} still hold it; keep the set, or run nibble:check --allow-data-loss")
+      Issue.new(source: scope, message: "set '#{set}' of #{field} was removed and #{count} #{'block'.pluralize(count)} still hold it; keep the set, or move those blocks first", level: :warning)
     end
 
     def changed_types(scan, snapshot, covered)

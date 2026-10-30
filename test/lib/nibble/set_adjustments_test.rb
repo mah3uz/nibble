@@ -120,13 +120,18 @@ class Nibble::SetAdjustmentsTest < ActiveSupport::TestCase
     FileUtils.rm_rf(themes)
   end
 
-  test "nibble:check refuses to remove a set that saved blocks still use, and names the block count" do
+  test "nibble:check warns of a removed set saved blocks still hold and never fails on it, so an upgrade isn't stopped" do
     write_blueprint_with(remove_sets: %w[quote])
     entry = create_entry("articles", { "title" => "A" })
     entry.update_columns(data: entry.data.merge("blocks" => [ { "id" => "aaaaaaaa", "type" => "quote" }, { "id" => "bbbbbbbb", "type" => "rich_text" } ]))
+    message = "set 'quote' of blocks was removed and 1 block still hold it; keep the set, or move those blocks first"
 
-    issues = Nibble::Drift.issues.map { |issue| "#{issue.source}: #{issue.message}" }
-    assert_equal [ "collections/articles: set 'quote' of blocks was removed and 1 block still hold it; keep the set, or run nibble:check --allow-data-loss" ], issues
+    assert_equal [ [ "collections/articles", message, :warning ] ], Nibble::Drift.issues.map { |issue| [ issue.source, issue.message, issue.level ] }
+    [ false, true ].each do |allow|
+      result = Nibble::Check.run(allow_data_loss: allow)
+      assert(result.warnings.any? { |warning| warning.message == message })
+      assert(result.problems.none? { |problem| problem.message.include?("set 'quote'") })
+    end
   end
 
   test "a removed set no saved block uses is not an issue" do

@@ -262,13 +262,13 @@ to end, and [Theme components](../theming/components.md) covers the `Blocks` com
 > ```
 >
 > `nibble:check` refuses an added handle the field already has (replace a set with `config: sets` instead, or pick
-> another handle), a removed set the field doesn't have, and a removed set that saved blocks still use. Every other
+> another handle), a removed set the field doesn't have, and warns of a removed set that saved blocks still hold. Every other
 > key under `config` replaces the field's own, as for any reference. `add_sets` and `remove_sets` work on any
 > replicator reached through a reference.
 
 > [!CAUTION]
-> Removing a set that pages already use strands the blocks written with it. `nibble:check` refuses the change and
-> names the pages; move their content first, or keep the set.
+> Removing a set that pages already use strands the blocks written with it. `nibble:check` warns and
+> names how many blocks hold it; move their content first, or keep the set.
 
 ## 5. Fieldsets: fields written once
 

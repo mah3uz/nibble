@@ -291,7 +291,8 @@ module Nibble
         []
       end
       Drift.issues(schema:, migrations:).each do |issue|
-        (@allow_data_loss ? @warnings : @problems) << Problem.new(source: issue.source, message: issue.message, level: @allow_data_loss ? :warning : :error)
+        warn = @allow_data_loss || issue.level == :warning
+        (warn ? @warnings : @problems) << Problem.new(source: issue.source, message: issue.message, level: warn ? :warning : :error)
       end
     rescue ActiveRecord::StatementInvalid
       nil
