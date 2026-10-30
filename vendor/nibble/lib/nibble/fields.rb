@@ -2,7 +2,8 @@ module Nibble
   class Fields
     include Enumerable
 
-    FIELDSET_REFERENCE = /\A(?<fieldset>.+)\.(?<field>[a-z0-9_]+)\z/
+    SET_ADJUSTMENTS = %w[add_sets remove_sets].freeze
+    FIELDSET_REFERENCE =/\A(?<fieldset>.+)\.(?<field>[a-z0-9_]+)\z/
 
     attr_reader :source, :parent_field, :parent_index
 
@@ -90,7 +91,51 @@ module Nibble
       match = FIELDSET_REFERENCE.match(reference) or fail!("#{key}.field", "invalid reference '#{reference}' (expected fieldset.field)")
       fieldset = fieldset_fields(match[:fieldset], key, stack)
       field = fieldset.get(match[:field]) or fail!("#{key}.field", "fieldset '#{match[:fieldset]}' has no field '#{match[:field]}'")
-      build(handle, field.config.merge(overrides.to_h), key)
+      overrides = overrides.to_h
+      config = field.config.merge(overrides.except(*SET_ADJUSTMENTS))
+      config = adjust_sets(config, overrides, key) if overrides.keys.intersect?(SET_ADJUSTMENTS)
+      build(handle, config, key)
+    end
+
+    def adjust_sets(config, overrides, key)
+      base = config["sets"]
+      fail!("#{key}.config", "add_sets and remove_sets need a field that has sets") unless base.is_a?(Hash)
+
+      groups = grouped_sets(base)
+      existing = groups.values.flat_map { |group| group["sets"].keys }
+
+      Array(overrides["remove_sets"]).map(&:to_s).each do |set|
+        fail!("#{key}.config.remove_sets", "set '#{set}' isn't in the field, which has #{existing.join(', ')}") unless existing.include?(set)
+        groups.each_value { |group| group["sets"].delete(set) }
+      end
+      groups.reject! { |_, group| group["sets"].empty? }
+
+      overrides["add_sets"].to_h.each do |group_handle, added|
+        added = added.to_h
+        if groups.key?(group_handle)
+          groups[group_handle]["sets"].merge!(added_sets(added, groups, "#{key}.config.add_sets.#{group_handle}"))
+        else
+          fail!("#{key}.config.add_sets.#{group_handle}", "a new group needs a 'sets' map of its sets") unless added["sets"].is_a?(Hash)
+          groups[group_handle] = added.merge("sets" => added_sets(added["sets"], groups, "#{key}.config.add_sets.#{group_handle}.sets"))
+        end
+      end
+
+      config.merge("sets" => groups)
+    end
+
+    def added_sets(added, groups, key)
+      taken = groups.values.flat_map { |group| group["sets"].keys }
+      added.each_key do |set|
+        fail!("#{key}.#{set}", "set '#{set}' already exists; replace it with 'config: sets', or pick another handle") if taken.include?(set)
+      end
+      added
+    end
+
+    def grouped_sets(sets)
+      first = sets.values.first
+      return sets.transform_values { |group| group.merge("sets" => group["sets"].to_h.dup) } if first.is_a?(Hash) && first.key?("sets")
+
+      { "main" => { "sets" => sets.dup } }
     end
 
     def imported(item, key, stack)

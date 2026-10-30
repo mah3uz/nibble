@@ -15,6 +15,7 @@ module Nibble
         *scan.orphaned_parents.filter_map { |kind, handle, count| removed_parent(kind, handle, count) unless covered.parent?(kind, handle) },
         *scan.orphaned_blueprints.filter_map { |scope, blueprint, count| removed_blueprint(scope, blueprint, count) unless covered.blueprint?(scope, blueprint) },
         *scan.stranded.filter_map { |(scope, field), count| removed_field(scope, field, count) unless covered.field?(scope, field) },
+        *scan.stranded_sets.map { |(scope, field, set), count| removed_set(scope, field, set, count) },
         *changed_types(scan, snapshot, covered)
       ]
     end
@@ -47,6 +48,10 @@ module Nibble
 
     def removed_field(scope, field, count)
       Issue.new(source: scope, message: "#{field} was removed and #{count} #{'record'.pluralize(count)} still hold it; #{HINT}")
+    end
+
+    def removed_set(scope, field, set, count)
+      Issue.new(source: scope, message: "set '#{set}' of #{field} was removed and #{count} #{'block'.pluralize(count)} still use it; keep the set, or run nibble:check --allow-data-loss")
     end
 
     def changed_types(scan, snapshot, covered)
@@ -96,12 +101,14 @@ module Nibble
     end
 
     class Scan
-      attr_reader :stranded, :held, :orphaned_parents, :orphaned_blueprints
+      attr_reader :stranded, :stranded_sets, :held, :orphaned_parents, :orphaned_blueprints
 
       def initialize(schema, scan: true)
         @schema = schema
         @stranded = Hash.new(0)
         @held = Hash.new(0)
+        @stranded_sets = Hash.new(0)
+        @sets = {}
         @orphaned_parents = []
         @orphaned_blueprints = []
         run if scan
@@ -144,6 +151,7 @@ module Nibble
         known = @schema.globals.to_h { |item| [ item.handle, item ] }
         count_orphans("globals", Records::GlobalSet.group(:handle).count, known)
         Records::GlobalSet.where(handle: known.keys).find_each do |global|
+          note_sets("globals/#{global.handle}", global.blueprint_fields)
           tally("globals/#{global.handle}", global.blueprint_fields.all.transform_values(&:type), global.data)
         end
       end
@@ -163,9 +171,27 @@ module Nibble
 
           if fields.key?(key)
             @held[[ scope, key ]] += 1 if count_held
+            tally_sets(scope, key, value)
           else
             @stranded[[ scope, key ]] += 1
           end
+        end
+      end
+
+      def tally_sets(scope, key, value)
+        known = @sets[[ scope, key ]]
+        return unless known && value.is_a?(Array)
+
+        value.each do |row|
+          type = row["type"] if row.is_a?(Hash)
+          @stranded_sets[[ scope, key, type ]] += 1 if type && !known.include?(type)
+        end
+      end
+
+      def note_sets(scope, fields)
+        fields.all.each do |handle, field|
+          fieldtype = field.fieldtype
+          (@sets[[ scope, handle ]] ||= Set.new).merge(fieldtype.sets_config.keys) if fieldtype.respond_to?(:sets?) && fieldtype.sets?
         end
       end
 
@@ -185,6 +211,7 @@ module Nibble
       def fields_by_blueprint(item, kind)
         @schema.blueprints_for(item).to_h do |blueprint|
           fields = Blueprint.new(blueprint, schema: @schema).fields
+          note_sets("#{kind}/#{item.handle}", fields)
           beside = kind == "collections" ? Records::Entry.beside_blueprint(item, fields.handles, schema: @schema) : []
           types = fields.all.transform_values(&:type)
           [ blueprint.handle, types.merge(beside.to_h { |field| [ field["handle"], field.dig("field", "type") ] }) ]
