@@ -53,6 +53,34 @@ class Nibble::Cp::NavigationControllerTest < ActionDispatch::IntegrationTest
     assert_match "Sneaky", errors["tree"], "the first problem is still given for the whole menu"
   end
 
+  test "custom kinds, query items and show dates round-trip through the editor, which is told the kinds and what a query may list" do
+    @nibble_themes.join("records", "schema", "navigation", "mega.yml").write({
+      "title" => "Mega", "collections" => [ "articles" ], "queries" => [ "docs" ],
+      "kinds" => { "featured" => { "display" => "Featured card", "link" => "required", "children" => false,
+                                   "fields" => [ { "handle" => "blurb", "field" => { "type" => "text" } } ] } }
+    }.to_yaml)
+    Nibble.reset_schema!
+    post = publish_entry(create_entry("articles", { "title" => "Post" }))
+    guides = create_entry("docs", { "title" => "Guides" })
+    tag = create_term("News")
+    stored = [
+      { "kind" => "featured", "type" => "entry", "id" => post.id, "title" => "Post", "fields" => { "blurb" => "New" }, "children" => [] },
+      { "kind" => "query", "title" => "Guides", "query" => { "collection" => "docs", "parent" => guides.id, "sort" => "title", "limit" => 5 },
+        "show_from" => "2026-11-01T09:00:00Z", "show_until" => "2026-11-08T09:00:00Z", "children" => [] }
+    ]
+    assert lifecycle(Nibble::Records::NavigationTree.new(handle: "mega", locale: "en"), :save, "tree" => stored).ok?
+
+    get "/cp/navigation/mega/edit"
+    assert_equal [ [ "featured", "Featured card", "required", false, [ "blurb" ] ] ],
+      props["menu"]["kinds"].map { |kind| [ *kind.values_at("handle", "display", "link", "children"), kind["fields"].map { |field| field["handle"] } ] }
+    assert_equal [ [ "docs", true, [ "tags" ] ] ], props["menu"]["queries"].map { |query| [ query["handle"], query["structured"], query["taxonomies"].map { |one| one["handle"] } ] }
+    assert_equal [ [ "entry", guides.id ], [ "term", tag.id ] ], props["query_records"].map { |record| record.values_at("type", "id") }
+    patch "/cp/navigation/mega", params: { tree: props["tree"] }, as: :json
+
+    assert_equal "Navigation saved.", flash[:notice]
+    assert_equal stored, Nibble::Records::NavigationTree.find_by!(handle: "mega").tree, "an editor save keeps a kind's link, the query and the dates"
+  end
+
   test "the editor is told what the menu may hold" do
     get "/cp/navigation/rich/edit"
     menu = props["menu"]
