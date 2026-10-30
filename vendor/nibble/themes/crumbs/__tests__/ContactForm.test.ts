@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { createSSRApp } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 import { describe, expect, it, vi } from 'vitest'
@@ -11,22 +12,9 @@ vi.mock('../../../frontend/nibble/composables', async () => {
   return { useLocale: () => ref('en') }
 })
 
-const PUBLIC_FIELDTYPES = [
-  'text',
-  'textarea',
-  'integer',
-  'toggle',
-  'select',
-  'radio',
-  'checkboxes',
-  'date',
-  'files',
-  'calculation',
-  'note',
-  'time',
-  'color',
-  'button_group',
-]
+const PUBLIC_FIELDTYPES = readFileSync(new URL('../../../lib/nibble/forms.rb', import.meta.url), 'utf8')
+  .match(/PUBLIC_FIELDTYPES = %w\[([^\]]+)\]/)![1]!
+  .split(/\s+/)
 
 const field = (handle: string, extra: Record<string, unknown> = {}) =>
   ({ handle, type: 'text', display: handle, instructions: null, required: false, ...extra }) as NibbleFormField
@@ -173,6 +161,9 @@ describe('crumbs ContactForm', () => {
       field('name', { autocomplete: 'name' }),
       field('message', { type: 'textarea', rows: 3 }),
       field('guests', { type: 'integer' }),
+      field('price', { type: 'decimal', decimals: 2 }),
+      field('mood', { type: 'range', min: 1, max: 9 }),
+      field('stars', { type: 'rating', display: 'Stars', max: 3 }),
       field('consent', { type: 'toggle', display: 'Consent', inline_label: 'I agree to be contacted' }),
       field('size', { type: 'select', options, required: true }),
       field('extras', { type: 'select', options, multiple: true }),
@@ -189,17 +180,21 @@ describe('crumbs ContactForm', () => {
     ]
     const html = await render(form({ fields }))
 
+    expect(PUBLIC_FIELDTYPES.length).toBeGreaterThan(16)
     expect(new Set(fields.map((item) => item.type))).toEqual(new Set(PUBLIC_FIELDTYPES))
     expect(tag(html, 'visit-name')).toMatch(/type="text"[^>]*autocomplete="name"/)
     expect(tag(html, 'visit-message')).toMatch(/^<textarea[^>]*rows="3"/)
     expect(tag(html, 'visit-guests')).toContain('type="number"')
+    expect(tag(html, 'visit-price')).toMatch(/type="number"(?=[^>]*inputmode="decimal")/)
+    expect(tag(html, 'visit-mood')).toMatch(/type="range"(?=[^>]*min="1")(?=[^>]*max="9")/)
+    expect(html.match(/type="radio"[^>]*name="stars"/g)).toHaveLength(3)
     expect(tag(html, 'visit-consent')).toMatch(/type="checkbox"[^>]*value="true"/)
     expect(html).toMatch(/<label[^>]*for="visit-consent">(<!--\[-->)?\s*I agree to be contacted/)
     expect(tag(html, 'visit-size')).toMatch(/^<select(?=[^>]*required)/)
     expect(html).toMatch(/<option value disabled selected>\s*Choose one…/)
     expect(tag(html, 'visit-extras')).toMatch(/^<select(?=[^>]*multiple)(?=[^>]*name="extras\[\]")/)
 
-    const [group, topics] = html.match(/<fieldset[\s\S]*?<\/fieldset>/g) ?? []
+    const [, group, topics] = html.match(/<fieldset[\s\S]*?<\/fieldset>/g) ?? []
     expect(group).toMatch(
       /<legend[^>]*>\s*Group size(<!--\[-->)?<span[^>]*aria-hidden="true"> \*<\/span><span class="sr-only"> \(required\)/,
     )
