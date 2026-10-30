@@ -12,6 +12,37 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+> **One way to bring content in, wherever a page needs it.** The queries a view's sidecar runs now work for layouts,
+> for the page's own linked records, and for a form's choices.
+
+One database migration adds a column for the labels a submission was made with; it only adds, so it can be rolled
+back, but the snapshot taken before an upgrade is the surest way back.
+
+### What's new
+
+- **A layout can query content.** `layouts/<name>.yml` is a sidecar like a view's, and its props reach every page
+  using the layout, the 404, search and preview pages included, typed as `LayoutProps`. A layout that shares another's
+  header takes its queries with `extends: default`. `nibble:check` refuses a layout query named like a view's or like
+  a prop every page has.
+- **A page brings its linked records along.** `page: { include: [loan] }` in a view's or layout's sidecar gives the
+  page's relationship fields as whole records, so a view or layout reads the fields of what the page links to.
+- **Child entries in a query.** `include: [children]` on a structured collection gives each entry its published
+  children in tree order, enough for a menu of sections and their pages.
+- **A form's choices can come from content.** A `select`, `radio`, `checkboxes` or `button_group` field on a form takes
+  `options: { from: entries:<collection> }` (or `terms:`), with `value`, `label`, `where` and `sort`. Only published
+  entries in the visitor's language are offered and accepted. `parent:` narrows one field's choices by the answer to
+  another, through the tree or a relationship field, and the `@nibble` form helper hides choices that don't fit and
+  clears one that stops fitting.
+- **Submissions keep their choices readable.** Each choice's label is stored with the submission, so the Control
+  Plane, emails and exports still show it after the option is renamed or removed; an encrypted field's labels are
+  encrypted too.
+- **Generated types follow `include`.** An included field is typed as the record it holds, and `children` as the
+  collection's records.
+
+### Changed
+
+- crumbs lists topics in its footer from a layout query, and a post shows its author's bio.
+
 ## 0.24.0 — 2026-10-30 21:08 +0600
 
 > **Change what a site already holds, safely.** A content migration can replace a shipped value where editors haven't
