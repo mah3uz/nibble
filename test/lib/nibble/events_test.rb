@@ -1,6 +1,8 @@
 require "test_helper"
 
 class Nibble::EventsTest < ActiveSupport::TestCase
+  include ActiveJob::TestHelper
+
   self.use_transactional_tests = false
 
   setup do
@@ -68,5 +70,20 @@ class Nibble::EventsTest < ActiveSupport::TestCase
 
     Nibble::Events.dispatch_pending
     assert_equal [ [ "record.created", 9 ] ], @delivered.to_a
+  end
+
+  test "a rolled-back publish leaves the thread able to schedule the next dispatch, so later events aren't left waiting" do
+    ActiveRecord::Base.transaction do
+      Nibble::Events.publish("record.saved", id: 1)
+      raise ActiveRecord::Rollback
+    end
+    ActiveRecord::Base.transaction do
+      ActiveRecord::Base.transaction(requires_new: true) { Nibble::Events.publish("record.saved", id: 2) }
+      raise ActiveRecord::Rollback
+    end
+
+    assert_enqueued_with(job: Nibble::Jobs::DispatchEvents) { Nibble::Events.publish("record.saved", id: 3) }
+  ensure
+    Thread.current[:nibble_dispatch_scheduled] = nil
   end
 end

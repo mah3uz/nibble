@@ -18,6 +18,10 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
   such as `{global.site.contact_email}` by asking the database for the global's columns, and an image build has no
   database, so `bin/kamal deploy` stopped with "Could not find table 'global_sets'". The check reads the schema alone
   now, and checks the global against the schema being checked rather than the running site's.
+- **Events keep being delivered after a change is rolled back.** A change that published an event and was then rolled
+  back, such as a preview, left its server thread believing a delivery was already on the way, so that thread
+  queued none for its later changes; their webhooks, search updates and cache purges waited for another thread's
+  delivery or a restart. A rollback clears that mark now.
 
 ## 0.23.0 — 2026-10-30 20:09 +0600
 

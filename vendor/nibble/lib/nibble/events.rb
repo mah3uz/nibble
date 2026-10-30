@@ -26,6 +26,8 @@ module Nibble
         return if Thread.current[:nibble_dispatch_scheduled]
 
         Thread.current[:nibble_dispatch_scheduled] = true
+        # A rollback drops the commit callback below, so it has to clear the flag itself or this thread never schedules again.
+        ActiveRecord::Base.current_transaction.after_rollback { Thread.current[:nibble_dispatch_scheduled] = false }
         ActiveRecord.after_all_transactions_commit do
           Thread.current[:nibble_dispatch_scheduled] = false
           Jobs::DispatchEvents.perform_later
