@@ -32,6 +32,8 @@ module Nibble
         edits(asset).merge(resize).merge(format:, saver: { quality: preset["q"] || 80 })
       end
 
+      def edited(asset) = edits(asset).merge(format: asset.extension, saver: { quality: 90 })
+
       def edits(asset)
         steps = {}
         steps[:rot] = :"d#{asset.rotation}" if asset.rotation.positive?

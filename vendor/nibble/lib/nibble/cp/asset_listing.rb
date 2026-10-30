@@ -50,10 +50,11 @@ module Nibble
       end
 
       def row(asset, usage_count)
+        width, height = Assets.output_size(asset, nil)
         {
           "id" => asset.id, "filename" => asset.filename, "title" => asset.display_title, "kind" => asset.kind,
           "extension" => asset.extension, "thumbnail" => asset.thumbnail_url, "url" => asset.url,
-          "size" => asset.size, "updated_at" => asset.updated_at.utc.iso8601, "width" => asset.width, "height" => asset.height,
+          "size" => asset.size, "updated_at" => asset.updated_at.utc.iso8601, "width" => width, "height" => height,
           "duration" => asset.duration, "alt" => asset.alt, "folder" => asset.folder, "usage_count" => usage_count,
           "edit_url" => "/cp/media?#{{ folder: asset.folder.presence, asset: asset.id }.compact.to_query}",
           "actions" => []

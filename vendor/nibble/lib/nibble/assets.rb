@@ -54,6 +54,22 @@ module Nibble
       def uploadable?(filename) = (UPLOADABLE + Nibble.config.asset_extensions).include?(extension(filename))
       def transformable?(asset) = TRANSFORMABLE.include?(extension(asset.filename))
       def previewable?(asset) = asset.kind == "video" && ActiveStorage::Previewer::VideoPreviewer.ffmpeg_exists?
+      def edited?(asset) = transformable?(asset) && Transform.encodable?(asset.extension) && Transform.edits(asset).any?
+
+      # libvips counts the frames of a WebP or AVIF but reads an APNG as its first frame alone.
+      def animated?(asset)
+        return false unless %w[png webp avif].include?(asset.extension)
+
+        data = asset.blob.download
+        if asset.extension == "png"
+          actl, idat = data.index("acTL"), data.index("IDAT")
+          return !!(actl && idat && actl < idat)
+        end
+        image = Vips::Image.new_from_buffer(data, "")
+        image.get_typeof("n-pages").positive? && image.get("n-pages") > 1
+      rescue Vips::Error, ActiveStorage::FileNotFoundError
+        false
+      end
 
       def presets = CP_PRESETS.merge(Nibble.config.asset_presets)
       def preset(name) = presets[name.to_s]
@@ -66,7 +82,7 @@ module Nibble
 
       def output_size(asset, preset_name)
         preset = preset_name && preset(preset_name)
-        return [ asset.width, asset.height ] unless preset
+        return (edited?(asset) ? asset.edited_size || [ nil, nil ] : [ asset.width, asset.height ]) unless preset
 
         return [ preset["w"], preset["h"] ] if preset["fit"] == "crop"
 

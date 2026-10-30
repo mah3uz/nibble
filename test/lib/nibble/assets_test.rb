@@ -109,4 +109,19 @@ class Nibble::AssetsTest < ActiveSupport::TestCase
     assert_equal [ 64, 32 ], asset.reload.values_at(:width, :height)
     assert_equal 0, asset.lock_version, "analysis doesn't conflict with an editor that's already open"
   end
+
+  test "an animated image can't be cropped, since every use would then show a single frame" do
+    frames = Vips::Image.black(4, 4).join(Vips::Image.black(4, 4) + 255, :vertical).cast(:uchar)
+      .mutate { |image| image.set_type!(GObject::GINT_TYPE, "page-height", 4) }
+    still = Vips::Image.black(4, 4).write_to_buffer(".png")
+    actl = [ 8, "acTL", 2, 0 ].pack("NA4NN").then { |chunk| chunk + [ Zlib.crc32(chunk[4..]) ].pack("N") }
+    files = { "loop.webp" => frames.write_to_buffer(".webp"), "loop.png" => still.dup.insert(33, actl), "still.png" => still }
+    crop = { "edits" => { "crop" => { "x" => 0, "y" => 0, "width" => 0.5, "height" => 0.5 } } }
+
+    results = files.to_h do |filename, body|
+      asset = create_asset(blob: ActiveStorage::Blob.create_and_upload!(io: StringIO.new(body), filename:))
+      [ filename, lifecycle(asset, :save, crop).ok? ]
+    end
+    assert_equal({ "loop.webp" => false, "loop.png" => false, "still.png" => true }, results)
+  end
 end
