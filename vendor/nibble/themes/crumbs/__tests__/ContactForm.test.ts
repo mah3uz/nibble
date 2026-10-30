@@ -146,6 +146,31 @@ describe('crumbs ContactForm', () => {
     expect(html).toMatch(/<p class="mt-2 [^"]*">Hello\./)
   })
 
+  it('lays fields side by side by their width from a small screen up, and one under another on a phone', async () => {
+    const html = await render(
+      form({
+        fields: [
+          field('first', { width: 50 }),
+          field('last', { width: 50 }),
+          field('city', { width: 33 }),
+          field('note'),
+        ],
+        sections: [{ display: 'You', instructions: 'Hello.', fields: ['first', 'last', 'city', 'note'] }],
+      }),
+    )
+    const wrapper = (id: string) =>
+      html.match(new RegExp(`<div class="([^"]*)">(<!--[^>]*-->)*<label for="${id}"`))?.[1]
+
+    expect(html).toMatch(/<fieldset[^>]*class="grid grid-cols-\[minmax\(0,1fr\)\] gap-8 sm:grid-cols-12"/)
+    expect([wrapper('visit-first'), wrapper('visit-last'), wrapper('visit-city'), wrapper('visit-note')]).toEqual([
+      'sm:col-span-6',
+      'sm:col-span-6',
+      'sm:col-span-4',
+      'sm:col-span-full',
+    ])
+    expect(html).toMatch(/<p class="[^"]*sm:col-span-full[^"]*">Hello\./)
+  })
+
   it('draws an integer field as a number input with min, max and step, so the browser agrees with the server', async () => {
     const html = await render(
       form({ fields: [field('amount', { type: 'integer', min: 2000, max: 10000, step: 500 })] }),

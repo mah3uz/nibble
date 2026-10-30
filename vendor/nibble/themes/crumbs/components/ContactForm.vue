@@ -54,6 +54,14 @@ const rangeText = (field: NibbleFormField) =>
     : undefined
 const help = (field: NibbleFormField) => [field.instructions, contact.fileLimits(field)].filter(Boolean).join(' ')
 const invalid = (field: NibbleFormField) => (contact.errors.value[field.handle] ? 'true' : undefined)
+const SPANS: Record<number, string> = {
+  25: 'sm:col-span-3',
+  33: 'sm:col-span-4',
+  50: 'sm:col-span-6',
+  66: 'sm:col-span-8',
+  75: 'sm:col-span-9',
+}
+const span = (field: NibbleFormField) => SPANS[field.width ?? 100] ?? 'sm:col-span-full'
 const optionId = (field: NibbleFormField, index: number) =>
   index === 0 ? contact.inputId(field) : `${contact.inputId(field)}-${index}`
 
@@ -148,11 +156,13 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
       v-for="(group, index) in groups"
       v-show="contact.isCurrentStep(index)"
       :key="index"
-      class="grid grid-cols-[minmax(0,1fr)] gap-8"
+      class="grid grid-cols-[minmax(0,1fr)] gap-8 sm:grid-cols-12"
     >
       <template v-if="form.sections">
         <legend class="mb-2 text-xl">{{ sectionNumber(index) }}. {{ group.display }}</legend>
-        <p v-if="group.instructions" class="mt-2 text-sm text-gray-600 dark:text-gray-300">{{ group.instructions }}</p>
+        <p v-if="group.instructions" class="mt-2 text-sm text-gray-600 sm:col-span-full dark:text-gray-300">
+          {{ group.instructions }}
+        </p>
       </template>
       <template v-for="field in group.fields" :key="field.handle">
         <input
@@ -162,7 +172,7 @@ function bound(field: NibbleFormField, date: string | undefined, time: string) {
           :name="contact.fieldName(field)"
           :value="contact.values[field.handle]"
         />
-        <div v-else-if="contact.isVisible(field)">
+        <div v-else-if="contact.isVisible(field)" :class="span(field)">
           <fieldset
             v-if="field.type === 'radio' || field.type === 'checkboxes' || joined(field)"
             :aria-describedby="contact.describedBy(field)"

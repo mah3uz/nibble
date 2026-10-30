@@ -7,9 +7,9 @@ success:
   message: Thanks for writing in. We'll get back to you soon.
 fields:
   - handle: name
-    field: { type: text, display: Your name, required: true, character_limit: 100 }
+    field: { type: text, display: Your name, required: true, character_limit: 100, width: 50 }
   - handle: email
-    field: { type: text, input_type: email, display: Email, required: true }
+    field: { type: text, input_type: email, display: Email, required: true, width: 50 }
   - handle: topic
     field:
       type: select

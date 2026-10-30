@@ -255,6 +255,19 @@ Branch on `field.type` and draw each with the control below. Always label it wit
 `legend` for a group of inputs), link help and errors with `describedBy` and `aria-invalid`, and set `required` from
 `isRequired(field)`.
 
+`width` (`25`, `33`, `50`, `66`, `75` or `100`) is how much of a row a field asks for. crumbs lays each section out
+on twelve columns from the `sm` breakpoint up, so two `width: 50` fields sit side by side, and keeps one column on a
+phone:
+
+```vue
+<div class="grid grid-cols-[minmax(0,1fr)] gap-8 sm:grid-cols-12">
+  <div v-for="field in fields" :key="field.handle" :class="span(field)">…</div>
+</div>
+```
+
+where `span` maps `50` to `sm:col-span-6`, `33` to `sm:col-span-4` and so on, and a field with no `width` to
+`sm:col-span-full`. Write the class names out in full, so Tailwind finds them.
+
 **Text.** An `<input>` with `type` from `input_type` (`text` by default, and `email`, `url`, `tel`, `number`, `date`,
 `month`, `week`, `time`, `color` and `password` are the other types a text field may name; see [the
 fieldtypes](../modelling/blueprints.md#3-the-fieldtypes)). The server checks `email`, `url` and `tel` values, so draw
