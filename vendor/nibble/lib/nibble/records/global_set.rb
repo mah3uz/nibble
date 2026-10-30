@@ -12,9 +12,12 @@ module Nibble
 
       def item = Nibble.schema.find(:globals, handle)
 
-      def blueprint_definition
-        Blueprint.for(Schema::Item.new(kind: "blueprints", handle:, parent: item.key, path: item.path, layer: item.layer, data: item["blueprint"]))
+      # Read from the schema alone, since a build checks forms and links with no database to ask for columns.
+      def self.blueprint_for(handle, item = Nibble.schema.find(:globals, handle))
+        item && Blueprint.for(Schema::Item.new(kind: "blueprints", handle:, parent: item.key, path: item.path, layer: item.layer, data: item["blueprint"]))
       end
+
+      def blueprint_definition = self.class.blueprint_for(handle, item)
 
       def values = data.to_h
       def snapshot = values

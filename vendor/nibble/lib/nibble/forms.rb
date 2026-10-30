@@ -166,10 +166,10 @@ module Nibble
         problems.concat(limit_problems(form, schema))
         problems.concat(resume_problems(form, schema))
         handles = form.fields(schema:).handles
-        form.notify.each_with_index { |notify, index| problems.concat(notify_problems(notify, index, handles)) }
+        form.notify.each_with_index { |notify, index| problems.concat(notify_problems(notify, index, handles, schema)) }
         form.deliveries.each_with_index { |delivery, index| problems.concat(delivery_problems(delivery, index, schema)) }
         problems << "success needs a message or a redirect" unless form.item["success"].blank? || form.item["success"]["message"].present? || redirect?(form.success["redirect"])
-        problems.concat(template_problems(form.item["success"]["message"], "success.message", [])) if form.item["success"].is_a?(Hash) && form.item["success"]["message"].is_a?(String)
+        problems.concat(template_problems(form.item["success"]["message"], "success.message", [], schema)) if form.item["success"].is_a?(Hash) && form.item["success"]["message"].is_a?(String)
         problems << "handler '#{form.handler}' isn't registered" if form.handler && !handlers.key?(form.handler)
         problems << "submit_label must be text, or text per locale" unless form.item["submit_label"].nil? || Schema::Rules::TEXT.(form.item["submit_label"])
         problems << "retention_days must be a positive number of days" unless form.retention_days.nil? || form.retention_days.to_i.positive?
@@ -271,7 +271,7 @@ module Nibble
 
       def unique_field?(field) = field && UNIQUE_FIELDTYPES.include?(field.type) && field.get("multiple") != true
 
-      def notify_problems(notify, index, handles)
+      def notify_problems(notify, index, handles, schema)
         return [ "notify.#{index} must be a mapping with a `to` address" ] unless notify.is_a?(Hash) && notify["to"].present?
 
         problems = []
@@ -280,10 +280,10 @@ module Nibble
         end
         problems << "notify.#{index}.reply_to must be one of the form's field handles" if notify.key?("reply_to") && !handles.include?(notify["reply_to"])
         %w[to cc bcc].each do |key|
-          Array(notify[key]).each { |address| problems.concat(recipient_problems(address, "notify.#{index}.#{key}", handles)) }
+          Array(notify[key]).each { |address| problems.concat(recipient_problems(address, "notify.#{index}.#{key}", handles, schema)) }
         end
         %w[subject message].each do |key|
-          problems.concat(template_problems(notify[key], "notify.#{index}.#{key}", handles)) if notify.key?(key)
+          problems.concat(template_problems(notify[key], "notify.#{index}.#{key}", handles, schema)) if notify.key?(key)
         end
         Conditions::KEYS.each do |key|
           next unless notify.key?(key)
@@ -295,31 +295,31 @@ module Nibble
         problems
       end
 
-      def recipient_problems(address, label, handles)
+      def recipient_problems(address, label, handles, schema)
         message = "#{label} must be an address, {field.<handle>} or {global.<set>.<field>}"
         return [ message ] unless address.is_a?(String)
         return [] unless address.include?("{")
         return [ message ] unless address.strip.match?(/\A\{(field|global)\.[A-Za-z0-9_.]+\}\z/)
 
-        template_problems(address, label, handles)
+        template_problems(address, label, handles, schema)
       end
 
-      def template_problems(value, label, handles)
+      def template_problems(value, label, handles, schema)
         return [ "#{label} must be text" ] unless value.is_a?(String)
 
         value.scan(Outbound::Template::PATTERN).filter_map do |kind, name|
           case kind
           when "field" then "#{label} names {field.#{name}}, which isn't one of the form's field handles" unless handles.include?(name)
           when "form" then "#{label} can use {form.title} only" unless name == "title"
-          when "global" then global_problem(label, name)
+          when "global" then global_problem(label, name, schema)
           else "#{label} can't use {#{kind}.#{name}} in an email"
           end
         end
       end
 
-      def global_problem(label, name)
+      def global_problem(label, name, schema)
         handle, field = name.split(".", 2)
-        found = field && handle != Integrations::HANDLE && Nibble.schema.find(:globals, handle) && Records::GlobalSet.new(handle:).blueprint_fields.get(field)
+        found = field && handle != Integrations::HANDLE && Records::GlobalSet.blueprint_for(handle, schema.find(:globals, handle))&.fields&.get(field)
         "#{label} names {global.#{name}}, which isn't a field of a global set" unless found
       end
 

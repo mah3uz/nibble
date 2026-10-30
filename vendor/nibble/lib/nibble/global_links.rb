@@ -14,7 +14,7 @@ module Nibble
       handle, name = parse(ref)
       return nil if handle.nil? || handle == Integrations::HANDLE || !Nibble.schema.find(:globals, handle)
 
-      field = Records::GlobalSet.new(handle:).blueprint_fields.get(name)
+      field = Records::GlobalSet.blueprint_for(handle).fields.get(name)
       field if field && address?(field)
     end
 
@@ -66,7 +66,7 @@ module Nibble
       Nibble.schema.globals.filter_map do |item|
         next if item.handle == Integrations::HANDLE
 
-        fields = Records::GlobalSet.new(handle: item.handle).blueprint_fields.select { |field| address?(field) }
+        fields = Records::GlobalSet.blueprint_for(item.handle, item).fields.select { |field| address?(field) }
         next if fields.empty?
 
         { "handle" => item.handle, "title" => item["title"] || item.handle.humanize,

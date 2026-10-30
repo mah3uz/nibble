@@ -24,6 +24,24 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     assert_not_includes sources, "backups"
   end
 
+  test "a build checks a form that emails a global's address without a database to ask" do
+    theme_file("globals/contact.yml", title: "Contact", blueprint: { tabs: { main: { sections: [ { fields: [
+      { handle: "email", field: { type: "text", input_type: "email" } } ] } ] } } })
+    theme_file("forms/signup.yml", title: "Signup", success: { message: "Thanks!" },
+      fields: [ { handle: "email", field: { type: "text", input_type: "email" } } ],
+      notify: [ { to: "{global.contact.email}" }, { to: "{global.contact.phone}" } ])
+    Nibble::Records::GlobalSet.reset_column_information
+    Nibble::Records::GlobalSet.define_singleton_method(:load_schema!) { raise ActiveRecord::StatementInvalid, "Could not find table 'global_sets'" }
+
+    messages = check(static: true).problems.map(&:to_s).grep(/signup/)
+
+    assert_equal 1, messages.size
+    assert_match "{global.contact.phone}", messages.first
+  ensure
+    Nibble::Records::GlobalSet.singleton_class.remove_method(:load_schema!)
+    Nibble::Records::GlobalSet.reset_column_information
+  end
+
   test "a form that needs a CAPTCHA warns, not fails, while Integrations has no keys" do
     theme_file("forms/signup.yml", title: "Signup", fields: [ { handle: "email", field: { type: "text", input_type: "email" } } ],
       spam: { captcha: true }, success: { message: "Thanks!" })

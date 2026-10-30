@@ -12,6 +12,13 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+### What's fixed
+
+- **A site whose form emails a global's address builds again.** `bin/rails nibble:build` checked a `notify` recipient
+  such as `{global.site.contact_email}` by asking the database for the global's columns, and an image build has no
+  database, so `bin/kamal deploy` stopped with "Could not find table 'global_sets'". The check reads the schema alone
+  now, and checks the global against the schema being checked rather than the running site's.
+
 ## 0.23.0 — 2026-10-30 20:09 +0600
 
 > **Menus that do more, and blocks you add instead of copy.** Menus gain headings, fields and kinds of their own,
