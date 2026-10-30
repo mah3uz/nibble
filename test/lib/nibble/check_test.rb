@@ -81,6 +81,18 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     assert(messages.none? { |m| m.include?("amount") })
   end
 
+  test "a unique message belongs to a field the form's limits make unique, since that is the only place it is shown" do
+    theme_file("forms/signup.yml", title: "Signup", success: { message: "Thanks!" }, limits: { unique: [ "email" ] }, fields: [
+      { handle: "email", field: { type: "text", input_type: "email", messages: { unique: "You've signed up already" } } },
+      { handle: "name", field: { type: "text", messages: { unique: "Taken" } } }
+    ])
+
+    messages = check.problems.map(&:to_s).grep(/message for 'unique'/)
+
+    assert_equal 1, messages.size
+    assert_includes messages.first, "'name'"
+  end
+
   test "a message that isn't a string is refused" do
     theme_file("forms/signup.yml", title: "Signup", success: { message: "Thanks!" }, fields: [
       { handle: "phone", field: { type: "text", validate: [ "regex:/^04/" ], messages: { regex: 5 } } }

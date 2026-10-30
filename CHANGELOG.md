@@ -12,6 +12,11 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+### What's fixed
+
+- **`nibble:check` accepts `messages.unique` on a field the form's `limits.unique` names.** It said the field had no
+  rule for that message, though a repeated value shows it.
+
 ## 0.22.2 — 2026-10-30 05:17 +0600
 
 ### What's fixed

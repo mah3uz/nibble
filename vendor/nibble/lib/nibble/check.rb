@@ -47,7 +47,7 @@ module Nibble
       schema.forms.each do |item|
         capture(item.path) do
           form = Forms::Form.new(item:)
-          check_fields(form.fields(schema:), item.path, calculations: true)
+          check_fields(form.fields(schema:), item.path, calculations: true, unique: form.unique.map(&:to_s))
           Forms.problems(form, schema:).each { |message| problem(item.path, message) }
           Forms.locale_problems(form, schema:, locales: @config.locales.map(&:code)).each { |message| problem(item.path, message) }
           Forms.warnings(form).each { |message| @warnings << Problem.new(source: item.path.to_s.delete_prefix("#{Rails.root}/"), message:, level: :warning) }
@@ -78,14 +78,14 @@ module Nibble
       nil
     end
 
-    def check_fields(fields, source, calculations: false)
+    def check_fields(fields, source, calculations: false, unique: [])
       fields.each do |field|
         rule_names = (field.validation_rules + Validation.explode(field.fieldtype.rules)).map { |rule| rule.to_s.split(":", 2).first }
         rule_names.each do |name|
           problem(source, "field '#{field.path}' uses unknown validation rule '#{name}'") unless Validation.known?(name)
         end
         field.fieldtype.config_problems.each { |message| problem(source, "field '#{field.path}' #{message}") }
-        check_messages(field, rule_names, source)
+        check_messages(field, rule_names, source, unique:)
         check_required_condition(field, fields, source)
         problem(source, "field '#{field.path}' is a note, which only displays text: it can't be required, hidden, encrypted or have a default") if note_with_storage_options?(field)
         problem(source, "field '#{field.path}' is a calculation, which only a form can have") if field.type == Forms::Calculations::TYPE && !calculations
@@ -104,12 +104,13 @@ module Nibble
       field.display_only? && (field.config.key?("default") || field.required_condition || %w[required hidden encrypt].any? { |key| field.get(key) == true } || field.validation_rules.include?("required"))
     end
 
-    def check_messages(field, rule_names, source)
+    def check_messages(field, rule_names, source, unique:)
       messages = field.get("messages")
       return unless messages.is_a?(Hash)
 
       rule_names += [ "required" ] if field.get("required") == true || field.required_condition
       rule_names += [ "step" ] if field.type == "integer" && field.get("step")
+      rule_names += [ "unique" ] if unique.include?(field.handle)
       locales = @config.locales.map(&:code)
       messages.each do |rule, message|
         problem(source, "field '#{field.path}' has a message for '#{rule}', which it has no rule for") unless rule_names.include?(rule)
