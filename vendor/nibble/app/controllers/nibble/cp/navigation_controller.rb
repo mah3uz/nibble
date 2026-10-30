@@ -30,7 +30,7 @@ module Nibble
         end
 
         result = Nibble::Lifecycle.call(record(item), :save, { "tree" => from_tree_items(params[:tree]) }, actor: Nibble::Current.user)
-        return redirect_back_or_to(edit_cp_navigation_path(item.handle), inertia: { errors: { tree: Array(result.errors.values.flatten).first } }) unless result.ok?
+        return redirect_back_or_to(edit_cp_navigation_path(item.handle), inertia: { errors: { tree: Array(result.errors.values.flatten).first }.merge(item_errors(result.record)) }) unless result.ok?
 
         redirect_to edit_cp_navigation_path(item.handle), notice: "Navigation saved."
       end
@@ -50,6 +50,10 @@ module Nibble
           tree: [], records: [],
           source: { folder: files_folder(item), links: flatten(Nibble::Files.index.tree(item.handle)) }
         }
+      end
+
+      def item_errors(record)
+        record.errors.objects.select { |error| error.options[:path] }.group_by { |error| error.options[:path] }.transform_values { |errors| errors.first.message }
       end
 
       def flatten(links, depth = 0)

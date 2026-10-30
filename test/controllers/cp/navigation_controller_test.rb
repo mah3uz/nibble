@@ -37,6 +37,22 @@ class Nibble::Cp::NavigationControllerTest < ActionDispatch::IntegrationTest
       "nothing stored is lost; an item without fields gains its toggle switched off, as an entry does"
   end
 
+  test "a refused save says which item each problem is on, so the editor can show it there" do
+    tree = [
+      { kind: "link", title: "Fine", link: { type: "url", url: "/fine" }, children: [] },
+      { kind: "heading", title: "Company", children: [
+        { kind: "link", title: "Sneaky", link: { type: "url", url: "javascript:alert(1)" }, children: [] }
+      ] }
+    ]
+    patch "/cp/navigation/rich", params: { tree: }, as: :json
+    follow_redirect!
+
+    errors = props["errors"]
+    assert_equal [ "tree.1.children.0" ], errors.keys - [ "tree" ]
+    assert_match "“Sneaky” must link to", errors["tree.1.children.0"]
+    assert_match "Sneaky", errors["tree"], "the first problem is still given for the whole menu"
+  end
+
   test "the editor is told what the menu may hold" do
     get "/cp/navigation/rich/edit"
     menu = props["menu"]

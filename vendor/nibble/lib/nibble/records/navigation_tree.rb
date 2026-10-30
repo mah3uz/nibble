@@ -54,13 +54,13 @@ module Nibble
       def check_nodes(nodes, path, depth, fields)
         max = item["max_depth"]
         nodes.each_with_index do |node, index|
-          key = "#{path}.#{index}"
-          next errors.add(:tree, "Item #{index + 1} isn't a link.") unless node.is_a?(Hash)
+          key = @checking = "#{path}.#{index}"
+          next flag("Item #{index + 1} isn't a link.") unless node.is_a?(Hash)
 
           check_node(node, label(node, index))
           check_fields(node, label(node, index), fields)
           children = node["children"].to_a
-          errors.add(:tree, "#{label(node, index)} is nested too deeply. This menu allows #{max} #{max == 1 ? 'level' : 'levels'}.") if max && depth > max
+          flag("#{label(node, index)} is nested too deeply. This menu allows #{max} #{max == 1 ? 'level' : 'levels'}.") if max && depth > max
           check_nodes(children, "#{key}.children", depth + 1, fields) if children.any?
         end
       end
@@ -69,61 +69,63 @@ module Nibble
 
       def check_node(node, key)
         flags = %w[new_tab hidden].reject { |flag| [ nil, true, false ].include?(node[flag]) }
-        errors.add(:tree, "#{key} has #{flags.join(' and ')} set to something other than true or false.") if flags.any?
+        flag("#{key} has #{flags.join(' and ')} set to something other than true or false.") if flags.any?
         case self.class.kind(node)
         when "link" then check_link(node, key)
         when "heading"
-          return errors.add(:tree, "#{key} is a heading, which this menu doesn't allow.") unless item["headings"] == true
+          return flag("#{key} is a heading, which this menu doesn't allow.") unless item["headings"] == true
 
-          errors.add(:tree, "#{key} is a heading, which needs a title.") if node["title"].blank?
-          errors.add(:tree, "#{key} is a heading, so it can't link anywhere.") if node.values_at("type", "url", "id", "ref").any?(&:present?)
+          flag("#{key} is a heading, which needs a title.") if node["title"].blank?
+          flag("#{key} is a heading, so it can't link anywhere.") if node.values_at("type", "url", "id", "ref").any?(&:present?)
         else
-          errors.add(:tree, "#{key} is a kind of item this menu doesn't support.")
+          flag("#{key} is a kind of item this menu doesn't support.")
         end
       end
 
       def check_link(node, key)
         case node["type"]
         when "url"
-          errors.add(:tree, "#{key} needs a title and a web address.") if node["url"].blank? || node["title"].blank?
-          errors.add(:tree, "#{key} must link to a web page, an email address or a phone number.") if node["url"].present? && !SafeUrl.safe?(node["url"])
+          flag("#{key} needs a title and a web address.") if node["url"].blank? || node["title"].blank?
+          flag("#{key} must link to a web page, an email address or a phone number.") if node["url"].present? && !SafeUrl.safe?(node["url"])
         when *LINK_TYPES.keys
           allowed = Array(item[LINK_TYPES[node["type"]]])
           target = Records.model(node["type"]).find_by(id: node["id"], deleted_at: nil)
           scope = target && (node["type"] == "entry" ? target.collection : target.taxonomy)
-          errors.add(:tree, "#{key} links to #{node['type'] == 'entry' ? 'a page' : 'a term'} that's been deleted. Choose another.") unless target
-          errors.add(:tree, "#{key} links to #{scope.to_s.humanize}, which this menu can't link to.") if target && !allowed.include?(scope)
+          flag("#{key} links to #{node['type'] == 'entry' ? 'a page' : 'a term'} that's been deleted. Choose another.") unless target
+          flag("#{key} links to #{scope.to_s.humanize}, which this menu can't link to.") if target && !allowed.include?(scope)
         when "global" then check_global(node, key)
         when "asset" then check_asset(node, key)
         else
-          errors.add(:tree, "#{key} has a link type this menu doesn't support.")
+          flag("#{key} has a link type this menu doesn't support.")
         end
       end
 
       def check_global(node, key)
         handle, = GlobalLinks.parse(node["ref"])
         allowed = item["globals"]
-        return errors.add(:tree, "#{key} links to a site setting, which this menu can't link to.") unless allowed == true || (allowed.is_a?(Array) && allowed.include?(handle))
+        return flag("#{key} links to a site setting, which this menu can't link to.") unless allowed == true || (allowed.is_a?(Array) && allowed.include?(handle))
 
-        errors.add(:tree, "#{key} needs a title.") if node["title"].blank?
-        errors.add(:tree, "#{key} links to a site setting that doesn't hold an address. Choose another.") unless GlobalLinks.field(node["ref"])
+        flag("#{key} needs a title.") if node["title"].blank?
+        flag("#{key} links to a site setting that doesn't hold an address. Choose another.") unless GlobalLinks.field(node["ref"])
       end
 
       def check_asset(node, key)
-        return errors.add(:tree, "#{key} links to a file, which this menu can't link to.") unless item["assets"] == true
+        return flag("#{key} links to a file, which this menu can't link to.") unless item["assets"] == true
 
-        errors.add(:tree, "#{key} links to a file that's been deleted. Choose another.") unless Asset.kept.exists?(id: node["id"])
+        flag("#{key} links to a file that's been deleted. Choose another.") unless Asset.kept.exists?(id: node["id"])
       end
 
       def check_fields(node, key, fields)
         values = node["fields"]
-        return errors.add(:tree, "#{key} has fields that aren't a set of values.") unless values.nil? || values.is_a?(Hash)
+        return flag("#{key} has fields that aren't a set of values.") unless values.nil? || values.is_a?(Hash)
         return if fields.empty?
 
-        Validator.new(fields, locale:).validate(values.to_h).errors.each_value do |messages|
-          messages.each { |message| errors.add(:tree, "#{key}: #{message}") }
+        Validator.new(fields, locale:).validate(values.to_h).errors.each do |field, messages|
+          messages.each { |message| flag("#{key}: #{message}", "#{@checking}.fields.#{field}") }
         end
       end
+
+def flag(message, path = @checking) = errors.add(:tree, message, path:)
 
       def process_item_fields = self.tree = processed_tree(tree)
 
