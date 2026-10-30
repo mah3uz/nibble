@@ -25,6 +25,9 @@ Because Nibble runs the queries, it knows exactly what a page depended on. It ca
 things, and publishing any of them clears exactly the pages that used it. A view that fetched for itself would give
 all of that up.
 
+A form's choice field reads its options with the same `from`, `where`, `not` and `sort`; see
+[Choices from content](../modelling/forms.md#15-choices-from-content).
+
 Every Tidewater page ends with the three newest posts and the blog's topics, so the view that renders pages asks
 for them:
 

@@ -287,7 +287,70 @@ posted, stored, emailed, exported or delivered, it has no value for a condition 
 `hidden`, `encrypt`ed or have a `default`; `nibble:check` refuses those. It takes the other options a field does,
 such as `display`, `width` and `conditions`.
 
-### 1.5 Steps, and finishing later
+### 1.5 Choices from content
+
+A `select`, `radio`, `checkboxes` or `button_group` can take its options from a collection or a taxonomy, so editors
+add a service in the Control Plane and the form offers it:
+
+```yaml
+  - handle: service
+    field:
+      type: select
+      display: Service
+      options:
+        from: entries:services
+        value: code
+        label: title
+        where: { featured: true }
+        sort: title
+        limit: 50
+```
+
+`from`, `where`, `not` and `sort` are written as in a [view's query](../theming/queries.md). Only published entries are
+offered, in the visitor's locale, with that locale's titles. `value` is what is posted and stored, `slug` unless you
+name another; `label` is what the visitor reads, `title` unless you name another. Each may be a column or a field
+holding one value, such as `text` or `integer`. `limit` is 200 unless you give a smaller one. A page showing the form
+is cleared from the page cache when an entry of the collection changes.
+
+A post must name one of the options, or Nibble refuses it with the field's `in` message ("Choose one of the options
+for …"), which `messages: { in: … }` replaces, per locale.
+
+One choice can narrow another with `parent`. In a structured collection, `parent: region` offers the entries under
+the region the visitor chose:
+
+```yaml
+  - handle: region
+    field: { type: select, options: { from: entries:areas, where: { parent_id: { null: true } } } }
+  - handle: suburb
+    field: { type: select, options: { from: entries:areas, parent: region } }
+```
+
+To follow a relationship instead, name the field on the option that points at the parent's entry or term:
+
+```yaml
+  - handle: kind
+    field: { type: checkboxes, options: { from: terms:kinds } }
+  - handle: service
+    field: { type: select, options: { from: entries:services, parent: { field: kind, by: kinds } } }
+```
+
+Each option then carries `parents`, the parent field's values it belongs under, and the theme's `useNibbleForm` shows
+only those of a chosen parent (see [Forms in your theme](../theming/forms-in-your-theme.md)). With several answers on
+the parent, an option fits when any of its parents was chosen. A post naming an option that doesn't fit is refused
+with the same `in` message.
+
+Options from content are for forms only. `nibble:check` refuses them in a blueprint or global set, a source that isn't
+a query, a collection kept as files, a `value` or `label` that isn't a column or a one-value field, a `limit` above
+200, and a `parent` that isn't another choice field of the form with options from content, a tree parent from another
+or unstructured collection, a `by` that can't point at the parent's source, and parents that go round in a circle.
+The value type in generated types is `string`.
+
+A submission keeps the label of every choice as it was sent, for static options too. The Control Plane, CSV exports
+and emails show an option's label as it is now while it is still offered, and the kept one once it isn't, such as when
+the entry is unpublished or deleted. The label of an `encrypt`ed field is encrypted with it, and labels go when the
+submission is erased, purged or deleted.
+
+### 1.6 Steps, and finishing later
 
 `steps: true` on a sectioned form makes each section a step. The visitor sees one step at a time with a progress
 indicator, Back and Next, and Next checks that step before moving on:

@@ -59,6 +59,7 @@ Run for every blueprint, fieldset, global and form.
 | `field '…' has a required condition that …` | a conditional `required` that is not exactly one of the condition forms, or names a field that is not beside it | rewrite it as the message says |
 | `field '…' is a note, which only displays text …` | a note field with `required`, `hidden`, `encrypt` or a default | remove those settings |
 | `field '…' is a calculation, which only a form can have` | the calculation fieldtype is used outside a form | use it in a form, or use another fieldtype |
+| `field '…' takes its options from content, which only a form's field can` | a choice field in a blueprint or global set with `options: { from: entries:… }` | list its options, or use an `entries` or `terms` field |
 | `field '…' has computed default '…', which isn't registered` | `default: computed:name` with no such default | register it, or use a plain default |
 | `field handle '…' is reserved for the entry itself` | the handle is one the entry already uses (`slug`, `status`, `uri`, `template` and the like) | rename the field |
 | `field '…' is a …, which apps can't be told how to write: give the fieldtype a json_schema` (warning) | a custom fieldtype that agents and the management API cannot describe | add a `json_schema` to the fieldtype |
@@ -77,6 +78,7 @@ A form's messages begin with its file. The common ones:
 | `limits.…`, `spam.…`, `resume…`, `notify.N.…`, `retention_days …` | a setting with a wrong shape; the message says what it should be | see [Forms](../modelling/forms.md) |
 | `api.N …` | a delivery with neither `use` nor `url`, an unknown API connection, a bad `method`, `format` or `mode` | see [Forms](../modelling/forms.md) |
 | `… has a formula …` | a calculation field that does not parse, or names a field that is missing or not numeric | fix the formula |
+| `field '…' options…` | options from content whose query, `value`, `label`, `limit` or `parent` is wrong; the message names which | see [Choices from content](../modelling/forms.md#15-choices-from-content) |
 | `success needs a message or a redirect`, `handler '…' isn't registered` | a form with no success outcome, or a handler name that does not exist | add one, or register the handler |
 | `… has captcha: true but Integrations has no CAPTCHA keys, so every submission is refused` (warning) | the form needs a CAPTCHA and none is configured | add the keys under **Integrations**, or turn captcha off |
 | `form '…' has N stored submissions but isn't in the schema …` (warning) | a form was removed while its submissions remain; the daily purge will delete them | restore the form, or export the submissions first |

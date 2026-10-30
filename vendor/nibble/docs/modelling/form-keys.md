@@ -21,7 +21,7 @@ refuses a form with a key not listed here, a key of the wrong type or a value it
 | `title` | text | **required** | the form's name, shown to visitors and in emails | [Forms](forms.md#1-declaring-a-form) |
 | `fields` | list | | the form's fields, in order; give `fields` or `sections`, not both | [Forms](forms.md#1-declaring-a-form) |
 | `sections` | list | | groups of fields; each is `{ display, instructions, fields }` | [Forms](forms.md#1-declaring-a-form) |
-| `steps` | true / false | `false` | each section becomes a step; needs `sections` | [Steps](forms.md#15-steps-and-finishing-later) |
+| `steps` | true / false | `false` | each section becomes a step; needs `sections` | [Steps](forms.md#16-steps-and-finishing-later) |
 | `submit_label` | text | the theme's "Send message" | the send button's text | [Translating](form-translation.md) |
 | `success` | map | | what the visitor sees after sending | [Forms](forms.md#1-declaring-a-form) |
 | `success.message` | text | | shown in place of the form; may use `{global.<set>.<field>}` | [Forms](forms.md#1-declaring-a-form) |
@@ -35,9 +35,9 @@ refuses a form with a key not listed here, a key of the wrong type or a value it
 
 | Key | Type | Default | Meaning | Explained in |
 |---|---|---|---|---|
-| `resume` | true / false | `false` | adds **Save and finish later**; needs `store` on | [Steps](forms.md#15-steps-and-finishing-later) |
-| `resume_email` | text | | the handle of the `text` field that holds the visitor's address | [Steps](forms.md#15-steps-and-finishing-later) |
-| `resume_days` | whole number | `7` | how many days the link works | [Steps](forms.md#15-steps-and-finishing-later) |
+| `resume` | true / false | `false` | adds **Save and finish later**; needs `store` on | [Steps](forms.md#16-steps-and-finishing-later) |
+| `resume_email` | text | | the handle of the `text` field that holds the visitor's address | [Steps](forms.md#16-steps-and-finishing-later) |
+| `resume_days` | whole number | `7` | how many days the link works | [Steps](forms.md#16-steps-and-finishing-later) |
 
 ## 3. Emailing: `notify`
 

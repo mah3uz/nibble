@@ -342,6 +342,13 @@ value is an array, `max_items` limits how many, and the name is `handle[]`. `cle
 
 **Radio.** A `fieldset` and `legend`, and one radio per option. `inline` asks for the options in a row.
 
+**Options narrowed by another choice.** A choice field with a [`parent`](../modelling/forms.md#15-choices-from-content)
+names the field it follows, and each of its options (a `NibbleFormOption`) carries `parents`. Draw `demo.options(field)` instead of
+`field.options` for every choice field: it is the options that fit the parent's current answers, and every option
+until the page has JavaScript, so a visitor without it can still choose and the server checks the pairing. When the
+parent's answer changes, `useNibbleForm` clears a child answer that no longer fits. `optionsFor(field, values)` from
+`@nibble` gives the same list for any values.
+
 **Button group.** The same values as a radio (it is typed as one); draw the options as joined buttons, each a radio
 input hidden visually, with a visible label that shows the checked state.
 
@@ -601,9 +608,9 @@ The rest depend on the type, and are absent unless the schema set them:
 | `range` | `min`, `max`, `step`, `prepend`, `append` |
 | `rating` | `max` |
 | `toggle` | `inline_label`, `inline_label_html` (only when the label has links) |
-| `select` | `placeholder`, `options`, `multiple`, `max_items`, `clearable` |
-| `radio`, `checkboxes` | `options`, `inline` |
-| `button_group` | `options` |
+| `select` | `placeholder`, `options`, `parent`, `multiple`, `max_items`, `clearable` |
+| `radio`, `checkboxes` | `options`, `parent`, `inline` |
+| `button_group` | `options`, `parent` |
 | `date` | `inline`, `time_enabled`, `earliest_date`, `latest_date`, `time_zone` |
 | `time` | `placeholder`, `seconds`, `earliest`, `latest` |
 | `color` | `swatches`, `allow_any` |
