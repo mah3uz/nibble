@@ -1,5 +1,7 @@
 module Nibble
   module Packages
+    NODE_KEYS = %w[kind new_tab hidden show_from show_until].freeze
+
     Document = Data.define(:kind, :handle, :locale, :key, :data, :file) do
       def slug = key.split("/").last
       def parent_key = key.count("/") > 1 ? key.split("/")[0..-2].join("/") : nil
@@ -270,15 +272,41 @@ module Nibble
 
       def navigation_errors(doc)
         item = Nibble.schema.find(:navigation, doc.handle) or return [ "#{doc.file}: no navigation '#{doc.handle}'" ]
+        fields = Records::NavigationTree.new(handle: doc.handle, locale: doc.locale).item_fields
 
-        links(doc.data["tree"].to_a).filter_map do |node|
-          type = (node.keys & %w[entry term]).first
-          if type
-            "#{doc.file}: link to unknown #{type} '#{node[type]}'" unless @references.known?(type, doc.locale, node[type].to_s)
-          elsif node["url"].blank? || node["title"].blank?
-            "#{doc.file}: a link needs an entry, a term, or a url and a title"
-          end
-        end.tap { |errors| errors << "#{doc.file}: navigation #{item.handle} has no tree" if doc.data["tree"].blank? }
+        links(doc.data["tree"].to_a).flat_map { |node| node_errors(doc, node, fields) }
+          .tap { |errors| errors << "#{doc.file}: navigation #{item.handle} has no tree" if doc.data["tree"].blank? }
+      end
+
+      def node_errors(doc, node, fields)
+        type = (node.keys & Records::NavigationTree::RECORD_LINKS).first
+        errors = []
+        if type
+          errors << "#{doc.file}: link to unknown #{type} '#{node[type]}'" unless @references.known?(type, doc.locale, node[type].to_s)
+        elsif !node.key?("ref") && Records::NavigationTree.kind(node) == "link" && (node["url"].blank? || node["title"].blank?)
+          errors << "#{doc.file}: a link needs an entry, a term, an asset, a ref, or a url and a title"
+        end
+        errors + query_errors(doc, node["query"]) + item_field_errors(doc, node, fields)
+      end
+
+      def query_errors(doc, query)
+        return [] unless query.is_a?(Hash)
+
+        term = query["term"].is_a?(Hash) ? query["term"]["id"] : nil
+        [ ([ "entry", query["parent"] ] if query["parent"].present?), ([ "term", term ] if term.present?) ].compact.filter_map do |type, key|
+          "#{doc.file}: query names unknown #{type} '#{key}'" unless @references.known?(type, doc.locale, key.to_s)
+        end
+      end
+
+      def item_field_errors(doc, node, fields)
+        return [] unless node.key?("fields")
+        return [ "#{doc.file}: fields must be a map of values" ] unless node["fields"].is_a?(Hash)
+
+        values = node["fields"]
+        overrides = %w[entry term asset].to_h { |type| [ type, ValidationResolver.new(@references, doc.locale, type) ] }
+        result = Resolvers.with_overrides(overrides) { Validator.new(fields, locale: doc.locale).validate(values) }
+        (values.keys - fields.handles).map { |key| "#{doc.file}: '#{key}' isn't an item field of #{doc.handle}" } +
+          result.errors.flat_map { |path, messages| messages.map { |message| "#{doc.file}: #{path}: #{message}" } }
       end
 
       def field_errors(doc, record, full:)
@@ -379,8 +407,8 @@ module Nibble
         outcome = record.persisted? ? :updated : :created
         return :skipped if record.persisted? && !@update
 
-        incoming = tree(doc.data["tree"].to_a, doc.locale)
-        return :skipped if record.persisted? && normalize(incoming) == normalize(record.tree.to_a)
+        incoming = tree(doc.data["tree"].to_a, doc.locale, record.item_fields)
+        return :skipped if record.persisted? && normalize(record.processed_tree(incoming)) == normalize(record.tree.to_a)
 
         succeed!(doc, Lifecycle.call(record, :save, { "tree" => incoming }, actor: Principal.system, mode: @lifecycle_mode))
         outcome
@@ -449,13 +477,40 @@ module Nibble
           field.fieldtype.nested_fields.any?
       end
 
-      def tree(nodes, locale)
-        nodes.map do |node|
-          type = (node.keys & %w[entry term]).first
-          link = type ? { "type" => type, "id" => @references.id(type, locale, node[type].to_s) } : { "type" => "url", "url" => node["url"] }
+      def tree(nodes, locale, fields)
+        context = Context.new(@references, locale, strict: true)
+        nodes.filter_map do |node|
+          link = target(node, locale)
+          # A packaged file is only uploaded by a real import, so a preview has no id for it.
+          next if link["type"] == "asset" && link["id"].nil?
+
           link["title"] = node["title"] if node["title"]
-          link.merge("children" => tree(node["children"].to_a, locale))
+          link.merge!(node.slice(*NODE_KEYS))
+          link["fields"] = item_values(node["fields"], fields, context) if node["fields"].is_a?(Hash)
+          link["query"] = query(node["query"], locale) if node["query"].is_a?(Hash)
+          link.merge("children" => tree(node["children"].to_a, locale, fields))
         end
+      end
+
+      def target(node, locale)
+        type = (node.keys & Records::NavigationTree::RECORD_LINKS).first
+        if type then { "type" => type, "id" => @references.id(type, locale, node[type].to_s) }
+        elsif node.key?("ref") then { "type" => "global", "ref" => node["ref"] }
+        elsif node.key?("url") || Records::NavigationTree.kind(node) == "link" then { "type" => "url", "url" => node["url"] }
+        else {}
+        end
+      end
+
+      def item_values(values, fields, context)
+        values.slice(*fields.handles).to_h { |handle, value| [ handle, fields.get(handle).fieldtype.import(value, context) ] }
+      end
+
+      def query(query, locale)
+        query = query.merge("parent" => @references.id("entry", locale, query["parent"].to_s)) if query["parent"].present?
+        term = query["term"]
+        return query unless term.is_a?(Hash) && term["id"].present?
+
+        query.merge("term" => term.merge("id" => @references.id("term", locale, term["id"].to_s)))
       end
 
       def links(nodes) = nodes.flat_map { |node| [ node, *links(node["children"].to_a) ] }

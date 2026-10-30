@@ -39,6 +39,8 @@ module Nibble
 
       def event_payload = super.merge("handle" => handle)
 
+      def processed_tree(nodes) = item_fields.any? ? processed(nodes, item_fields) : nodes
+
       private
 
       def flatten(nodes) = nodes.select { |node| node.is_a?(Hash) }.flat_map { |node| [ node, *flatten(node["children"].to_a) ] }
@@ -123,7 +125,7 @@ module Nibble
         end
       end
 
-      def process_item_fields = self.tree = processed(tree, item_fields)
+      def process_item_fields = self.tree = processed_tree(tree)
 
       def processed(nodes, fields)
         nodes.map do |node|

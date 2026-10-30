@@ -73,8 +73,9 @@ tagline: Invoicing that gets you paid
 contact_email: hello@tidewater.example
 ```
 
-A menu is a `tree`. A link is a `url`, or an `entry` named as `<collection>/<slug>`, so it survives the entry being
-given a new ID in a new database:
+A menu is a `tree`. A link is a `url`, an `entry` named as `<collection>/<slug>`, a `term` as `<taxonomy>/<slug>`, a
+file as `asset: <folder>/<filename>`, or a site setting as `ref: global:<handle>.<field>`, so it survives the record
+being given a new ID in a new database:
 
 ```yaml
 # site/packages/default/navigation/main/en.yml
@@ -83,7 +84,23 @@ tree:
   title: Pricing
 - url: "/blog"
   title: Blog
+- kind: heading
+  title: Company
+  children:
+  - asset: legal/terms.pdf
+    title: Terms
+    new_tab: true
+  - ref: global:site.careers_url
+    title: Careers
+    fields:
+      badge: Hiring
+      related:
+      - pages/about
 ```
+
+An item also carries its `kind`, `new_tab`, `hidden` and item `fields`, written as an entry's fields are, so a
+relationship names records by key. An item that links to a
+record the package and the site don't have is reported, and nothing is imported.
 
 An entry is its fields, blocks included; `redirects.yml` and `assets.yml` are lists.
 
