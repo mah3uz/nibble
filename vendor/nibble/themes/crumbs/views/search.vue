@@ -46,6 +46,12 @@ const query = computed(() => site.value.params.q ?? '')
             :key="`${result.type}-${result.id}`"
             class="border-b border-current/15 pb-6"
           >
+            <p class="mb-2 font-mono text-base text-accent sm:text-sm">
+              {{ result.collection === 'posts' ? 'Article' : 'Page' }}
+              <template v-if="result.parent">
+                in <Link :href="result.parent.uri ?? '#'" class="underline">{{ result.parent.title }}</Link>
+              </template>
+            </p>
             <h2 class="text-2xl font-semibold">
               <Link :href="result.uri ?? '#'" class="hover:text-accent">{{ result.title }}</Link>
             </h2>

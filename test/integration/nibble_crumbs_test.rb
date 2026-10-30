@@ -98,6 +98,7 @@ class NibbleCrumbsTest < ActionDispatch::IntegrationTest
     results = props["props"]["results"]["data"]
     assert_equal [ "What a good changelog sounds like" ], results.map { |result| result["title"] }
     assert_includes results.first["search_snippet"], "<mark>"
+    assert_equal "posts", results.first["collection"]
   end
 
   test "the archive paginates, and a topic page lists only its own articles" do
@@ -123,5 +124,6 @@ class NibbleCrumbsTest < ActionDispatch::IntegrationTest
     get "/no-such-crumb"
     assert_response :not_found
     assert_equal "theme/errors/404", props["component"]
+    assert_equal 3, props["props"]["latest"].size
   end
 end

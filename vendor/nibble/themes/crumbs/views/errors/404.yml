@@ -1,0 +1,5 @@
+latest:
+  from: entries:posts
+  sort: published_at:desc
+  limit: 3
+  fields: [published_at]

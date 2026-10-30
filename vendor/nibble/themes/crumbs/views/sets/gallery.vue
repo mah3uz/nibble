@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Image, type ImageValue } from '@nibble'
+import { Image } from '@nibble'
+import type { AssetValue } from '@site/types'
 
-defineProps<{ images: ImageValue[] | null }>()
+defineProps<{ images: AssetValue[] | null }>()
 </script>
 
 <template>
