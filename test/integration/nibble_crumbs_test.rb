@@ -144,4 +144,49 @@ class NibbleCrumbsTest < ActionDispatch::IntegrationTest
     assert_equal "theme/errors/404", props["component"]
     assert_equal 3, props["props"]["latest"].size
   end
+
+  def change(record, action, attrs)
+    result = Nibble::Lifecycle.call(record, action, attrs, actor: Nibble::Principal.system)
+    assert result.ok?, result.errors.inspect
+    Nibble::Events.dispatch_pending
+  end
+
+  test "the Footer menu takes headings, so a footer can be drawn as titled columns" do
+    footer = Nibble::Records::NavigationTree.find_or_initialize_by(handle: "footer", locale: "en")
+    change(footer, :save, "tree" => [
+      { "kind" => "heading", "title" => "Read", "children" => [ { "type" => "url", "title" => "Archive", "url" => "/blog" } ] },
+      { "kind" => "heading", "title" => "Crumbs", "children" => [ { "type" => "url", "title" => "About", "url" => "/about" } ] }
+    ])
+
+    get "/"
+    columns = props["props"]["site"]["navigation"]["footer"]
+    assert_equal [ [ "heading", nil, "Read" ], [ "heading", nil, "Crumbs" ] ], columns.map { |item| item.values_at("kind", "url", "title") }
+    assert_equal [ "/blog" ], columns.first["children"].map { |link| link["url"] }
+  end
+
+  test "the menus say which item is the page being read and which section it is in" do
+    get "/blog/the-first-crumb"
+    archive = props["props"]["site"]["navigation"]["main"].find { |link| link["title"] == "Archive" }
+    assert_equal [ false, true ], archive.values_at("current", "in_trail")
+
+    get "/blog"
+    archive = props["props"]["site"]["navigation"]["main"].find { |link| link["title"] == "Archive" }
+    assert_equal [ true, true ], archive.values_at("current", "in_trail")
+  end
+
+  test "a page's Latest posts block lists as many of the newest articles as the editor chose" do
+    page = Nibble::Blueprint.for(Nibble.schema.blueprints_for(Nibble.schema.collection("pages")).first)
+    assert_equal %w[rich_text quote cta latest_posts], page.field("blocks").config["sets"]["content"]["sets"].keys,
+      "crumbs adds the block to the standard ones rather than copying them"
+
+    about = Nibble::Records::Entry.find_by!(collection: "pages", slug: "about")
+    blocks = about.data["blocks"] + [ { "id" => "latest", "type" => "latest_posts", "count" => 2, "heading" => "Fresh crumbs" } ]
+    change(about, :publish, "blocks" => blocks)
+    Nibble::PageCache.store.clear
+
+    get "/about"
+    block = props["props"]["page"]["blocks"].last
+    assert_equal [ "latest_posts", "Fresh crumbs" ], block.values_at("type", "heading")
+    assert_equal [ "The week I renamed one thing", "Tools that earned their keep" ], block["queries"]["posts"].map { |post| post["title"] }
+  end
 end

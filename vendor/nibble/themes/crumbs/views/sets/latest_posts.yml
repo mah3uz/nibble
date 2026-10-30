@@ -1,0 +1,5 @@
+posts:
+  from: entries:posts
+  sort: published_at:desc
+  limit: { from: $set.count, default: 3 }
+  fields: [excerpt, published_at, featured_image]

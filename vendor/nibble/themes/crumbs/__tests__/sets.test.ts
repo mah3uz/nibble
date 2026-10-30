@@ -3,11 +3,13 @@ import { renderToString } from 'vue/server-renderer'
 import { describe, expect, it, vi } from 'vitest'
 import Cta from '../views/sets/cta.vue'
 import Embed from '../views/sets/embed.vue'
+import LatestPosts from '../views/sets/latest_posts.vue'
 import { embedSrc } from '../lib/embed'
 
 vi.mock('@inertiajs/vue3', async () => {
   const { defineComponent, h } = await import('vue')
   return {
+    usePage: () => ({ props: { site: { locale: 'en', time_zone: 'UTC' } } }),
     Link: defineComponent({
       props: { href: { type: String, default: '' } },
       setup:
@@ -68,5 +70,32 @@ describe('cta set', () => {
     const html = await render(Cta, { ...base, link: { type: 'url', url: 'https://example.com' } })
     expect(html).toContain('href="https://example.com"')
     expect(html).not.toContain('data-inertia')
+  })
+})
+
+describe('latest_posts set', () => {
+  const post = (title: string) => ({
+    id: title,
+    type: 'post',
+    title,
+    uri: `/blog/${title.toLowerCase()}`,
+    url: null,
+    excerpt: null,
+    published_at: '2026-10-01T00:00:00Z',
+    featured_image: null,
+  })
+
+  it('draws each post its query found as a card, under the heading when the editor gave one', async () => {
+    const queries = { posts: [post('First'), post('Second')] }
+    const titled = await render(LatestPosts, { count: 2, heading: 'Fresh crumbs', queries })
+    expect(titled).toMatch(/<h2[^>]*>Fresh crumbs<\/h2>/)
+    expect([...titled.matchAll(/<article/g)]).toHaveLength(2)
+    expect(titled).toContain('href="/blog/second"')
+
+    expect(await render(LatestPosts, { count: 2, heading: null, queries })).not.toContain('Fresh crumbs')
+  })
+
+  it('draws nothing when there are no posts, rather than an empty section', async () => {
+    expect(await render(LatestPosts, { heading: 'Fresh crumbs', queries: { posts: [] } })).not.toContain('<section')
   })
 })
