@@ -52,7 +52,10 @@ module Nibble
         return true if NUMERIC_TYPES.include?(field.type)
         return false unless CHOICE_TYPES.include?(field.type) && field.get("multiple") != true
 
-        options = field.fieldtype.options
+        source = Options.for(field)
+        return false if source.content?
+
+        options = source.options
         options.any? && options.all? { |option| Formula::NUMBER.match?(option["value"].to_s) }
       end
 

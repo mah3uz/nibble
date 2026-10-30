@@ -62,6 +62,7 @@ module Nibble
     def type = config.fetch("type", "text")
     def fieldtype_class = Fieldtypes.find(type)
     def fieldtype = fieldtype_class.new(self)
+    def options_source = @options_source ||= Options.for(self)
 
     def get(key, fallback = nil)
       value = config[key.to_s]

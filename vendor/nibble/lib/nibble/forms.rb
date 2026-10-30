@@ -132,11 +132,12 @@ module Nibble
         nil
       end
 
-      def display_value(field, value, locale = nil)
+      def display_value(field, value, locale = nil, labels: nil)
         shown = field.fieldtype.display(value)
         return shown unless shown.nil?
 
-        labels = field.fieldtype.respond_to?(:options) ? field.fieldtype.options(locale).to_h { |option| [ option["value"].to_s, option["label"].to_s ] } : {}
+        current = field.fieldtype.respond_to?(:options) ? field.fieldtype.options(locale).to_h { |option| [ option["value"].to_s, option["label"].to_s ] } : {}
+        labels = labels.to_h.merge(current)
         case value
         when Array then value.map { |item| item.is_a?(Hash) ? item["filename"].to_s : labels.fetch(item.to_s, item.to_s) }
         when true then "Yes"
@@ -154,11 +155,13 @@ module Nibble
 
       def problems(form, schema:)
         problems = section_problems(form)
-        form.fields(schema:).all.each_value do |field|
+        fields = form.fields(schema:)
+        fields.all.each_value do |field|
           problems << "field '#{field.handle}' uses '#{field.type}', which can't be used on a public form" unless PUBLIC_FIELDTYPES.include?(field.type)
           problems << "field handle '#{field.handle}' clashes with the honeypot" if field.handle == form.honeypot
           problems.concat(hidden_problems(field))
           problems.concat(encrypt_problems(form, field))
+          problems.concat(option_problems(field, fields, schema))
         end
         problems.concat(Uploads.problems(form, schema:))
         problems.concat(Calculations.problems(form.fields(schema:)))
@@ -185,17 +188,18 @@ module Nibble
           (%w[display instructions] + Definition::LOCALIZED_CONFIG).each { |key| texts["field '#{field.handle}' #{key}"] = field.get(key) }
           next unless Definition::OPTION_TYPES.include?(field.type)
 
-          option_labels(field.fieldtype.config("options")).each { |value, label| texts["field '#{field.handle}' option '#{value}'"] = label }
+          Options.for(field).localized_labels.each { |value, label| texts["field '#{field.handle}' option '#{value}'"] = label }
         end
         texts.flat_map { |label, text| Localized.problems(text, locales, label) }
       end
 
       private
 
-      def option_labels(raw)
-        return raw.to_a if raw.is_a?(Hash)
+      def option_problems(field, fields, schema)
+        return [] unless Definition::OPTION_TYPES.include?(field.type)
 
-        Array(raw).filter_map { |item| [ item["key"] || item["value"], item["label"] ] if item.is_a?(Hash) }
+        source = Options.for(field, fields)
+        source.content? ? source.problems(schema).map { |message| "field '#{field.handle}' #{message}" } : []
       end
 
       def hidden_problems(field)

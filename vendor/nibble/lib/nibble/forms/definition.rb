@@ -23,7 +23,7 @@ module Nibble
           "action" => action(form, fields, params),
           "honeypot" => form.honeypot,
           "captcha" => captcha,
-          "fields" => fields.all.values.map { |field| field_definition(field, params, locale) },
+          "fields" => fields.all.values.map { |field| field_definition(field, params, locale, fields:) },
           "sections" => form.sections(locale:)&.map { |section| section.merge("fields" => section["fields"].handles) },
           "steps" => form.steps?,
           "resume" => resume.definition,
@@ -76,12 +76,16 @@ module Nibble
         config["inline_label"] = SafeMarkdown.label_text(config["inline_label"])
       end
 
-      def field_definition(field, params = {}, locale = nil)
+      def field_definition(field, params = {}, locale = nil, fields: nil)
         config = field.fieldtype.config.slice(*FIELD_CONFIG).compact
         LOCALIZED_CONFIG.each { |key| config[key] = Localized.resolve(config[key], locale) if config.key?(key) }
         label_markup(config)
         config["text_html"] = field.fieldtype.html(locale) if field.display_only?
-        config["options"] = field.fieldtype.options(locale) if OPTION_TYPES.include?(field.type)
+        if OPTION_TYPES.include?(field.type)
+          source = Options.for(field, fields)
+          config["options"] = source.options(locale)
+          config["parent"] = source.parent_handle if source.content? && source.parent_handle
+        end
         config["time_zone"] = field.fieldtype.time_zone if field.type == "date" && field.fieldtype.time_zone
         config["default"] = public_default(field) if config.key?("default")
         if field.get("hidden") == true
