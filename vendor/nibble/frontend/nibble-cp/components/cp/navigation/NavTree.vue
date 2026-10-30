@@ -245,7 +245,9 @@ useSortable(listRef, items, {
               <span class="truncate text-sm font-medium">{{ item.title }}</span>
               <Badge v-if="kindLabel(item)" variant="outline">{{ kindLabel(item) }}</Badge>
               <Badge v-if="item.hidden"><EyeOff /> Hidden</Badge>
-              <Badge v-if="schedule(item)" variant="outline"><CalendarClock /> {{ schedule(item) }}</Badge>
+              <Badge v-if="schedule(item)" variant="outline" class="max-w-full"
+                ><CalendarClock /><span class="truncate">{{ schedule(item) }}</span></Badge
+              >
               <span v-if="warning(item)" class="inline-flex items-center gap-1 text-xs text-amber-600">
                 <AlertTriangle class="size-3" /> {{ warning(item) }}
               </span>

@@ -143,13 +143,11 @@ const sorts = computed(() => {
     ? offered
     : [...offered, { value: form.sort, label: `Sorted by ${form.sort}` }]
 })
-const limit = computed(() => (form.limit.trim() === '' ? undefined : Number(form.limit)))
-const queryValid = computed(
-  () =>
-    kind.value !== 'query' ||
-    (!!source.value &&
-      (limit.value === undefined || (Number.isInteger(limit.value) && limit.value >= 1 && limit.value <= QUERY_LIMIT))),
+const limit = computed(() => (String(form.limit).trim() === '' ? undefined : Number(form.limit)))
+const limitValid = computed(
+  () => limit.value === undefined || (Number.isInteger(limit.value) && limit.value >= 1 && limit.value <= QUERY_LIMIT),
 )
+const queryValid = computed(() => kind.value !== 'query' || (!!source.value && limitValid.value))
 const datesInOrder = computed(
   () => !form.showFrom || !form.showUntil || Date.parse(form.showFrom) < Date.parse(form.showUntil),
 )
@@ -315,12 +313,16 @@ function save() {
                 :min="1"
                 :max="QUERY_LIMIT"
                 :placeholder="String(QUERY_LIMIT)"
-                :aria-invalid="!queryValid || undefined"
+                :aria-invalid="!limitValid || undefined"
               />
             </div>
           </div>
-          <p class="text-xs text-muted-foreground" :class="!queryValid && source && 'text-destructive'">
-            The site lists up to {{ QUERY_LIMIT }} published pages here, and keeps the list up to date by itself.
+          <p class="text-xs" :class="limitValid ? 'text-muted-foreground' : 'text-destructive'">
+            {{
+              limitValid
+                ? `The site fills this with up to ${limit ?? QUERY_LIMIT} published pages, and keeps it up to date.`
+                : `Choose from 1 to ${QUERY_LIMIT} pages.`
+            }}
           </p>
         </template>
         <template v-if="linkMode !== 'none'">
@@ -386,8 +388,8 @@ function save() {
             <AssetSelector v-model:open="pickingFile" :max-files="1" title="Choose a file" @select="pickFile" />
           </div>
           <div v-else-if="form.linkType !== 'none'" class="space-y-2">
-            <Label>{{ pickerLabel }}</Label>
-            <EntryPicker v-model="form.entryId" :entries="pickerEntries" />
+            <Label id="nav-item-entry-label">{{ pickerLabel }}</Label>
+            <EntryPicker v-model="form.entryId" :entries="pickerEntries" aria-labelledby="nav-item-entry-label" />
           </div>
           <label v-if="form.linkType !== 'none'" class="flex items-center justify-between gap-4 text-sm">
             Open in a new tab
@@ -403,8 +405,8 @@ function save() {
           </span>
           <Switch v-model="form.hidden" />
         </label>
-        <div class="space-y-2">
-          <Label for="nav-item-show-from">Show from</Label>
+        <div class="space-y-2" role="group" aria-labelledby="nav-item-show-from-label">
+          <Label id="nav-item-show-from-label" for="nav-item-show-from">Show from</Label>
           <DateFieldtype
             id="nav-item-show-from"
             handle="show_from"
@@ -413,8 +415,8 @@ function save() {
             @update:value="(value: string | null) => (form.showFrom = value)"
           />
         </div>
-        <div class="space-y-2">
-          <Label for="nav-item-show-until">Show until</Label>
+        <div class="space-y-2" role="group" aria-labelledby="nav-item-show-until-label">
+          <Label id="nav-item-show-until-label" for="nav-item-show-until">Show until</Label>
           <DateFieldtype
             id="nav-item-show-until"
             handle="show_until"
