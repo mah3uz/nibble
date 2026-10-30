@@ -36,10 +36,12 @@ module Nibble
 
     def present_navigation(tree)
       Dependencies.add("navigation:#{tree.handle}")
+      return [] unless tree.item
+
       @preload.load([ tree ])
-      entry_fields = Array(tree.item&.[]("entry_fields"))
-      @preload.load(tree.links.filter_map { |node| @preload.record("entry", node["id"]) if node["type"] == "entry" }) if entry_fields.any?
-      nodes(tree.tree.to_a, tree.item_fields, entry_fields, headings: tree.item&.[]("headings") == true)
+      menu = tree.menu
+      @preload.load(tree.links.filter_map { |node| @preload.record("entry", node["id"]) if node["type"] == "entry" }) if menu.entry_fields.any?
+      nodes(tree.tree.to_a, menu)
     end
 
     private
@@ -105,25 +107,47 @@ module Nibble
       { "id" => user.id, "name" => user.name }
     end
 
-    def nodes(list, item_fields, entry_fields, headings:)
+    # An item whose kind, query or dates the menu no longer allows is left out rather than shown in a shape the theme doesn't expect.
+    def nodes(list, menu)
       list.filter_map do |node|
-        next if node["hidden"] == true
+        next if node["hidden"] == true || !Records::NavigationTree.shown?(node, @context.now)
 
         kind = Records::NavigationTree.kind(node)
+        custom = menu.kind(kind)
         link = case kind
         when "link" then link(node)
-        when "heading" then { "type" => nil, "title" => node["title"], "url" => nil } if headings
+        when "heading" then unlinked(node) if menu.headings?
+        when "query" then unlinked(node) if menu.queries.include?(MenuQuery.new(node["query"]).collection)
+        else (custom.link != "none" && Records::NavigationTree.linked?(node) ? link(node) : unlinked(node)) if custom
         end
         next unless link
 
-        target = link.delete("target")
-        link.merge(
-          "kind" => kind, "new_tab" => node["new_tab"] == true,
-          "fields" => augmented(item_fields, node["fields"]),
-          "entry" => (augmented(target.blueprint_fields.only(entry_fields), target.values) if target.is_a?(Records::Entry) && entry_fields.any?),
-          "children" => nodes(node["children"].to_a, item_fields, entry_fields, headings:)
-        )
+        children = if kind == "query" then query_links(node["query"], menu) or next
+        elsif custom && !custom.children then []
+        else nodes(node["children"].to_a, menu)
+        end
+        item(link, kind, node, menu, children)
       end
+    end
+
+    def item(link, kind, node, menu, children)
+      target = link.delete("target")
+      link.merge(
+        "kind" => kind, "new_tab" => node["new_tab"] == true,
+        "fields" => augmented(menu.fields_for(kind), node["fields"]),
+        "entry" => (augmented(target.blueprint_fields.only(menu.entry_fields), target.values) if target.is_a?(Records::Entry) && menu.entry_fields.any?),
+        "children" => children
+      )
+    end
+
+    def unlinked(node) = { "type" => nil, "title" => node["title"], "url" => nil }
+
+    def query_links(query, menu)
+      records = MenuQuery.new(query).records(@context)
+      @preload.load(records) if menu.entry_fields.any?
+      records.map { |record| item(record_link("entry", record, nil), "link", {}, menu, []) }
+    rescue Query::Invalid
+      nil
     end
 
     def link(node)
@@ -134,10 +158,14 @@ module Nibble
         { "type" => "global", "title" => node["title"], "url" => url }
       when *Records::NavigationTree::RECORD_LINKS
         target = @preload.record(node["type"], node["id"]) or return nil
-        Dependencies.add("#{target.record_type}:#{target.id}")
-        title, url = target.is_a?(Records::Asset) ? [ target.display_title, target.url ] : [ target.title, target.uri ]
-        { "type" => node["type"], "id" => target.id, "title" => node["title"].presence || title, "url" => url, "target" => target }
+        record_link(node["type"], target, node["title"])
       end
+    end
+
+    def record_link(type, target, title)
+      Dependencies.add("#{target.record_type}:#{target.id}")
+      name, url = target.is_a?(Records::Asset) ? [ target.display_title, target.url ] : [ target.title, target.uri ]
+      { "type" => type, "id" => target.id, "title" => title.presence || name, "url" => url, "target" => target }
     end
 
     def augmented(fields, values)

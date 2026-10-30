@@ -313,6 +313,19 @@ class Nibble::CheckTest < ActiveSupport::TestCase
     assert_match "loose.yml: entry_fields needs collections", messages
   end
 
+  test "a menu's kinds have their fields checked, can't redefine a built-in kind or repeat an item field, and its queries must name collections" do
+    theme_file("navigation/mega.yml", title: "Mega", queries: [ "evnts" ],
+      item_fields: [ { handle: "badge", field: { type: "text" } } ],
+      kinds: { featured: { fields: [ { handle: "blurb", field: { type: "text", validate: [ "postcode" ] } }, { handle: "badge", field: { type: "text" } } ] },
+               heading: { link: "none" } })
+
+    messages = check.problems.select { |problem| problem.source.include?("navigation/") }.map(&:to_s).join("\n")
+    assert_match "field 'blurb' uses unknown validation rule 'postcode'", messages
+    assert_match "kind 'featured' field 'badge' is already an item field", messages, "the theme's type for the item would hold the field twice"
+    assert_match "kind 'heading' is built in", messages
+    assert_match "queries names collection 'evnts', which doesn't exist", messages
+  end
+
   test "a routed collection whose entries resolve to a view the theme lacks warns, and one with a template that exists does not" do
     theme_file("collections/events.yml", title: "Events", route: "/events/{slug}", blueprints: [ "event" ])
     theme_file("blueprints/collections/events/event.yml", title: "Event", tabs: { main: { sections: [ { fields: [

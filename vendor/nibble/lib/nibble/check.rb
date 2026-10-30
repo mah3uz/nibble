@@ -326,8 +326,19 @@ module Nibble
         Array(item["collections"]).each { |handle| problem(item.path, "collection '#{handle}' doesn't exist") unless schema.collection(handle) }
         Array(item["taxonomies"]).each { |handle| problem(item.path, "taxonomy '#{handle}' doesn't exist") unless schema.taxonomy(handle) }
         (item["globals"].is_a?(Array) ? item["globals"] : []).each { |handle| problem(item.path, "global '#{handle}' doesn't exist") unless schema.find(:globals, handle) }
-        capture(item.path) { check_fields(Fields.new(item["item_fields"], schema:, source: item.path, key: "item_fields"), item.path) } if item["item_fields"]
+        item_fields = capture(item.path) { Fields.new(item["item_fields"], schema:, source: item.path, key: "item_fields").tap { |fields| check_fields(fields, item.path) } }
         check_entry_fields(item, schema)
+        check_menu_kinds(item, schema, item_fields&.handles.to_a)
+        Array(item["queries"]).each { |handle| problem(item.path, "queries names collection '#{handle}', which doesn't exist") unless schema.collection(handle) }
+      end
+    end
+
+    def check_menu_kinds(item, schema, item_fields)
+      (item["kinds"].to_h.keys & MenuSchema::BUILT_IN_KINDS).each { |handle| problem(item.path, "kind '#{handle}' is built in, so it can't be redefined") }
+      item["kinds"].to_h.except(*MenuSchema::BUILT_IN_KINDS).each do |handle, kind|
+        fields = capture(item.path) { Fields.new(kind.to_h["fields"], schema:, source: item.path, key: "kinds.#{handle}.fields") } or next
+        check_fields(fields, item.path)
+        (fields.handles & item_fields).each { |field| problem(item.path, "kind '#{handle}' field '#{field}' is already an item field, which every item has") }
       end
     end
 

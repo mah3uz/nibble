@@ -8,6 +8,7 @@ module Nibble
         before = record.snapshot
         record.assign_snapshot(before.merge(attrs.slice("tree")))
         record.save!
+        Jobs::PurgeNavigation.schedule(record)
         revision!(kind)
         emit(event || (created ? "record.created" : "record.saved"), "changes" => diff(before, record.snapshot))
       end
