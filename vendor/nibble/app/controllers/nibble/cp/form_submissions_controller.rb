@@ -7,7 +7,7 @@ module Nibble
       def show
         @submission.update_column(:read_at, Time.current) unless @submission.read?
         fields = @form.fields.add_values(@submission.data)
-        meta = fields.meta.merge(file_meta)
+        meta = with_stored_labels(fields.meta.merge(file_meta))
         render inertia: "cp/forms/Submission", props: {
           form: { handle: @form.handle, title: @form.title || @form.handle.humanize },
           submission: { id: @submission.id, status: @submission.status, created_at: @submission.created_at.utc.iso8601,
@@ -115,6 +115,15 @@ module Nibble
         @form.fields.all.values.select { |field| field.type == "files" }.to_h do |field|
           [ field.handle, { "files" => Array(@submission.data[field.handle]).map { |file| file_row(file) } } ]
         end
+      end
+
+      def with_stored_labels(meta)
+        @submission.labels.each do |handle, kept|
+          options = meta.dig(handle, "options") or next
+          known = options.map { |option| option["value"].to_s }
+          meta[handle] = meta[handle].merge("options" => options + kept.except(*known).map { |value, label| { "value" => value, "label" => label } })
+        end
+        meta
       end
 
       def file_row(file)

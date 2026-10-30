@@ -2,12 +2,12 @@ module Nibble
   class FormsMailer < Nibble::ApplicationMailer
     helper_method :mail_text, :mail_html
 
-    def submission(form_handle, index, data, plan)
+    def submission(form_handle, index, data, plan, labels = {})
       @form = Nibble::Forms.find(form_handle) or return
       notify = @form.notify[index] or return
       fields = @form.fields.all.values.reject(&:display_only?)
       fields = fields.select { |field| notify["fields"].include?(field.handle) } if notify["fields"]
-      @rows = fields.map { |field| [ field.display(plan.locale), Array(Nibble::Forms.display_value(field, data[field.handle], plan.locale)).join(", ") ] }
+      @rows = fields.map { |field| [ field.display(plan.locale), Array(Nibble::Forms.display_value(field, data[field.handle], plan.locale, labels: labels[field.handle])).join(", ") ] }
       @message = plan.message
       @visitor = plan.visitor
       @locale = plan.locale

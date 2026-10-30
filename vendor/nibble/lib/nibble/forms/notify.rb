@@ -27,6 +27,7 @@ module Nibble
         @form = form
         @data = data.to_h
         @submission = submission
+        @labels = submission&.labels || {}
         @locale = Nibble.config.locale(locale)&.code || Nibble.config.default_locale.code
         @templates = {}
       end
@@ -51,7 +52,7 @@ module Nibble
 
       def deliver(index)
         planned = plan(index) or return
-        Nibble::FormsMailer.submission(@form.handle, index, @data, planned).deliver_now
+        Nibble::FormsMailer.submission(@form.handle, index, @data, planned, @labels).deliver_now
         record(index, planned.to.join(", "), "sent")
       rescue Skipped => error
         Rails.logger.warn("Form '#{@form.handle}' notify.#{index} skipped: #{error.message}")
@@ -90,7 +91,7 @@ module Nibble
       end
 
       def display_values(locale)
-        @form.fields.all.values.reject(&:display_only?).to_h { |field| [ field.handle, Array(Forms.display_value(field, @data[field.handle], locale)).join(", ") ] }
+        @form.fields.all.values.reject(&:display_only?).to_h { |field| [ field.handle, Array(Forms.display_value(field, @data[field.handle], locale, labels: @labels[field.handle])).join(", ") ] }
       end
 
       def link

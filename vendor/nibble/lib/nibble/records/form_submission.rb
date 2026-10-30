@@ -7,9 +7,10 @@ module Nibble
 
       def self.record_type = "form_submission"
       def self.polymorphic_name = record_type
-      def self.receive!(values, encrypt: [], **attributes)
+      def self.receive!(values, encrypt: [], labels: {}, **attributes)
         transaction do
-          create!(data: values.except(*encrypt), **attributes).tap { |record| record.keep!(values, encrypt:) if values.slice(*encrypt).compact.any? }
+          create!(data: values.except(*encrypt), labels: labels.except(*encrypt).presence, **attributes)
+            .tap { |record| record.keep!(values, encrypt:, labels:) if values.slice(*encrypt).compact.any? }
         end
       end
 
@@ -37,13 +38,19 @@ module Nibble
         stored = super
         return stored if encrypted_data.blank?
 
-        stored.merge(encrypted_data.to_h { |handle, ciphertext| [ handle, reveal(handle, ciphertext) ] })
+        stored.merge(encrypted_data.to_h { |handle, ciphertext| [ handle, reveal(ciphertext, purpose(handle)) ] })
       end
 
-      def keep!(values, encrypt: [], **attributes)
+      # An encrypted field's labels are kept sealed, as a string in place of its { value => label } map.
+      def labels
+        super.to_h.to_h { |handle, kept| [ handle, kept.is_a?(String) ? reveal(kept, label_purpose(handle)) : kept ] }.compact
+      end
+
+      def keep!(values, encrypt: [], labels: {}, **attributes)
         secret = values.slice(*encrypt).compact
         sealed = secret.to_h { |handle, value| [ handle, Secrets.encrypt(value.to_json, purpose: purpose(handle)) ] }
-        update!(data: values.except(*secret.keys), encrypted_data: sealed.presence, **attributes)
+        sealed_labels = labels.slice(*encrypt).to_h { |handle, kept| [ handle, Secrets.encrypt(kept.to_json, purpose: label_purpose(handle)) ] }
+        update!(data: values.except(*secret.keys), encrypted_data: sealed.presence, labels: labels.except(*encrypt).merge(sealed_labels).presence, **attributes)
       end
 
       def delivery(key) = deliveries.find { |item| item["key"] == key }
@@ -66,9 +73,10 @@ module Nibble
       private
 
       def purpose(handle) = "nibble/form_submission:#{id}:#{handle}"
+      def label_purpose(handle) = "#{purpose(handle)}:labels"
 
-      def reveal(handle, ciphertext)
-        plain = Secrets.decrypt(ciphertext, purpose: purpose(handle))
+      def reveal(ciphertext, purpose)
+        plain = Secrets.decrypt(ciphertext, purpose:)
         plain && JSON.parse(plain)
       end
 
