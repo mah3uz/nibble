@@ -12,6 +12,8 @@ Nibble is in beta: a release is meant to keep a working site working, and what i
 
 ## Unreleased
 
+## 0.24.0 — 2026-10-30 21:08 +0600
+
 > **Change what a site already holds, safely.** A content migration can replace a shipped value where editors haven't
 > changed it, and this release fixes the deploy of a site whose form emails a site setting.
 
