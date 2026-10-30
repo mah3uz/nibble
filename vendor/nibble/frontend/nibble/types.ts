@@ -2,6 +2,7 @@ export type Link = { type: string; id?: number; title: string; url: string; chil
 
 export type SiteProps = {
   locale: string
+  time_zone: string
   url: string
   params: Record<string, string>
   globals: Record<string, Record<string, unknown>>

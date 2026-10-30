@@ -51,6 +51,27 @@ class NibbleCrumbsTest < ActionDispatch::IntegrationTest
     assert_equal [ "Archive", "Topics", "About" ], page["site"]["navigation"]["main"].map { |link| link["title"] }
   end
 
+  test "the site props carry the site's time zone so a theme can show dates on the day they happened" do
+    previous = Time.zone
+    Time.zone = "Sydney"
+    Nibble::PageCache.store.clear
+    get "/"
+
+    assert_equal "Australia/Sydney", props["props"]["site"]["time_zone"]
+  ensure
+    Time.zone = previous
+  end
+
+  test "the topic list counts its articles and the home page leaves article bodies out" do
+    get "/topics"
+    assert props["props"]["topics"].all? { |topic| topic["entries_count"].is_a?(Integer) }
+    assert_operator props["props"]["topics"].sum { |topic| topic["entries_count"] }, :>, 0
+
+    get "/"
+    page = props["props"]
+    assert((page["featured"] + page["recent"]).none? { |post| post.key?("body") })
+  end
+
   test "an article renders its body, byline, topics and related articles" do
     get "/blog/the-week-i-renamed-one-thing"
     page = props["props"]["page"]

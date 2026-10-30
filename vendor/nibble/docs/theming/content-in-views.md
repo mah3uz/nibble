@@ -25,7 +25,7 @@ After reading this guide, you will know:
 |---|---|
 | `page` | the entry, term or file page being rendered: the [record](#2-the-shape-of-a-record) and its fields |
 | one prop per sidecar query | whatever the [query sidecar](queries.md) asked for, under the name the sidecar gave it |
-| `site` | `locale`, `url` (this page's absolute URL), `params`, `globals` and `navigation` |
+| `site` | `locale`, `time_zone` (the site's time zone as an IANA name, such as `Australia/Sydney`), `url` (this page's absolute URL), `params`, `globals` and `navigation` |
 | `seo` | the title, description, canonical URL, robots and image `SeoHead` renders |
 | `layout` | the name of the layout wrapping the page |
 | `preview` | `{ label, edit_url }` while an editor previews a draft, otherwise `null` |
@@ -127,6 +127,9 @@ What a theme does not receive is the list of a record's translations: there is n
 languages". A language switcher links to each locale's home page, built from the site's locales, rather than to the
 sibling of the page being viewed. The theme's own interface strings, such as "Read more", belong in the theme: keep a
 small map keyed by locale and look it up with `useLocale()`.
+
+Dates are stored in UTC. To show one on the day it happened for the site, format it with `site.time_zone` as the
+`timeZone` of `Intl.DateTimeFormat`, and with the page's locale.
 
 ## 5. Globals and menus
 

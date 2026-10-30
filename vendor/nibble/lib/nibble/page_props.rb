@@ -108,7 +108,7 @@ module Nibble
       presenter.preload(globals.values + menus.values)
       Dependencies.add("global:#{Integrations::HANDLE}")
       {
-        "locale" => context.locale, "url" => Presenter.url(@request_path), "params" => declared,
+        "locale" => context.locale, "time_zone" => ::Time.zone.tzinfo.name, "url" => Presenter.url(@request_path), "params" => declared,
         "globals" => schema.globals.reject { |item| item.handle == Integrations::HANDLE }
           .to_h { |item| [ item.handle, present_global(presenter, globals[item.handle], item.handle) ] },
         "navigation" => schema.navigations.to_h { |item| [ item.handle, present_navigation(presenter, menus[item.handle], item.handle) ] }
