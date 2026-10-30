@@ -6,7 +6,7 @@ module Api
       def show
         asset = Nibble::Records::Asset.where(deleted_at: nil).find_by!(uuid: params[:id])
 
-        respond({ "data" => presenter.present([ asset ]).first })
+        respond({ "data" => { "uuid" => asset.uuid }.merge(Nibble::Records::AssetResolver.new.summary(asset)) })
       end
     end
   end

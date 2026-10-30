@@ -83,7 +83,7 @@ Each token may make 300 requests a minute.
 | `GET /api/v1/terms/:uuid` | one term |
 | `GET /api/v1/globals/:handle` | a global's fields |
 | `GET /api/v1/navigation/:handle` | a menu |
-| `GET /api/v1/assets/:id` | one asset |
+| `GET /api/v1/assets/:uuid` | one asset, as an asset field holds it |
 | `GET /api/v1/routes` | every public URL the site serves |
 | `GET /api/v1/schema` | the collections and taxonomies the API serves, and their fields |
 | `GET /api/v1/health` | whether the site is healthy |
